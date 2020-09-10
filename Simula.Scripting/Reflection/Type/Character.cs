@@ -6,7 +6,7 @@ using Simula.Scripting.Reflection.Markup;
 namespace Simula.Scripting.Type {
 
     [Expose("char")]
-    public class Character {
+    public class Character : Var {
         private char value = ' ';
 
         public static implicit operator char(Character s) {

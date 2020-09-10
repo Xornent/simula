@@ -6,7 +6,12 @@ using System.Text;
 namespace Simula.Scripting.Type {
 
     [Expose("class")]
-    public class Class {
+    public class Class : Var {
         public String name = "";
+        public System.Type? type;
+
+        internal Class(System.Type classType) {
+            this.type = classType;
+        }
     }
 }

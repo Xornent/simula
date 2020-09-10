@@ -6,7 +6,7 @@ using Simula.Scripting.Reflection.Markup;
 namespace Simula.Scripting.Type {
 
     [Expose("float")]
-    public class Float {
+    public class Float : Var {
         private float value;
 
         public static implicit operator float(Float i) {

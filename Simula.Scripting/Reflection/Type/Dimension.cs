@@ -6,7 +6,7 @@ using Simula.Scripting.Reflection.Markup;
 namespace Simula.Scripting.Type {
 
     [Expose("dimension")]
-    public class Dimension {
+    public class Dimension : Var {
         int n;
         public Dimension(int _n) {
             this.n = _n;

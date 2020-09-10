@@ -6,7 +6,7 @@ using Simula.Scripting.Reflection.Markup;
 namespace Simula.Scripting.Type {
     
     [Expose("func")]
-    public class Function {
+    public class Function : Var {
 
         // 这个 dynamic 对象是 Func<..., ...> 的一种子类
 

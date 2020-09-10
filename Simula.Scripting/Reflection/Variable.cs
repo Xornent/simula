@@ -9,6 +9,8 @@ namespace Simula.Scripting.Reflection {
         public string Name = "";
         public string FullName = "";
 
+        public bool Hidden = false;
+
         // 关于对象实例的注解:
 
         // 就像我们在反射类的定义中看到的, 一个类型分为抽象类和特化类两种, 而变量的类型只能是特化的类

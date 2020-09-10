@@ -6,7 +6,7 @@ using Simula.Scripting.Reflection.Markup;
 namespace Simula.Scripting.Type {
    
     [Expose("int")]
-    public class Integer {
+    public class Integer : Var {
         private System.Numerics.BigInteger value;
 
         public static implicit operator System.Numerics.BigInteger(Integer i) {

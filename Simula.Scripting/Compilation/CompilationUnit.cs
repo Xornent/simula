@@ -23,8 +23,8 @@ namespace Simula.Scripting.Compilation {
             get { if (body == null) body = Parse(); return body; }
         }
 
-        private List<Reflection.Module> modules = new List<Reflection.Module>();
-        public List<Reflection.Module> Modules {
+        private Dictionary<string, Reflection.Module> modules = new Dictionary<string, Reflection.Module>();
+        public Dictionary<string, Reflection.Module> Modules {
             get { if (modules.Count == 0) modules = Generate(); return modules; }
         }
 
@@ -49,8 +49,8 @@ namespace Simula.Scripting.Compilation {
             return block;
         }
 
-        private List<Reflection.Module> Generate() {
-            List<Reflection.Module> mods = new List<Reflection.Module>();
+        private Dictionary<string, Reflection.Module> Generate() {
+            Dictionary<string, Reflection.Module> mods = new Dictionary<string, Reflection.Module>();
             return mods;
         }
 
@@ -71,43 +71,24 @@ namespace Simula.Scripting.Compilation {
             this.File = path;
         }
 
-        private List<Reflection.Module> modules = new List<Reflection.Module>();
-        public List<Reflection.Module> Modules {
+        private Dictionary<string, Reflection.Module> modules = new Dictionary<string, Reflection.Module>();
+        public Dictionary<string, Reflection.Module> Modules {
             get { if (modules.Count == 0) modules = Generate(); return modules; }
         }
 
-        private List<Reflection.Module> Generate() {
+        private Dictionary<string, Reflection.Module> Generate() {
             Dictionary<string, Reflection.Module> mods = new Dictionary<string, Reflection.Module>();
             Assembly asm = Assembly.LoadFrom(File);
             System.Type[] types = asm.GetTypes();
 
             foreach (var type in types) {
                 if (type.FullName == null) continue;
-                if (!type.FullName.StartsWith("Simula.Scripting.Type.")) continue;
-                Reflection.Markup.ExposeAttribute? exposed = type.GetCustomAttribute<Reflection.Markup.ExposeAttribute>();
-                if (exposed == null) continue;
-
-                Type.Class classVar = new Type.Class();
-                Reflection.AbstractClass classDef = new Reflection.AbstractClass();
-
-                if (type.Namespace == null) continue;
-                string moduleName = type.Namespace.Replace("Simula.Scripting.Type", "");
-                if (moduleName.StartsWith(".")) moduleName = moduleName.Remove(0, 1);
-
-                classDef.Compiled = true;
-                if (moduleName == "") classDef.FullName = exposed.Alias;
-                else classDef.FullName = moduleName + "." + exposed.Alias;
                 
-                // 在 Simula.Scripting.Type 命名空间下定义的类是不属于任何包的.
-                // 它所对应的 Module 名为 "".
+                // 从已编译的程序集中加载所有类, 筛选出所有用 ExposeAttribute 标识的类.
 
-                if (moduleName == "") {
-                    if (!mods.ContainsKey("")) mods.Add("", new Reflection.Module());
-
-                }
             }
 
-            return mods.Values.ToList();
+            return mods;
         }
 
         public override void Register(RuntimeContext ctx) {
@@ -147,13 +128,112 @@ namespace Simula.Scripting.Compilation {
     }
 
     public static class Utilities {
-        public static List<string> GetModuleHirachy(string s) {
-            if (s == "") return new List<string>();
+
+        public static string Connect(this List<string> list, string connection) {
+            if (list.Count == 0) return "";
+            string s = list[0];
+            for(int i = 1; i<list.Count;i++) {
+                s = s + connection + list[i];
+            }
+            return s;
+        }
+
+        public static List<string> GetModuleHirachy(string? s) {
+            if (string.IsNullOrEmpty(s)) return new List<string>() { "" };
             if (s.StartsWith("Simula.Scripting.Type.")) s = s.Replace("Simula.Scripting.Type.", "");
             if (s.StartsWith("Simula.Scripting.Type")) s = s.Replace("Simula.Scripting.Type", "");
             if (s.Contains(".")) {
                 return s.Split('.').ToList();
             } else return new List<string>() { s };
         }
+
+        public static List<System.Type> GetAccessableClassType(Assembly asm) {
+            List<System.Type> types = new List<System.Type>();
+            foreach(var type in asm.GetTypes()) {
+                Reflection.Markup.ExposeAttribute? expose = type.GetCustomAttribute<Reflection.Markup.ExposeAttribute>();
+                if(expose != null) {
+                    if (expose.Alias == "<global>") continue;
+                    types.Add(type);
+                }
+            }
+            return types;
+        }
+
+        public static List<Reflection.Variable> GetAccessableClassVariable(Assembly asm) {
+            List<Reflection.Variable> classes = new List<Reflection.Variable>();
+            foreach (var type in asm.GetTypes()) {
+                Reflection.Markup.ExposeAttribute? expose = type.GetCustomAttribute<Reflection.Markup.ExposeAttribute>();
+                if (expose != null) {
+                    if (expose.Alias == "<global>") continue;
+                    Reflection.Variable var = new Reflection.Variable();
+                    var.FullName = GetModuleHirachy(type.Namespace).Connect(".");
+                    if (var.FullName == "")
+                        var.FullName += expose.Alias;
+                    else var.FullName += ("." + expose.Alias);
+                    var.Name = expose.Alias;
+                    var.Hidden = expose.ToSystemOnly;
+                    var.Object = new Type.Class(type);
+                    classes.Add(var);
+                }
+            }
+            return classes;
+        }
+
+        public static void SetVariable(List<string> module, Reflection.Variable variable, Dictionary<string, Reflection.Module> destinationArray) {
+            Reflection.Module? current = null;
+            foreach (var submod in module) {
+                if(current == null) {
+                    if (destinationArray.ContainsKey(submod))
+                        current = destinationArray[submod];
+                    else {
+                        current = new Reflection.Module();
+                        current.Name = submod;
+                        current.Compiled = true;
+                        destinationArray.Add(submod, current);
+                    }
+                } else if(current.SubModules.ContainsKey(submod)) {
+                    current = current.SubModules[submod];
+                } else {
+                    var i = new Reflection.Module();
+                    i.Name = submod;
+                    i.Compiled = true;
+                    current.SubModules.Add(submod, i);
+                    current = i;
+                }
+            }
+
+            if (current.Variables.ContainsKey(variable.Name)) {
+                variable.Conflict = current.Variables[variable.Name];
+                current.Variables[variable.Name] = variable;
+            } else
+                current.Variables.Add(variable.Name, variable);
+        }
+
+        public static void RemoveVariable(List<string> module, Reflection.Variable variable, Dictionary<string, Reflection.Module> destinationArray) {
+            Reflection.Module? current = null;
+            foreach (var submod in module) {
+                if (current == null) {
+                    if (destinationArray.ContainsKey(submod))
+                        current = destinationArray[submod];
+                    else return;
+                } else if (current.SubModules.ContainsKey(submod)) {
+                    current = current.SubModules[submod];
+                } else return;
+            }
+
+            if (current.Variables.ContainsKey(variable.Name)) {
+                Reflection.Variable varia = current.Variables[variable.Name];
+                while(varia != variable) {
+                    if (varia.Conflict == null) return;
+                    varia = varia.Conflict;
+
+                    if(varia.Conflict == variable) {
+                        varia.Conflict = variable.Conflict;
+                        return;
+                    }
+                }
+            } else return;
+        }
+
     }
 }
