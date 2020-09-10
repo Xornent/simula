@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+	  <UseWpf>true</UseWpf>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Simula.Scripting.Compression\Simula.Scripting.Compression.csproj" />
+    <ProjectReference Include="..\Simula.Scripting.Json\Simula.Scripting.Json.csproj" />
+  </ItemGroup>
+
+</Project>

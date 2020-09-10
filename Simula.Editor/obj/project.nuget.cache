@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "y4ofrA0/I6+YGvHnUZ4wWX3nTm/yC+8VuMpziKrCmukbgvjFqat5wI1pQk9zE55ZoxOTOeXAdVsdhPdrqp0d/g==",
+  "success": true,
+  "projectFilePath": "G:\\Github\\source\\xornent\\projects\\simula\\Simula.Editor\\Simula.Editor.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Xorne\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\3.1.2\\microsoft.aspnetcore.app.ref.3.1.2.nupkg.sha512"
+  ],
+  "logs": []
+}

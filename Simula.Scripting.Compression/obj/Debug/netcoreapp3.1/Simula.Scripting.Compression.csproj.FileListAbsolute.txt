@@ -1,0 +1,9 @@
+G:\Github\source\xornent\projects\simula\Simula.Scripting.Compression\bin\Debug\netcoreapp3.1\Simula.Scripting.Compression.deps.json
+G:\Github\source\xornent\projects\simula\Simula.Scripting.Compression\bin\Debug\netcoreapp3.1\Simula.Scripting.Compression.dll
+G:\Github\source\xornent\projects\simula\Simula.Scripting.Compression\bin\Debug\netcoreapp3.1\Simula.Scripting.Compression.pdb
+G:\Github\source\xornent\projects\simula\Simula.Scripting.Compression\obj\Debug\netcoreapp3.1\Simula.Scripting.Compression.csprojAssemblyReference.cache
+G:\Github\source\xornent\projects\simula\Simula.Scripting.Compression\obj\Debug\netcoreapp3.1\Simula.Scripting.Compression.AssemblyInfoInputs.cache
+G:\Github\source\xornent\projects\simula\Simula.Scripting.Compression\obj\Debug\netcoreapp3.1\Simula.Scripting.Compression.AssemblyInfo.cs
+G:\Github\source\xornent\projects\simula\Simula.Scripting.Compression\obj\Debug\netcoreapp3.1\Simula.Scripting.Compression.csproj.CoreCompileInputs.cache
+G:\Github\source\xornent\projects\simula\Simula.Scripting.Compression\obj\Debug\netcoreapp3.1\Simula.Scripting.Compression.dll
+G:\Github\source\xornent\projects\simula\Simula.Scripting.Compression\obj\Debug\netcoreapp3.1\Simula.Scripting.Compression.pdb

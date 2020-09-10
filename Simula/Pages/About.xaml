@@ -1,0 +1,76 @@
+﻿<UserControl x:Class=" Simula.Pages.About"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Simula.Pages"
+             mc:Ignorable="d" FontFamily="PingFang SC" Width="494" Height="345">
+    <Grid>
+        <StackPanel Orientation="Vertical">
+            <Grid Height="20"/>
+            <Grid HorizontalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
+                    <Grid Width="64" Height="64">
+                        <Image Source="pack://siteoforigin:,,,/app.icon.ico"/>
+                    </Grid>
+                    <Grid>
+                        <StackPanel Orientation="Vertical" Margin="10,0,0,0">
+                            <Label Content=" Simula" FontSize="30"/>
+                            <Label Content="版本 0.0.3" FontFamily="Consolas" Margin="10,-10,0,0" Foreground="Gray"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Grid>
+            <Grid Height="20"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.15*"/>
+                    <ColumnDefinition Width="0.7*"/>
+                    <ColumnDefinition Width="0.15*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="1" 
+                           Text="本软件处在初级的测试阶段，存在不可预知的漏洞和行为的异常，并且存在丢失用户数据的风险。因此，请不要将此版本用作生产用途，可以在 相应的 Github Repo Issues 中汇报已存在的问题。一切资料的损失由用户自行承担。" 
+                           TextWrapping="Wrap" Foreground="Gray"/>
+            </Grid>
+            <Grid Height="20"/>
+            <ScrollViewer Height="150">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.15*"/>
+                        <ColumnDefinition Width="0.7*"/>
+                        <ColumnDefinition Width="0.15*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Column="1">
+                        <StackPanel Orientation="Vertical">
+                            <Label Content="更新日志" HorizontalAlignment="Center" FontSize="15" Margin="0,0,0,0"/>
+                            <StackPanel Orientation="Vertical">
+                                <Label Content="版本 0.0.3"  FontSize="13" FontFamily="Consolas, simsun" Margin="0,10,0,0"/>
+                                <TextBlock Grid.Column="1" Margin="20,0,0,0" FontFamily="Consolas, simsun" LineHeight="16"
+                                       Text="1. 简易的 Simula Script 语言标准
+                                             2. 代码编辑器的非智能实现" 
+                                       TextWrapping="Wrap" Foreground="Gray"/>
+                                <Label Content="版本 0.0.2"  FontSize="13" FontFamily="Consolas, simsun" Margin="0,10,0,0"/>
+                                <TextBlock Grid.Column="1" Margin="20,0,0,0" FontFamily="Consolas, simsun" LineHeight="16"
+                                       Text="1. 设计用户界面，定义了停靠选项卡和菜单的材质
+                                             2. 取消了停靠式窗口的设计" 
+                                       TextWrapping="Wrap" Foreground="Gray"/>
+                                <Label Content="版本 0.0.1"  FontSize="13" FontFamily="Consolas, simsun" Margin="0,10,0,0"/>
+                                <TextBlock Grid.Column="1" Margin="20,0,0,0" FontFamily="Consolas, simsun" LineHeight="16"
+                                       Text="1. 设计用户界面，定义了窗口，主选项卡的基本设计
+                                             2. 从 Project Anura Windows 的界面中迁移" 
+                                       TextWrapping="Wrap" Foreground="Gray"/>
+
+                                <Grid Height="20"/>
+                                <Button Content="向 Xornent S.I. 汇报异常" Width="150" Height="22"/>
+                                <Grid Height="10"/>
+                                <Button Content="捐助 Project Simula" Width="150" Height="22"/>
+                                <Grid Height="10"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </ScrollViewer>
+            
+        </StackPanel>
+    </Grid>
+</UserControl>

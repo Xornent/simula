@@ -1,0 +1,681 @@
+﻿<Window x:Class=" Simula.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Simula"
+        xmlns:page ="clr-namespace:Simula.Pages"
+        xmlns:ui ="clr-namespace:Simula.UI"
+        xmlns:editor ="http://xornent.org/simula/editor"
+        xmlns:script ="clr-namespace:Simula.Scripting;assembly=Simula.Scripting"
+        xmlns:package="clr-namespace:Simula.Scripting.Packaging"
+        mc:Ignorable="d" 
+        Icon="pack://siteoforigin:,,,/app.icon.ico"
+        Title="无工作区 -  Simula" Height="690" Width="1050" MinWidth="895" MinHeight="570" WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+
+        <LinearGradientBrush x:Key="headerPanel" StartPoint="0,0" EndPoint="0,1" ColorInterpolationMode="ScRgbLinearInterpolation">
+            <LinearGradientBrush.GradientStops>
+                <GradientStop Color="#e9e8ec" Offset="0"/>
+                <GradientStop Color="#dedede" Offset="1"/>
+            </LinearGradientBrush.GradientStops>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="tabPanel" StartPoint="0,0" EndPoint="0,1" ColorInterpolationMode="ScRgbLinearInterpolation">
+            <LinearGradientBrush.GradientStops>
+                <GradientStop Color="#dedede" Offset="0"/>
+                <GradientStop Color="#d0d0d0" Offset="1"/>
+            </LinearGradientBrush.GradientStops>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="searchGrad" StartPoint="0,0" EndPoint="0,1" ColorInterpolationMode="ScRgbLinearInterpolation">
+            <LinearGradientBrush.GradientStops>
+                <GradientStop Color="#ffffff" Offset="0"/>
+                <GradientStop Color="#f0f0f0" Offset="1"/>
+            </LinearGradientBrush.GradientStops>
+        </LinearGradientBrush>
+
+        <Style x:Key="Search" x:Name="Search" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Grid>
+                            <Rectangle Fill="{StaticResource searchGrad}" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}"
+                               RadiusX="4" RadiusY="4">
+                                <Rectangle.Effect>
+                                    <DropShadowEffect BlurRadius="4" ShadowDepth="0" Opacity="0.3"/>
+                                </Rectangle.Effect>
+                            </Rectangle>
+                            <Grid VerticalAlignment="Center">
+                                <DockPanel Height="28">
+                                    <Grid Width="30" DockPanel.Dock="Left">
+                                        <TextBlock Width="auto" Height="auto" TextAlignment="Center" VerticalAlignment="Center"
+                                                   IsHitTestVisible="false" Foreground="DarkOrange"
+                                                   FontFamily="Segoe MDL2 Assets" FontSize="16" Text="&#xE1DE;"/>
+                                    </Grid>
+                                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                                        <TextBlock Width="26" Height="auto" TextAlignment="Center" VerticalAlignment="Center" 
+                                                   IsHitTestVisible="false" Foreground="Green"
+                                                   FontFamily="Segoe MDL2 Assets" FontSize="16" Text="&#xe775;"/>
+                                        <TextBlock Width="26" Height="auto" TextAlignment="Center" VerticalAlignment="Center"
+                                                   IsHitTestVisible="false" Foreground="Green"
+                                                   FontFamily="Segoe MDL2 Assets" FontSize="16" Text="&#xe71f;"/>
+                                        <TextBlock Width="36" Height="auto" TextAlignment="Center" VerticalAlignment="Center"
+                                                   IsHitTestVisible="false" Foreground="Green"
+                                                   FontFamily="Segoe MDL2 Assets" FontSize="16" Text="&#xE149;"/>
+                                    </StackPanel>
+                                    <Grid>
+                                        <TextBlock Width="auto" Height="auto" TextAlignment="Center" VerticalAlignment="Center"
+                                                   Text="{TemplateBinding Content}" FontFamily="PingFanG sc Bold" FontSize="13"></TextBlock>
+                                    </Grid>
+                                </DockPanel>
+                            </Grid>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="Label" x:Key="BottomBubblePanel">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Label}">
+                        <Grid>
+                            <Border CornerRadius="4" BorderBrush="Black" BorderThickness="1" VerticalAlignment="Bottom" Margin="0,0,0,8.5" Background="Yellow" HorizontalAlignment="Left" Padding="5">
+                                <ContentPresenter />
+                            </Border>
+                            <Canvas Width="10" Height="10" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10,0,0,0" Background="Transparent">
+                                <Path Stroke="Black" StrokeThickness="0.5" Fill="Yellow">
+                                    <Path.Data>
+                                        <PathGeometry Figures="M 0,0
+                                  L 0,0,5,10
+                                  L 5,10,10,0
+                                  "/>
+                                    </Path.Data>
+                                </Path>
+                            </Canvas>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </Window.Resources>
+
+
+    <Grid>
+        <Grid x:Name="MainGrid" Visibility="Visible" >
+            <DockPanel>
+                <Grid DockPanel.Dock="Top" Height="32" Name="WindowController"  MouseLeftButtonDown="Window_Drag">
+                    <Rectangle Width="auto" Height="auto" Fill="{StaticResource headerPanel}"/>
+                    <DockPanel>
+                        <StackPanel Width="65" DockPanel.Dock="Left" Orientation="Horizontal">
+                            <Button Content="&#xE00E;" FontFamily="Segoe MDL2 Assets" Width="25" FontSize="13" Margin="4"></Button>
+                            <Button Content="&#xE00F;" FontFamily="Segoe MDL2 Assets" Width="25" FontSize="13" Margin="0 5 5 5"></Button>
+                        </StackPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Grid Width="46" Height="30" Margin="0 0 0 4" VerticalAlignment="Center">
+                                <Rectangle Width="46" Margin="0 0 0 0" Fill="Transparent" MouseDown="Application_Minimize">
+                                    <Rectangle.Triggers>
+                                        <EventTrigger RoutedEvent="MouseEnter">
+                                            <EventTrigger.Actions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <ColorAnimation From="Transparent" To="LightGray" Duration="0:0:0.15" Storyboard.TargetProperty="(Rectangle.Fill).(SolidColorBrush.Color)"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger.Actions>
+                                        </EventTrigger>
+                                        <EventTrigger RoutedEvent="MouseLeave">
+                                            <EventTrigger.Actions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <ColorAnimation From="LightGray" To="Transparent" Duration="0:0:0.15" Storyboard.TargetProperty="(Rectangle.Fill).(SolidColorBrush.Color)"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger.Actions>
+                                        </EventTrigger>
+                                    </Rectangle.Triggers>
+                                </Rectangle>
+                                <TextBlock Text="&#xE108;" FontFamily="Segoe MDL2 Assets" 
+                                       FontSize="9.5" IsHitTestVisible="False" Height="auto" TextAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                            </Grid>
+                            <Grid Width="46" Height="30" Margin="0 0 0 4" VerticalAlignment="Center">
+                                <Rectangle Width="46" Margin="0 0 0 0" Fill="Transparent" MouseDown="Application_Maximize">
+                                    <Rectangle.Triggers>
+                                        <EventTrigger RoutedEvent="MouseEnter">
+                                            <EventTrigger.Actions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <ColorAnimation From="Transparent" To="LightGray" Duration="0:0:0.15" Storyboard.TargetProperty="(Rectangle.Fill).(SolidColorBrush.Color)"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger.Actions>
+                                        </EventTrigger>
+                                        <EventTrigger RoutedEvent="MouseLeave">
+                                            <EventTrigger.Actions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <ColorAnimation From="LightGray" To="Transparent" Duration="0:0:0.15" Storyboard.TargetProperty="(Rectangle.Fill).(SolidColorBrush.Color)"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger.Actions>
+                                        </EventTrigger>
+                                    </Rectangle.Triggers>
+                                </Rectangle>
+                                <TextBlock Text="&#xE003;" FontFamily="Segoe MDL2 Assets" 
+                                       FontSize="9.5" IsHitTestVisible="False" Height="auto" TextAlignment="Center"
+                                       VerticalAlignment="Bottom" Margin="0,0,0,10"/>
+                            </Grid>
+                            <Grid Width="46" Height="30" Margin="0 0 0 4" VerticalAlignment="Center">
+                                <Rectangle Width="46" Margin="0 0 0 0" Name="close" Fill="Transparent" MouseDown="Application_Close">
+                                    <Rectangle.Triggers>
+                                        <EventTrigger RoutedEvent="MouseEnter">
+                                            <EventTrigger.Actions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <ColorAnimation From="Transparent" To="Red" Duration="0:0:0.15" Storyboard.TargetProperty="(Rectangle.Fill).(SolidColorBrush.Color)"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger.Actions>
+                                        </EventTrigger>
+                                        <EventTrigger RoutedEvent="MouseLeave">
+                                            <EventTrigger.Actions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <ColorAnimation From="Red" To="Transparent" Duration="0:0:0.15" Storyboard.TargetProperty="(Rectangle.Fill).(SolidColorBrush.Color)"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger.Actions>
+                                        </EventTrigger>
+                                    </Rectangle.Triggers>
+                                </Rectangle>
+                                <TextBlock Text="&#xE106;" FontFamily="Segoe MDL2 Assets" 
+                                       FontSize="9.5" IsHitTestVisible="False" Height="auto" TextAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <StackPanel Width="130" DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Content="&#xE81c;" FontFamily="Segoe MDL2 Assets" Width="35" FontSize="13" Margin="8 4 4 4"></Button>
+                            <Button Content="&#xE118;" FontFamily="Segoe MDL2 Assets" Width="35" FontSize="13" Margin="0 4 4 4"></Button>
+                            <Button Content="&#xE2AF;" FontFamily="Segoe MDL2 Assets" Width="35" FontSize="13" Margin="0 4 4 4"></Button>
+                        </StackPanel>
+                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Height="38">
+                            <!-- Central Area -->
+                        </Grid>
+                    </DockPanel>
+                    <Menu HorizontalAlignment="Left" Height="24" Margin="67,0,0,0" VerticalAlignment="Center" Width="619" FontWeight="Bold">
+                        <Menu.Items>
+                            <Grid Width="20" Height="20" Margin="-5,-2,0,0">
+                                <Image Source="pack://siteoforigin:,,,/app.icon.ico"/>
+                            </Grid>
+                            <MenuItem Header=" 文件(_F) " Name="mi_0_file" Height="24">
+                                <MenuItem.Items>
+                                    <MenuItem Header="新建项">
+                                        <MenuItem.Items>
+                                            <MenuItem Header="新建脚本 ..." InputGestureText="Ctrl + N"/>
+                                            <MenuItem Header="新建函数 ..." InputGestureText="Ctrl + Shift + N"/>
+                                            <MenuItem Header="新建类和基类 ..." InputGestureText="Ctrl + Shift + C"/>
+                                        </MenuItem.Items>
+                                    </MenuItem>
+                                    <MenuItem Header="新建工作区">
+                                        <MenuItem.Items>
+                                            <MenuItem Header="从现有代码创建工作区 ..." />
+                                            <MenuItem Header="从源代码管理创建工作区 ..." InputGestureText="Ctrl + Shift + G"/>
+                                            <MenuItem Header="从文件夹创建工作区 ..." InputGestureText="Ctrl + Shift + F"/>
+                                        </MenuItem.Items>
+                                    </MenuItem>
+                                    <MenuItem Header="打开">
+                                        <MenuItem.Items>
+                                            <MenuItem Header="代码文件 ..." InputGestureText="Ctrl + O"/>
+                                            <MenuItem Header="工作区 ..." InputGestureText="Ctrl + Shift + O"/>
+                                            <MenuItem Header="克隆储存库 ..."/>
+                                        </MenuItem.Items>
+                                    </MenuItem>
+                                    <Separator/>
+                                    <MenuItem Header="关闭" InputGestureText="Ctrl + X"/>
+                                    <MenuItem Header="关闭工作区" InputGestureText="Ctrl + Shift + X"/>
+                                    <Separator/>
+                                    <MenuItem Header="保存" InputGestureText="Ctrl + S"/>
+                                    <MenuItem Header="另存为 ..." InputGestureText="Ctrl + Shift + S"/>
+                                    <MenuItem Header="保存所有打开的文档"/>
+                                    <MenuItem Header="最近打开的文件历史"/>
+                                    <MenuItem Header="最近使用的工作区"/>
+                                    <Separator/>
+                                    <MenuItem Header="退出应用程序" InputGestureText="Alt + F4"/>
+                                </MenuItem.Items>
+                            </MenuItem>
+                            <MenuItem Header=" 编辑(_E) " Name="mi_0_edit" Height="24">
+                                <MenuItem.Items>
+                                    <MenuItem Header="转到"/>
+                                    <MenuItem Header="查找和替换">
+                                        <MenuItem.Items>
+                                            <MenuItem Header="快速查找 ..." InputGestureText="Ctrl + F"/>
+                                            <MenuItem Header="快速替换 ..." InputGestureText="Ctrl + R"/>
+                                            <Separator/>
+                                            <MenuItem Header="在文件中查找 ..." InputGestureText="Ctrl + Shift + F"/>
+                                            <MenuItem Header="在文件中替换 ..." InputGestureText="Ctrl + Shift + R"/>
+                                        </MenuItem.Items>
+                                    </MenuItem>
+                                    <Separator/>
+                                    <MenuItem Header="撤销" InputGestureText="Ctrl + Z"/>
+                                    <MenuItem Header="重做" InputGestureText="Ctrl + Y"/>
+                                    <MenuItem Header="剪切" InputGestureText="Ctrl + X"/>
+                                    <MenuItem Header="复制" InputGestureText="Ctrl + C"/>
+                                    <MenuItem Header="粘贴" InputGestureText="Ctrl + V"/>
+                                    <MenuItem Header="查看剪切板历史记录 ..." InputGestureText="Ctrl + F"/>
+                                    <MenuItem Header="删除" InputGestureText="Del"/>
+                                    <Separator/>
+                                    <MenuItem Header="全选" InputGestureText="Ctrl + A"/>
+                                    <Separator/>
+                                    <MenuItem Header="将文件作为文本插入 ..."/>
+                                    <MenuItem Header="文本格式">
+                                        <MenuItem.Items>
+                                            <MenuItem Header="格式化当前文件" InputGestureText="Ctrl + Alt + F"/>
+                                            <MenuItem Header="格式化选定的内容"/>
+                                            <MenuItem Header="统一前导空格为 Tab"/>
+                                            <MenuItem Header="统一前导空格为空格" InputGestureText="Ctrl + Alt + S"/>
+                                            <Separator/>
+                                            <MenuItem Header="转换为大写"/>
+                                            <MenuItem Header="转换为小写"/>
+                                            <Separator/>
+                                            <MenuItem Header="将选定行上移"/>
+                                            <MenuItem Header="将选定行下移"/>
+                                            <MenuItem Header="注释选定行" InputGestureText="Ctrl + Plus"/>
+                                            <MenuItem Header="取消注释选定行" InputGestureText="Ctrl + Minus"/>
+                                            <Separator/>
+                                            <MenuItem Header="切换查看（省略）空白字符"/>
+                                            <MenuItem Header="切换自动换行"/>
+                                        </MenuItem.Items>
+                                    </MenuItem>
+                                    <MenuItem Header="书签">
+                                        <MenuItem.Items>
+                                            <MenuItem Header="切换书签状态" InputGestureText="Ctrl + B"/>
+                                            <MenuItem Header="上一个书签" InputGestureText="Ctrl + Shift + Up"/>
+                                            <MenuItem Header="下一个书签" InputGestureText="Ctrl + Shift + Down"/>
+                                            <MenuItem Header="清除文档中的所有书签" InputGestureText="Ctrl + Shift + C"/>
+                                        </MenuItem.Items>
+                                    </MenuItem>
+                                    <MenuItem Header="相同缩进域的开头" InputGestureText="Ctrl + Up"/>
+                                    <MenuItem Header="相同缩进域的结尾" InputGestureText="Ctrl + Down"/>
+                                    <MenuItem Header="文件编辑设置 ..." />
+                                </MenuItem.Items>
+                            </MenuItem>
+                            <MenuItem Header=" 调试和分析(_D) " Name="mi_0_debug" Height="24">
+                                <MenuItem Header="从数据文件导入变量 ..." InputGestureText="Ctrl + I"/>
+                                <MenuItem Header="新建变量 ..." InputGestureText="Ctrl + Shift + V"/>
+                                <MenuItem Header="导出当前的工作区变量 ..."/>
+                                <Separator/>
+                                <MenuItem Header="编辑工作区中的变量"/>
+                                <MenuItem Header="清除工作区中定义的变量" InputGestureText="Ctrl + Shift + R"/>
+                                <MenuItem Header="复位变量和函数的重定义 ..." InputGestureText="Ctrl + R"/>
+                                <Separator/>
+                                <MenuItem Header="代码度量值 ..." InputGestureText="Ctrl + Shift + I"/>
+                                <MenuItem Header="代码清理">
+                                    <MenuItem Header="对工作区进行代码清理"/>
+                                    <MenuItem Header="代码清理选项 ..."/>
+                                </MenuItem>
+                                <MenuItem Header="执行效率分析 ..."/>
+                                <MenuItem Header="运行时系统资源分析 ..."/>
+                                <Separator/>
+                                <MenuItem Header="开始调试" InputGestureText="F5"/>
+                                <MenuItem Header="开始执行（不调试）" InputGestureText="Ctrl + F5"/>
+                                <Separator/>
+                                <MenuItem Header="逐语句" InputGestureText="F11"/>
+                                <MenuItem Header="跳出" InputGestureText="F13"/>
+                                <MenuItem Header="逐过程" InputGestureText="F12"/>
+                                <Separator/>
+                                <MenuItem Header="切换断点状态" InputGestureText="F9"/>
+                                <MenuItem Header="新建条件断点 ..."/>
+                                <MenuItem Header="删除文档中的所有断点" InputGestureText="Ctrl + Alt + B"/>
+                                <MenuItem Header="删除工作区内的所有断点 ..."/>
+                                <Separator/>
+                                <MenuItem Header="异常行为设置 ..."/>
+                                <Separator/>
+                                <MenuItem Header="生成工作区" InputGestureText="Ctrl + B"/>
+                                <MenuItem Header="重新生成工作区" InputGestureText="Ctrl + Shift + B"/>
+                                <MenuItem Header="打包当前工作区为工具集 ..." InputGestureText="Ctrl + Shift + P"/>
+                            </MenuItem>
+                            <MenuItem Header=" 图形(_G) " Name="mi_0_graphic" Height="24"/>
+                            <MenuItem Header=" 应用程序(_A) " Name="mi_0_application" Height="24"/>
+                            <MenuItem Header=" 拓展(_X) " Name="mi_0_extension" Height="24">
+                                <MenuItem Header="管理拓展程序和工具集 ..." InputGestureText="F9" Click="Menu_ManageExtensions"/>
+                                <MenuItem Header="管理自定义代码片段 ..." InputGestureText="Ctrl + F9"/>
+                                <Separator/>
+                                <MenuItem Header="创建 GUID ..."/>
+                                <MenuItem Header="管理外部工具 ..."/>
+                                <Separator/>
+                                <MenuItem Header="命令提示符 ..." InputGestureText="Ctrl + `"/>
+                            </MenuItem>
+                            <MenuItem Header=" 布局(_L) " Name="mi_0_layout" Height="24">
+                                <MenuItem Header="关闭所有选项卡" InputGestureText="Ctrl + Alt + X"/>
+                                <MenuItem Header="关闭当前选项卡" InputGestureText="Ctrl + Shift + X"/>
+                                <Separator/>
+                                <MenuItem Header="起始页"/>
+                                <MenuItem Header="窗口 ..." InputGestureText="Ctrl + W"/>
+                            </MenuItem>
+                            <MenuItem Header=" 帮助(_H) " Name="mi_0_help" Height="24">
+                                <MenuItem.Items>
+                                    <MenuItem Header="关于  Simula ..." InputGestureText="Ctrl + Alt + A" Click="Menu_About"/>
+                                    <MenuItem Header="关于  Simula 增效工具和工具集 ..." />
+                                    <MenuItem Header="获取在线帮助 ..." InputGestureText="F1"/>
+                                    <Separator/>
+                                    <MenuItem Header="法律信息 ..."/>
+                                    <MenuItem Header="向 Xornent S.I. 汇报改进计划 ..." />
+                                </MenuItem.Items>
+                            </MenuItem>
+                        </Menu.Items>
+                    </Menu>
+                </Grid>
+                <Grid DockPanel.Dock="Top" Height="25" Name="TabController" Background="{StaticResource tabPanel}">
+                    <Border BorderBrush="#b8b8b8" BorderThickness="1" ></Border>
+                    <DockPanel>
+                        <StackPanel Orientation="Horizontal" x:Name="TabContainer">
+                            <Grid>
+                                <Border TextBlock.Foreground="Black" BorderBrush="#a8a8a8" BorderThickness="1">
+                                    <Grid>
+                                        <Rectangle Fill="#BDBDBD" Width="30" Height="auto">
+                                            <Rectangle.Effect>
+                                                <DropShadowEffect Opacity="0.08" Color="Gray" BlurRadius="5" Direction="180"></DropShadowEffect>
+                                            </Rectangle.Effect>
+                                        </Rectangle>
+                                        <TextBlock Text="&#xE840;" FontFamily="Segoe MDL2 Assets" 
+                                       FontSize="12" IsHitTestVisible="False" Height="auto" TextAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+
+                            <Grid>
+                                <Border TextBlock.Foreground="Black" BorderBrush="#a8a8a8" BorderThickness="1">
+                                    <Grid>
+                                        <Rectangle Fill="#BDBDBD" Width="30" Height="auto" MouseDown="NewTab_Click">
+                                            <Rectangle.Effect>
+                                                <DropShadowEffect Opacity="0.08" Color="Gray" BlurRadius="5" Direction="180"></DropShadowEffect>
+                                            </Rectangle.Effect>
+                                        </Rectangle>
+                                        <TextBlock Text="&#xE109;" FontFamily="Segoe MDL2 Assets" 
+                                       FontSize="12" IsHitTestVisible="False" Height="auto" TextAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+
+                            <!-- XAML Mark Here represents the reserved spacing for new tabs. -->
+                            <!-- the xaml presentation will be dynamicly added by realms of logic in .xaml.cs file.
+                             and user-added tab pages can be called through NewTab_Click(sender, e) and 
+                             AddPage(page). 
+                        -->
+                        </StackPanel>
+                    </DockPanel>
+                </Grid>
+                
+                <Grid >
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="1"/>
+                        <RowDefinition Height="300" MinHeight="23"/>
+                    </Grid.RowDefinitions>
+                    <Grid x:Name="Host" Grid.Row="0"></Grid>
+                    <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch"/>
+                    <Grid x:Name="Panels" Grid.Row="2" SnapsToDevicePixels="True">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3*" MaxWidth="315"/>
+                            <ColumnDefinition Width="1"/>
+                            <ColumnDefinition Width="4*"/>
+                            <ColumnDefinition Width="1"/>
+                            <ColumnDefinition Width="3*"/>
+                        </Grid.ColumnDefinitions>
+                        <TabControl TabStripPlacement="Bottom" Grid.Column="0" MaxWidth="315">
+                            <TabControl.Items>
+                                <TabItem Header="工作区资源浏览器">
+                                    <TreeView>
+                                        <TreeView.Items>
+                                            <TreeViewItem Header="Simula 基本组件" Tag=" &#xE118;">
+                                                <TreeViewItem.Items>
+                                                    <TreeViewItem Header="Simula 应用程序和依赖项" Tag=" &#xE118;"/>
+                                                    <TreeViewItem Header="Nuget 包管理器" Tag=" &#xE118;"/>
+                                                    <TreeViewItem Header="用户界面" Tag=" &#xE118;">
+                                                        <TreeViewItem.Items>
+                                                            <TreeViewItem Header="即时命令行" Tag=" &#xE118;"/>
+                                                            <TreeViewItem Header="变量" Tag=" &#xE118;"/>
+                                                        </TreeViewItem.Items>
+                                                    </TreeViewItem>
+                                                </TreeViewItem.Items>
+                                            </TreeViewItem>
+                                            <TreeViewItem Header="可拓展性" Tag=" &#xE118;"/>
+                                        </TreeView.Items>
+                                    </TreeView>
+                                </TabItem>
+                                <TabItem Header="工具集"></TabItem>
+                                <TabItem Header="源代码管理"></TabItem>
+                            </TabControl.Items>
+                        </TabControl>
+                        <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        <TabControl TabStripPlacement="Bottom" Grid.Column="2" >
+                            <TabControl.Items>
+                                <TabItem Header="即时命令行" x:Name="panelPrompt">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="auto"/>
+                                        </Grid.RowDefinitions>
+                                        <script:SimulaTextEditor x:Name="editor_console" Grid.Row="0" Text="" SyntaxHighlighting="Simula" FontFamily="Consolas, Simsun" FontSize="13"/>
+                                        <script:SimulaTextEditor x:Name="editor_consoleInput" Grid.Row="1" Text="" SyntaxHighlighting="Simula" FontFamily="Consolas, Simsun" FontSize="13" ShowLineNumbers="True" MaxHeight="200"/>
+                                    </Grid>
+                                </TabItem>
+                                <TabItem Header="版式"></TabItem>
+                            </TabControl.Items>
+                        </TabControl>
+                        <GridSplitter Grid.Column="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        <TabControl TabStripPlacement="Bottom" Grid.Column="4">
+                            <TabControl.Items>
+                                <TabItem Header="变量">
+                                    <script:SimulaTextEditor x:Name="editor_languageService" Grid.Row="0" Text="" SyntaxHighlighting="Simula" FontFamily="Consolas, Simsun" FontSize="13"/>
+                                </TabItem>
+                                <TabItem Header="属性"></TabItem>
+                                <TabItem Header="代码分析器"></TabItem>
+                                <TabItem Header="书签和断点"></TabItem>
+                            </TabControl.Items>
+                        </TabControl>
+                        <Grid.Effect>
+                            <DropShadowEffect BlurRadius="8" Opacity="0.3" ShadowDepth="-30" />
+                        </Grid.Effect>
+                    </Grid>
+                </Grid>
+            </DockPanel>
+
+            <Popup Name="popDialogHost" AllowsTransparency="True" StaysOpen="False" PopupAnimation="Fade"  
+               Placement="Absolute" VerticalAlignment="Center"
+               VerticalOffset="90" Height="100" Margin="1,0,-1,0">
+                <Grid Name="popDialogGrid" Width="440" Height="520">
+                    <Rectangle Name="popRectangle" Fill="#f8f8f8" Width="400" Height="500" Margin="20 0 20 20">
+                        <Rectangle.Effect>
+                            <DropShadowEffect Color="Black" Opacity="0.18" BlurRadius="20"></DropShadowEffect>
+                        </Rectangle.Effect>
+                    </Rectangle>
+                </Grid>
+            </Popup>
+        </Grid>
+
+        <Grid x:Name="InstallMainGrid" Visibility="Hidden">
+            <DockPanel>
+                <Grid DockPanel.Dock="Top" Height="32" Name="InstallWindowController"  MouseLeftButtonDown="Window_Drag">
+                    <Rectangle Width="auto" Height="auto" Fill="{StaticResource headerPanel}">
+                        <Rectangle.Effect>
+                            <DropShadowEffect Opacity="0.15" Direction="-90" BlurRadius="5" ShadowDepth="3"/>
+                        </Rectangle.Effect>
+                    </Rectangle>
+                    <DockPanel>
+                        <StackPanel Width="65" DockPanel.Dock="Left" Orientation="Horizontal">
+                            <Button Content="&#xE00E;" FontFamily="Segoe MDL2 Assets" Width="25" FontSize="13" Margin="4"></Button>
+                            <Button Content="&#xE00F;" FontFamily="Segoe MDL2 Assets" Width="25" FontSize="13" Margin="0 5 5 5"></Button>
+                        </StackPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Grid Width="46" Height="30" Margin="0 0 0 4" VerticalAlignment="Center">
+                                <Rectangle Width="46" Margin="0 0 0 0" Fill="Transparent" MouseDown="Application_Minimize">
+                                    <Rectangle.Triggers>
+                                        <EventTrigger RoutedEvent="MouseEnter">
+                                            <EventTrigger.Actions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <ColorAnimation From="Transparent" To="LightGray" Duration="0:0:0.15" Storyboard.TargetProperty="(Rectangle.Fill).(SolidColorBrush.Color)"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger.Actions>
+                                        </EventTrigger>
+                                        <EventTrigger RoutedEvent="MouseLeave">
+                                            <EventTrigger.Actions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <ColorAnimation From="LightGray" To="Transparent" Duration="0:0:0.15" Storyboard.TargetProperty="(Rectangle.Fill).(SolidColorBrush.Color)"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger.Actions>
+                                        </EventTrigger>
+                                    </Rectangle.Triggers>
+                                </Rectangle>
+                                <TextBlock Text="&#xE108;" FontFamily="Segoe MDL2 Assets" 
+                                       FontSize="9.5" IsHitTestVisible="False" Height="auto" TextAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                            </Grid>
+                            <Grid Width="46" Height="30" Margin="0 0 0 4" VerticalAlignment="Center">
+                                <Rectangle Width="46" Margin="0 0 0 0" Fill="Transparent" MouseDown="Application_Close">
+                                    <Rectangle.Triggers>
+                                        <EventTrigger RoutedEvent="MouseEnter">
+                                            <EventTrigger.Actions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <ColorAnimation From="Transparent" To="Red" Duration="0:0:0.15" Storyboard.TargetProperty="(Rectangle.Fill).(SolidColorBrush.Color)"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger.Actions>
+                                        </EventTrigger>
+                                        <EventTrigger RoutedEvent="MouseLeave">
+                                            <EventTrigger.Actions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <ColorAnimation From="Red" To="Transparent" Duration="0:0:0.15" Storyboard.TargetProperty="(Rectangle.Fill).(SolidColorBrush.Color)"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger.Actions>
+                                        </EventTrigger>
+                                    </Rectangle.Triggers>
+                                </Rectangle>
+                                <TextBlock Text="&#xE106;" FontFamily="Segoe MDL2 Assets" 
+                                       FontSize="9.5" IsHitTestVisible="False" Height="auto" TextAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                            </Grid>
+                        </StackPanel>
+                        <Menu Margin="2,0,0,0" Width="170" FontWeight="Bold">
+                            <Menu.Items>
+                                <Grid Width="20" Height="20" Margin="-5,0,0,0">
+                                    <Image Source="pack://siteoforigin:,,,/app.icon.ico"/>
+                                </Grid>
+                                <MenuItem Header="安装程序(_I)" Margin="4,4,0,4">
+                                    <MenuItem Header="检查更新 ..."/>
+                                    <MenuItem Header="选择更新和更改的组件 ..."/>
+                                    <MenuItem Header="API 兼容性报告 ..."/>
+                                </MenuItem>
+                                <MenuItem Header="网络(_N)" Margin="4,4,0,4">
+                                    <MenuItem Header="诊断网络 ..."/>
+                                    <MenuItem Header="更新行为选项 ..."/>
+                                </MenuItem>
+                            </Menu.Items>
+                        </Menu>
+                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Height="38">
+                            <!-- Central Area -->
+                        </Grid>
+                    </DockPanel>
+                </Grid>
+
+                <Grid x:Name="InstallerHost" TextElement.FontFamily="PingFang SC">
+                    <Grid x:Name="step_1" Visibility="Hidden">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:Load Size="0.25" Width="75" Height="75" Margin="-90,-95,0,0"/>
+                                    <Label Content="正在检查更新版本的 Simula" FontFamily="PingFang SC" FontWeight="Light" Margin="45,0,0,0" FontSize="25" VerticalContentAlignment="Center" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                    <Grid x:Name="step_2" Visibility="Hidden">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Label Content="检查需要更新安装的组件" FontFamily="PingFang SC" FontWeight="Light" Margin="0,0,0,0" FontSize="25" VerticalContentAlignment="Center" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <ScrollViewer Width="700" Height="380"/>
+                                <Grid>
+                                    <WrapPanel HorizontalAlignment="Right" Margin="6">
+                                        <Button Margin="6 2 6 2" Padding="10 4 10 4" Content="返回上一步"/>
+                                        <Button  Margin="6 2 6 2" Padding="10 4 10 4"  Content="下一步"/>
+                                    </WrapPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                    <Grid x:Name="step_3" Visibility="Hidden">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Label Content="API 兼容性报告" FontFamily="PingFang SC" FontWeight="Light" Margin="0,0,0,0" FontSize="25" VerticalContentAlignment="Center" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <ScrollViewer Width="700" Height="380"/>
+                                <Grid>
+                                    <WrapPanel HorizontalAlignment="Right" Margin="6">
+                                        <Button Margin="6 2 6 2" Padding="10 4 10 4" Content="返回上一步"/>
+                                        <Button  Margin="6 2 6 2" Padding="10 4 10 4"  Content="下一步"/>
+                                    </WrapPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                    <Grid x:Name="step_4" Visibility="Visible">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Label Content="正在更新安装" FontFamily="PingFang SC" FontWeight="Light" Margin="0,0,0,0" FontSize="25" VerticalContentAlignment="Center" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <ScrollViewer Width="700" Height="380" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Vertical" Width="450" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Label Content="正在下载包： Xornent Prerequisites ..."/>
+                                        <ProgressBar Height="8" Value="3" Width="440"/>
+
+                                        <Grid Height="5"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Content=" &#xe814;" FontSize="16" Foreground="Orange" FontFamily="Segoe MDL2 Assets"/>
+                                            <TextBlock TextWrapping="Wrap" Width="410" Margin="5" Text="在下载过程中需要持续的互联网连接，你应当保持设备处在联网状态." Foreground="OrangeRed" Height="16"/>
+                                        </StackPanel>
+                                        <Grid Height="20"/>
+                                        <Label Content="正在创建系统还原点 ..."/>
+                                        <ProgressBar Height="8" Value="1" Width="440"/>
+                                        <Grid Height="50"/>
+                                    </StackPanel>
+                                </ScrollViewer>
+                                <Grid>
+                                    <WrapPanel HorizontalAlignment="Right" Margin="6">
+                                        <Button Margin="6 2 6 2" Padding="10 4 10 4" Content="取消安装程序"/>
+                                    </WrapPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </DockPanel>
+
+        </Grid>
+    </Grid>
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CornerRadius="0"
+                      GlassFrameThickness="1"
+                      UseAeroCaptionButtons="False"
+                      NonClientFrameEdges="None"
+                      CaptionHeight="1"/>
+    </WindowChrome.WindowChrome>
+
+</Window>

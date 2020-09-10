@@ -1,0 +1,10 @@
+G:\Github\source\xornent\projects\simula\Simula.Scripting\obj\Debug\netcoreapp3.1\Simula.Scripting.csprojAssemblyReference.cache
+G:\Github\source\xornent\projects\simula\Simula.Scripting\obj\Debug\netcoreapp3.1\Simula.Scripting.AssemblyInfoInputs.cache
+G:\Github\source\xornent\projects\simula\Simula.Scripting\obj\Debug\netcoreapp3.1\Simula.Scripting.AssemblyInfo.cs
+G:\Github\source\xornent\projects\simula\Simula.Scripting\obj\Debug\netcoreapp3.1\Simula.Scripting.dll
+G:\Github\source\xornent\projects\simula\Simula.Scripting\obj\Debug\netcoreapp3.1\Simula.Scripting.pdb
+G:\bin\Debug\netcoreapp3.1\Simula.Scripting.deps.json
+G:\bin\Debug\netcoreapp3.1\Simula.Scripting.dll
+G:\bin\Debug\netcoreapp3.1\Simula.Scripting.pdb
+G:\Github\source\xornent\projects\simula\Simula.Scripting\obj\Debug\netcoreapp3.1\Simula.Scripting.csproj.CopyComplete
+G:\Github\source\xornent\projects\simula\Simula.Scripting\obj\Debug\netcoreapp3.1\Simula.Scripting.csproj.CoreCompileInputs.cache

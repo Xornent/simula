@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Data\DefaultTexFont.xml" />
+    <None Remove="Data\GlueSettings.xml" />
+    <None Remove="Data\PredefinedColors.xml" />
+    <None Remove="Data\PredefinedTexFormulas.xml" />
+    <None Remove="Data\TexFormulaSettings.xml" />
+    <None Remove="Data\TexSymbols.xml" />
+    <None Remove="Fonts\cmex10.ttf" />
+    <None Remove="Fonts\cmmi10.ttf" />
+    <None Remove="Fonts\cmr10.ttf" />
+    <None Remove="Fonts\cmsy10.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Data\DefaultTexFont.xml" />
+    <EmbeddedResource Include="Data\GlueSettings.xml" />
+    <EmbeddedResource Include="Data\PredefinedColors.xml" />
+    <EmbeddedResource Include="Data\PredefinedTexFormulas.xml" />
+    <EmbeddedResource Include="Data\TexFormulaSettings.xml" />
+    <EmbeddedResource Include="Data\TexSymbols.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Fonts\cmex10.ttf" />
+    <Resource Include="Fonts\cmmi10.ttf" />
+    <Resource Include="Fonts\cmr10.ttf" />
+    <Resource Include="Fonts\cmsy10.ttf" />
+  </ItemGroup>
+
+</Project>

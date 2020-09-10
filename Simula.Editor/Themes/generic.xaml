@@ -1,0 +1,15 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:editing="clr-namespace:Simula.Editor.Editing">
+	<ResourceDictionary.MergedDictionaries>
+		<ResourceDictionary Source="/Simula.Editor;component/TextEditor.xaml" />
+		<ResourceDictionary Source="/Simula.Editor;component/Search/DropDownButton.xaml" />
+		<ResourceDictionary Source="/Simula.Editor;component/Search/SearchPanel.xaml" />
+		<ResourceDictionary Source="/Simula.Editor;component/CodeCompletion/CompletionList.xaml" />
+		<ResourceDictionary Source="/Simula.Editor;component/CodeCompletion/InsightWindow.xaml" />
+	</ResourceDictionary.MergedDictionaries>
+
+	<Style TargetType="{x:Type editing:LineNumberMargin}">
+		<Setter Property="Control.Cursor" Value="/Simula.Editor;component/themes/RightArrow.cur"/>
+	</Style>
+</ResourceDictionary>
