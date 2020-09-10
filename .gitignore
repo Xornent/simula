@@ -1,0 +1,17 @@
+
+# the git ignore file of the project.
+
+# *  all program output should be ignored (in bin/ and obj/ folders).
+# *  all runtime folders should be created by the application during
+#    during runtime if they are not exist. 
+# *  application icons can be preserved for design-time use.
+
+bin/
+bin/*
+obj/
+obj/*
+
+!/simula/bin/debug/netcoreapp3.1/app.icon.64.png
+!/simula/bin/debug/netcoreapp3.1/app.icon.128.png
+!/simula/bin/debug/netcoreapp3.1/app.icon.256.png
+!/simula/bin/debug/netcoreapp3.1/app.icon.ico

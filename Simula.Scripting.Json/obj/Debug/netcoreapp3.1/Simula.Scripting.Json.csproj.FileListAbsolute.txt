@@ -1,9 +1,0 @@
-G:\Github\source\xornent\projects\simula\Simula.Scripting.Json\obj\Debug\netcoreapp3.1\Simula.Scripting.Json.csprojAssemblyReference.cache
-G:\Github\source\xornent\projects\simula\Simula.Scripting.Json\obj\Debug\netcoreapp3.1\Simula.Scripting.Json.AssemblyInfoInputs.cache
-G:\Github\source\xornent\projects\simula\Simula.Scripting.Json\obj\Debug\netcoreapp3.1\Simula.Scripting.Json.AssemblyInfo.cs
-G:\Github\source\xornent\projects\simula\Simula.Scripting.Json\obj\Debug\netcoreapp3.1\Simula.Scripting.Json.csproj.CoreCompileInputs.cache
-G:\Github\source\xornent\projects\simula\Simula.Scripting.Json\bin\Debug\netcoreapp3.1\Simula.Scripting.Json.deps.json
-G:\Github\source\xornent\projects\simula\Simula.Scripting.Json\bin\Debug\netcoreapp3.1\Simula.Scripting.Json.dll
-G:\Github\source\xornent\projects\simula\Simula.Scripting.Json\bin\Debug\netcoreapp3.1\Simula.Scripting.Json.pdb
-G:\Github\source\xornent\projects\simula\Simula.Scripting.Json\obj\Debug\netcoreapp3.1\Simula.Scripting.Json.dll
-G:\Github\source\xornent\projects\simula\Simula.Scripting.Json\obj\Debug\netcoreapp3.1\Simula.Scripting.Json.pdb
