@@ -29,16 +29,33 @@ namespace Simula.Scripting.Compilation {
         // a = dimension<1>()            | Dimension                     | Instance
         // simula                        | 这是 C# 的命名空间            | Module
 
-        // 已编译的对象
-
-        public Dictionary<string, Reflection.Variable> Variables = new Dictionary<string, Reflection.Variable>();
-
-        // 动态的对象
-
-        public Dictionary<string, Reflection.AbstractClass> Classes = new Dictionary<string, Reflection.AbstractClass>();
         public Dictionary<string, Reflection.Module> Modules = new Dictionary<string, Reflection.Module>();
-        public Dictionary<string, Reflection.Function> Functions = new Dictionary<string, Reflection.Function>();
-        public Dictionary<string, Reflection.IdentityClass> IdentityClasses = new Dictionary<string, Reflection.IdentityClass>();
-        public Dictionary<string, Reflection.Instance> Instances = new Dictionary<string, Reflection.Instance>();
+
+        public Stack<TemperaryContext> CallStack = new Stack<TemperaryContext>();
+
+        // 在此处, 或者是任意一个返回值的 Statement 中, 返回的值是 dynamic? . 即如果遇到所有的异常, 
+        // 统一返回 C# 中定义的 null 值. 反之, 则返回如下类型中的一种:
+
+        // 1.  Reflection.AbstractClass 如果对象是一个未编译的抽象类
+        // 2.  Reflection.IdentityClass 如果对象是一个未编译的特化类
+        // 3.  Reflection.Instance 如果对象是一个未编译的实例
+        // 4.  Reflection.Module 如果对象是一个模块或子模块
+        // 5.  Reflection.Variable 如果对象是一个已编译的命名语言内对象(包括抽象类, 函数, 和基础类型)
+        // 6.  Type.Var 如果对象是匿名语言内对象
+
+        public dynamic? GetMember(string name) {
+
+            // 因为这个函数返回可调用的对象, 所以我们断言它一定是命名对象, 而不是匿名对象.
+            // 我们在运算符嵌套中会使用匿名对象.
+
+            // 先从调用栈的顶层(如果有)寻找对象.
+
+            if (CallStack.Count > 0) {
+                var current = CallStack.Peek();
+                if (current.Classes.ContainsKey(name)) return current.Classes[name];
+            }
+
+            return null;
+        }
     }
 }

@@ -22,5 +22,9 @@ namespace Simula.Scripting.Syntax {
         public virtual void Parse(Token.TokenCollection sentence) {
             return;
         }
+
+        public virtual dynamic? Operate(Compilation.RuntimeContext ctx) {
+            return null;
+        }
     }
 }

@@ -25,6 +25,10 @@ namespace Simula.Scripting.Syntax {
             if(sentence.Count%2 != 0) {
                 sentence.Last().Error = new Token.TokenizerException("SS0006");
             }
+
+            this.FullName = fullName;
         }
+
+        public string FullName = "";
     }
 }

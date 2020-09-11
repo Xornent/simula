@@ -22,6 +22,9 @@ namespace Simula.Scripting.Syntax {
                     else sentence[i].Error = new Token.TokenizerException("SS0004");
                 }
             }
+            this.FullName = fullName;
         }
+
+        public string FullName = "";
     }
 }

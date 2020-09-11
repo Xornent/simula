@@ -22,20 +22,20 @@ namespace Simula.Scripting.Syntax {
     }
 
     public class DefinitionBlock : BlockStatement {
-        DefinitionType Type;
-        Visibility Visibility = Visibility.Hidden;
+        public DefinitionType Type;
+        public Visibility Visibility = Visibility.Hidden;
 
-        Token.Token? FunctionName;
-        List<Parameter> FunctionParameters = new List<Parameter>();
-        EvaluationStatement? FunctionAlias;
+        public Token.Token? FunctionName;
+        public List<Parameter> FunctionParameters = new List<Parameter>();
+        public EvaluationStatement? FunctionAlias;
 
-        Token.Token? ClassName;
-        List<Parameter> ClassParameters = new List<Parameter>();
-        EvaluationStatement? ClassInheritage;
-        EvaluationStatement? ClassAlias;
+        public Token.Token? ClassName;
+        public List<Parameter> ClassParameters = new List<Parameter>();
+        public EvaluationStatement? ClassInheritage;
+        public EvaluationStatement? ClassAlias;
 
-        Token.Token? ConstantName;
-        EvaluationStatement? ConstantValue;
+        public Token.Token? ConstantName;
+        public EvaluationStatement? ConstantValue;
 
         public new void Parse(TokenCollection collection) {
                 if (collection[0] == "expose") {
@@ -51,7 +51,7 @@ namespace Simula.Scripting.Syntax {
                                     this.Type = DefinitionType.Class;
                                     collection.RemoveRange(0, 3);
                                     break;
-                                case "const":
+                                case "var":
                                     this.Type = DefinitionType.Constant;
                                     collection.RemoveRange(0, 3);
                                     break;
@@ -68,7 +68,7 @@ namespace Simula.Scripting.Syntax {
                             this.Type = DefinitionType.Class;
                             collection.RemoveRange(0, 2);
                             break;
-                        case "const":
+                        case "var":
                             this.Type = DefinitionType.Constant;
                             collection.RemoveRange(0, 2);
                             break;
@@ -89,7 +89,7 @@ namespace Simula.Scripting.Syntax {
                                     this.Type = DefinitionType.Class;
                                     collection.RemoveRange(0, 3);
                                     break;
-                                case "const":
+                                case "var":
                                     this.Type = DefinitionType.Constant;
                                     collection.RemoveRange(0, 3);
                                     break;
@@ -106,7 +106,7 @@ namespace Simula.Scripting.Syntax {
                             this.Type = DefinitionType.Class;
                             collection.RemoveRange(0, 2);
                             break;
-                        case "const":
+                        case "var":
                             this.Type = DefinitionType.Constant;
                             collection.RemoveRange(0, 2);
                             break;
@@ -125,7 +125,7 @@ namespace Simula.Scripting.Syntax {
                             this.Type = DefinitionType.Class;
                             collection.RemoveRange(0, 2);
                             break;
-                        case "const":
+                        case "var":
                             this.Type = DefinitionType.Constant;
                             collection.RemoveRange(0, 2);
                             break;
@@ -234,7 +234,14 @@ namespace Simula.Scripting.Syntax {
                 return null.d
             end
 
-            def const loc = 0
+            ' def const loc = 0
+            ' in primary versions of simula script language [<=0.4], the
+            ' keyword reserved for defining global variables is 'const', and
+            ' we change it to 'var' for disambigution purposes.
+            
+            ' however, in c-sharp program we keep the enum value DefinitionType.Constant.
+
+            def var loc = 0
 
             hidden def func fuck(dimension<56> h)
                 (math.pi**3)/(5 % (ico/k**2))
