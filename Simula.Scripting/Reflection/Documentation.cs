@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Simula.Scripting.Reflection {
 
-    public class Documentation {
+    public class Documentation : Base {
         public List<string> Content = new List<string>();
     }
 }

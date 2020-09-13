@@ -38,6 +38,16 @@ namespace Simula {
         }
 
         private void HandleConsoleEditorTextChanged(object sender, EventArgs e) {
+            Scripting.Compilation.RuntimeContext ctx = new Scripting.Compilation.RuntimeContext();
+
+            Scripting.Compilation.LibraryCompilationUnit lib = new Scripting.Compilation.LibraryCompilationUnit(
+                Environment.CurrentDirectory + @"\simula.scripting.dll", System.IO.FileMode.Open);
+            lib.Register(ctx);
+
+            Scripting.Compilation.SourceCompilationUnit src = new Scripting.Compilation.SourceCompilationUnit(editor_console.Text);
+            src.Register(ctx);
+
+            src.Run(ctx);
         }
 
         private void Window_StateChanged(object sender, EventArgs e) {

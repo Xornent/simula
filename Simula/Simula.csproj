@@ -14,21 +14,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SharpDX" Version="4.2.0" />
-    <PackageReference Include="SharpDX.D3DCompiler" Version="4.2.0" />
-    <PackageReference Include="SharpDX.Direct2D1" Version="4.2.0" />
-    <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0" />
-    <PackageReference Include="SharpDX.Direct3D9" Version="4.2.0" />
-    <PackageReference Include="SharpDX.DXGI" Version="4.2.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Simula.Editor\Simula.Editor.csproj" />
     <ProjectReference Include="..\Simula.Scripting.Packaging\Simula.Scripting.Packaging.csproj" />
     <ProjectReference Include="..\Simula.Scripting\Simula.Scripting.csproj" />
     <ProjectReference Include="..\Simula.TeX\Simula.TeX.csproj" />
   </ItemGroup>
-
 
   <ItemGroup>
     <EmbeddedResource Update="Properties\Resources.resx">

@@ -370,7 +370,7 @@
        TargetType="{x:Type Menu}">
             <Setter Property="OverridesDefaultStyle"
           Value="True" />
-            <Setter Property="FontFamily" Value="PingFang SC"/>
+            <Setter Property="FontFamily" Value=" Segoe UI, Consolas, Simsun"/>
             <Setter Property="SnapsToDevicePixels"
           Value="True" />
             <Setter Property="Template">
@@ -667,7 +667,7 @@
                     <TextBlock x:Name="InputGestureText"
                  Grid.Column="2"
                  Text="{TemplateBinding InputGestureText}"
-                  Margin="16,2,2,2" FontFamily="Consolas" FontWeight="Bold"
+                  Margin="16,2,2,2" FontFamily="Consolas"
                  DockPanel.Dock="Right" />
                 </Grid>
             </Border>
@@ -758,7 +758,7 @@
                     <TextBlock x:Name="InputGestureText"
                  Grid.Column="2"
                  Text="{TemplateBinding InputGestureText}"
-                 Margin="16,0,2,2" FontFamily="Consolas" FontWeight="Bold"
+                 Margin="16,0,2,2" FontFamily="Consolas"
                  DockPanel.Dock="Right" />
                     <Path Grid.Column="3"
             HorizontalAlignment="Center"
@@ -888,7 +888,7 @@
           Value="True" />
             <Setter Property="SnapsToDevicePixels"
           Value="True" />
-            <Setter Property="FontFamily" Value="PingFang SC"/>
+            <Setter Property="FontFamily" Value="Segoe UI, Consolas, Simsun"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type TabControl}">
@@ -988,6 +988,7 @@
                                     <DropShadowEffect x:Name="itemDropShadow" Opacity="0" ShadowDepth="4" BlurRadius="8"/>
                                 </Border.Effect>
                                 <ContentPresenter x:Name="ContentSite"
+                                                  SnapsToDevicePixels="True"
                               VerticalAlignment="Center"
                               HorizontalAlignment="Center"
                               ContentSource="Header"
@@ -1141,7 +1142,7 @@
             <Setter Property="Padding" Value="0,0,0,0" />
             <Setter Property="Foreground" Value="Black" />
             <Setter Property="FocusVisualStyle" Value="{StaticResource TreeViewItemFocusVisual}" />
-            <Setter Property="FontFamily" Value="PingFang SC"/>
+            <Setter Property="FontFamily" Value="Segoe UI, Consolas, Simsun"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type TreeViewItem}">

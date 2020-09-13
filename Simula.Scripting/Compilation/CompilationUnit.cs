@@ -79,10 +79,49 @@ namespace Simula.Scripting.Compilation {
                 }
             }
 
+            TemperaryContext tempCtx = new TemperaryContext();
+            foreach (var item in classes) {
+                if (tempCtx.Classes.ContainsKey(item.Name)) {
+                    item.Conflict = tempCtx.Classes[item.Name];
+                    tempCtx.Classes[item.Name] = item;
+                } else tempCtx.Classes.Add(item.Name, item);
+            }
+
+            foreach (var item in identityClasses) {
+                if (tempCtx.IdentityClasses.ContainsKey(item.Name)) {
+                    item.Conflict = tempCtx.IdentityClasses[item.Name];
+                    tempCtx.IdentityClasses[item.Name] = item;
+                } else tempCtx.IdentityClasses.Add(item.Name, item);
+            }
+
+            foreach (var item in instances) {
+                if (tempCtx.Instances.ContainsKey(item.Name)) {
+                    item.Conflict = tempCtx.Instances[item.Name];
+                    tempCtx.Instances[item.Name] = item;
+                } else tempCtx.Instances.Add(item.Name, item);
+            }
+
+            foreach (var item in variables) {
+                if (tempCtx.Variables.ContainsKey(item.Name)) {
+                    item.Conflict = tempCtx.Variables[item.Name];
+                    tempCtx.Variables[item.Name] = item;
+                } else tempCtx.Variables.Add(item.Name, item);
+            }
+
+            foreach (var item in functions) {
+                if (tempCtx.Functions.ContainsKey(item.Name)) {
+                    item.Conflict = tempCtx.Functions[item.Name];
+                    tempCtx.Functions[item.Name] = item;
+                } else tempCtx.Functions.Add(item.Name, item);
+            }
+
+            ctx.CallStack.Push(tempCtx);
+
             string module = "";
             if (!string.IsNullOrEmpty(mod)) module = (string)mod;
 
             foreach (var item in block.Children) {
+
                 // 值得注意的是, 一个注册进模块中的变量只能是声明通用的变量, 即一个 class (AbstractClass)
                 // 类型只能由 def class 生成, 一个 func (Function) 类型只能由 def func 和 def var 生成,
                 // 类型, dimension<1> 只能由 def var 生成. 而运行时产生的局部变量在初始化类时注册进
@@ -94,7 +133,7 @@ namespace Simula.Scripting.Compilation {
 
                     switch (defs.Type) {
                         case DefinitionType.Constant:
-                            dynamic? result = defs.ConstantValue?.Result();
+                            dynamic? result = defs.ConstantValue?.Result(ctx);
                             if (result == null) break;
                             if (result is Type.Var) {
                                 Reflection.Variable varia = new Reflection.Variable();
@@ -168,9 +207,11 @@ namespace Simula.Scripting.Compilation {
                             func.Startup = defs.Children;
 
                             foreach (var par in defs.FunctionParameters) {
-                                func.Parameters.Add((par.Type?.Result() ?? new Reflection.IdentityClass(),
+                                func.Parameters.Add((par.Type?.Result(ctx) ?? new Reflection.IdentityClass(),
                                     par.Name?.Value ?? ""));
                             }
+
+                            Utilities.SetFunction(func.ModuleHirachy, func, ctx.Modules);
                             break;
                         case DefinitionType.Class:
                             Reflection.AbstractClass cls = new Reflection.AbstractClass();
@@ -180,18 +221,22 @@ namespace Simula.Scripting.Compilation {
                             cls.ModuleHirachy = Utilities.GetModuleHirachy(module);
                             cls.Name = defs.ClassName?.Value ?? "";
                             cls.Definition = defs;
-                            cls.Inheritage = defs.ClassInheritage?.Result();
+                            cls.Inheritage = defs.ClassInheritage?.Result(ctx);
 
                             foreach (var par in defs.ClassParameters) {
-                                cls.SubclassIdentifer.Add((par.Type?.Result() ?? new Reflection.IdentityClass(),
+                                cls.SubclassIdentifer.Add((par.Type?.Result(ctx) ?? new Reflection.IdentityClass(),
                                     par.Name?.Value ?? ""));
                             }
+
+                            Utilities.SetAbstractClass(cls.ModuleHirachy, cls, ctx.Modules);
                             break;
                         default:
                             break;
                     }
                 }
             }
+
+            ctx.CallStack.Pop();
         }
 
         public override void Register(RuntimeContext ctx) {
@@ -241,9 +286,13 @@ namespace Simula.Scripting.Compilation {
             // 从已编译的程序集中加载所有类, 筛选出所有用 ExposeAttribute 标识的类.
 
             Variables = Utilities.GetAccessableClassVariable(asm);
+            Variables.AddRange(Utilities.GetAccessableGlobalVariable(asm));
         }
 
         public override void Register(RuntimeContext ctx) {
+            if (Variables.Count == 0)
+                Generate();
+
             foreach (var item in Variables) {
                 Utilities.SetVariable(item.ModuleHirachy, item, ctx.Modules);
             }
@@ -336,6 +385,52 @@ namespace Simula.Scripting.Compilation {
                 }
             }
             return classes;
+        }
+
+        public static List<Reflection.Variable> GetAccessableGlobalVariable(Assembly asm) {
+            List<Reflection.Variable> globals = new List<Reflection.Variable>();
+            foreach (var type in asm.GetTypes()) {
+                Reflection.Markup.ExposeAttribute? expose = type.GetCustomAttribute<Reflection.Markup.ExposeAttribute>();
+                if (expose != null) {
+                    if (expose.Alias == "<global>") {
+                        var functions = type.GetMethods();
+                        var fields = type.GetFields();
+
+                        foreach (var item in functions) {
+                            expose = item.GetCustomAttribute<Reflection.Markup.ExposeAttribute>();
+                            if (item.IsStatic && expose!=null) {
+                                Reflection.Variable var = new Reflection.Variable();
+                                var.FullName = GetModuleHirachy(type.Namespace).Connect(".");
+                                if (var.FullName == "")
+                                    var.FullName += expose.Alias;
+                                else var.FullName += ("." + expose.Alias);
+                                var.Name = expose.Alias;
+                                var.Hidden = expose.ToSystemOnly;
+                                var.Object = new Type.Function(item);
+                                var.ModuleHirachy = GetModuleHirachy(type.Namespace);
+                                globals.Add(var);
+                            }
+                        }
+
+                        foreach (var item in fields) {
+                            expose = item.GetCustomAttribute<Reflection.Markup.ExposeAttribute>();
+                            if (item.IsStatic && expose != null) {
+                                Reflection.Variable var = new Reflection.Variable();
+                                var.FullName = GetModuleHirachy(type.Namespace).Connect(".");
+                                if (var.FullName == "")
+                                    var.FullName += expose.Alias;
+                                else var.FullName += ("." + expose.Alias);
+                                var.Name = expose.Alias;
+                                var.Hidden = expose.ToSystemOnly;
+                                var.Object = (Type.Var)((item.GetValue(null)) ?? Type.Global.Null);
+                                var.ModuleHirachy = GetModuleHirachy(type.Namespace);
+                                globals.Add(var);
+                            }
+                        }
+                    }
+                }
+            }
+            return globals;
         }
 
         public static void SetVariable(List<string> module, Reflection.Variable variable, Dictionary<string, Reflection.Module> destinationArray) {

@@ -10,11 +10,10 @@ namespace Simula.Scripting.Type {
 
         // 这个 dynamic 对象是 Func<..., ...> 的一种子类
 
-        private dynamic? function = null;
-        public Function(dynamic f) {
+        public System.Reflection.MethodInfo? function = null;
+        public Function(System.Reflection.MethodInfo? f) {
             this.function = f;
         }
 
-        
     }
 }

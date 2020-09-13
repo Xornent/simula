@@ -34,7 +34,7 @@ namespace Simula.Scripting.Type {
 
         [Expose("_create", true)]
         public override Function _create() {
-            return new Function(new Func<String, Boolean>(_init));
+            return new Function(this.GetType().GetMethod("_init"));
         }
 
         [Expose("_init", true)]

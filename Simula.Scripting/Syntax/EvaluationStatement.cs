@@ -10,8 +10,11 @@ namespace Simula.Scripting.Syntax {
         public TokenCollection RawEvaluateToken = new TokenCollection();
         public List<OperatorStatement> EvaluateOperators = new List<OperatorStatement>();
 
-        public dynamic Result() {
-            return Type.Global.Null;
+        public dynamic Result(Compilation.RuntimeContext ctx) {
+            if (EvaluateOperators.Count > 1) return Type.Global.Null;
+            var operation = EvaluateOperators[0];
+
+            return operation.Operate(ctx);
         }
 
         string EvalString = "";

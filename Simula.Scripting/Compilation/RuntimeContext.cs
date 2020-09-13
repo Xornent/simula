@@ -33,8 +33,8 @@ namespace Simula.Scripting.Compilation {
 
         public Stack<TemperaryContext> CallStack = new Stack<TemperaryContext>();
 
-        // 在此处, 或者是任意一个返回值的 Statement 中, 返回的值是 dynamic? . 即如果遇到所有的异常, 
-        // 统一返回 C# 中定义的 null 值. 反之, 则返回如下类型中的一种:
+        // 在此处, 或者是任意一个返回值的 Statement 中, 返回的值是 dynamic . 即如果遇到所有的异常, 
+        // 统一返回 Null. 反之, 则返回如下类型中的一种:
 
         // 1.  Reflection.AbstractClass 如果对象是一个未编译的抽象类
         // 2.  Reflection.IdentityClass 如果对象是一个未编译的特化类
@@ -43,7 +43,7 @@ namespace Simula.Scripting.Compilation {
         // 5.  Reflection.Variable 如果对象是一个已编译的命名语言内对象(包括抽象类, 函数, 和基础类型)
         // 6.  Type.Var 如果对象是匿名语言内对象
 
-        public dynamic? GetMember(string name) {
+        public dynamic GetMember(string name) {
 
             // 因为这个函数返回可调用的对象, 所以我们断言它一定是命名对象, 而不是匿名对象.
             // 我们在运算符嵌套中会使用匿名对象.
@@ -53,9 +53,28 @@ namespace Simula.Scripting.Compilation {
             if (CallStack.Count > 0) {
                 var current = CallStack.Peek();
                 if (current.Classes.ContainsKey(name)) return current.Classes[name];
+                if (current.Functions.ContainsKey(name)) return current.Functions[name];
+                if (current.IdentityClasses.ContainsKey(name)) return current.IdentityClasses[name];
+                if (current.Instances.ContainsKey(name)) return current.Instances[name];
+                if (current.SubModules.ContainsKey(name)) return current.SubModules[name];
+                if (current.Variables.ContainsKey(name)) return current.Variables[name];
             }
 
-            return null;
+            // 在全局寻找(顶层)对象
+
+            if (this.Modules.ContainsKey(name)) return this.Modules[name];
+
+            if (this.Modules.ContainsKey("")) {
+                var mod = this.Modules[""];
+                if (mod.Classes.ContainsKey(name)) return mod.Classes[name];
+                if (mod.Functions.ContainsKey(name)) return mod.Functions[name];
+                if (mod.IdentityClasses.ContainsKey(name)) return mod.IdentityClasses[name];
+                if (mod.Instances.ContainsKey(name)) return mod.Instances[name];
+                if (mod.SubModules.ContainsKey(name)) return mod.Instances[name];
+                if (mod.Variables.ContainsKey(name)) return mod.Variables[name];
+            }
+
+            return Type.Global.Null;
         }
     }
 }

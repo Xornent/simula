@@ -7,9 +7,6 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="DirectX\HandleRenderTarget.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
     <Compile Update="Pages\About.xaml.cs">
       <SubType>Code</SubType>
     </Compile>

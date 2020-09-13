@@ -18,15 +18,14 @@ namespace Simula.Scripting.Type {
     // 10. 布尔逻辑运算符 (_or, _and)
     // 11. 位逻辑运算符 (_bitor, _bitand, _bitnot)
 
-    public abstract class Var {
+    public abstract class Var : Reflection.CompiledBase {
         public virtual Function _create() {
-            return new Function(new Func<_Null>(_init));
+            return new Function(this.GetType().GetMethod("_init"));
         }
 
         public virtual _Null _init() {
             return Null;
         }
-
     }
 
     public class _Null : Var {

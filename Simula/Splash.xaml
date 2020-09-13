@@ -4,20 +4,20 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Simula"
-        FontFamily="PingFang SC" WindowStartupLocation="CenterScreen"
-        mc:Ignorable="d"
-        Title="Splash" Height="300" Width="600">
+        FontFamily="consolas, simsun" WindowStartupLocation="CenterScreen"
+        mc:Ignorable="d" Icon="pack://siteoforigin:,,,/app.icon.ico" 
+        Title="Simula" Height="300" Width="600">
     <Canvas>
         <Image Canvas.Left="-20" Canvas.Top="60" Source="pack://siteoforigin:,,,/app.icon.256.png" Width="256" Height="256"/>
-        <Label Canvas.Left="350" Canvas.Top="80" FontWeight="Light" Content="Simula" FontSize="70"/>
-        <Label Canvas.Left="485" Canvas.Top="20" FontWeight="Bold" Content="0.1.0 α" Foreground="OrangeRed" FontSize="20"/>
-        <Grid Width="260" Canvas.Left="300" Canvas.Top="180" Height="75">
+        <Label Canvas.Left="318" Canvas.Top="77" Content="Simula" FontFamily="segoe ui, simsun" FontWeight="Black" FontSize="70"/>
+        <Label Canvas.Left="485" Canvas.Top="20" FontWeight="Black" Content="0.1.0 α" FontFamily="segoe ui, simsun" Foreground="OrangeRed" FontSize="20"/>
+        <Grid Width="290" Canvas.Left="270" Canvas.Top="180" Height="90">
             <StackPanel Orientation="Vertical">
                 <TextBlock TextAlignment="Right" Text="正在加载 Simula 脚本基础类 ..." Foreground="Gray"/>
-                <Grid Height="10"/>
-                <TextBlock TextAlignment="Right" Text="版权所有 © Xornent S.I. 2016 - 2020." FontSize="11"/>
-                <Grid Height="3"/>
-                <TextBlock TextAlignment="Right" Foreground="Gray" Text="本软件的副本是免费发放的, 你应该可以在正规渠道获取合法的发行版本只要你愿意遵守列出的协议: SPL" LineHeight="1" TextWrapping="Wrap" FontSize="11"/>
+                <Grid Height="14"/>
+                <TextBlock TextAlignment="Right" Text="版权所有 © Xornent S.I. 2016 - 2020." FontSize="12"/>
+                <Grid Height="6"/>
+                <TextBlock TextAlignment="Right" Foreground="Gray" Text="本软件的副本是免费发放的, 你应该可以在正规渠道获取合法的发行版本只要你愿意遵守列出的协议: SPL" LineHeight="18" TextWrapping="Wrap" FontSize="12"/>
             </StackPanel>
         </Grid>
         <Label Visibility="Hidden" Canvas.Left="370" Canvas.Top="14" FontWeight="UltraLight" Content="Extended" Foreground="OrangeRed" FontSize="25"/>

@@ -200,10 +200,10 @@ namespace Simula.Scripting.Syntax {
 
         private void ParseAbsoluteClassName(TokenCollection collection) {
             this.ClassName = collection[0];
-            if (collection[1] == "<>") { } else {
+            if (collection[1] == "{}") { } else {
                 TokenCollection tk = new TokenCollection();
                 for (int i = 2; i < collection.Count; i++) {
-                    if (collection[i] == ">") break;
+                    if (collection[i] == "}") break;
                     else tk.Add(collection[i]);
                 }
 
@@ -220,37 +220,6 @@ namespace Simula.Scripting.Syntax {
                 }
             }
         }
-
-        /*
-        use simula.typing
-        use simula.math
-        use simula.symbolics
-
-        module simula.dynamics
-
-        expose def class force<digit dimx, digit dimy> : inferor<>
-            expose def func iot(digit i, digit c)
-                k = (i + c) **3
-                return null.d
-            end
-
-            ' def const loc = 0
-            ' in primary versions of simula script language [<=0.4], the
-            ' keyword reserved for defining global variables is 'const', and
-            ' we change it to 'var' for disambigution purposes.
-            
-            ' however, in c-sharp program we keep the enum value DefinitionType.Constant.
-
-            def var loc = 0
-
-            hidden def func fuck(dimension<56> h)
-                (math.pi**3)/(5 % (ico/k**2))
-            end
-        end
-
-        i = new force<1,1>
-        i.iot(122,233)
-        */
 
         private void ParseAbsoluteFunctionDefinition(TokenCollection collection) {
             this.FunctionName = collection[0];

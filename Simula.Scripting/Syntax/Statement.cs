@@ -23,8 +23,8 @@ namespace Simula.Scripting.Syntax {
             return;
         }
 
-        public virtual dynamic? Operate(Compilation.RuntimeContext ctx) {
-            return null;
+        public virtual dynamic Operate(Compilation.RuntimeContext ctx) {
+            return Type.Global.Null;
         }
     }
 }
