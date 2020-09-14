@@ -28,6 +28,20 @@ namespace Simula.Scripting.Type {
             return value.GetHashCode();
         }
 
+        public override string ToString() {
+            return value;
+        }
+
+        [Expose("_create", true)]
+        public Function _create() {
+            return new Function(this.GetType().GetMethod("_init"), this);
+        }
+
+        [Expose("_init", true)]
+        public String _init() {
+            return this;
+        }
+
         public String to_lower() {
             return value.ToLower();
         }

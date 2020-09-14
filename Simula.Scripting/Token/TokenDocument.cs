@@ -73,9 +73,25 @@ namespace Simula.Scripting.Token {
                 foreach (var column in line) {
                     columnnum++;
 
-                    if (token.Value.StartsWith("'")) {
+                    if (token.Value.StartsWith("\"")) {
+                        if (token.Value[token.Value.Length - 1] != '\\') {
+                            if(column == '\"') {
+                                token.Value += '\"';
+                                end = new Position(linenum, columnnum);
+                                token.Location = new Span(start, end);
+                                Tokens.Add(token);
+                                token = new Token("");
+                                start = new Position(linenum, columnnum+1);
+                            } else {
+                                token.Value += column;
+                            }
+                        } else {
+                            token.Value += column;
+                        }
+                    } else if (token.Value.StartsWith("'")) {
                         token.Value += column;
                     } else {
+
                         if (token == "(" ||
                             token == ")" ||
                             token == "[" ||
@@ -418,7 +434,7 @@ namespace Simula.Scripting.Token {
                                         start = new Position(linenum, columnnum);
                                     }
                                 } else if (token.IsValidNumberBeginning()) {
-                                    if (column.IsAlphabet()) {
+                                    if (column.IsAlphabet() || column == '\"') {
                                         end = new Position(linenum, columnnum - 1);
                                         token.Location = new Span(start, end);
                                         Tokens.Add(token);
@@ -427,7 +443,7 @@ namespace Simula.Scripting.Token {
                                     } else {
                                         token.Value += column;
                                     }
-                                } else if (token.IsValidSymbolBeginning()) {
+                                } else if (token.IsValidSymbolBeginning() || column == '\"') {
                                     end = new Position(linenum, columnnum - 1);
                                     token.Location = new Span(start, end);
                                     Tokens.Add(token);

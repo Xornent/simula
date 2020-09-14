@@ -10,7 +10,7 @@ namespace Simula.Scripting.Syntax {
         public TokenCollection RawEvaluateToken = new TokenCollection();
         public List<OperatorStatement> EvaluateOperators = new List<OperatorStatement>();
 
-        public dynamic Result(Compilation.RuntimeContext ctx) {
+        public override dynamic Operate(Compilation.RuntimeContext ctx) {
             if (EvaluateOperators.Count > 1) return Type.Global.Null;
             var operation = EvaluateOperators[0];
 
@@ -18,13 +18,13 @@ namespace Simula.Scripting.Syntax {
         }
 
         string EvalString = "";
-        public new void Parse(TokenCollection collection) {
+        public override void Parse(TokenCollection collection) {
             EvalString = collection.ToString();
 
             this.RawEvaluateToken = collection;
             this.EvaluateOperators.Clear();
             foreach (var item in RawEvaluateToken) {
-                EvaluateOperators.Add(new SelfOperation() { Self = item });
+                EvaluateOperators.Add(new SelfOperation() { Self = item, RawEvaluateToken = new TokenCollection() { item } });
             }
 
             // 运算符次序
@@ -87,7 +87,7 @@ namespace Simula.Scripting.Syntax {
             while (ReplaceSmallBracketToFunctionCall()) { }
 #endif
             while (ParseSealedOperator("[", "]", EvaluateOperators)) { }
-            while (ReplaceSmallBracketToIndex()) { }
+            while (ReplaceSquareBracketToIndex()) { }
 
             while (ParseBinocularOperator("**", EvaluateOperators)) { }
             while (ParseBinocularOperator("*", EvaluateOperators)) { }
@@ -126,7 +126,7 @@ namespace Simula.Scripting.Syntax {
                         func.Left = EvaluateOperators[c - 1];
                         func.Right = EvaluateOperators[c];
                         EvaluateOperators.RemoveRange(c - 1, 2);
-                        EvaluateOperators.Add(func);
+                        EvaluateOperators.Insert(c-1, func);
                         return true;
                     }
                 }
@@ -150,7 +150,7 @@ namespace Simula.Scripting.Syntax {
                         func.Left = EvaluateOperators[c - 1];
                         func.Right = EvaluateOperators[c];
                         EvaluateOperators.RemoveRange(c - 1, 2);
-                        EvaluateOperators.Add(func);
+                        EvaluateOperators.Insert(c-1, func);
                         return true;
                     }
                 }
@@ -158,11 +158,11 @@ namespace Simula.Scripting.Syntax {
             return false;
         }
 
-        bool ReplaceSmallBracketToIndex() {
+        bool ReplaceSquareBracketToIndex() {
             int length = EvaluateOperators.Count;
             for (int c = 0; c < length; c++) {
                 var item = EvaluateOperators[c];
-                if (item is SmallBracketOperation) {
+                if (item is SquareBracketOperation) {
                     if (c != 0) {
                         OperatorStatement op = EvaluateOperators[c - 1];
                         if (op is SelfOperation) {
@@ -174,7 +174,7 @@ namespace Simula.Scripting.Syntax {
                         func.Left = EvaluateOperators[c - 1];
                         func.Right = EvaluateOperators[c];
                         EvaluateOperators.RemoveRange(c - 1, 2);
-                        EvaluateOperators.Add(func);
+                        EvaluateOperators.Insert(c-1, func);
                         return true;
                     }
                 }
@@ -220,106 +220,74 @@ namespace Simula.Scripting.Syntax {
                                         self.Self.Error = new TokenizerException("SS0018");
                                 }
 
+                                OperatorStatement? op = null;
                                 switch (operation) {
                                     case ".":
-                                        OperatorStatement op = new MemberOperation() { Left = token[c - 1], Right = token[c + 1] };
-                                        token.RemoveRange(c - 1, 3);
-                                        token.Insert(c - 1, op);
-                                        return true;
+                                        op = new MemberOperation() { Left = token[c - 1], Right = token[c + 1] };
+                                        goto case "final";
                                     case "**":
                                         op = new PowOperation() { Left = token[c - 1], Right = token[c + 1] };
-                                        token.RemoveRange(c - 1, 3);
-                                        token.Insert(c - 1, op);
-                                        return true;
+                                        goto case "final";
                                     case "*":
                                         op = new MultiplyOperation() { Left = token[c - 1], Right = token[c + 1] };
-                                        token.RemoveRange(c - 1, 3);
-                                        token.Insert(c - 1, op);
-                                        return true;
+                                        goto case "final";
                                     case "/":
                                         op = new DivideOperation() { Left = token[c - 1], Right = token[c + 1] };
-                                        token.RemoveRange(c - 1, 3);
-                                        token.Insert(c - 1, op);
-                                        return true;
+                                        goto case "final";
                                     case "%":
                                         op = new ModOperation() { Left = token[c - 1], Right = token[c + 1] };
-                                        token.RemoveRange(c - 1, 3);
-                                        token.Insert(c - 1, op);
-                                        return true;
+                                        goto case "final";
                                     case "+":
                                         op = new AddOperation() { Left = token[c - 1], Right = token[c + 1] };
-                                        token.RemoveRange(c - 1, 3);
-                                        token.Insert(c - 1, op);
-                                        return true;
+                                        goto case "final";
                                     case "-":
                                         op = new MinusOperation() { Left = token[c - 1], Right = token[c + 1] };
-                                        token.RemoveRange(c - 1, 3);
-                                        token.Insert(c - 1, op);
-                                        return true;
+                                        goto case "final";
                                     case "<<":
                                         op = new LeftShiftOperation() { Left = token[c - 1], Right = token[c + 1] };
-                                        token.RemoveRange(c - 1, 3);
-                                        token.Insert(c - 1, op);
-                                        return true;
+                                        goto case "final";
                                     case ">>":
                                         op = new RightShiftOperation() { Left = token[c - 1], Right = token[c + 1] };
-                                        token.RemoveRange(c - 1, 3);
-                                        token.Insert(c - 1, op);
-                                        return true;
+                                        goto case "final";
                                     case "<":
                                         op = new LessThanOperation() { Left = token[c - 1], Right = token[c + 1] };
-                                        token.RemoveRange(c - 1, 3);
-                                        token.Insert(c - 1, op);
-                                        return true;
+                                        goto case "final";
                                     case ">":
                                         op = new MoreThanOperation() { Left = token[c - 1], Right = token[c + 1] };
-                                        token.RemoveRange(c - 1, 3);
-                                        token.Insert(c - 1, op);
-                                        return true;
+                                        goto case "final";
                                     case "<=":
                                         op = new NoMoreThanOperation() { Left = token[c - 1], Right = token[c + 1] };
-                                        token.RemoveRange(c - 1, 3);
-                                        token.Insert(c - 1, op);
-                                        return true;
+                                        goto case "final";
                                     case ">=":
                                         op = new NoLessThanOperation() { Left = token[c - 1], Right = token[c + 1] };
-                                        token.RemoveRange(c - 1, 3);
-                                        token.Insert(c - 1, op);
-                                        return true;
+                                        goto case "final";
                                     case "==":
                                         op = new EqualOperation() { Left = token[c - 1], Right = token[c + 1] };
-                                        token.RemoveRange(c - 1, 3);
-                                        token.Insert(c - 1, op);
-                                        return true;
+                                        goto case "final";
                                     case "!=":
                                         op = new NotEqualOperation() { Left = token[c - 1], Right = token[c + 1] };
-                                        token.RemoveRange(c - 1, 3);
-                                        token.Insert(c - 1, op);
-                                        return true;
+                                        goto case "final";
                                     case "||":
                                         op = new OrOperation() { Left = token[c - 1], Right = token[c + 1] };
-                                        token.RemoveRange(c - 1, 3);
-                                        token.Insert(c - 1, op);
-                                        return true;
+                                        goto case "final";
                                     case "&&":
                                         op = new AndOperation() { Left = token[c - 1], Right = token[c + 1] };
-                                        token.RemoveRange(c - 1, 3);
-                                        token.Insert(c - 1, op);
-                                        return true;
+                                        goto case "final";
                                     case "|":
                                         op = new BitOrOperation() { Left = token[c - 1], Right = token[c + 1] };
-                                        token.RemoveRange(c - 1, 3);
-                                        token.Insert(c - 1, op);
-                                        return true;
+                                        goto case "final";
                                     case "&":
                                         op = new BitAndOperation() { Left = token[c - 1], Right = token[c + 1] };
-                                        token.RemoveRange(c - 1, 3);
-                                        token.Insert(c - 1, op);
-                                        return true;
+                                        goto case "final";
                                     case "^":
                                         op = new BitNotOperation() { Left = token[c - 1], Right = token[c + 1] };
+                                        goto case "final";
+                                    case "final":
+                                        op.RawEvaluateToken.AddRange(token[c - 1].RawEvaluateToken);
+                                        op.RawEvaluateToken.AddRange(token[c].RawEvaluateToken);
+                                        op.RawEvaluateToken.AddRange(token[c + 1].RawEvaluateToken);
                                         token.RemoveRange(c - 1, 3);
-                                        token.Insert(c - 1, op);
+                                        token.Insert(c - 1, op ?? new OperatorStatement());
                                         return true;
                                     default:
                                         self.Self.Error = new TokenizerException("SS0001");
@@ -359,6 +327,9 @@ namespace Simula.Scripting.Syntax {
                                 if (left == "(") {
                                     SmallBracketOperation sm = new SmallBracketOperation();
                                     sm.EvaluateOperators = children;
+                                    foreach (var item in children) {
+                                        sm.RawEvaluateToken.AddRange(item.RawEvaluateToken);
+                                    }
                                     sm.Parse();
                                     token.RemoveAt(i);
                                     token.Insert(i, sm);
@@ -369,6 +340,18 @@ namespace Simula.Scripting.Syntax {
 #endif
                                     AngleBracketOperation sm = new AngleBracketOperation();
                                     sm.EvaluateOperators = children;
+                                    foreach (var item in children) {
+                                        sm.RawEvaluateToken.AddRange(item.RawEvaluateToken);
+                                    }
+                                    sm.Parse();
+                                    token.RemoveAt(i);
+                                    token.Insert(i, sm);
+                                } else if (left == "[") {
+                                    SquareBracketOperation sm = new SquareBracketOperation();
+                                    sm.EvaluateOperators = children;
+                                    foreach (var item in children) {
+                                        sm.RawEvaluateToken.AddRange(item.RawEvaluateToken);
+                                    }
                                     sm.Parse();
                                     token.RemoveAt(i);
                                     token.Insert(i, sm);

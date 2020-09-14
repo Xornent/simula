@@ -38,6 +38,7 @@ namespace Simula {
         }
 
         private void HandleConsoleEditorTextChanged(object sender, EventArgs e) {
+            
             Scripting.Compilation.RuntimeContext ctx = new Scripting.Compilation.RuntimeContext();
 
             Scripting.Compilation.LibraryCompilationUnit lib = new Scripting.Compilation.LibraryCompilationUnit(
@@ -48,6 +49,8 @@ namespace Simula {
             src.Register(ctx);
 
             src.Run(ctx);
+
+            System.Windows.MessageBox.Show("Complete");
         }
 
         private void Window_StateChanged(object sender, EventArgs e) {

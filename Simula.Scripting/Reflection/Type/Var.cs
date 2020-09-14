@@ -19,13 +19,7 @@ namespace Simula.Scripting.Type {
     // 11. 位逻辑运算符 (_bitor, _bitand, _bitnot)
 
     public abstract class Var : Reflection.CompiledBase {
-        public virtual Function _create() {
-            return new Function(this.GetType().GetMethod("_init"));
-        }
 
-        public virtual _Null _init() {
-            return Null;
-        }
     }
 
     public class _Null : Var {

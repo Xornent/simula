@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using Simula.Scripting.Reflection;
 
 namespace Simula.Scripting.Compilation {
 
@@ -70,11 +71,59 @@ namespace Simula.Scripting.Compilation {
                 if (mod.Functions.ContainsKey(name)) return mod.Functions[name];
                 if (mod.IdentityClasses.ContainsKey(name)) return mod.IdentityClasses[name];
                 if (mod.Instances.ContainsKey(name)) return mod.Instances[name];
-                if (mod.SubModules.ContainsKey(name)) return mod.Instances[name];
+                if (mod.Variables.ContainsKey(name)) return mod.Variables[name];
+                if (mod.SubModules.ContainsKey(name)) return mod.SubModules[name];
+            }
+
+            return Type.Global.Null;
+        }
+
+        public dynamic GetMemberModulePrior(string name) {
+
+            // 因为这个函数返回可调用的对象, 所以我们断言它一定是命名对象, 而不是匿名对象.
+            // 我们在运算符嵌套中会使用匿名对象.
+
+            // 先从调用栈的顶层(如果有)寻找对象.
+
+            if (CallStack.Count > 0) {
+                var current = CallStack.Peek();
+
+                if (current.SubModules.ContainsKey(name)) return current.SubModules[name];
+                if (current.Classes.ContainsKey(name)) return current.Classes[name];
+                if (current.Functions.ContainsKey(name)) return current.Functions[name];
+                if (current.IdentityClasses.ContainsKey(name)) return current.IdentityClasses[name];
+                if (current.Instances.ContainsKey(name)) return current.Instances[name];
+                if (current.Variables.ContainsKey(name)) return current.Variables[name];
+            }
+
+            // 在全局寻找(顶层)对象
+
+            if (this.Modules.ContainsKey(name)) return this.Modules[name];
+
+            if (this.Modules.ContainsKey("")) {
+                var mod = this.Modules[""];
+
+                if (mod.SubModules.ContainsKey(name)) return mod.SubModules[name];
+                if (mod.Classes.ContainsKey(name)) return mod.Classes[name];
+                if (mod.Functions.ContainsKey(name)) return mod.Functions[name];
+                if (mod.IdentityClasses.ContainsKey(name)) return mod.IdentityClasses[name];
+                if (mod.Instances.ContainsKey(name)) return mod.Instances[name];
                 if (mod.Variables.ContainsKey(name)) return mod.Variables[name];
             }
 
             return Type.Global.Null;
+        }
+
+        public void SetMember(dynamic exist, dynamic obj) {
+            if (exist is Type._Null) { } else {
+                if (exist.ModuleHirachy[0] == "<callstack>") {
+                    CallStack.Peek().SetMember(exist.Name, obj);
+                } else {
+                    Reflection.Module? module = Utilities.GetModule(exist.ModuleHirachy, this.Modules);
+                    if (module == null) return;
+                    module.SetMember(exist.Name, obj);
+                }
+            }
         }
     }
 }

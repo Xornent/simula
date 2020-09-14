@@ -16,5 +16,10 @@ namespace Simula.Scripting.Type {
 
         [Expose("null")]
         public static readonly _Null Null = new _Null();
+
+        [Expose("alert")]
+        public static void Alert(Var str) {
+            System.Windows.MessageBox.Show(str.ToString());
+        }
     }
 }

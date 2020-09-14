@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace Simula.Scripting.Syntax {
-   
-    public class SmallBracketOperation : OperatorStatement{
+
+    public class SquareBracketOperation : OperatorStatement {
+
+        // 这应该返回一个 dimension 对象. 因为它在程序中较 {} 和 () 更灵活.
+
         public override dynamic Operate(Compilation.RuntimeContext ctx) {
             List<Reflection.Base> bases = new List<Reflection.Base>();
             if (EvaluateOperators.Count == 0) return bases;

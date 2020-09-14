@@ -133,7 +133,7 @@ namespace Simula.Scripting.Compilation {
 
                     switch (defs.Type) {
                         case DefinitionType.Constant:
-                            dynamic? result = defs.ConstantValue?.Result(ctx);
+                            dynamic? result = defs.ConstantValue?.Operate(ctx);
                             if (result == null) break;
                             if (result is Type.Var) {
                                 Reflection.Variable varia = new Reflection.Variable();
@@ -207,7 +207,7 @@ namespace Simula.Scripting.Compilation {
                             func.Startup = defs.Children;
 
                             foreach (var par in defs.FunctionParameters) {
-                                func.Parameters.Add((par.Type?.Result(ctx) ?? new Reflection.IdentityClass(),
+                                func.Parameters.Add((par.Type?.Operate(ctx) ?? new Reflection.IdentityClass(),
                                     par.Name?.Value ?? ""));
                             }
 
@@ -221,10 +221,10 @@ namespace Simula.Scripting.Compilation {
                             cls.ModuleHirachy = Utilities.GetModuleHirachy(module);
                             cls.Name = defs.ClassName?.Value ?? "";
                             cls.Definition = defs;
-                            cls.Inheritage = defs.ClassInheritage?.Result(ctx);
+                            cls.Inheritage = defs.ClassInheritage?.Operate(ctx);
 
                             foreach (var par in defs.ClassParameters) {
-                                cls.SubclassIdentifer.Add((par.Type?.Result(ctx) ?? new Reflection.IdentityClass(),
+                                cls.SubclassIdentifer.Add((par.Type?.Operate(ctx) ?? new Reflection.IdentityClass(),
                                     par.Name?.Value ?? ""));
                             }
 
@@ -260,12 +260,15 @@ namespace Simula.Scripting.Compilation {
             }
 
             if (!exist) this.Register(ctx);
+
+            ctx.CallStack.Push(new TemperaryContext());
             foreach (var item in this.Body.Children) {
                 if (item is DefinitionBlock) { }
                 else {
                     item.Operate(ctx);
                 }
             }
+            ctx.CallStack.Pop();
         }
     }
 
@@ -406,7 +409,7 @@ namespace Simula.Scripting.Compilation {
                                 else var.FullName += ("." + expose.Alias);
                                 var.Name = expose.Alias;
                                 var.Hidden = expose.ToSystemOnly;
-                                var.Object = new Type.Function(item);
+                                var.Object = new Type.Function(item, null);
                                 var.ModuleHirachy = GetModuleHirachy(type.Namespace);
                                 globals.Add(var);
                             }

@@ -6,10 +6,6 @@ using System.Text;
 namespace Simula.Scripting.Reflection {
 
     public class Variable : CompiledBase {
-        public string Name = "";
-        public string FullName = "";
-        public List<string> ModuleHirachy = new List<string>();
-
         public bool Hidden = false;
         public bool Writable = true;
 
@@ -44,13 +40,17 @@ namespace Simula.Scripting.Reflection {
 
         public dynamic InvokeMember(string member, List<Base> param) {
             Type.Var? v;
-            Variable va = this;
-            while(va.Conflict !=null) {
+            Variable? va = this;
+            while(va != null) {
                 v = va.Object;
                 System.Type t = v.GetType();
                 List<System.Type> paramTypes = new List<System.Type>();
                 foreach (var item in param) {
-                    paramTypes.Add(item.GetType());
+                    if (item is Variable) {
+                        paramTypes.Add(((Variable)item).Object.GetType());
+                    } else {
+                        paramTypes.Add(item.GetType());
+                    }
                 }
 
                 System.Reflection.MethodInfo? mi = t.GetMethod(member, paramTypes.ToArray());
@@ -69,8 +69,8 @@ namespace Simula.Scripting.Reflection {
 
         public Type.Var GetMember(string member) {
             Type.Var? v;
-            Variable va = this;
-            while (va.Conflict != null) {
+            Variable? va = this;
+            while (va != null) {
                 v = va.Object;
                 System.Type t = v.GetType();
 
@@ -81,6 +81,12 @@ namespace Simula.Scripting.Reflection {
                     if (obj == null) return Type.Global.Null;
                     else if (obj is Type.Var) return (Type.Var)obj;
                     else return Type.Global.Null;
+                }
+
+                var func = t.GetMethod(member);
+                if(func == null) {
+                } else {
+                    return new Type.Function(func, v);
                 }
                 
                 va = va.Conflict;

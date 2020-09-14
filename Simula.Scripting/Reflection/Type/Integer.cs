@@ -31,5 +31,19 @@ namespace Simula.Scripting.Type {
         public override int GetHashCode() {
             return value.GetHashCode();
         }
+
+        public override string ToString() {
+            return value.ToString();
+        }
+
+        [Expose("_create", true)]
+        public Function _create() {
+            return new Function(this.GetType().GetMethod("_init"), this);
+        }
+
+        [Expose("_init", true)]
+        public Integer _init() {
+            return this;
+        }
     }
 }

@@ -32,9 +32,14 @@ namespace Simula.Scripting.Type {
             return value.GetHashCode();
         }
 
+        public override string ToString() {
+            if (this.value == true) return "true";
+            else return "false";
+        }
+
         [Expose("_create", true)]
-        public override Function _create() {
-            return new Function(this.GetType().GetMethod("_init"));
+        public Function _create() {
+            return new Function(this.GetType().GetMethod("_init"), this);
         }
 
         [Expose("_init", true)]
@@ -61,7 +66,7 @@ namespace Simula.Scripting.Type {
 
         [Expose("_notequal", true)]
         public Boolean _notequal(Boolean evaluation) {
-            return _not(_equal(evaluation));
+            return _equal(evaluation)._not();
         }
 
         [Expose("_or", true)]
@@ -74,8 +79,7 @@ namespace Simula.Scripting.Type {
             return this.value && evaluation.value;
         }
 
-        [Expose("_not", true)]
-        public Boolean _not(Boolean evaluation) {
+        public Boolean _not() {
             return !this.value;
         }
     }

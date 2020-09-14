@@ -105,7 +105,6 @@ namespace Simula.Scripting.Token {
                     item != '&' &&
                     item != '%' &&
                     item != '!' &&
-                    item != '\'' &&
                     item != ':' &&
                     item != ';' &&
                     item != ',' &&

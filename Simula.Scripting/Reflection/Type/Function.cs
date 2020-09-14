@@ -11,9 +11,18 @@ namespace Simula.Scripting.Type {
         // 这个 dynamic 对象是 Func<..., ...> 的一种子类
 
         public System.Reflection.MethodInfo? function = null;
-        public Function(System.Reflection.MethodInfo? f) {
+        public Var? parent = null;
+        public Function(System.Reflection.MethodInfo? f, Var? p) {
             this.function = f;
+            this.parent = p;
         }
 
+        public override string ToString() {
+            return "func : " + (function?.ToString()?.ToLower() ?? "null");
+        }
+
+        internal Var? call(Var?[]? param) {
+            return (Var?)function?.Invoke(parent, param);
+        }
     }
 }
