@@ -17,6 +17,7 @@ namespace Simula.Scripting.Compilation {
 
         public string Content { get; private set; } = "";
         public string File { get; private set; } = "";
+        public Token.TokenDocument? Tokens { get; set; }
 
         private BlockStatement? body = null;
         public BlockStatement Body {
@@ -42,6 +43,7 @@ namespace Simula.Scripting.Compilation {
             Token.TokenDocument doc = new Token.TokenDocument();
             doc.Tokenize(this.Content);
             block.Parse(doc.Tokens);
+            this.Tokens = doc;
             return block;
         }
 
@@ -133,7 +135,7 @@ namespace Simula.Scripting.Compilation {
 
                     switch (defs.Type) {
                         case DefinitionType.Constant:
-                            dynamic? result = defs.ConstantValue?.Operate(ctx);
+                            dynamic? result = defs.ConstantValue?.Execute(ctx).value;
                             if (result == null) break;
                             if (result is Type.Var) {
                                 Reflection.Variable varia = new Reflection.Variable();
@@ -143,6 +145,7 @@ namespace Simula.Scripting.Compilation {
                                 if (module != "")
                                     varia.FullName = module + "." + varia.Name;
                                 else varia.FullName = varia.Name;
+                                varia.Object = (Type.Var)result;
                                 Utilities.SetVariable(varia.ModuleHirachy, varia, ctx.Modules);
                             } else if (result is Reflection.AbstractClass) {
                                 var m = Utilities.GetModule(Utilities.GetModuleHirachy(module), ctx.Modules);
@@ -207,7 +210,7 @@ namespace Simula.Scripting.Compilation {
                             func.Startup = defs.Children;
 
                             foreach (var par in defs.FunctionParameters) {
-                                func.Parameters.Add((par.Type?.Operate(ctx) ?? new Reflection.IdentityClass(),
+                                func.Parameters.Add((par.Type?.Execute(ctx).value ?? new Reflection.IdentityClass(),
                                     par.Name?.Value ?? ""));
                             }
 
@@ -221,10 +224,10 @@ namespace Simula.Scripting.Compilation {
                             cls.ModuleHirachy = Utilities.GetModuleHirachy(module);
                             cls.Name = defs.ClassName?.Value ?? "";
                             cls.Definition = defs;
-                            cls.Inheritage = defs.ClassInheritage?.Operate(ctx);
+                            cls.Inheritage = defs.ClassInheritage?.Execute(ctx).value;
 
                             foreach (var par in defs.ClassParameters) {
-                                cls.SubclassIdentifer.Add((par.Type?.Operate(ctx) ?? new Reflection.IdentityClass(),
+                                cls.SubclassIdentifer.Add((par.Type?.Execute(ctx).value ?? new Reflection.IdentityClass(),
                                     par.Name?.Value ?? ""));
                             }
 
@@ -251,7 +254,7 @@ namespace Simula.Scripting.Compilation {
             ctx.Registry.Remove(this);
         }
 
-        public void Run(RuntimeContext ctx) {
+        public dynamic Run(RuntimeContext ctx) {
             bool exist = false;
             foreach (var item in ctx.Registry) {
                 if (item is SourceCompilationUnit)
@@ -261,14 +264,78 @@ namespace Simula.Scripting.Compilation {
 
             if (!exist) this.Register(ctx);
 
-            ctx.CallStack.Push(new TemperaryContext());
-            foreach (var item in this.Body.Children) {
-                if (item is DefinitionBlock) { }
-                else {
-                    item.Operate(ctx);
+            List<Reflection.AbstractClass> classes = new List<Reflection.AbstractClass>();
+            List<Reflection.IdentityClass> identityClasses = new List<Reflection.IdentityClass>();
+            List<Reflection.Instance> instances = new List<Reflection.Instance>();
+            List<Reflection.Variable> variables = new List<Reflection.Variable>();
+            List<Reflection.Function> functions = new List<Reflection.Function>();
+
+            // 同样, 运行时我们也注册一个 CallStack.
+
+            BlockStatement block = this.Body;
+            string? mod = "";
+            foreach (var item in block.Children) {
+                if (item is UseStatement) {
+                    Reflection.Module? m = Utilities.GetModule(Utilities.GetModuleHirachy((item as UseStatement)?.FullName), ctx.Modules);
+                    if (m == null) break;
+                    foreach (var funcs in m.Functions)
+                        functions.Add(funcs.Value);
+                    foreach (var clss in m.Classes)
+                        classes.Add(clss.Value);
+                    foreach (var ins in m.Instances)
+                        instances.Add(ins.Value);
+                    foreach (var vars in m.Variables)
+                        variables.Add(vars.Value);
+                    foreach (var id in m.IdentityClasses)
+                        identityClasses.Add(id.Value);
+                }
+
+                if (item is ModuleStatement) {
+                    mod = (item as ModuleStatement)?.FullName;
                 }
             }
+
+            TemperaryContext tempCtx = new TemperaryContext();
+            foreach (var item in classes) {
+                if (tempCtx.Classes.ContainsKey(item.Name)) {
+                    item.Conflict = tempCtx.Classes[item.Name];
+                    tempCtx.Classes[item.Name] = item;
+                } else tempCtx.Classes.Add(item.Name, item);
+            }
+
+            foreach (var item in identityClasses) {
+                if (tempCtx.IdentityClasses.ContainsKey(item.Name)) {
+                    item.Conflict = tempCtx.IdentityClasses[item.Name];
+                    tempCtx.IdentityClasses[item.Name] = item;
+                } else tempCtx.IdentityClasses.Add(item.Name, item);
+            }
+
+            foreach (var item in instances) {
+                if (tempCtx.Instances.ContainsKey(item.Name)) {
+                    item.Conflict = tempCtx.Instances[item.Name];
+                    tempCtx.Instances[item.Name] = item;
+                } else tempCtx.Instances.Add(item.Name, item);
+            }
+
+            foreach (var item in variables) {
+                if (tempCtx.Variables.ContainsKey(item.Name)) {
+                    item.Conflict = tempCtx.Variables[item.Name];
+                    tempCtx.Variables[item.Name] = item;
+                } else tempCtx.Variables.Add(item.Name, item);
+            }
+
+            foreach (var item in functions) {
+                if (tempCtx.Functions.ContainsKey(item.Name)) {
+                    item.Conflict = tempCtx.Functions[item.Name];
+                    tempCtx.Functions[item.Name] = item;
+                } else tempCtx.Functions.Add(item.Name, item);
+            }
+
+            ctx.CallStack.Push(tempCtx);
+            var result = this.Body.Execute(ctx);
             ctx.CallStack.Pop();
+
+            return result.value;
         }
     }
 

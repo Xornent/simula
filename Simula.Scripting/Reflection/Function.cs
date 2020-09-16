@@ -21,17 +21,13 @@ namespace Simula.Scripting.Reflection {
             // 执行在 DOM 语句树定义的函数.
 
             var selection = this;
-            bool notMatch = true;
+            bool notMatch = false;
 
             while (notMatch) {
                 notMatch = false;
 
                 if (pars.Count != selection.Parameters.Count) { notMatch = true; continue; }
-                int count = 0;
-                foreach (var item in pars) {
-                    if (item.GetType() != Parameters[count].type.GetType()) notMatch = true;
-                }
-
+                
                 if (!notMatch) break;
                 if (selection.Conflict == null) break;
                 selection = selection.Conflict;
@@ -42,6 +38,7 @@ namespace Simula.Scripting.Reflection {
             // 函数的一个 CallStack 中储存了自己的参数作为变量, 以及定义自己的类中的变量作为变量.
             // 它们分别在 pars 和 Parent.Functions 与 Parent.Variables 中
 
+            int c = 0;
             TemperaryContext tctx = new TemperaryContext();
             foreach (var item in pars) {
                 if(item is AbstractClass) {
@@ -68,7 +65,15 @@ namespace Simula.Scripting.Reflection {
                     var i = item as Variable;
                     if (i == null) continue;
                     tctx.Variables.OverflowAddVariable(i.Name, i);
+                } else if (item is Type.Var) {
+                    Variable v = new Variable();
+                    v.Name = Parameters[c].name;
+                    v.Object = (Type.Var)item;
+                    v.ModuleHirachy = new List<string>() { "<callstack>" };
+                    tctx.Variables.OverflowAddVariable(Parameters[c].name, v);
                 }
+
+                c++;
             }
 
             if (!IsStatic) {
@@ -76,45 +81,80 @@ namespace Simula.Scripting.Reflection {
                 // 其实通过 IsStatic, 我们已经断言 Parent 不为 null 了, 但是 Visual Studio 会持续警告
 
                 foreach (var item in Parent.Variables) {
-                    if (item is AbstractClass) {
-                        var i = item as AbstractClass;
+                    if (item.Value is AbstractClass) {
+                        var i = item.Value as AbstractClass;
                         if (i == null) continue;
-                        tctx.Classes.OverflowAddAbstractClass(i.Name, i);
-                    } else if (item is IdentityClass) {
-                        var i = item as IdentityClass;
+                        tctx.Classes.OverflowAddAbstractClass(item.Key, i);
+                    } else if (item.Value is IdentityClass) {
+                        var i = item.Value as IdentityClass;
                         if (i == null) continue;
-                        tctx.IdentityClasses.OverflowAddIdentityClass(i.Name, i);
-                    } else if (item is Instance) {
-                        var i = item as Instance;
+                        tctx.IdentityClasses.OverflowAddIdentityClass(item.Key, i);
+                    } else if (item.Value is Instance) {
+                        var i = item.Value as Instance;
                         if (i == null) continue;
-                        tctx.Instances.OverflowAddInstance(i.Name, i);
-                    } else if (item is Function) {
-                        var i = item as Function;
+                        tctx.Instances.OverflowAddInstance(item.Key, i);
+                    } else if (item.Value is Function) {
+                        var i = item.Value as Function;
                         if (i == null) continue;
-                        tctx.Functions.OverflowAddFunction(i.Name, i);
-                    } else if (item is Module) {
-                        var i = item as Module;
+                        tctx.Functions.OverflowAddFunction(item.Key, i);
+                    } else if (item.Value is Module) {
+                        var i = item.Value as Module;
                         if (i == null) continue;
-                        tctx.SubModules.OverflowAddModule(i.Name, i);
-                    } else if (item is Variable) {
-                        var i = item as Variable;
+                        tctx.SubModules.OverflowAddModule(item.Key, i);
+                    } else if (item.Value is Variable) {
+                        var i = item.Value as Variable;
                         if (i == null) continue;
-                        tctx.Variables.OverflowAddVariable(i.Name, i);
+                        tctx.Variables.OverflowAddVariable(item.Key, i);
                     }
                 }
 
                 foreach (var item in Parent.Functions) {
-                    tctx.Functions.OverflowAddFunction(item.Name, item);
+                    tctx.Functions.OverflowAddFunction(item.Key, item.Value);
                 }
             }
 
             ctx.CallStack.Push(tctx);
 
             dynamic? result = null;
-            if(!notMatch) result = new Syntax.BlockStatement() { Children = selection.Startup }.Operate(ctx);
+            if (!notMatch) {
+                result = new Syntax.BlockStatement() { Children = selection.Startup }.Execute(ctx);
+            }
 
-            ctx.CallStack.Pop();
-            return result;
+            var stack = ctx.CallStack.Pop();
+            if(!IsStatic) {
+                var parent = this.Parent;
+                foreach (var item in stack.Variables) {
+                    if (parent.Variables.ContainsKey(item.Key))
+                        parent.Variables[item.Key] = item.Value;
+                }
+
+                foreach (var item in stack.Classes) {
+                    if (parent.Variables.ContainsKey(item.Key))
+                        parent.Variables[item.Key] = item.Value;
+                }
+
+                foreach (var item in stack.IdentityClasses) {
+                    if (parent.Variables.ContainsKey(item.Key))
+                        parent.Variables[item.Key] = item.Value;
+                }
+
+                foreach (var item in stack.Instances) {
+                    if (parent.Variables.ContainsKey(item.Key))
+                        parent.Variables[item.Key] = item.Value;
+                }
+
+                foreach (var item in stack.SubModules) {
+                    if (parent.Variables.ContainsKey(item.Key))
+                        parent.Variables[item.Key] = item.Value;
+                }
+
+                foreach (var item in stack.Functions) {
+                    if (parent.Functions.ContainsKey(item.Key))
+                        parent.Functions[item.Key] = item.Value;
+                }
+            }
+
+            return ((ValueTuple<dynamic, Debugging.ExecutableFlag>)result).Item1;
         }
     }
 }

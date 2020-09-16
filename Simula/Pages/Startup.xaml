@@ -8,12 +8,16 @@
              mc:Ignorable="d" 
              d:DesignHeight="400" d:DesignWidth="800" FontFamily="PingFANG sc">
     <Grid >
+        <Grid.RowDefinitions>
+            <RowDefinition Height="33*"/>
+            <RowDefinition Height="167*"/>
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+        <Grid VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,134,0,0" Grid.Row="1">
         </Grid>
-        <ScrollViewer Grid.Column="0" >
+        <ScrollViewer Grid.Column="0" Grid.RowSpan="2" >
             <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
             </StackPanel>
         </ScrollViewer>

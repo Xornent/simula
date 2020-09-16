@@ -23,8 +23,8 @@ namespace Simula.Scripting.Syntax {
             return;
         }
 
-        public virtual dynamic Operate(Compilation.RuntimeContext ctx) {
-            return Type.Global.Null;
+        public virtual (dynamic value, Debugging.ExecutableFlag flag) Execute(Compilation.RuntimeContext ctx) {
+            return (Type.Global.Null, Debugging.ExecutableFlag.Pass);
         }
     }
 }

@@ -370,7 +370,8 @@
        TargetType="{x:Type Menu}">
             <Setter Property="OverridesDefaultStyle"
           Value="True" />
-            <Setter Property="FontFamily" Value=" Segoe UI, Consolas, Simsun"/>
+            <Setter Property="FontFamily" Value="PingFang SC, Segoe UI, Consolas, Simsun"/>
+            <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="SnapsToDevicePixels"
           Value="True" />
             <Setter Property="Template">
@@ -888,7 +889,7 @@
           Value="True" />
             <Setter Property="SnapsToDevicePixels"
           Value="True" />
-            <Setter Property="FontFamily" Value="Segoe UI, Consolas, Simsun"/>
+            <Setter Property="FontFamily" Value="PingFang SC, Segoe UI, Consolas, Simsun"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type TabControl}">

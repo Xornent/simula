@@ -9,7 +9,7 @@
         xmlns:editor ="http://xornent.org/simula/editor"
         xmlns:script ="clr-namespace:Simula.Scripting;assembly=Simula.Scripting"
         xmlns:package="clr-namespace:Simula.Scripting.Packaging"
-        mc:Ignorable="d" 
+        mc:Ignorable="d" UseLayoutRounding="True"
         Icon="pack://siteoforigin:,,,/app.icon.ico"
         Title="无工作区 -  Simula" Height="690" Width="1050" MinWidth="895" MinHeight="570" WindowStartupLocation="CenterScreen">
     <Window.Resources>
@@ -113,6 +113,12 @@
                             <Button Content="&#xE00E;" FontFamily="Segoe MDL2 Assets" Width="25" FontSize="13" Margin="4"></Button>
                             <Button Content="&#xE00F;" FontFamily="Segoe MDL2 Assets" Width="25" FontSize="13" Margin="0 5 5 5"></Button>
                         </StackPanel>
+
+                        <StackPanel Width="130" DockPanel.Dock="Left" Orientation="Horizontal">
+                            <Button Content="&#xE81c;" FontFamily="Segoe MDL2 Assets" Width="35" FontSize="13" Margin="8 4 4 4"></Button>
+                            <Button Content="&#xE118;" FontFamily="Segoe MDL2 Assets" Width="35" FontSize="13" Margin="0 4 4 4"></Button>
+                            <Button Content="&#xE2AF;" FontFamily="Segoe MDL2 Assets" Width="35" FontSize="13" Margin="0 4 4 4"></Button>
+                        </StackPanel>
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                             <Grid Width="46" Height="30" Margin="0 0 0 4" VerticalAlignment="Center">
                                 <Rectangle Width="46" Margin="0 0 0 0" Fill="Transparent" MouseDown="Application_Minimize">
@@ -197,18 +203,13 @@
                             </Grid>
                         </StackPanel>
 
-                        <StackPanel Width="130" DockPanel.Dock="Right" Orientation="Horizontal">
-                            <Button Content="&#xE81c;" FontFamily="Segoe MDL2 Assets" Width="35" FontSize="13" Margin="8 4 4 4"></Button>
-                            <Button Content="&#xE118;" FontFamily="Segoe MDL2 Assets" Width="35" FontSize="13" Margin="0 4 4 4"></Button>
-                            <Button Content="&#xE2AF;" FontFamily="Segoe MDL2 Assets" Width="35" FontSize="13" Margin="0 4 4 4"></Button>
-                        </StackPanel>
                         <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Height="38">
                             <!-- Central Area -->
                         </Grid>
                     </DockPanel>
-                    <Menu HorizontalAlignment="Left" Height="24" Margin="67,0,0,0" VerticalAlignment="Center" Width="645" FontWeight="Regular">
+                    <Menu HorizontalAlignment="Left" Height="24" Margin="200,0,0,0" VerticalAlignment="Center" Width="645" >
                         <Menu.Items>
-                            <MenuItem Header="Simula" FontWeight="Bold"/>
+                            <Image Source="pack://siteoforigin:,,,/app.icon.ico"/>
                             <MenuItem Header=" 文件(_F) " Name="mi_0_file" Height="24">
                                 <MenuItem.Items>
                                     <MenuItem Header="新建项">
@@ -245,7 +246,33 @@
                                     <MenuItem Header="退出应用程序" InputGestureText="Alt + F4"/>
                                 </MenuItem.Items>
                             </MenuItem>
-                            <MenuItem Header=" 编辑(_E) " Name="mi_0_edit" Height="24">
+                            <MenuItem Header=" 拓展(_X) " Name="mi_0_extension" Height="24" >
+                                <MenuItem Header="管理拓展程序和工具集 ..." InputGestureText="F9" Click="Menu_ManageExtensions"/>
+                                <MenuItem Header="管理自定义代码片段 ..." InputGestureText="Ctrl + F9"/>
+                                <Separator/>
+                                <MenuItem Header="创建 GUID ..."/>
+                                <MenuItem Header="管理外部工具 ..."/>
+                                <Separator/>
+                                <MenuItem Header="命令提示符 ..." InputGestureText="Ctrl + `"/>
+                            </MenuItem>
+                            <MenuItem Header=" 布局(_L) " Name="mi_0_layout" Height="24">
+                                <MenuItem Header="关闭所有选项卡" InputGestureText="Ctrl + Alt + X"/>
+                                <MenuItem Header="关闭当前选项卡" InputGestureText="Ctrl + Shift + X"/>
+                                <Separator/>
+                                <MenuItem Header="起始页"/>
+                                <MenuItem Header="窗口 ..." InputGestureText="Ctrl + W"/>
+                            </MenuItem>
+                            <MenuItem Header=" 帮助(_H) " Name="mi_0_help" Height="24">
+                                <MenuItem.Items>
+                                    <MenuItem Header="关于  Simula ..." InputGestureText="Ctrl + Alt + A" Click="Menu_About"/>
+                                    <MenuItem Header="关于  Simula 增效工具和工具集 ..." />
+                                    <MenuItem Header="获取在线帮助 ..." InputGestureText="F1"/>
+                                    <Separator/>
+                                    <MenuItem Header="法律信息 ..."/>
+                                    <MenuItem Header="向 Xornent S.I. 汇报改进计划 ..." />
+                                </MenuItem.Items>
+                            </MenuItem>
+                            <MenuItem Header=" 编辑(_E) " Name="mi_0_edit" Height="24" Visibility="Hidden">
                                 <MenuItem.Items>
                                     <MenuItem Header="转到"/>
                                     <MenuItem Header="查找和替换">
@@ -301,7 +328,7 @@
                                     <MenuItem Header="文件编辑设置 ..." />
                                 </MenuItem.Items>
                             </MenuItem>
-                            <MenuItem Header=" 调试和分析(_D) " Name="mi_0_debug" Height="24">
+                            <MenuItem Header=" 调试和分析(_D) " Name="mi_0_debug" Height="24" Visibility="Hidden">
                                 <MenuItem Header="从数据文件导入变量 ..." InputGestureText="Ctrl + I"/>
                                 <MenuItem Header="新建变量 ..." InputGestureText="Ctrl + Shift + V"/>
                                 <MenuItem Header="导出当前的工作区变量 ..."/>
@@ -336,34 +363,8 @@
                                 <MenuItem Header="重新生成工作区" InputGestureText="Ctrl + Shift + B"/>
                                 <MenuItem Header="打包当前工作区为工具集 ..." InputGestureText="Ctrl + Shift + P"/>
                             </MenuItem>
-                            <MenuItem Header=" 图形(_G) " Name="mi_0_graphic" Height="24"/>
-                            <MenuItem Header=" 应用程序(_A) " Name="mi_0_application" Height="24"/>
-                            <MenuItem Header=" 拓展(_X) " Name="mi_0_extension" Height="24">
-                                <MenuItem Header="管理拓展程序和工具集 ..." InputGestureText="F9" Click="Menu_ManageExtensions"/>
-                                <MenuItem Header="管理自定义代码片段 ..." InputGestureText="Ctrl + F9"/>
-                                <Separator/>
-                                <MenuItem Header="创建 GUID ..."/>
-                                <MenuItem Header="管理外部工具 ..."/>
-                                <Separator/>
-                                <MenuItem Header="命令提示符 ..." InputGestureText="Ctrl + `"/>
-                            </MenuItem>
-                            <MenuItem Header=" 布局(_L) " Name="mi_0_layout" Height="24">
-                                <MenuItem Header="关闭所有选项卡" InputGestureText="Ctrl + Alt + X"/>
-                                <MenuItem Header="关闭当前选项卡" InputGestureText="Ctrl + Shift + X"/>
-                                <Separator/>
-                                <MenuItem Header="起始页"/>
-                                <MenuItem Header="窗口 ..." InputGestureText="Ctrl + W"/>
-                            </MenuItem>
-                            <MenuItem Header=" 帮助(_H) " Name="mi_0_help" Height="24">
-                                <MenuItem.Items>
-                                    <MenuItem Header="关于  Simula ..." InputGestureText="Ctrl + Alt + A" Click="Menu_About"/>
-                                    <MenuItem Header="关于  Simula 增效工具和工具集 ..." />
-                                    <MenuItem Header="获取在线帮助 ..." InputGestureText="F1"/>
-                                    <Separator/>
-                                    <MenuItem Header="法律信息 ..."/>
-                                    <MenuItem Header="向 Xornent S.I. 汇报改进计划 ..." />
-                                </MenuItem.Items>
-                            </MenuItem>
+                            <MenuItem Header=" 图形(_G) " Name="mi_0_graphic" Height="24" Visibility="Hidden"/>
+                            <MenuItem Header=" 应用程序(_A) " Name="mi_0_application" Height="24" Visibility="Hidden"/>
                         </Menu.Items>
                     </Menu>
                 </Grid>
@@ -413,12 +414,12 @@
                 <Grid >
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
-                        <RowDefinition Height="1"/>
-                        <RowDefinition Height="300" MinHeight="23"/>
+                        <RowDefinition Height="0"/>
+                        <RowDefinition Height="0" MinHeight="23"/>
                     </Grid.RowDefinitions>
                     <Grid x:Name="Host" Grid.Row="0"></Grid>
                     <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch"/>
-                    <Grid x:Name="Panels" Grid.Row="2" SnapsToDevicePixels="True">
+                    <Grid x:Name="Panels" Grid.Row="2" SnapsToDevicePixels="True" TextElement.FontWeight="Bold" Visibility="Hidden">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="3*" MaxWidth="315"/>
                             <ColumnDefinition Width="1"/>
@@ -429,7 +430,7 @@
                         <TabControl TabStripPlacement="Bottom" Grid.Column="0" MaxWidth="315">
                             <TabControl.Items>
                                 <TabItem Header="工作区资源浏览器">
-                                    <TreeView>
+                                    <TreeView TextElement.FontWeight="Regular">
                                         <TreeView.Items>
                                             <TreeViewItem Header="Simula 基本组件" Tag=" &#xE118;">
                                                 <TreeViewItem.Items>
@@ -452,7 +453,7 @@
                             </TabControl.Items>
                         </TabControl>
                         <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                        <TabControl TabStripPlacement="Bottom" Grid.Column="2" >
+                        <TabControl TabStripPlacement="Bottom" Grid.Column="2">
                             <TabControl.Items>
                                 <TabItem Header="即时命令行" x:Name="panelPrompt">
                                     <Grid>
@@ -460,8 +461,8 @@
                                             <RowDefinition Height="*"/>
                                             <RowDefinition Height="auto"/>
                                         </Grid.RowDefinitions>
-                                        <script:SimulaTextEditor x:Name="editor_console" Grid.Row="0" Text="" SyntaxHighlighting="Simula" FontFamily="Consolas, Simsun" FontSize="13"/>
-                                        <script:SimulaTextEditor x:Name="editor_consoleInput" Grid.Row="1" Text="" SyntaxHighlighting="Simula" FontFamily="Consolas, Simsun" FontSize="13" ShowLineNumbers="True" MaxHeight="200"/>
+                                        <script:SimulaTextEditor x:Name="editor_console"  FontWeight="Regular" Grid.Row="0" Text="" SyntaxHighlighting="Simula" FontFamily="Consolas, Simsun" FontSize="13"/>
+                                        <script:SimulaTextEditor x:Name="editor_consoleInput"  FontWeight="Regular" Grid.Row="1" Text="" SyntaxHighlighting="Simula" FontFamily="Consolas, Simsun" FontSize="13" ShowLineNumbers="True" MaxHeight="200"/>
                                     </Grid>
                                 </TabItem>
                                 <TabItem Header="版式"></TabItem>

@@ -38,8 +38,8 @@ namespace Simula.Scripting.Reflection {
     public class IdentityClass : SourceBase {
         public List<(string name, Base value)> SubclassIdentifer = new List<(string, Base)>();
 
-        private List<Function> Functions = new List<Function>();
-        private List<Base> Variables = new List<Base>();
+        private Dictionary<string, Function> Functions = new Dictionary<string, Function>();
+        private Dictionary<string, Base> Variables = new Dictionary<string, Base>();
         public List<Function> Initializers = new List<Function>();
         public Syntax.DefinitionBlock? Definition;
 
@@ -54,8 +54,8 @@ namespace Simula.Scripting.Reflection {
             // 我们每生成一个对象, 就重新初始化一组 Functions 和 Variables, 再将其传递引用到子对象的
             // Instance 中, 而不破坏原来创建的函数. 所以我们不使用 Clear, 而是 new.
 
-            this.Functions = new List<Function>();
-            this.Variables = new List<Base>();
+            this.Functions = new Dictionary<string, Function>();
+            this.Variables = new Dictionary<string, Base>();
 
             string module = this.FullName;
             TemperaryContext tctx = new TemperaryContext();
@@ -69,7 +69,7 @@ namespace Simula.Scripting.Reflection {
 
                     switch (defs.Type) {
                         case DefinitionType.Constant:
-                            dynamic? result = defs.ConstantValue?.Operate(ctx);
+                            dynamic? result = defs.ConstantValue?.Execute(ctx).value;
                             if (result == null) break;
                             if (result is Type.Var) {
                                 Reflection.Variable varia = new Reflection.Variable();
@@ -79,38 +79,40 @@ namespace Simula.Scripting.Reflection {
                                 if (module != "")
                                     varia.FullName = module + "." + varia.Name;
                                 else varia.FullName = varia.Name;
-                                this.Variables.Add(varia);
+                                this.Variables.Add(defs.ConstantName?.Value ?? "", varia);
+                                varia.Object = (Type.Var)result;
+                                varia.ModuleHirachy = new List<string>() { "<callstack>" };
                                 tctx.Variables.OverflowAddVariable(varia.Name, varia);
                             } else if (result is Reflection.AbstractClass) {
                                 var temp = result as Reflection.AbstractClass;
                                 if (temp == null) return;
-                                this.Variables.Add(temp);
-                                tctx.Classes.OverflowAddAbstractClass(temp.Name, temp);
+                                this.Variables.Add(defs.ConstantName?.Value ?? "", temp);
+                                tctx.Classes.OverflowAddAbstractClass(defs.ConstantName?.Value ?? "", temp);
                             } else if (result is Reflection.Function) {
                                 var temp = result as Reflection.Function;
                                 if (temp == null) return;
-                                this.Functions.Add(temp);
-                                tctx.Functions.OverflowAdd(temp.Name, temp);
+                                this.Functions.Add(defs.ConstantName?.Value ?? "", temp);
+                                tctx.Functions.OverflowAdd(defs.ConstantName?.Value ?? "", temp);
                             } else if (result is Reflection.IdentityClass) {
                                 var temp = result as Reflection.IdentityClass;
                                 if (temp == null) return;
-                                this.Variables.Add(temp);
-                                tctx.IdentityClasses.OverflowAddIdentityClass(temp.Name, temp);
+                                this.Variables.Add(defs.ConstantName?.Value ?? "", temp);
+                                tctx.IdentityClasses.OverflowAddIdentityClass(defs.ConstantName?.Value ?? "", temp);
                             } else if (result is Reflection.Instance) {
                                 var temp = result as Reflection.Instance;
                                 if (temp == null) return;
-                                this.Variables.Add(temp);
-                                tctx.Instances.OverflowAdd(temp.Name, temp);
+                                this.Variables.Add(defs.ConstantName?.Value ?? "", temp);
+                                tctx.Instances.OverflowAdd(defs.ConstantName?.Value ?? "", temp);
                             } else if (result is Reflection.Variable) {
                                 var temp = result as Reflection.Variable;
                                 if (temp == null) return;
-                                this.Variables.Add(temp);
-                                tctx.Variables.OverflowAddVariable(temp.Name, temp);
+                                this.Variables.Add(defs.ConstantName?.Value ?? "", temp);
+                                tctx.Variables.OverflowAddVariable(defs.ConstantName?.Value ?? "", temp);
                             } else if (result is Reflection.Module) {
                                 var temp = result as Reflection.Module;
                                 if (temp == null) return;
-                                this.Variables.Add(temp);
-                                tctx.SubModules.OverflowAddModule(temp.Name, temp);
+                                this.Variables.Add(defs.ConstantName?.Value ?? "", temp);
+                                tctx.SubModules.OverflowAddModule(defs.ConstantName?.Value ?? "", temp);
                             } else break;
                             break;
                         case DefinitionType.Function:
@@ -121,15 +123,16 @@ namespace Simula.Scripting.Reflection {
                             func.ModuleHirachy = Utilities.GetModuleHirachy(module);
                             func.Name = defs.FunctionName?.Value ?? "";
                             func.Startup = defs.Children;
+                            func.ModuleHirachy = new List<string>() { "<callstack>" };
 
                             foreach (var par in defs.FunctionParameters) {
-                                func.Parameters.Add((par.Type?.Operate(ctx) ??
+                                func.Parameters.Add((par.Type?.Execute(ctx).value ??
                                     new Reflection.IdentityClass(),
                                     par.Name?.Value ?? ""));
                             }
                             func.Parent = ins;
 
-                            this.Functions.Add(func);
+                            this.Functions.Add(func.Name, func);
                             tctx.Functions.OverflowAddFunction(func.Name, func);
                             break;
                     }
@@ -148,32 +151,34 @@ namespace Simula.Scripting.Reflection {
 
             Initializers.Clear();
             foreach (var item in Functions) {
-                if (item.Name == "_init")
-                    Initializers.Add(item);
+                if (item.Key == "_init")
+                    Initializers.Add(item.Value);
             }
 
             foreach (var item in Initializers) {
-                var obj = item.Invoke(param, ctx);
-                if (obj != null) break;
+                try {
+                    var obj = item.Invoke(param, ctx);
+                    break;
+                } catch { }
             }
             return ins;
         }
     }
 
     public class Instance : SourceBase {
-        public List<Function> Functions = new List<Function>();
-        public List<Base> Variables = new List<Base>();
+        public Dictionary<string, Function> Functions = new Dictionary<string, Function>();
+        public Dictionary<string, Base> Variables = new Dictionary<string, Base>();
 
         public bool Compiled = false;
         public Instance? Conflict;
 
         public dynamic GetMember(string name) {
             foreach (var item in Functions) {
-                if (item.Name == name) return item;
+                if (item.Key == name) return item.Value;
             }
 
             foreach (var item in Variables) {
-                if (item.Name == name) return item;
+                if (item.Key == name) return item.Value;
             }
 
             return Type.Global.Null;

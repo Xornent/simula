@@ -10,7 +10,7 @@ namespace Simula.Scripting.Syntax {
             if (this.Right == null) return Type.Global.Null;
             dynamic evalLeft = Left.Operate(ctx);
             SmallBracketOperation angle = (SmallBracketOperation)this.Right;
-            List<Reflection.Base> bases = angle.Operate(ctx);
+            List<Reflection.Base> bases = angle.OperateList(ctx);
 
             if(evalLeft is Type.Var) {
                 if (((Type.Var)evalLeft) is Type.Function) {
@@ -42,6 +42,10 @@ namespace Simula.Scripting.Syntax {
                 return Type.Global.Null;
             } else if (evalLeft is Reflection.Function) {
                 var v = ((Reflection.Function)evalLeft).Invoke(bases, ctx);
+                if (v == null) return Type.Global.Null;
+                else return v;
+            } else if(evalLeft is Reflection.IdentityClass) {
+                var v = ((Reflection.IdentityClass)evalLeft).CreateInstance(bases, ctx);
                 if (v == null) return Type.Global.Null;
                 else return v;
             }

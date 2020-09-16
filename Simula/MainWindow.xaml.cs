@@ -264,7 +264,7 @@ namespace Simula {
         }
 
         private void NewTab_Click(object sender, MouseButtonEventArgs e) {
-            UserControl pg = new Pages.Startup();
+            UserControl pg = new Pages.SourceEditor();
             TabPages.Add(pg);
             var id = Guid.NewGuid();
             TabIndices.Add(id.ToString().Replace("-", "_"));
@@ -374,7 +374,7 @@ namespace Simula {
         }
 
         private void Menu_About(object sender, EventArgs e) {
-            DisplayPopup(new Pages.About(), 494, 345, true);
+            new Pages.About().ShowDialog();
         }
 
         private void Menu_ManageExtensions(object sender, EventArgs e) {

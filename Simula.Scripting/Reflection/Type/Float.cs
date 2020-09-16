@@ -97,8 +97,5 @@ namespace Simula.Scripting.Type {
         public Boolean _nolessthan(Float f) {
             return this.value >= f;
         }
-
-        //comp = bool{}
-        //alert(comp)
     }
 }

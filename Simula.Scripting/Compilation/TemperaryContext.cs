@@ -61,38 +61,52 @@ namespace Simula.Scripting.Compilation {
                     this.Functions.OverflowAddFunction(name, (Function)obj);
                 }
             } else {
+                List<string> keys = new List<string>();
                 if (m is Variable) {
-                    this.Variables.Remove(m.Name);
+                    keys = this.Variables.RemoveValue((Variable)m);
                 } else if (m is Module) {
-                    this.SubModules.Remove(m.Name);
+                    keys = this.SubModules.RemoveValue((Module)m);
                 } else if (m is AbstractClass) {
-                    this.Classes.Remove(m.Name);
+                    keys = this.Classes.RemoveValue((AbstractClass)m);
                 } else if (m is IdentityClass) {
-                    this.IdentityClasses.Remove(m.Name);
+                    keys = this.IdentityClasses.RemoveValue((IdentityClass)m);
                 } else if (m is Instance) {
-                    this.Instances.Remove(m.Name);
+                    keys = this.Instances.RemoveValue((Instance)m);
                 } else if (m is Function) {
-                    this.Functions.Remove(m.Name);
+                    keys = this.Functions.RemoveValue((Function)m);
                 }
 
                 if (obj is Type.Var) {
                     Variable v = new Variable();
                     v.Name = name;
                     v.Object = (Type.Var)obj;
-                    this.Variables.OverflowAddVariable(v.Name, v);
-                    v.ModuleHirachy = new List<string>() { "<callstack>" };
+                    foreach (var item in keys) {
+                        this.Variables.OverflowAddVariable(item, v);
+                    }
                 } else if (obj is Variable) {
-                    this.Variables.OverflowAddVariable(name, (Variable)obj);
+                    foreach (var item in keys) {
+                        this.Variables.OverflowAddVariable(item, (Variable)obj);
+                    }
                 } else if (obj is Module) {
-                    this.SubModules.OverflowAddModule(name, (Module)obj);
+                    foreach (var item in keys) {
+                        this.SubModules.OverflowAddModule(item, (Module)obj);
+                    }
                 } else if (obj is AbstractClass) {
-                    this.Classes.OverflowAddAbstractClass(name, (AbstractClass)obj);
+                    foreach (var item in keys) {
+                        this.Classes.OverflowAddAbstractClass(item, (AbstractClass)obj);
+                    }
                 } else if (obj is IdentityClass) {
-                    this.IdentityClasses.OverflowAddIdentityClass(name, (IdentityClass)obj);
+                    foreach (var item in keys) {
+                        this.IdentityClasses.OverflowAddIdentityClass(item, (IdentityClass)obj);
+                    }
                 } else if (obj is Instance) {
-                    this.Instances.OverflowAddInstance(name, (Instance)obj);
+                    foreach (var item in keys) {
+                        this.Instances.OverflowAddInstance(item, (Instance)obj);
+                    }
                 } else if (obj is Function) {
-                    this.Functions.OverflowAddFunction(name, (Function)obj);
+                    foreach (var item in keys) {
+                        this.Functions.OverflowAddFunction(item, (Function)obj);
+                    }
                 }
             }
         }

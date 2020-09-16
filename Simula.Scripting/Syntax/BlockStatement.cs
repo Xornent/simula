@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Simula.Scripting.Compilation;
+using Simula.Scripting.Debugging;
 using Simula.Scripting.Token;
 
 namespace Simula.Scripting.Syntax {
@@ -8,7 +10,7 @@ namespace Simula.Scripting.Syntax {
     public class BlockStatement : Statement {
         public List<Statement> Children = new List<Statement>();
 
-        public new void Parse(Token.TokenCollection collection) {
+        public override void Parse(Token.TokenCollection collection) {
             List<TokenCollection> lines = collection.Split(Token.Token.LineBreak);
             Stack<BlockStatement> currentBlock = new Stack<BlockStatement>();
             currentBlock.Push(this);
@@ -53,7 +55,7 @@ namespace Simula.Scripting.Syntax {
 
                             i.Parse(line);
                         } else if (line[0] == "eif") {
-                            if (currentBlock.Peek() is IfBlock) {
+                            if (currentBlock.Peek() is IfBlock || currentBlock.Peek() is ElseIfBlock) {
                                 var b = currentBlock.Pop();
                                 currentBlock.Peek().Children.Add(b);
                             } else line[0].Error = new TokenizerException("SS0007");
@@ -80,16 +82,8 @@ namespace Simula.Scripting.Syntax {
                             currentBlock.Push(e);
 
                             e.Parse(line);
-                        } else if (line[0] == "label") {
-                            LabelStatement l = new LabelStatement();
-                            l.Parse(line);
-                            currentBlock.Peek().Children.Add(l);
                         } else if (line[0] == "pass") {
                             PassStatement l = new PassStatement();
-                            l.Parse(line);
-                            currentBlock.Peek().Children.Add(l);
-                        } else if (line[0] == "go") {
-                            GoStatement l = new GoStatement();
                             l.Parse(line);
                             currentBlock.Peek().Children.Add(l);
                         } else if (line[0] == "break") {
@@ -123,6 +117,45 @@ namespace Simula.Scripting.Syntax {
                     }
                 }
             }
+        }
+
+        public override (dynamic value, Debugging.ExecutableFlag flag) Execute(Compilation.RuntimeContext ctx) {
+            bool skipif = false;
+            foreach (var item in this.Children) {
+                if (item is DefinitionBlock) { }
+                else {
+                    if (item is ElseBlock || item is ElseIfBlock) {
+                        if (skipif) { continue; }
+                    } else {
+                        if (skipif) skipif = false;
+                    }
+
+                    var result = item.Execute(ctx);
+
+                    if (item is IfBlock || item is ElseIfBlock || item is ElseBlock) {
+                        if (result.flag == ExecutableFlag.Else) {
+                            skipif = false;
+                        } else {
+                            skipif = true;
+                        }
+                    }
+
+                    switch (result.flag) {
+                        case Debugging.ExecutableFlag.Pass:
+                            break;
+                        case Debugging.ExecutableFlag.Return:
+                            return (result.value, Debugging.ExecutableFlag.Return);
+                        case Debugging.ExecutableFlag.Break:
+                            return (result.value, Debugging.ExecutableFlag.Break);
+                        case Debugging.ExecutableFlag.Continue:
+                            return (result.value, Debugging.ExecutableFlag.Continue);
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            return (Type.Global.Null, Debugging.ExecutableFlag.Pass);
         }
     }
 }

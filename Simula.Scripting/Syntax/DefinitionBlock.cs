@@ -38,11 +38,22 @@ namespace Simula.Scripting.Syntax {
         public EvaluationStatement? ConstantValue;
 
         public new void Parse(TokenCollection collection) {
+            Token.Token[] store = new Token.Token[collection.Count];
+            collection.CopyTo(store);
+
                 if (collection[0] == "expose") {
-                    this.Visibility = Visibility.Expose;
+                if (collection.Count == 1) {
+                    collection[0].Error = new TokenizerException("SS0012");
+                    return;
+                }
+                this.Visibility = Visibility.Expose;
                     switch ((string)collection[1]) {
                         case "def":
-                            switch ((string)collection[2]) {
+                        if (collection.Count == 2) {
+                            collection[0].Error = new TokenizerException("SS0013");
+                            return;
+                        }
+                        switch ((string)collection[2]) {
                                 case "func":
                                     this.Type = DefinitionType.Function;
                                     collection.RemoveRange(0, 3);
@@ -78,9 +89,17 @@ namespace Simula.Scripting.Syntax {
                     }
                 } else if (collection[0] == "hidden") {
                     this.Visibility = Visibility.Hidden;
-                    switch ((string)collection[1]) {
+                if (collection.Count == 1) {
+                    collection[0].Error = new TokenizerException("SS0012");
+                    return;
+                }
+                switch ((string)collection[1]) {
                         case "def":
-                            switch ((string)collection[2]) {
+                        if (collection.Count == 2) {
+                            collection[0].Error = new TokenizerException("SS0013");
+                            return;
+                        }
+                        switch ((string)collection[2]) {
                                 case "func":
                                     this.Type = DefinitionType.Function;
                                     collection.RemoveRange(0, 3);
@@ -116,6 +135,10 @@ namespace Simula.Scripting.Syntax {
                     }
                 } else if (collection[0] == "def") {
                     this.Visibility = Visibility.Hidden;
+                if (collection.Count == 1) {
+                    collection[0].Error = new TokenizerException("SS0013");
+                    return;
+                }
                     switch ((string)collection[1]) {
                         case "func":
                             this.Type = DefinitionType.Function;
@@ -135,13 +158,18 @@ namespace Simula.Scripting.Syntax {
                     }
                 }
 
-                // 在此处的 collection 值应为序列
+            if (collection.Count == 0) {
+                store[store.Length - 1].Error = new TokenizerException("ss0021");
+                return;
+            }
 
-                // class_name<[class parameters ...]> [: inherit] [= defined<...>]
-                // func_name([function parameters]) [= defined(...)]
-                // const_name = defined
+            // 在此处的 collection 值应为序列
 
-                switch (this.Type) {
+            // class_name<[class parameters ...]> [: inherit] [= defined<...>]
+            // func_name([function parameters]) [= defined(...)]
+            // const_name = defined
+
+            switch (this.Type) {
                     case DefinitionType.Constant:
                         if (collection.Contains(new Token.Token("="))) {
                             var l = collection.Split(new Token.Token("="));
@@ -164,7 +192,7 @@ namespace Simula.Scripting.Syntax {
                                 this.FunctionAlias = eval;
                             } else collection[0].Error = new TokenizerException("SS0002");
                         } else {
-                            ParseAbsoluteFunctionDefinition(collection);
+                        ParseAbsoluteFunctionDefinition(collection);
                         }
                         break;
                     case DefinitionType.Class:
@@ -199,7 +227,12 @@ namespace Simula.Scripting.Syntax {
         }
 
         private void ParseAbsoluteClassName(TokenCollection collection) {
+
             this.ClassName = collection[0];
+            if(collection.Count == 1) {
+                collection[0].Error = new TokenizerException("ss0022");
+                return;
+            }
             if (collection[1] == "{}") { } else {
                 TokenCollection tk = new TokenCollection();
                 for (int i = 2; i < collection.Count; i++) {
@@ -223,23 +256,35 @@ namespace Simula.Scripting.Syntax {
 
         private void ParseAbsoluteFunctionDefinition(TokenCollection collection) {
             this.FunctionName = collection[0];
-            if (collection[1] == "(" && collection[2] == ")") { } else {
-                TokenCollection tk = new TokenCollection();
-                for (int i = 2; i < collection.Count; i++) {
-                    if (collection[i] == ")") break;
-                    else tk.Add(collection[i]);
-                }
+            if (collection.Count <3) {
+                collection[0].Error = new TokenizerException("ss0023");
+                return;
+            }
 
-                var funcParam = tk.Split(new Token.Token(","));
-                this.FunctionParameters.Clear();
-                foreach (var item in funcParam) {
-                    Parameter par = new Parameter();
-                    par.Name = item.Last();
-                    item.RemoveLast();
-                    EvaluationStatement e = new EvaluationStatement();
-                    e.Parse(item);
-                    par.Type = e;
-                    this.FunctionParameters.Add(par);
+            try {
+                if (collection[1] == "(" && collection[2] == ")") { } else {
+                    TokenCollection tk = new TokenCollection();
+                    for (int i = 2; i < collection.Count; i++) {
+                        if (collection[i] == ")") break;
+                        else tk.Add(collection[i]);
+                    }
+
+                    var funcParam = tk.Split(new Token.Token(","));
+                    this.FunctionParameters.Clear();
+                    foreach (var item in funcParam) {
+                        Parameter par = new Parameter();
+                        par.Name = item.Last();
+                        item.RemoveLast();
+                        EvaluationStatement e = new EvaluationStatement();
+                        e.Parse(item);
+                        par.Type = e;
+                        this.FunctionParameters.Add(par);
+                    }
+                }
+            } catch {
+                if (collection.Count < 3) {
+                    collection[collection.Count - 1].Error = new TokenizerException("ss0024");
+                    return;
                 }
             }
         }

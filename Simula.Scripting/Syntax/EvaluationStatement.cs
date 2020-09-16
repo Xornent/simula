@@ -10,11 +10,11 @@ namespace Simula.Scripting.Syntax {
         public TokenCollection RawEvaluateToken = new TokenCollection();
         public List<OperatorStatement> EvaluateOperators = new List<OperatorStatement>();
 
-        public override dynamic Operate(Compilation.RuntimeContext ctx) {
-            if (EvaluateOperators.Count > 1) return Type.Global.Null;
+        public override (dynamic value, Debugging.ExecutableFlag flag) Execute(Compilation.RuntimeContext ctx) {
+            if (EvaluateOperators.Count > 1) return (Type.Global.Null, Debugging.ExecutableFlag.Pass);
             var operation = EvaluateOperators[0];
 
-            return operation.Operate(ctx);
+            return (operation.Operate(ctx), Debugging.ExecutableFlag.Pass);
         }
 
         string EvalString = "";

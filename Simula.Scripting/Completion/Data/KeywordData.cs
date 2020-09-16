@@ -10,27 +10,27 @@ using System.Windows.Media.Effects;
 
 namespace Simula.Scripting.Completion.Data {
 
-    class KeywordData : ICompletionData {
+    public class KeywordData : ICompletionData {
 
         public static List<KeywordData> Registry = new List<KeywordData>()
         {
-             new KeywordData("if")
+            new KeywordData("if") // 0
             {
                 Definition = "if <bool> ...",
                 Documentation = "if 逻辑块接受一个其后跟随的表达式, 计算出其等效的布尔类型的值. 如果该值为真, 则相应 if 块中的代码行是有效的, 反之, 它们是无效的"
-            }, new KeywordData("eif")
+            }, new KeywordData("eif") // 1
             {
                 Definition = "eif <bool> ...",
                 Documentation = "eif 逻辑块接受一个其后跟随的表达式, 计算出其等效的布尔类型的值. 在这个 eif 块从属的 if 块和之前的所有 eif 的表达式值均为 false 时, 如果该值为真, 则相应 eif 块中的代码行是有效的, 反之, 它们是无效的"
-            }, new KeywordData("else")
+            }, new KeywordData("else") // 2
             {
                 Definition = "else ...",
                 Documentation = "如果 else 逻辑块前的所有 if 和 eif 表达式都无法执行, else 表达式中的代码段是有效的, 反之是无效的"
-            }, new KeywordData("end")
+            }, new KeywordData("end") // 3
             {
                 Definition = "end",
                 Documentation = "结束一个代码块. if, eif, else, for, while, def 语句均可创建一个代码块, 它们需要以 end 结尾"
-            }, new KeywordData("option")
+            }, new KeywordData("option") // 4
             {
                 Definition = "option [选项名称] [选项值]",
                 Documentation = "指示编译器, 解释器, 或者命令行窗口执行特定的选项. 从以下的列表项中选取支持的命令语句: \n" +
@@ -38,88 +38,76 @@ namespace Simula.Scripting.Completion.Data {
                 "override    [on, off] \n" +
                 "warning     [on, off] [id] \n" +
                 "error       [on, off] [id] "
-            }, new KeywordData("use")
+            }, new KeywordData("use") // 5
             {
                 Definition = "use [包全名]",
                 Documentation = "从已注册的全局中引用一个包的所有内容"
-            }, new KeywordData("module")
+            }, new KeywordData("module") // 6
             {
                 Definition = "module [包全名]",
                 Documentation = "定义这个编译单元中所有内容从属在某个包下. 如果一个编译单元没有一个 module 语句, 它被默认定义在全局变量中, 如果一个编译单元有超过一个 module 语句, 只有从上至下的第一个是有效的"
-            }, new KeywordData("def")
+            }, new KeywordData("def") // 7
             {
-                Definition = "[expose, hidden] def class 类型名<[分类型参数, ...]> [: 基类型] \n" +
-                "[expose, hidden] def const 常量名 [= ...] \n" +
+                Definition = "[expose, hidden] def class 类型名<[...]> [: ...] \n" +
+                "[expose, hidden] def const 变量名 [= ...] \n" +
                 "[expose, hidden] def func 函数名 ([函数参数 ...])",
-                Documentation = "定义一个类, 函数, 或常量的开始"
-            }, new KeywordData("class")
+                Documentation = "定义一个类, 函数, 或变量的开始"
+            }, new KeywordData("class") // 8
             {
                 Definition = "[expose, hidden] def class 类型名<[分类型参数, ...]> [: 基类型]",
                 Documentation = "定义一个类的开始"
-            }, new KeywordData("func")
+            }, new KeywordData("func") // 9
             {
                 Definition = "[expose, hidden] def func 函数名 ([函数参数 ...])",
                 Documentation = "定义一个函数的开始"
-            }, new KeywordData("const")
+            }, new KeywordData("var") // 10
             {
-                Definition = "[expose, hidden] def const 常量名 [= ...] ",
-                Documentation = "定义一个常量的开始"
-            }, new KeywordData("expose")
+                Definition = "[expose, hidden] def const 变量名 [= ...] ",
+                Documentation = "定义一个变量的开始"
+            }, new KeywordData("expose") // 11
             {
                 Definition = "expose def ...",
                 Documentation = "全局可见修饰符. 在默认情况下, 一个成员只在定义它的包中可见, 而这个修饰符定义了需要在其它包中同样可见的导出对象"
-            }, new KeywordData("hidden")
+            }, new KeywordData("hidden") // 12
             {
                 Definition = "hidden def ...",
                 Documentation = "默认情况下, 一个成员只在定义它的包中可见"
-            }, new KeywordData("label")
+            }, new KeywordData("label") // 13
             {
                 Definition = "label 标签名",
                 Documentation = "定义一个标签, 它含有一个代码块. 在程序执行到 go 跳转指令时, 执行标签中的所有语句, 再回到 go 定义的位置."
-            }, new KeywordData("pass")
+            }, new KeywordData("pass") // 14
             {
                 Definition = "pass",
                 Documentation = "跳出正在执行的代码块, 或者是一个循环的一轮, 如果当前不在任何一个代码块中, 就终止执行程序"
-            }, new KeywordData("go")
+            }, new KeywordData("go") // 15
             {
                 Definition = "go 标签名",
                 Documentation = "跳转到指定的标签, 如果标签没有定义, 本语句是无效的"
-            }, new KeywordData("return")
+            }, new KeywordData("return") // 16
             {
                 Definition = "return [返回值]",
                 Documentation = "跳出当前的函数, 并可选的返回一个值. 如果当前不在函数块中, 本语句是无效的"
-            }, new KeywordData("break")
+            }, new KeywordData("break") // 17
             {
                 Definition = "break",
                 Documentation = "跳出当前的循环. 如果当前不在循环块中, 本语句是无效的"
-            }, new KeywordData("while")
+            }, new KeywordData("while") // 18
             {
                 Definition = "while 检测语句 ...",
                 Documentation = "当检测语句的值为 true 时, 执行代码块中的语句, 并进行下一次检测"
-            }, new KeywordData("enum")
+            }, new KeywordData("enum") // 19
             {
                 Definition = "enum [枚举值] in [枚举器] [at <dimension<n>>]",
                 Documentation = "在一个枚举器中遍历枚举值, 可选的获取此时在枚举器中的位置, 并执行相应的代码段"
-            }, new KeywordData("in")
+            }, new KeywordData("in") // 20
             {
                 Definition = "enum [枚举值] in [枚举器] [at <dimension<n>>]",
                 Documentation = "声明枚举器"
-            }, new KeywordData("at")
+            }, new KeywordData("at") // 21
             {
                 Definition = "enum [枚举值] in [枚举器] [at <dimension<n>>]",
                 Documentation = "获取枚举器坐标"
-            }, new KeywordData("bool")
-            {
-                Definition = "expose def class bool<> : object<>",
-                Documentation = "表示一个布尔值 (true 或者 false)"
-            }, new KeywordData("string")
-            {
-                Definition = "expose def class string<> : dimension<1>",
-                Documentation = "将文本表示为 UTF-16 代码单元的序列"
-            }, new KeywordData("char")
-            {
-                Definition = "expose def class char<> : object<>",
-                Documentation = "UTF-16 代码单元"
             }
         };
 

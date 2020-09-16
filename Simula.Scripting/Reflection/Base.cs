@@ -7,7 +7,7 @@ namespace Simula.Scripting.Reflection {
     public class Base {
         public string Name = "";
         public string FullName = "";
-        public List<string> ModuleHirachy = new List<string>();
+        public List<string> ModuleHirachy = new List<string>() { "<callstack>" };
     }
 
     public class SourceBase : Base {

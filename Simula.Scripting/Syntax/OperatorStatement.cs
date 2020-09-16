@@ -8,6 +8,10 @@ namespace Simula.Scripting.Syntax {
         public OperatorStatement? Left { get; set; }
         public OperatorStatement? Right { get; set; }
 
+        public virtual dynamic Operate(Compilation.RuntimeContext ctx) {
+            return Type.Global.Null;
+        }
+
         public dynamic OperateByName(string name, Compilation.RuntimeContext ctx) {
             if (this.Left == null) return Type.Global.Null;
             if (this.Right == null) return Type.Global.Null;

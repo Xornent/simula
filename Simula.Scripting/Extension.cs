@@ -64,5 +64,17 @@ namespace Simula.Scripting {
                 dict[key] = val;
             } else dict.Add(key, val);
         }
+
+        public static List<TKey> RemoveValue<TKey, TValue>(this Dictionary<TKey, TValue> dict, TValue value) {
+            List<TKey> keys = new List<TKey>();
+            foreach (var item in dict) {
+                if (item.Value.Equals( value)) keys.Add(item.Key);
+            }
+
+            foreach (var item in keys) {
+                dict.Remove(item);
+            }
+            return keys;
+        }
     }
 }

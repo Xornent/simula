@@ -27,14 +27,14 @@ namespace Simula.Scripting.Syntax {
             Right.Parse(lr[1]);
         }
 
-        public override dynamic Operate(Compilation.RuntimeContext ctx) {
-            if (Left == null) { this.Right?.Operate(ctx); return Type.Global.Null; };
-            if (Right == null) { return Type.Global.Null; }
-            dynamic? evalLeft = this.Left?.Operate(ctx);
-            dynamic? evalRight = this.Right?.Operate(ctx);
+        public override (dynamic value, Debugging.ExecutableFlag flag) Execute(Compilation.RuntimeContext ctx) {
+            if (Left == null) { this.Right?.Execute(ctx); return (Type.Global.Null, Debugging.ExecutableFlag.Pass); };
+            if (Right == null) { return (Type.Global.Null, Debugging.ExecutableFlag.Pass); }
+            dynamic? evalLeft = this.Left?.Execute(ctx).value;
+            dynamic? evalRight = this.Right?.Execute(ctx).value;
 
-            if (evalLeft == null) return Type.Global.Null;
-            if (evalRight == null) return Type.Global.Null;
+            if (evalLeft == null) return (Type.Global.Null, Debugging.ExecutableFlag.Pass);
+            if (evalRight == null) return (Type.Global.Null, Debugging.ExecutableFlag.Pass);
             if (evalLeft is Type._Null) { 
                 if(Left.EvaluateOperators.Count == 1) 
                     if(Left.EvaluateOperators[0] is SelfOperation)
@@ -42,7 +42,7 @@ namespace Simula.Scripting.Syntax {
             } else {
                 ctx.SetMember(evalLeft, evalRight);
             }
-            return evalRight;
+            return (evalRight, Debugging.ExecutableFlag.Pass);
         }
     }
 }

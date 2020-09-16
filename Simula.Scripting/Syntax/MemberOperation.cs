@@ -48,6 +48,8 @@ namespace Simula.Scripting.Syntax {
                 return ((Reflection.Variable)evalLeft).GetMember(member);
             } else if(evalLeft is Reflection.Instance) {
                 return ((Reflection.Instance)evalLeft).GetMember(member);
+            } else if(evalLeft is Reflection.Module) {
+                return ((Reflection.Module)evalLeft).GetMemberModulePrior(member);
             }
 
             return Type.Global.Null;
