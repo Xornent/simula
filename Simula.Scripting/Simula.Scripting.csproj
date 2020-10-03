@@ -9,7 +9,6 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <OutputPath>/bin/Debug</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>

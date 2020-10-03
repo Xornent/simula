@@ -119,6 +119,10 @@ namespace Simula.Scripting.Reflection {
             if (!notMatch) {
                 result = new Syntax.BlockStatement() { Children = selection.Startup }.Execute(ctx);
             }
+            
+            // 在函数执行完毕后, 变量的更改都储存在临时调用栈里, 而在 C# 中无法定义值类型, 这些变化导致调用栈中新赋值
+            // 的变量和原有的变量有不同的内存地址. (因为语言是弱类型的, 我们不能限制已定义的变量的类型, 来共用一个内存
+            // 地址). 此时, 我们就要将新的变量(按照名字) 更新到全局变量库中. 当然, 如果只是临时变量就不需要了.
 
             var stack = ctx.CallStack.Pop();
             if(!IsStatic) {

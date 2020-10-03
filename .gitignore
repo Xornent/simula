@@ -10,6 +10,12 @@ bin/
 bin/*
 obj/
 obj/*
+.vs/
+.vs/*
+simula/.vs/
+simula/.vs/*
+.build/
+.vscode/
 
 !/simula/bin/debug/netcoreapp3.1/app.icon.64.png
 !/simula/bin/debug/netcoreapp3.1/app.icon.128.png
