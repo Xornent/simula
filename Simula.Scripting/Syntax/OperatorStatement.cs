@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using Simula.Scripting.Debugging;
 using System.Text;
+using Simula.Scripting.Reflection;
 
 namespace Simula.Scripting.Syntax {
 
@@ -8,50 +10,47 @@ namespace Simula.Scripting.Syntax {
         public OperatorStatement? Left { get; set; }
         public OperatorStatement? Right { get; set; }
 
-        public virtual dynamic Operate(Compilation.RuntimeContext ctx) {
-            return Type.Global.Null;
+        public virtual ExecutionResult Operate(Compilation.RuntimeContext ctx) {
+            return new ExecutionResult();
         }
 
-        public dynamic OperateByName(string name, Compilation.RuntimeContext ctx) {
-            if (this.Left == null) return Type.Global.Null;
-            if (this.Right == null) return Type.Global.Null;
-            dynamic evalLeft = this.Left.Operate(ctx);
-            dynamic evalRight = this.Right.Operate(ctx);
+        public ExecutionResult OperateByName(string name, Compilation.RuntimeContext ctx) {
+            if (this.Left == null) return new ExecutionResult();
+            if (this.Right == null) return new ExecutionResult();
+            ExecutionResult evalLeft = this.Left.Operate(ctx);
+            ExecutionResult evalRight = this.Right.Operate(ctx);
 
-            dynamic rightObj = evalRight;
-            if (evalRight is Reflection.Variable) rightObj = evalRight.Object;
-            if (evalLeft is Reflection.Variable) {
-                try {
-                    return ((Reflection.Variable)evalLeft).InvokeMember(name, new List<Reflection.Base>() { rightObj });
-                } catch {
-                    this.RawEvaluateToken[0].Error = new Token.TokenizerException("SS0020");
-                }
-            } else if (evalLeft is Type.Var) {
-                try {
-                    Reflection.Variable varia = new Reflection.Variable();
-                    varia.Object = (Type.Var)evalLeft;
-                    return varia.InvokeMember(name, new List<Reflection.Base>() { rightObj });
-                } catch {
-                    this.RawEvaluateToken[0].Error = new Token.TokenizerException("SS0020");
-                }
-            } else if (evalLeft is Reflection.Instance) {
-                try {
-                    var member = ((Reflection.Instance)evalLeft).GetMember(name);
-                    if (member == null) return Type.Global.Null;
-                    if (member == Type.Global.Null) return Type.Global.Null;
-                    if (member is Reflection.Function) {
-                        return ((Reflection.Function)member).Invoke(new List<Reflection.Base>() { rightObj }, ctx) ?? Type.Global.Null;
-                    } else return Type.Global.Null;
-                } catch {
-                    this.RawEvaluateToken[0].Error = new Token.TokenizerException("SS0020");
-                }
-            } else if (evalLeft is Type._Null || evalRight is Type._Null) {
-                return Type.Global.Null;
-            } else {
-                this.RawEvaluateToken[0].Error = new Token.TokenizerException("SS0019");
+            switch (evalLeft.Result.Type) {
+                case Reflection.MemberType.Class:
+                    break;
+                case Reflection.MemberType.Instance:
+                    Instance instance = (Instance)evalLeft.Result;
+                    var member = instance.GetMember(name);
+                    if(member.Pointer != 0) {
+                        if (member.Result.Type == MemberType.Function) {
+                            var result = ((Function)member.Result).Invoke(new List<Member>() { evalRight.Result }, ctx);
+                            return result;
+                        }
+                    }
+                    break;
+                case Reflection.MemberType.Function:
+                    break;
+                case Reflection.MemberType.Module:
+                    break;
+                case Reflection.MemberType.Unknown:
+                    break;
+                default:
+                    break;
             }
 
-            return Type.Global.Null;
+            return new ExecutionResult();
+        }
+
+        public ExecutionResult OperateBySignal(string signal, Compilation.RuntimeContext ctx) {
+            if (Class.Operators.ContainsKey(signal))
+                if (Class.Operators[signal].Type == OperatorType.Binary)
+                    return OperateByName(Class.Operators[signal].MethodBinding, ctx);
+            return new ExecutionResult();
         }
     }
 }

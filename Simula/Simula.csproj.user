@@ -48,5 +48,11 @@
     <Page Update="UI\Load.xaml">
       <SubType>Designer</SubType>
     </Page>
+    <Page Update="UI\Fonts.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="UI\Styles.xaml">
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
 </Project>

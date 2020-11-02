@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Simula.Scripting.Reflection {
 
-    public class Documentation : Base {
-        public List<string> Content = new List<string>();
+    public class Documentation {
+        public List<string> Content { get; set; } = new List<string>();
     }
 }

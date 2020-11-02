@@ -1,4 +1,5 @@
-﻿using Simula.Scripting.Token;
+﻿using Simula.Scripting.Debugging;
+using Simula.Scripting.Token;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,8 +12,8 @@ namespace Simula.Scripting.Syntax {
 
         }
 
-        public override (dynamic value, Debugging.ExecutableFlag flag) Execute(Compilation.RuntimeContext ctx) {
-            return (Type.Global.Null, Debugging.ExecutableFlag.Break);
+        public override ExecutionResult Execute(Compilation.RuntimeContext ctx) {
+            return new ExecutionResult(0, ctx, ExecutableFlag.Break);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Simula.Scripting.Debugging;
 using Simula.Scripting.Token;
 
 namespace Simula.Scripting.Syntax {
@@ -10,11 +11,11 @@ namespace Simula.Scripting.Syntax {
         public TokenCollection RawEvaluateToken = new TokenCollection();
         public List<OperatorStatement> EvaluateOperators = new List<OperatorStatement>();
 
-        public override (dynamic value, Debugging.ExecutableFlag flag) Execute(Compilation.RuntimeContext ctx) {
-            if (EvaluateOperators.Count > 1) return (Type.Global.Null, Debugging.ExecutableFlag.Pass);
+        public override ExecutionResult Execute(Compilation.RuntimeContext ctx) {
+            if (EvaluateOperators.Count > 1) return new ExecutionResult();
             var operation = EvaluateOperators[0];
 
-            return (operation.Operate(ctx), Debugging.ExecutableFlag.Pass);
+            return operation.Operate(ctx);
         }
 
         string EvalString = "";
@@ -81,7 +82,6 @@ namespace Simula.Scripting.Syntax {
             while (ReplaceSmallBracketToFunctionCall()) { }
 #else
             while (ParseSealedOperator("{", "}", EvaluateOperators)) { }
-            while (ReplaceAngleBracketToClassType()) { }
 
             while (ParseSealedOperator("(", ")", EvaluateOperators)) { }
             while (ReplaceSmallBracketToFunctionCall()) { }
@@ -123,30 +123,6 @@ namespace Simula.Scripting.Syntax {
                         }
 
                         FunctionCallOperation func = new FunctionCallOperation();
-                        func.Left = EvaluateOperators[c - 1];
-                        func.Right = EvaluateOperators[c];
-                        EvaluateOperators.RemoveRange(c - 1, 2);
-                        EvaluateOperators.Insert(c-1, func);
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        bool ReplaceAngleBracketToClassType() {
-            int length = EvaluateOperators.Count;
-            for (int c = 0; c < length; c++) {
-                var item = EvaluateOperators[c];
-                if (item is AngleBracketOperation) {
-                    if (c != 0) {
-                        OperatorStatement op = EvaluateOperators[c - 1];
-                        if (op is SelfOperation) {
-                            var self = op as SelfOperation;
-                            if (self.Self.IsValidSymbolBeginning()) { continue; }
-                        }
-
-                        ClassTypeOperation func = new ClassTypeOperation();
                         func.Left = EvaluateOperators[c - 1];
                         func.Right = EvaluateOperators[c];
                         EvaluateOperators.RemoveRange(c - 1, 2);
@@ -336,16 +312,6 @@ namespace Simula.Scripting.Syntax {
 #if optional
                                 } else if (left == "<") {
 #else
-                                } else if (left == "{") {
-#endif
-                                    AngleBracketOperation sm = new AngleBracketOperation();
-                                    sm.EvaluateOperators = children;
-                                    foreach (var item in children) {
-                                        sm.RawEvaluateToken.AddRange(item.RawEvaluateToken);
-                                    }
-                                    sm.Parse();
-                                    token.RemoveAt(i);
-                                    token.Insert(i, sm);
                                 } else if (left == "[") {
                                     SquareBracketOperation sm = new SquareBracketOperation();
                                     sm.EvaluateOperators = children;
@@ -372,3 +338,4 @@ namespace Simula.Scripting.Syntax {
         }
     }
 }
+#endif

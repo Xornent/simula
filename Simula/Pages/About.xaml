@@ -4,8 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Simula.Pages"
+        Icon="pack://siteoforigin:,,,/app.icon.ico"
              Title="关于 Xornent Simula" WindowStartupLocation="CenterScreen"
-             mc:Ignorable="d" FontFamily="pingfang sc, consolas, simsun" Width="524" Height="399">
+             mc:Ignorable="d" FontFamily="{StaticResource default}" Width="524" Height="399">
     <Grid>
         <StackPanel Orientation="Vertical">
             <Grid Height="20"/>
@@ -22,7 +23,12 @@
                     </Grid>
                 </StackPanel>
             </Grid>
-            <Grid Height="20"/>
+            <Grid Height="20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="285*"/>
+                    <ColumnDefinition Width="239*"/>
+                </Grid.ColumnDefinitions>
+            </Grid>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="0.15*"/>

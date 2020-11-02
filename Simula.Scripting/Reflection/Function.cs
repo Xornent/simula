@@ -1,164 +1,240 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Reflection;
 using System.Text;
+using System.Windows;
+using System.Windows.Documents;
 using Simula.Scripting.Compilation;
+using Simula.Scripting.Debugging;
 
 namespace Simula.Scripting.Reflection {
-    
-    public class Function : SourceBase {
-        public List<(Base type, string name)> Parameters = new List<(Base, string)>();
+
+    public struct NamedValue {
+        public NamedValue(string name, Member value) {
+            this.Name = name;
+            this.Value = value;
+        }
+
+        public string Name { get; set; }
+        public Member Value { get; set; }
+    }
+
+    public struct NamedType {
+        public NamedType(string name, Class value) {
+            this.Name = name;
+            this.Type = value;
+        }
+
+        public string Name { get; set; }
+        public Class Type { get; set; }
+    }
+
+    public class Function : Member {
+        public Function() : base() {
+            this.Type = MemberType.Function;
+        }
+
+        /// <summary>
+        /// 函数的参数声明表, 是一个特化类和名称的有序对的序列. Class 是一个链接
+        /// C# 类型和脚本中定义的类型的结构, 有子类 ClrClass(Type).
+        /// </summary>
+        public List<NamedType> Parameters { get; internal set; } = new List<NamedType>();
 
         public List<Syntax.Statement> Startup = new List<Syntax.Statement>();
-        public Documentation DocumentationSource = new Documentation();
-
-        public bool Compiled = false;
-        public Function? Conflict;
         public Instance? Parent = null;
         public bool IsStatic { get { return Parent == null; } }
 
-        public dynamic? Invoke(List<Base> pars, Compilation.RuntimeContext ctx) {
+        public virtual ExecutionResult Invoke(List<Member> parameters, Compilation.RuntimeContext ctx) {
 
-            // 执行在 DOM 语句树定义的函数.
+            // 每个函数变量的 Conflict 链中写着与其同名的函数组. 我们要遍历整个函数组, 来选择其
+            // 变量类型表与调用传入参数的变量类型表完全相同的函数, 如果没有找到, 返回 Null 常量,
+            // 并抛出一个运行时错误: "对于传入的参数 (..., ...) 没有找到一个 ... 函数与它匹配."
 
-            var selection = this;
-            bool notMatch = false;
+            Function? selection = this;
+            bool notMatch = true;
+
+            while(notMatch) {
+                notMatch = false;
+                for(int parameterCounter = 0; parameterCounter<parameters.Count; parameterCounter ++) {
+                    if(this.Parameters.Count < parameterCounter+1 ) { notMatch = false; break; }
+                    if (!this.Parameters[parameterCounter].Type.IsCompatible(parameters[parameterCounter])) { notMatch = true; break; }
+                }
+
+                if (selection?.Conflict == null) break;
+                if(notMatch) selection = (Function?)selection.Conflict;
+            }
+
+            if (selection == null)
+                return new ExecutionResult();
+
+            if (parameters.Count != selection.Parameters.Count) {
+                Function func = new Function();
+                func.Name = this.Name;
+                func.Parent = this.Parent;
+                func.ModuleHierarchy = this.ModuleHierarchy;
+                func.Documentation = this.Documentation;
+                func.Startup = this.Startup;
+
+                int count = 0;
+                foreach (var item in selection.Parameters) {
+                    count++;
+                    if (count > parameters.Count)
+                        func.Parameters.Add(item);
+                }
+
+                ExecutionResult reconstruct = new ExecutionResult(func, ctx);
+                return reconstruct;
+            }
+
+            // 注册函数可以使用的变量:
+            // 函数的一个 CallStack 中储存了自己的参数作为变量, 以及定义自己的类中的变量作为变量.
+
+            TemperaryContext scope = new TemperaryContext(ctx);
+            scope.Name = this.Name;
+            int counter = 0;
+            foreach (var item in parameters) {
+                scope.SetMember(this.Parameters[counter].Name, item);
+                counter++;
+            }
+
+            if (this.Parent != null)
+                foreach (var item in this.Parent.Members) {
+                    scope.SetMember(item.Key, ctx.GetMemberByMetadata(item.Value));
+                }
+
+            scope.BaseTemperaryContent = ctx.CallStack.Peek();
+            ctx.CallStack.Push(scope);
+
+            var result = new Syntax.BlockStatement() { Children = selection.Startup }.Execute(ctx);
+
+            ctx.CallStack.Pop();
+            return result;
+        }
+
+        public virtual ExecutionResult Invoke(List<NamedValue> parameters, Compilation.RuntimeContext ctx) {
+            Function? selection = this;
+            bool notMatch = true;
 
             while (notMatch) {
                 notMatch = false;
+                foreach (var item in parameters) {
+                    int found = this.Parameters.FindIndex((named) =>
+                    {
+                        if (named.Name == item.Name) return true;
+                        else return false;
+                    });
 
-                if (pars.Count != selection.Parameters.Count) { notMatch = true; continue; }
-                
-                if (!notMatch) break;
-                if (selection.Conflict == null) break;
-                selection = selection.Conflict;
-            }
-
-            // 注册函数可以使用的变量
-
-            // 函数的一个 CallStack 中储存了自己的参数作为变量, 以及定义自己的类中的变量作为变量.
-            // 它们分别在 pars 和 Parent.Functions 与 Parent.Variables 中
-
-            int c = 0;
-            TemperaryContext tctx = new TemperaryContext();
-            foreach (var item in pars) {
-                if(item is AbstractClass) {
-                    var i = item as AbstractClass;
-                    if (i == null) continue;
-                    tctx.Classes.OverflowAddAbstractClass(i.Name, i);
-                } else if (item is IdentityClass) {
-                    var i = item as IdentityClass;
-                    if (i == null) continue;
-                    tctx.IdentityClasses.OverflowAddIdentityClass(i.Name, i);
-                } else if (item is Instance) {
-                    var i = item as Instance;
-                    if (i == null) continue;
-                    tctx.Instances.OverflowAddInstance(i.Name, i);
-                } else if (item is Function) {
-                    var i = item as Function;
-                    if (i == null) continue;
-                    tctx.Functions.OverflowAddFunction(i.Name, i);
-                } else if (item is Module) {
-                    var i = item as Module;
-                    if (i == null) continue;
-                    tctx.SubModules.OverflowAddModule(i.Name, i);
-                } else if (item is Variable) {
-                    var i = item as Variable;
-                    if (i == null) continue;
-                    tctx.Variables.OverflowAddVariable(i.Name, i);
-                } else if (item is Type.Var) {
-                    Variable v = new Variable();
-                    v.Name = Parameters[c].name;
-                    v.Object = (Type.Var)item;
-                    v.ModuleHirachy = new List<string>() { "<callstack>" };
-                    tctx.Variables.OverflowAddVariable(Parameters[c].name, v);
-                }
-
-                c++;
-            }
-
-            if (!IsStatic) {
-
-                // 其实通过 IsStatic, 我们已经断言 Parent 不为 null 了, 但是 Visual Studio 会持续警告
-
-                foreach (var item in Parent.Variables) {
-                    if (item.Value is AbstractClass) {
-                        var i = item.Value as AbstractClass;
-                        if (i == null) continue;
-                        tctx.Classes.OverflowAddAbstractClass(item.Key, i);
-                    } else if (item.Value is IdentityClass) {
-                        var i = item.Value as IdentityClass;
-                        if (i == null) continue;
-                        tctx.IdentityClasses.OverflowAddIdentityClass(item.Key, i);
-                    } else if (item.Value is Instance) {
-                        var i = item.Value as Instance;
-                        if (i == null) continue;
-                        tctx.Instances.OverflowAddInstance(item.Key, i);
-                    } else if (item.Value is Function) {
-                        var i = item.Value as Function;
-                        if (i == null) continue;
-                        tctx.Functions.OverflowAddFunction(item.Key, i);
-                    } else if (item.Value is Module) {
-                        var i = item.Value as Module;
-                        if (i == null) continue;
-                        tctx.SubModules.OverflowAddModule(item.Key, i);
-                    } else if (item.Value is Variable) {
-                        var i = item.Value as Variable;
-                        if (i == null) continue;
-                        tctx.Variables.OverflowAddVariable(item.Key, i);
+                    if (found == -1) { notMatch = true; break; }
+                    var compared = this.Parameters[found];
+                    if(!compared.Type.IsCompatible(item.Value)) {
+                        notMatch = true;
+                        break;
                     }
                 }
 
-                foreach (var item in Parent.Functions) {
-                    tctx.Functions.OverflowAddFunction(item.Key, item.Value);
-                }
+                if (selection?.Conflict == null) break;
+                if (notMatch) selection = (Function?)selection.Conflict;
             }
 
-            ctx.CallStack.Push(tctx);
+            if (selection == null)
+                return new ExecutionResult();
 
-            dynamic? result = null;
-            if (!notMatch) {
-                result = new Syntax.BlockStatement() { Children = selection.Startup }.Execute(ctx);
-            }
-            
-            // 在函数执行完毕后, 变量的更改都储存在临时调用栈里, 而在 C# 中无法定义值类型, 这些变化导致调用栈中新赋值
-            // 的变量和原有的变量有不同的内存地址. (因为语言是弱类型的, 我们不能限制已定义的变量的类型, 来共用一个内存
-            // 地址). 此时, 我们就要将新的变量(按照名字) 更新到全局变量库中. 当然, 如果只是临时变量就不需要了.
+            if(parameters.Count != selection.Parameters.Count) {
+                Function func = new Function();
+                func.Name = this.Name;
+                func.Parent = this.Parent;
+                func.ModuleHierarchy = this.ModuleHierarchy;
+                func.Documentation = this.Documentation;
+                func.Startup = this.Startup;
 
-            var stack = ctx.CallStack.Pop();
-            if(!IsStatic) {
-                var parent = this.Parent;
-                foreach (var item in stack.Variables) {
-                    if (parent.Variables.ContainsKey(item.Key))
-                        parent.Variables[item.Key] = item.Value;
+                foreach (var item in selection.Parameters) {
+                    int given = parameters.FindIndex((named) =>
+                    {
+                        if (named.Name == item.Name) return true;
+                        else return false;
+                    });
+
+                    if(given == -1) func.Parameters.Add(item);
                 }
 
-                foreach (var item in stack.Classes) {
-                    if (parent.Variables.ContainsKey(item.Key))
-                        parent.Variables[item.Key] = item.Value;
-                }
-
-                foreach (var item in stack.IdentityClasses) {
-                    if (parent.Variables.ContainsKey(item.Key))
-                        parent.Variables[item.Key] = item.Value;
-                }
-
-                foreach (var item in stack.Instances) {
-                    if (parent.Variables.ContainsKey(item.Key))
-                        parent.Variables[item.Key] = item.Value;
-                }
-
-                foreach (var item in stack.SubModules) {
-                    if (parent.Variables.ContainsKey(item.Key))
-                        parent.Variables[item.Key] = item.Value;
-                }
-
-                foreach (var item in stack.Functions) {
-                    if (parent.Functions.ContainsKey(item.Key))
-                        parent.Functions[item.Key] = item.Value;
-                }
+                ExecutionResult reconstruct = new ExecutionResult(func, ctx);
+                return reconstruct;
             }
 
-            return ((ValueTuple<dynamic, Debugging.ExecutableFlag>)result).Item1;
+            TemperaryContext scope = new TemperaryContext(ctx);
+            scope.Name = this.Name;
+            foreach (var item in parameters) {
+                scope.SetMember(item.Name, item.Value);
+            }
+
+            if (this.Parent != null)
+                foreach (var item in this.Parent.Members) {
+                    scope.SetMember(item.Key, ctx.GetMemberByMetadata(item.Value));
+                }
+
+            scope.BaseTemperaryContent = ctx.CallStack.Peek();
+            ctx.CallStack.Push(scope);
+
+            var result = new Syntax.BlockStatement() { Children = selection.Startup }.Execute(ctx);
+
+            ctx.CallStack.Pop();
+            return result;
+        }
+    }
+
+    public class ClrFunction : Function, ClrMember {
+        public ClrFunction(MethodInfo function) : base() {
+            this.Reflection = function;
+
+            this.Parameters.Clear();
+            foreach (var item in function.GetParameters()) {
+                NamedType type = new NamedType();
+                type.Name = item.Name ?? "<annoymous>";
+                type.Type = ClrClass.Create(item.ParameterType);
+                this.Parameters.Add(type);
+            }
+        }
+
+        public new ClrInstance? Parent = null;
+        public new bool IsStatic { get { return Parent == null; } }
+        MethodInfo? Reflection = null; 
+        public override ExecutionResult Invoke(List<Member> parameters, RuntimeContext ctx) {
+            try {
+                List<object?> objectParameters = new List<object?>();
+                foreach (var item in parameters) {
+                    switch (item.Type) {
+                        case MemberType.Class:
+                            break;
+                        case MemberType.Instance:
+                            objectParameters.Add(((ClrInstance)item).Reflection);
+                            break;
+                        case MemberType.Function:
+                            break;
+                        case MemberType.Unknown:
+                            objectParameters.Add(Simula.Scripting.Type.Global.Null);
+                            break;
+                    }
+                }
+                var raw = Reflection?.Invoke(Parent?.Reflection, objectParameters.ToArray());
+                var result = new ClrInstance(raw, ctx);
+                if (result == null) return new ExecutionResult();
+                else return new ExecutionResult((Member)result, ctx);
+            } catch (Exception ex) {
+#if DEBUG
+                MessageBox.Show(ex.Message + "\n\n" + ex.StackTrace);
+#endif
+            }
+
+            return new ExecutionResult();
+        }
+
+        public override ExecutionResult Invoke(List<NamedValue> parameters, RuntimeContext ctx) {
+            return new ExecutionResult();
+        }
+
+        public object? GetNative() {
+            return this.Reflection;
         }
     }
 }

@@ -7,7 +7,7 @@ namespace Simula.Scripting.Type {
 
     [Expose("float")]
     public class Float : Var {
-        private float value;
+        public float value;
 
         public static implicit operator float(Float i) {
             return i.value;
@@ -17,25 +17,8 @@ namespace Simula.Scripting.Type {
             return new Float() { value = i };
         }
 
-        public override bool Equals(object? obj) {
-            if (obj == null) return false;
-            if (obj is float) return this.value == (float)obj;
-            if (obj is double) return this.value == (double)obj;
-            if (obj is Float) return this.value == ((Float)obj).value;
-            return false;
-        }
-
-        public override int GetHashCode() {
-            return value.GetHashCode();
-        }
-
         public override string ToString() {
             return value.ToString();
-        }
-
-        [Expose("_create", true)]
-        public Function _create() {
-            return new Function(this.GetType().GetMethod("_init"), this);
         }
 
         [Expose("_init", true)]
@@ -70,7 +53,13 @@ namespace Simula.Scripting.Type {
 
         [Expose("_equal")]
         public Boolean _equal(Var f) {
-            return Equals(f);
+            if (f is Float)
+                return this.value == ((Float)f).value;
+            if (f is Integer bint) {
+                if ((int)this.value == this.value)
+                    return bint.Equals((int)this.value);
+            }
+            return false;
         }
 
         [Expose("_notequal")]
@@ -78,22 +67,22 @@ namespace Simula.Scripting.Type {
             return _equal(f)._not();
         }
 
-        [Expose("_morethan")]
+        [Expose("_gt")]
         public Boolean _morethan(Float f) {
             return this.value > f;
         }
 
-        [Expose("_lessthan")]
+        [Expose("_lt")]
         public Boolean _lessthan(Float f) {
             return this.value < f;
         }
 
-        [Expose("_nomorethan")]
+        [Expose("_lte")]
         public Boolean _nomorethan(Float f) {
             return this.value <= f;
         }
 
-        [Expose("_nolessthan")]
+        [Expose("_gte")]
         public Boolean _nolessthan(Float f) {
             return this.value >= f;
         }

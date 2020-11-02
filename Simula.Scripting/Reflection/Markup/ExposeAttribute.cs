@@ -8,6 +8,7 @@ namespace Simula.Scripting.Reflection.Markup {
     sealed class ExposeAttribute : Attribute {
         readonly string alias;
         readonly bool toSystemOnly;
+
         public ExposeAttribute(string alias, bool systemOnly = false) {
             this.alias = alias;
             this.toSystemOnly = systemOnly;

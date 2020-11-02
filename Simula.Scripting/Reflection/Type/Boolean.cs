@@ -37,11 +37,6 @@ namespace Simula.Scripting.Type {
             else return "false";
         }
 
-        [Expose("_create", true)]
-        public Function _create() {
-            return new Function(this.GetType().GetMethod("_init"), this);
-        }
-
         [Expose("_init", true)]
         public Boolean _init(String evaluation) {
             if (evaluation.to_lower() == "true")
@@ -49,12 +44,12 @@ namespace Simula.Scripting.Type {
             else return False;
         }
 
-        [Expose("_bitleft", true)]
+        [Expose("_bitlshift", true)]
         public Boolean _bitleft(Integer evaluation) {
             return False;
         }
 
-        [Expose("_bitright", true)]
+        [Expose("_bitrshift", true)]
         public Boolean _bitright(Integer evaluation) {
             return False;
         }

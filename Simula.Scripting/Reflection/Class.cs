@@ -1,187 +1,240 @@
 ﻿using Simula.Scripting.Compilation;
+using Simula.Scripting.Debugging;
+using Simula.Scripting.Reflection.Markup;
 using Simula.Scripting.Syntax;
+using Simula.Scripting.Type;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Simula.Scripting.Reflection {
 
-    public class AbstractClass : SourceBase {
-        public List<(Base type, string name)> SubclassIdentifer = new List<(Base, string)>();
-        public IdentityClass? Inheritage;
-
-        public Syntax.DefinitionBlock? Definition;
-
-        public Documentation DocumentationSource = new Documentation();
-
-        public bool Compiled = false;
-        public AbstractClass? Conflict;
-
-
-        public IdentityClass? Identify(List<Base> bases, RuntimeContext ctx) {
-            IdentityClass id = new IdentityClass();
-            if (bases.Count != SubclassIdentifer.Count) return null;
-            int count = 0;
-            foreach (var item in SubclassIdentifer) {
-                if (item.type != bases[count]) return null;
-                else id.SubclassIdentifer.Add((item.name, bases[count]));
-                count++;
-            }
-
-            id.Abstract = this;
-            id.Definition = this.Definition;
-
-            return id;
-        } 
+    public enum OperatorType {
+        Binary,
+        UnaryLeft,
+        UnaryRight
     }
 
-    public class IdentityClass : SourceBase {
-        public List<(string name, Base value)> SubclassIdentifer = new List<(string, Base)>();
+    public struct OperatorRegistry {
+        public OperatorRegistry(string method, OperatorType type) {
+            this.MethodBinding = method;
+            this.Type = type;
+        }
 
-        private Dictionary<string, Function> Functions = new Dictionary<string, Function>();
-        private Dictionary<string, Base> Variables = new Dictionary<string, Base>();
-        public List<Function> Initializers = new List<Function>();
+        public string MethodBinding { get; set; }
+        public OperatorType Type { get; set; }
+    }
+
+    public class Class : Member {
+        public Class() {
+            this.Type = MemberType.Class;
+        }
+
+        public Class? Inheritage;
         public Syntax.DefinitionBlock? Definition;
 
-        public AbstractClass? Abstract;
+        // 这一组运算符字典是可以自行扩充的, 调用 class.register_operator(string, string, int).
+        // 可以注册一个成员函数和符号序列的关联. 并且指定一个可用的运算符类型.
 
-        public bool Compiled = false;
-        public IdentityClass? Conflict;
+        // 值得注意的是, 一些与语法密切相关的运算符是不可重命名的. 列表如下:
+        //   1.  [int count]           索引运算符, 被默认注册到 "_index(...)" 函数
+        //   2.  (int param1, ...)     函数参数运算符, 被默认注册到 "_call(...)" 函数
+        //   3.  func init(...)        类型初始化函数
 
+        public static Dictionary<string, OperatorRegistry> Operators = new Dictionary<string, OperatorRegistry>()
+        {
+            { "+", new OperatorRegistry("_add", OperatorType.Binary) },
+            { "-", new OperatorRegistry("_minus", OperatorType.Binary) },
+            { "*", new OperatorRegistry("_multiply", OperatorType.Binary) },
+            { "/", new OperatorRegistry("_divide", OperatorType.Binary) },
+            { "&", new OperatorRegistry("_and", OperatorType.Binary) },
+            { "&&", new OperatorRegistry("_bitand", OperatorType.Binary) },
+            { ".", new OperatorRegistry("_member", OperatorType.Binary) },
+            { "|", new OperatorRegistry("_bitor", OperatorType.Binary) },
+            { "||",new OperatorRegistry("_or", OperatorType.Binary)},
+            { "^", new OperatorRegistry("_bitnot", OperatorType.Binary) },
+            { "==",new OperatorRegistry("_equal", OperatorType.Binary) },
+            { "<<", new OperatorRegistry("_bitlshift", OperatorType.Binary) },
+            { ">>", new OperatorRegistry("_bitrshift", OperatorType.Binary) },
+            { "%", new OperatorRegistry("_quotient", OperatorType.Binary) },
+            { "<=",new OperatorRegistry("_lte", OperatorType.Binary) },
+            { "<", new OperatorRegistry("_lt", OperatorType.Binary) },
+            { ">", new OperatorRegistry("_gt", OperatorType.Binary) },
+            { ">=", new OperatorRegistry("_gte", OperatorType.Binary) },
+            { "!=", new OperatorRegistry("_notequal", OperatorType.Binary) },
+            { "**", new OperatorRegistry("_pow", OperatorType.Binary) },
+            { "++", new OperatorRegistry("_increment", OperatorType.UnaryLeft) },
+            { "--", new OperatorRegistry("_decrement", OperatorType.UnaryLeft) },
+            { "!", new OperatorRegistry("_not", OperatorType.UnaryLeft) }
+        };
 
-        private void Parse(Instance ins, RuntimeContext ctx) {
+        public virtual Instance CreateInstance(List<Member> parameters, RuntimeContext ctx) {
+            Instance inst = new Instance(ctx);
+            inst.Parent = this;
+            
+            // 在正常情况下这一句恒为假.
+            if (Definition?.Children == null) return inst;
 
-            // 我们每生成一个对象, 就重新初始化一组 Functions 和 Variables, 再将其传递引用到子对象的
-            // Instance 中, 而不破坏原来创建的函数. 所以我们不使用 Clear, 而是 new.
+            foreach (var item in Definition.Children) {
 
-            this.Functions = new Dictionary<string, Function>();
-            this.Variables = new Dictionary<string, Base>();
+                // 值得注意的是, 一个注册进模块中的变量只能是声明在最外层的变量, 假如一个变量声明在函数的里层
+                // 或者一个类型的里层, 在这里是不会被解析的. 当类型实例化的时候会解析类型中声明的函数和变量,
+                // 在函数被执行的时候会解析局部的变量. (事实上, 局部的变量不需要声明, 在赋值语句调用时就会自行添加)
 
-            string module = this.FullName;
-            TemperaryContext tctx = new TemperaryContext();
-            ctx.CallStack.Push(tctx);
-
-            if (Definition == null) return;
-            foreach (Syntax.Statement item in Definition.Children) {
-                if (item is Syntax.DefinitionBlock) {
-                    var defs = item as Syntax.DefinitionBlock;
-                    if (defs == null) return;
-
+                if (item is DefinitionBlock) {
+                    var defs = item as DefinitionBlock;
+                    if (defs == null) continue;
+                    var locModule = new Locator(true);
                     switch (defs.Type) {
                         case DefinitionType.Constant:
-                            dynamic? result = defs.ConstantValue?.Execute(ctx).value;
+                            ExecutionResult? result = defs.ConstantValue?.Execute(ctx);
                             if (result == null) break;
-                            if (result is Type.Var) {
-                                Reflection.Variable varia = new Reflection.Variable();
-                                varia.ModuleHirachy = Utilities.GetModuleHirachy(module);
-                                varia.Name = defs.ConstantName?.Value ?? "";
-                                varia.Hidden = defs.Visibility == Visibility.Hidden;
-                                if (module != "")
-                                    varia.FullName = module + "." + varia.Name;
-                                else varia.FullName = varia.Name;
-                                this.Variables.Add(defs.ConstantName?.Value ?? "", varia);
-                                varia.Object = (Type.Var)result;
-                                varia.ModuleHirachy = new List<string>() { "<callstack>" };
-                                tctx.Variables.OverflowAddVariable(varia.Name, varia);
-                            } else if (result is Reflection.AbstractClass) {
-                                var temp = result as Reflection.AbstractClass;
-                                if (temp == null) return;
-                                this.Variables.Add(defs.ConstantName?.Value ?? "", temp);
-                                tctx.Classes.OverflowAddAbstractClass(defs.ConstantName?.Value ?? "", temp);
-                            } else if (result is Reflection.Function) {
-                                var temp = result as Reflection.Function;
-                                if (temp == null) return;
-                                this.Functions.Add(defs.ConstantName?.Value ?? "", temp);
-                                tctx.Functions.OverflowAdd(defs.ConstantName?.Value ?? "", temp);
-                            } else if (result is Reflection.IdentityClass) {
-                                var temp = result as Reflection.IdentityClass;
-                                if (temp == null) return;
-                                this.Variables.Add(defs.ConstantName?.Value ?? "", temp);
-                                tctx.IdentityClasses.OverflowAddIdentityClass(defs.ConstantName?.Value ?? "", temp);
-                            } else if (result is Reflection.Instance) {
-                                var temp = result as Reflection.Instance;
-                                if (temp == null) return;
-                                this.Variables.Add(defs.ConstantName?.Value ?? "", temp);
-                                tctx.Instances.OverflowAdd(defs.ConstantName?.Value ?? "", temp);
-                            } else if (result is Reflection.Variable) {
-                                var temp = result as Reflection.Variable;
-                                if (temp == null) return;
-                                this.Variables.Add(defs.ConstantName?.Value ?? "", temp);
-                                tctx.Variables.OverflowAddVariable(defs.ConstantName?.Value ?? "", temp);
-                            } else if (result is Reflection.Module) {
-                                var temp = result as Reflection.Module;
-                                if (temp == null) return;
-                                this.Variables.Add(defs.ConstantName?.Value ?? "", temp);
-                                tctx.SubModules.OverflowAddModule(defs.ConstantName?.Value ?? "", temp);
-                            } else break;
+                            if (result.Result.Name != "") {
+                                ExecutionResult renamed = new ExecutionResult(result.Result, ctx.MaximumAllocatedPointer, ctx);
+                                ctx.MaximumAllocatedPointer++;
+                                inst.SetMember(defs.ConstantName ?? "", result.Result);
+                            } else {
+                                result.Result.ModuleHierarchy = locModule;
+                                result.Result.Name = defs.ConstantName ?? "";
+                                inst.SetMember(result.Result.Name, result.Result);
+                            }
                             break;
                         case DefinitionType.Function:
                             Reflection.Function func = new Reflection.Function();
-                            func.Compiled = false;
-                            if (module == "") func.FullName = defs.FunctionName?.Value ?? "";
-                            else func.FullName = module + "." + defs.FunctionName?.Value ?? "";
-                            func.ModuleHirachy = Utilities.GetModuleHirachy(module);
+                            func.ModuleHierarchy = locModule;
                             func.Name = defs.FunctionName?.Value ?? "";
                             func.Startup = defs.Children;
-                            func.ModuleHirachy = new List<string>() { "<callstack>" };
 
                             foreach (var par in defs.FunctionParameters) {
-                                func.Parameters.Add((par.Type?.Execute(ctx).value ??
-                                    new Reflection.IdentityClass(),
-                                    par.Name?.Value ?? ""));
+                                var typeResult = par.Type?.Execute(ctx).Result;
+                                if (typeResult.Type != MemberType.Class) {
+                                    ctx.Errors.Add(new RuntimeError(1, "函数的参数类型不是可用的类型.", defs.FunctionName?.Location));
+                                    break;
+                                }
+                                func.Parameters.Add(new NamedType(par.Name?.Value ?? "", (Class)typeResult));
                             }
-                            func.Parent = ins;
 
-                            this.Functions.Add(func.Name, func);
-                            tctx.Functions.OverflowAddFunction(func.Name, func);
+                            ExecutionResult funcResult = new ExecutionResult(func, ctx);
+                            inst.SetMember(func.Name, func);
+                            break;
+                        case DefinitionType.Class:
+                            ctx.Errors.Add(new RuntimeError(3, "类型中嵌套的类型和模块中嵌套的类型是无差别的, 禁止在类型中进行嵌套", defs.ClassName?.Location));
+                            break;
+                        default:
                             break;
                     }
                 }
             }
 
-            ctx.CallStack.Pop();
-        }
+            // 在这里我们调用类型的初始化方法.
 
-        public Instance? CreateInstance(List<Base> param, RuntimeContext ctx) {
-            Instance ins = new Instance();
+            var initializer = inst.GetMember("_init");
+            if(!initializer.IsNull())
+                if(initializer.Result.Type == MemberType.Function) {
+                    ((Function)initializer.Result).Invoke(parameters, ctx);
+                }
 
-            this.Parse(ins, ctx);
-            ins.Functions = this.Functions;
-            ins.Variables = this.Variables;
+            return inst;
+        } 
 
-            Initializers.Clear();
-            foreach (var item in Functions) {
-                if (item.Key == "_init")
-                    Initializers.Add(item.Value);
-            }
+        public bool IsCompatible(Member target) {
+            switch (target.Type) {
+                case MemberType.Class:
+                    if (this.Name == "class") return true;
+                    else return false;
+                case MemberType.Instance:
 
-            foreach (var item in Initializers) {
-                try {
-                    var obj = item.Invoke(param, ctx);
+                    // TODO: 这里还没有考虑类的继承.
+
+                    if (this.ModuleHierarchy.Connect(".") == ((Instance)target).Parent.ModuleHierarchy.Connect(".") &&
+                        this.Name == target.Name) return true;
+                    return false;
+                case MemberType.Function:
+                    if (this.Name == "func") return true;
+                    else return false;
+                case MemberType.Module:
+                    return false;
+                case MemberType.Unknown:
+
+                    // 事实上, 约定 MemberType.Unknown 的对象只是 Null; 而每个对象均可以为 Null
+
+                    return true;
+                default:
                     break;
-                } catch { }
             }
-            return ins;
+
+            return false;
         }
     }
 
-    public class Instance : SourceBase {
-        public Dictionary<string, Function> Functions = new Dictionary<string, Function>();
-        public Dictionary<string, Base> Variables = new Dictionary<string, Base>();
+    public class ClrClass : Class, ClrMember {
+        public static ClrClass Create(System.Type type) {
+            var attribute = type.GetCustomAttribute<ExposeAttribute>();
+            if (attribute == null) return new ClrClass();
 
-        public bool Compiled = false;
-        public Instance? Conflict;
+            if (attribute.Alias == "<global>") {
+                return new ClrClass();
+            } else {
+                ClrClass cls = new ClrClass();
+                cls.Name = attribute.Alias;
+                if (Registry.ContainsKey(type))
+                    return Registry[type];
+                cls.Reflection = type;
+                Registry.Add(type, cls);
+                if (type.BaseType == null) return cls;
+                if (type.BaseType == typeof(Var)) {
+                    cls.Inheritage = null;
+                } else if (type.IsSubclassOf(typeof(Var))) {
+                    if (Registry.ContainsKey(type.BaseType))
+                        cls.Inheritage = Registry[type.BaseType];
+                    cls.Inheritage = ClrClass.Create(type.BaseType);
+                }
 
-        public dynamic GetMember(string name) {
-            foreach (var item in Functions) {
-                if (item.Key == name) return item.Value;
+                return cls;
+            }
+        }
+
+        public new ClrClass? Inheritage { get; internal set; }
+        public System.Type Reflection { get; internal set; }
+        public override Instance CreateInstance(List<Member> parameters, RuntimeContext ctx) {
+            var type = this.Reflection;
+            ClrInstance instance = new ClrInstance();
+            instance.Parent = this;
+            instance.Reflection = Activator.CreateInstance(this.Reflection);
+
+            // 解析这个类型中的所有字段和函数(非静态的), 并把它转换到包装抽象的
+            // ClrInstance 和 ClrFunction.
+
+            foreach (var item in type.GetMethods()) {
+                if (item.IsStatic) continue;
+                var attribute = item.GetCustomAttribute<ExposeAttribute>();
+                if (attribute == null) continue;
+
+                var funcs = new ClrFunction(item);
+                funcs.Parent = instance;
+                funcs.Name = attribute.Alias;
+                instance.SetMember(attribute.Alias, funcs);
             }
 
-            foreach (var item in Variables) {
-                if (item.Key == name) return item.Value;
+            foreach (var item in type.GetFields()) {
+                if (item.IsStatic) continue;
+                var attribute = item.GetCustomAttribute<ExposeAttribute>();
+                if (attribute == null) continue;
+
+                var field = new ClrInstance(item);
+                field.Name = attribute.Alias;
+                instance.SetMember(attribute.Alias, field);
             }
 
-            return Type.Global.Null;
+            return instance;
+        }
+
+        public static Dictionary<System.Type, ClrClass> Registry = new Dictionary<System.Type, ClrClass>();
+        public object? GetNative() {
+            return this.Reflection;
         }
     }
 }

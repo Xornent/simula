@@ -140,9 +140,9 @@ namespace Simula.Scripting {
 
             Compilation.RuntimeContext ctx = new Scripting.Compilation.RuntimeContext();
 
-            Compilation.LibraryCompilationUnit lib = new Scripting.Compilation.LibraryCompilationUnit(
-                Environment.CurrentDirectory + @"\simula.scripting.dll", System.IO.FileMode.Open);
-            lib.Register(ctx);
+            // Compilation.LibraryCompilationUnit lib = new Scripting.Compilation.LibraryCompilationUnit(
+            //     Environment.CurrentDirectory + @"\simula.scripting.dll", System.IO.FileMode.Open);
+            // lib.Register(ctx);
             Compilation.SourceCompilationUnit src = new Scripting.Compilation.SourceCompilationUnit(this.Text);
 
             try {

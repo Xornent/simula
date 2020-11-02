@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Simula.Scripting.Reflection;
+using Simula.Scripting.Reflection.Markup;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using static Simula.Scripting.Type.Global;
@@ -18,11 +20,22 @@ namespace Simula.Scripting.Type {
     // 10. 布尔逻辑运算符 (_or, _and)
     // 11. 位逻辑运算符 (_bitor, _bitand, _bitnot)
 
-    public abstract class Var : Reflection.CompiledBase {
+    public abstract class Var : Member {
 
     }
 
-    public class _Null : Var {
+    [Expose("_null")]
+    public class NullType : Var {
+        public int GlobalId { get; private set; } = 0;
+        public NullType() {
+            this.Compiled = true;
+            this.FullName = "null";
+            this.Handle = 0;
+            this.Readable = true;
+            this.Writable = false;
+            this.Name = "null";
+        }
 
+        public static NullType Null = new NullType();
     }
 }

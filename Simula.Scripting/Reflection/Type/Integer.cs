@@ -7,7 +7,7 @@ namespace Simula.Scripting.Type {
    
     [Expose("int")]
     public class Integer : Var {
-        private System.Numerics.BigInteger value;
+        public System.Numerics.BigInteger value;
 
         public static implicit operator System.Numerics.BigInteger(Integer i) {
             return i.value;
@@ -37,28 +37,8 @@ namespace Simula.Scripting.Type {
             }
         }
 
-        public override bool Equals(object? obj) {
-            if (obj == null) return false;
-            if (obj is int) return this.value.Equals((int)obj);
-            if (obj is uint) return this.value.Equals((uint)obj);
-            if (obj is long) return this.value.Equals((long)obj);
-            if (obj is ulong) return this.value.Equals((ulong)obj);
-            if (obj is System.Numerics.BigInteger) return this.value == (System.Numerics.BigInteger)obj;
-            if (obj is Integer) return this.value == ((Integer)obj).value;
-            return false;
-        }
-
-        public override int GetHashCode() {
-            return value.GetHashCode();
-        }
-
         public override string ToString() {
             return value.ToString();
-        }
-
-        [Expose("_create", true)]
-        public Function _create() {
-            return new Function(this.GetType().GetMethod("_init"), this);
         }
 
         [Expose("_init", true)]
@@ -94,7 +74,12 @@ namespace Simula.Scripting.Type {
 
         [Expose("_equal")]
         public Boolean _equal(Var f) {
-            return Equals(f);
+            if (f is Integer) return this.value == ((Integer)f).value;
+            if( f is Float fl) {
+                if (fl.value == (int)fl.value)
+                    return this.value.Equals((int)fl.value);
+            }
+            return false;
         }
 
         [Expose("_notequal")]
@@ -102,27 +87,27 @@ namespace Simula.Scripting.Type {
             return _equal(f)._not();
         }
 
-        [Expose("_morethan")]
+        [Expose("_gt")]
         public Boolean _morethan(Integer f) {
             return this.value > f;
         }
 
-        [Expose("_lessthan")]
+        [Expose("_lt")]
         public Boolean _lessthan(Integer f) {
             return this.value < f;
         }
 
-        [Expose("_nomorethan")]
+        [Expose("_lte")]
         public Boolean _nomorethan(Integer f) {
             return this.value <= f;
         }
 
-        [Expose("_nolessthan")]
+        [Expose("_gte")]
         public Boolean _nolessthan(Integer f) {
             return this.value >= f;
         }
 
-        [Expose("_mod")]
+        [Expose("_quotient")]
         public Integer _mod(Integer f) {
             return this.value % f.value;
         }

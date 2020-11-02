@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Simula.Scripting.Debugging;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -23,8 +24,8 @@ namespace Simula.Scripting.Syntax {
             return;
         }
 
-        public virtual (dynamic value, Debugging.ExecutableFlag flag) Execute(Compilation.RuntimeContext ctx) {
-            return (Type.Global.Null, Debugging.ExecutableFlag.Pass);
+        public virtual ExecutionResult Execute(Compilation.RuntimeContext ctx) {
+            return new ExecutionResult();
         }
     }
 }

@@ -7,7 +7,7 @@
              xmlns:spkg="clr-namespace:Simula.Scripting.Packaging.Spkg;assembly=Simula.Scripting.Packaging"
         xmlns:ui ="clr-namespace:Simula.UI"
              mc:Ignorable="d" 
-             Height="550" Width="890" WindowStartupLocation="CenterScreen"
+             Height="550" Width="890" WindowStartupLocation="CenterScreen" FontFamily="{StaticResource default}"
         Title="Simula 包管理器" Icon="pack://siteoforigin:,,,/app.icon.ico">
     <Window.Resources>
         <DataTemplate x:Key="moduleTemplate">
@@ -47,8 +47,8 @@
         </Grid.RowDefinitions>
         <Grid Grid.Row="0" Background="#f0f0f0">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <TextBox x:Name="searchBox" Margin="8 5 5 5" Width="350" Text="Simula.Scripting" FontFamily="PingFang SC" FontSize="13" VerticalAlignment="Center" TextAlignment="Center"/>
-                <Button Content=" &#xe094; " FontFamily="Segoe MDL2 Assets" Height="20" Width="35" Click="HandleMouseDown"/>
+                <TextBox x:Name="searchBox" Margin="8 5 5 5" Height="25" Width="350" Text="Simula.Scripting" FontSize="13" TextAlignment="Center"/>
+                <Button Content=" &#xe094; " FontFamily="Segoe MDL2 Assets" Height="25" Width="35" Click="HandleMouseDown"/>
             </StackPanel>
 
         </Grid>
@@ -78,18 +78,18 @@
 
             <ScrollViewer  Grid.Column="3">
                 <Grid>
-                    <StackPanel Orientation="Vertical" TextElement.FontFamily="PingFang SC">
+                    <StackPanel Orientation="Vertical" TextElement.FontFamily="{StaticResource default}">
                         <StackPanel Margin="10" Orientation="Horizontal">
                             <Image x:Name="img" Width="32" Source="pack://siteoforigin:,,,/app.icon.ico"/>
                             <TextBlock x:Name="_id" Text="Simula.Scripting" FontSize="22" Margin="8 0 0 0"/>
                         </StackPanel>
                         <StackPanel Margin=" 10,10,10,0" Orientation="Vertical">
                             <TextBlock Text="作者" FontSize="13" FontWeight="Bold" Margin="8 8 0 0"/>
-                            <TextBlock x:Name="_author" TextWrapping="Wrap" FontFamily="Consolas, Simsun" Text="simula" FontWeight="Bold" Margin="8 5 0 0"/>
+                            <TextBlock x:Name="_author" FontSize="11" TextWrapping="Wrap" Text="simula" FontWeight="Bold" Margin="8 5 0 0"/>
                             <TextBlock Text="摘要和说明" FontSize="13" FontWeight="Bold" Margin="8 8 0 0"/>
-                            <TextBlock x:Name="_description" TextWrapping="Wrap" FontFamily="Consolas, simsun" Text="Simula.Scripting 是所有可载入的 Simula Script 库的基类. 提供对语言的解析实现, 等效 C# 语言代码生成, 和语言内置基础类的 C# 实现."  Margin="8 5 0 0" LineHeight="17"/>
+                            <TextBlock x:Name="_description" FontSize="11" TextWrapping="Wrap" FontWeight="Regular" Text="Simula.Scripting 是所有可载入的 Simula Script 库的基类. 提供对语言的解析实现, 动态语言运行时的编译工具和语言内置基础类."  Margin="8 5 0 0" LineHeight="17"/>
                             <TextBlock Text="项目主页" FontSize="13" FontWeight="Bold" Margin="8 8 0 0"/>
-                            <TextBlock x:Name="_project" TextWrapping="Wrap" FontFamily="Consolas, simsun" Text="xornent.github.io/simula/scripting/&#x0a;xornent.github.io/simula/"  Margin="8 5 0 0" LineHeight="17"/>
+                            <TextBlock x:Name="_project" FontSize="11" TextWrapping="Wrap" Text="xornent.github.io/simula/scripting/&#x0a;xornent.github.io/simula/"  Margin="8 5 0 0" LineHeight="17"/>
                             <TextBlock Text="许可证" FontSize="13" FontWeight="Bold" Margin="8 8 0 0"/>
                             <TextBlock x:Name="_lic" TextWrapping="Wrap" FontFamily="Consolas, simsun" Text="XPL. 版本 1.2"  Margin="8 5 0 0"/>
                             <TextBlock x:Name="_licurl" TextWrapping="Wrap" FontFamily="Consolas, simsun" Text="xornent.github.io/xpl/1_2/"  Margin="8 3 0 0"/>

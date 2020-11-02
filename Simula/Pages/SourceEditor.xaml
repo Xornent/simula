@@ -13,8 +13,10 @@
             <Grid DockPanel.Dock="Top" Height="38">
                 <DockPanel>
                     <StackPanel Width="100" DockPanel.Dock="Left" Orientation="Horizontal">
-                        <Button Content="&#xE1DA;" FontFamily="Segoe MDL2 Assets" Width="32" FontSize="13" Margin="6 8 5 8"></Button>
-                        <Button Content="&#xE102;" FontFamily="Segoe MDL2 Assets" Width="32" FontSize="13" Margin="0 8 5 8" Click="HandleRun"></Button>
+                        
+                        <Button Content="&#xE1DA;" FontFamily="Segoe MDL2 Assets" Width="32" FontSize="13" Margin="6 8 5 8"></Button> 
+                        <Button Content="&#xE102;" FontFamily="Segoe MDL2 Assets" Width="32" FontSize="13" Margin="0 8 5 8" x:Name="n" Click="HandleRun"></Button>
+                        
                     </StackPanel>
                     <Grid/>
                 </DockPanel>

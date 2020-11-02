@@ -5,16 +5,16 @@ using System.IO;
 using Simula.Scripting.Syntax;
 using System.Linq;
 using System.Reflection;
+using Simula.Scripting.Reflection;
+using Simula.Scripting.Debugging;
 
 namespace Simula.Scripting.Compilation {
 
     public abstract class CompilationUnit {
         public abstract void Register(RuntimeContext ctx);
-        public abstract void Unregister(RuntimeContext ctx);
     }
 
     public class SourceCompilationUnit : CompilationUnit {
-
         public string Content { get; private set; } = "";
         public string File { get; private set; } = "";
         public Token.TokenDocument? Tokens { get; set; }
@@ -24,7 +24,6 @@ namespace Simula.Scripting.Compilation {
             get { if (body == null) body = Parse(); return body; }
         }
 
-        
         public SourceCompilationUnit(string path, FileMode mode) {
             this.File = path;
             FileStream stream = new FileStream(path, mode);
@@ -47,87 +46,39 @@ namespace Simula.Scripting.Compilation {
             return block;
         }
 
-        private void Generate(RuntimeContext ctx) {
-
-            List<Reflection.AbstractClass> classes = new List<Reflection.AbstractClass>();
-            List<Reflection.IdentityClass> identityClasses = new List<Reflection.IdentityClass>();
-            List<Reflection.Instance> instances = new List<Reflection.Instance>();
-            List<Reflection.Variable> variables = new List<Reflection.Variable>();
-            List<Reflection.Function> functions = new List<Reflection.Function>();
-
-            // 在解析过程的最开始, 我们分析 use 和 module 语句, 已确定可以使用的对象的声明
-            // 以及获取本源文件定义的模块名称.
+        public override void Register(RuntimeContext ctx) {
 
             BlockStatement block = this.Body;
-            string? mod = "";
-            foreach (var item in block.Children) {
-                if (item is UseStatement) {
-                    Reflection.Module? m = Utilities.GetModule(Utilities.GetModuleHirachy((item as UseStatement)?.FullName), ctx.Modules);
-                    if (m == null) break;
-                    foreach (var funcs in m.Functions) 
-                        functions.Add(funcs.Value);
-                    foreach (var clss in m.Classes)
-                        classes.Add(clss.Value);
-                    foreach (var ins in m.Instances)
-                        instances.Add(ins.Value);
-                    foreach (var vars in m.Variables)
-                        variables.Add(vars.Value);
-                    foreach (var id in m.IdentityClasses)
-                        identityClasses.Add(id.Value);
-                }
+            TemperaryContext runstack;
+            if(ctx.CallStack.Count>0) {
+                runstack = ctx.CallStack.Peek();
+            } else {
+                runstack = new TemperaryContext(ctx);
+                ctx.CallStack.Push(runstack);
+            }
 
-                if(item is ModuleStatement) {
-                    mod = (item as ModuleStatement)?.FullName;
+            runstack.Name = "<全局>";
+            runstack.Permeable = true;
+
+            string currentModel = "";
+            foreach (var item in block.Children) {
+                if (item is ModuleStatement mod) {
+                    currentModel = mod.FullName;
                 }
             }
 
-            TemperaryContext tempCtx = new TemperaryContext();
-            foreach (var item in classes) {
-                if (tempCtx.Classes.ContainsKey(item.Name)) {
-                    item.Conflict = tempCtx.Classes[item.Name];
-                    tempCtx.Classes[item.Name] = item;
-                } else tempCtx.Classes.Add(item.Name, item);
+            Locator locModule = Utilities.GetLocator(currentModel);
+            Simula.Scripting.Reflection.Module? module = ctx.AllocateMpdule(locModule);
+            if (module == null) {
+                ctx.Errors.Add(new RuntimeError(0, "使用了无效的模块命名: 一个模块要么是缺省的, 要么采用一个不和当前域下任何变量重名的名称命名."));
+                return;
             }
-
-            foreach (var item in identityClasses) {
-                if (tempCtx.IdentityClasses.ContainsKey(item.Name)) {
-                    item.Conflict = tempCtx.IdentityClasses[item.Name];
-                    tempCtx.IdentityClasses[item.Name] = item;
-                } else tempCtx.IdentityClasses.Add(item.Name, item);
-            }
-
-            foreach (var item in instances) {
-                if (tempCtx.Instances.ContainsKey(item.Name)) {
-                    item.Conflict = tempCtx.Instances[item.Name];
-                    tempCtx.Instances[item.Name] = item;
-                } else tempCtx.Instances.Add(item.Name, item);
-            }
-
-            foreach (var item in variables) {
-                if (tempCtx.Variables.ContainsKey(item.Name)) {
-                    item.Conflict = tempCtx.Variables[item.Name];
-                    tempCtx.Variables[item.Name] = item;
-                } else tempCtx.Variables.Add(item.Name, item);
-            }
-
-            foreach (var item in functions) {
-                if (tempCtx.Functions.ContainsKey(item.Name)) {
-                    item.Conflict = tempCtx.Functions[item.Name];
-                    tempCtx.Functions[item.Name] = item;
-                } else tempCtx.Functions.Add(item.Name, item);
-            }
-
-            ctx.CallStack.Push(tempCtx);
-
-            string module = "";
-            if (!string.IsNullOrEmpty(mod)) module = (string)mod;
 
             foreach (var item in block.Children) {
 
-                // 值得注意的是, 一个注册进模块中的变量只能是声明通用的变量, 即一个 class (AbstractClass)
-                // 类型只能由 def class 生成, 一个 func (Function) 类型只能由 def func 和 def var 生成,
-                // 类型, dimension<1> 只能由 def var 生成. 而运行时产生的局部变量在初始化类时注册进
-                // Instance, 在执行函数时注册进函数调用栈.
+                // 值得注意的是, 一个注册进模块中的变量只能是声明在最外层的变量, 假如一个变量声明在函数的里层
+                // 或者一个类型的里层, 在这里是不会被解析的. 当类型实例化的时候会解析类型中声明的函数和变量,
+                // 在函数被执行的时候会解析局部的变量. (事实上, 局部的变量不需要声明, 在赋值语句调用时就会自行添加)
 
                 if (item is DefinitionBlock) {
                     var defs = item as DefinitionBlock;
@@ -135,103 +86,51 @@ namespace Simula.Scripting.Compilation {
 
                     switch (defs.Type) {
                         case DefinitionType.Constant:
-                            dynamic? result = defs.ConstantValue?.Execute(ctx).value;
+                            ExecutionResult? result = defs.ConstantValue?.Execute(ctx);
                             if (result == null) break;
-                            if (result is Type.Var) {
-                                Reflection.Variable varia = new Reflection.Variable();
-                                varia.ModuleHirachy = Utilities.GetModuleHirachy(module);
-                                varia.Name = defs.ConstantName?.Value ?? "";
-                                varia.Hidden = defs.Visibility == Visibility.Hidden;
-                                if (module != "")
-                                    varia.FullName = module + "." + varia.Name;
-                                else varia.FullName = varia.Name;
-                                varia.Object = (Type.Var)result;
-                                Utilities.SetVariable(varia.ModuleHirachy, varia, ctx.Modules);
-                            } else if (result is Reflection.AbstractClass) {
-                                var m = Utilities.GetModule(Utilities.GetModuleHirachy(module), ctx.Modules);
-
-                                if (m?.Classes.ContainsKey(defs.ConstantName?.Value ?? "") ?? false) {
-                                    var temp = result as Reflection.AbstractClass;
-                                    if (temp == null) return;
-                                    temp.Conflict = m.Classes[defs.ConstantName?.Value ?? ""];
-                                    m.Classes[defs.ConstantName?.Value ?? ""] = result;
-                                } else m?.Classes.Add(defs.ConstantName?.Value ?? "", result);
-                            } else if (result is Reflection.Function) {
-                                var m = Utilities.GetModule(Utilities.GetModuleHirachy(module), ctx.Modules);
-
-                                if (m?.Functions.ContainsKey(defs.ConstantName?.Value ?? "") ?? false) {
-                                    var temp = result as Reflection.Function;
-                                    if (temp == null) return;
-                                    temp.Conflict = m.Functions[defs.ConstantName?.Value ?? ""];
-                                    m.Functions[defs.ConstantName?.Value ?? ""] = result;
-                                } else m?.Functions.Add(defs.ConstantName?.Value ?? "", result);
-                            } else if (result is Reflection.IdentityClass) {
-                                var m = Utilities.GetModule(Utilities.GetModuleHirachy(module), ctx.Modules);
-
-                                if (m?.IdentityClasses.ContainsKey(defs.ConstantName?.Value ?? "") ?? false) {
-                                    var temp = result as Reflection.IdentityClass;
-                                    if (temp == null) return;
-                                    temp.Conflict = m.IdentityClasses[defs.ConstantName?.Value ?? ""];
-                                    m.IdentityClasses[defs.ConstantName?.Value ?? ""] = result;
-                                } else m?.IdentityClasses.Add(defs.ConstantName?.Value ?? "", result);
-                            } else if (result is Reflection.Instance) {
-                                var m = Utilities.GetModule(Utilities.GetModuleHirachy(module), ctx.Modules);
-
-                                if (m?.Instances.ContainsKey(defs.ConstantName?.Value ?? "") ?? false) {
-                                    var temp = result as Reflection.Instance;
-                                    if (temp == null) return;
-                                    temp.Conflict = m.Instances[defs.ConstantName?.Value ?? ""];
-                                    m.Instances[defs.ConstantName?.Value ?? ""] = result;
-                                } else m?.Instances.Add(defs.ConstantName?.Value ?? "", result);
-                            } else if (result is Reflection.Variable) {
-                                var m = Utilities.GetModule(Utilities.GetModuleHirachy(module), ctx.Modules);
-
-                                if (m?.Variables.ContainsKey(defs.ConstantName?.Value ?? "") ?? false) {
-                                    var temp = result as Reflection.Variable;
-                                    if (temp == null) return;
-                                    temp.Conflict = m.Variables[defs.ConstantName?.Value ?? ""];
-                                    m.Variables[defs.ConstantName?.Value ?? ""] = result;
-                                } else m?.Variables.Add(defs.ConstantName?.Value ?? "", result);
-                            } else if (result is Reflection.Module) {
-                                var m = Utilities.GetModule(Utilities.GetModuleHirachy(module), ctx.Modules);
-
-                                if (m?.SubModules.ContainsKey(defs.ConstantName?.Value ?? "") ?? false) {
-                                    m.SubModules[defs.ConstantName?.Value ?? ""] = result;
-                                } else m?.SubModules.Add(defs.ConstantName?.Value ?? "", result);
-                            } else break;
+                            if(result.Result.Name != "") {
+                                ExecutionResult renamed = new ExecutionResult(result.Result, ctx.MaximumAllocatedPointer, ctx);
+                                ctx.MaximumAllocatedPointer++;
+                                module.SetMember(defs.ConstantName ?? "", result.Result);
+                            } else {
+                                result.Result.ModuleHierarchy = locModule;
+                                result.Result.Name = defs.ConstantName ?? "";
+                                module.SetMember(result.Result.Name, result.Result);
+                            }
                             break;
                         case DefinitionType.Function:
                             Reflection.Function func = new Reflection.Function();
-                            func.Compiled = false;
-                            if (module == "") func.FullName = defs.FunctionName?.Value ?? "";
-                            else func.FullName = module + "." + defs.FunctionName?.Value ?? "";
-                            func.ModuleHirachy = Utilities.GetModuleHirachy(module);
+                            func.ModuleHierarchy = locModule;
                             func.Name = defs.FunctionName?.Value ?? "";
                             func.Startup = defs.Children;
 
                             foreach (var par in defs.FunctionParameters) {
-                                func.Parameters.Add((par.Type?.Execute(ctx).value ?? new Reflection.IdentityClass(),
-                                    par.Name?.Value ?? ""));
+                                var typeResult = par.Type?.Execute(ctx).Result;
+                                if(typeResult.Type != MemberType.Class) {
+                                    ctx.Errors.Add(new RuntimeError(1, "函数的参数类型不是可用的类型.", defs.FunctionName?.Location));
+                                    break;
+                                }
+                                func.Parameters.Add(new NamedType(par.Name?.Value ?? "", (Class)typeResult));
                             }
 
-                            Utilities.SetFunction(func.ModuleHirachy, func, ctx.Modules);
+                            ExecutionResult funcResult = new ExecutionResult(func, ctx);
+                            module.SetMember(func.Name, func);
                             break;
                         case DefinitionType.Class:
-                            Reflection.AbstractClass cls = new Reflection.AbstractClass();
-                            cls.Compiled = false;
-                            if (module == "") cls.FullName = defs.ClassName?.Value ?? "";
-                            else cls.FullName = module + "." + defs.ClassName?.Value ?? "";
-                            cls.ModuleHirachy = Utilities.GetModuleHirachy(module);
+                            Class cls = new Class();
+                            cls.ModuleHierarchy = locModule;
                             cls.Name = defs.ClassName?.Value ?? "";
                             cls.Definition = defs;
-                            cls.Inheritage = defs.ClassInheritage?.Execute(ctx).value;
 
-                            foreach (var par in defs.ClassParameters) {
-                                cls.SubclassIdentifer.Add((par.Type?.Execute(ctx).value ?? new Reflection.IdentityClass(),
-                                    par.Name?.Value ?? ""));
-                            }
-
-                            Utilities.SetAbstractClass(cls.ModuleHirachy, cls, ctx.Modules);
+                            var classInheritage = defs.ClassInheritage?.Execute(ctx).Result;
+                            if(classInheritage!= null) 
+                                if(classInheritage.Type != MemberType.Class) {
+                                    ctx.Errors.Add(new RuntimeError(2, "类型的继承对象不是可用的类型", defs.ClassName?.Location));
+                                    break;
+                                }
+                            cls.Inheritage = (Class?)classInheritage;
+                            ExecutionResult clsResult = new ExecutionResult(cls, ctx);
+                            module.SetMember(cls.Name, cls);
                             break;
                         default:
                             break;
@@ -240,18 +139,7 @@ namespace Simula.Scripting.Compilation {
             }
 
             ctx.CallStack.Pop();
-        }
-
-        public override void Register(RuntimeContext ctx) {
-            Generate(ctx);
             ctx.Registry.Add(this);
-        }
-
-        public override void Unregister(RuntimeContext ctx) {
-
-            // 不实现反注册方法
-
-            ctx.Registry.Remove(this);
         }
 
         public dynamic Run(RuntimeContext ctx) {
@@ -264,78 +152,24 @@ namespace Simula.Scripting.Compilation {
 
             if (!exist) this.Register(ctx);
 
-            List<Reflection.AbstractClass> classes = new List<Reflection.AbstractClass>();
-            List<Reflection.IdentityClass> identityClasses = new List<Reflection.IdentityClass>();
-            List<Reflection.Instance> instances = new List<Reflection.Instance>();
-            List<Reflection.Variable> variables = new List<Reflection.Variable>();
-            List<Reflection.Function> functions = new List<Reflection.Function>();
+            // 在解析过程的最开始, 我们分析 use 和 module 语句, 已确定可以使用的对象的声明
+            // 以及获取本源文件定义的模块名称.
 
-            // 同样, 运行时我们也注册一个 CallStack.
-
+            TemperaryContext runstack = new TemperaryContext(ctx);
+            runstack.Permeable = true;
+            ctx.CallStack.Push(runstack);
             BlockStatement block = this.Body;
-            string? mod = "";
             foreach (var item in block.Children) {
-                if (item is UseStatement) {
-                    Reflection.Module? m = Utilities.GetModule(Utilities.GetModuleHirachy((item as UseStatement)?.FullName), ctx.Modules);
-                    if (m == null) break;
-                    foreach (var funcs in m.Functions)
-                        functions.Add(funcs.Value);
-                    foreach (var clss in m.Classes)
-                        classes.Add(clss.Value);
-                    foreach (var ins in m.Instances)
-                        instances.Add(ins.Value);
-                    foreach (var vars in m.Variables)
-                        variables.Add(vars.Value);
-                    foreach (var id in m.IdentityClasses)
-                        identityClasses.Add(id.Value);
-                }
-
-                if (item is ModuleStatement) {
-                    mod = (item as ModuleStatement)?.FullName;
+                if (item is UseStatement use) {
+                    var locator = Utilities.GetLocator(use.FullName);
+                    runstack.Usings.Add(locator);
                 }
             }
 
-            TemperaryContext tempCtx = new TemperaryContext();
-            foreach (var item in classes) {
-                if (tempCtx.Classes.ContainsKey(item.Name)) {
-                    item.Conflict = tempCtx.Classes[item.Name];
-                    tempCtx.Classes[item.Name] = item;
-                } else tempCtx.Classes.Add(item.Name, item);
-            }
-
-            foreach (var item in identityClasses) {
-                if (tempCtx.IdentityClasses.ContainsKey(item.Name)) {
-                    item.Conflict = tempCtx.IdentityClasses[item.Name];
-                    tempCtx.IdentityClasses[item.Name] = item;
-                } else tempCtx.IdentityClasses.Add(item.Name, item);
-            }
-
-            foreach (var item in instances) {
-                if (tempCtx.Instances.ContainsKey(item.Name)) {
-                    item.Conflict = tempCtx.Instances[item.Name];
-                    tempCtx.Instances[item.Name] = item;
-                } else tempCtx.Instances.Add(item.Name, item);
-            }
-
-            foreach (var item in variables) {
-                if (tempCtx.Variables.ContainsKey(item.Name)) {
-                    item.Conflict = tempCtx.Variables[item.Name];
-                    tempCtx.Variables[item.Name] = item;
-                } else tempCtx.Variables.Add(item.Name, item);
-            }
-
-            foreach (var item in functions) {
-                if (tempCtx.Functions.ContainsKey(item.Name)) {
-                    item.Conflict = tempCtx.Functions[item.Name];
-                    tempCtx.Functions[item.Name] = item;
-                } else tempCtx.Functions.Add(item.Name, item);
-            }
-
-            ctx.CallStack.Push(tempCtx);
             var result = this.Body.Execute(ctx);
             ctx.CallStack.Pop();
 
-            return result.value;
+            return result.Result;
         }
     }
 
@@ -347,33 +181,45 @@ namespace Simula.Scripting.Compilation {
             this.File = path;
         }
 
-        private List<Reflection.Variable> Variables = new List<Reflection.Variable>();
-
-        private void Generate() {
-            Assembly asm = Assembly.LoadFrom(File);
-            System.Type[] types = asm.GetTypes();
-
-            // 从已编译的程序集中加载所有类, 筛选出所有用 ExposeAttribute 标识的类.
-
-            Variables = Utilities.GetAccessableClassVariable(asm);
-            Variables.AddRange(Utilities.GetAccessableGlobalVariable(asm));
-        }
-
         public override void Register(RuntimeContext ctx) {
-            if (Variables.Count == 0)
-                Generate();
 
-            foreach (var item in Variables) {
-                Utilities.SetVariable(item.ModuleHirachy, item, ctx.Modules);
+            // 注册公用变量.
+
+            System.Reflection.Assembly asm = Assembly.LoadFrom(this.File);
+            foreach (var type in asm.GetTypes()) {
+                Locator locModule = Utilities.GetLocator(type.Namespace?.Replace("Simula.Scripting.Type.", "").Replace("Simula.Scripting.Type", "") ?? "");
+                Simula.Scripting.Reflection.Module? module = ctx.AllocateMpdule(locModule);
+                Reflection.Markup.ExposeAttribute? expose = type.GetCustomAttribute<Reflection.Markup.ExposeAttribute>();
+                if (expose != null) {
+                    if (expose.Alias == "<global>") {
+                        foreach (var item in type.GetFields()) {
+                            expose = item.GetCustomAttribute<Reflection.Markup.ExposeAttribute>();
+                            if(expose!= null) {
+                                var value = item.GetValue(null);
+                                if (value == null) break;
+                                if(value is Member) {
+                                    Reflection.Module glb = new Reflection.Module(ctx);
+                                    ExecutionResult moduleresult = new ExecutionResult(glb, ctx);
+                                    if (!ctx.PredefinedObjects.ContainsKey("")) ctx.PredefinedObjects.Add("", new Metadata(moduleresult.Pointer, MemberType.Module));
+                                    if (ctx.PredefinedObjects.ContainsKey("")) 
+                                        ((Reflection.Module)(ctx.GetMemberByMetadata(ctx.PredefinedObjects[""]))).SetMember(item.Name, new ClrInstance(value)); 
+                                }
+                            }
+                        }
+
+                        foreach (var item in type.GetMethods()) {
+                            expose = item.GetCustomAttribute<Reflection.Markup.ExposeAttribute>();
+                            if (expose != null) {
+                                module?.SetMember(expose.Alias, new ClrFunction(item));
+                            }
+                        }
+                    } else {
+                        module?.SetMember(expose.Alias, ClrClass.Create(type));
+                    }
+                }
             }
+
             ctx.Registry.Add(this);
-        }
-
-        public override void Unregister(RuntimeContext ctx) {
-            foreach (var item in Variables) {
-                Utilities.RemoveVariable(item.ModuleHirachy, item, ctx.Modules);
-            }
-            ctx.Registry.Remove(this);
         }
     }
 
@@ -398,14 +244,9 @@ namespace Simula.Scripting.Compilation {
         public override void Register(RuntimeContext ctx) {
 
         }
-
-        public override void Unregister(RuntimeContext ctx) {
-
-        }
     }
 
     public static class Utilities {
-
         public static string Connect(this List<string> list, string connection) {
             if (list.Count == 0) return "";
             string s = list[0];
@@ -415,387 +256,27 @@ namespace Simula.Scripting.Compilation {
             return s;
         }
 
-        public static List<string> GetModuleHirachy(string? s) {
-            if (string.IsNullOrEmpty(s)) return new List<string>() { "" };
+        public static Locator GetLocator(string? s) {
+            if (string.IsNullOrEmpty(s)) {
+                var loca = new Locator(false);
+                loca.Add("");
+                return loca;
+            }
+
             if (s.StartsWith("Simula.Scripting.Type.")) s = s.Replace("Simula.Scripting.Type.", "");
             if (s.StartsWith("Simula.Scripting.Type")) s = s.Replace("Simula.Scripting.Type", "");
             if (s.Contains(".")) {
-                return s.Split('.').ToList();
-            } else return new List<string>() { s };
-        }
-
-        public static List<System.Type> GetAccessableClassType(Assembly asm) {
-            List<System.Type> types = new List<System.Type>();
-            foreach(var type in asm.GetTypes()) {
-                Reflection.Markup.ExposeAttribute? expose = type.GetCustomAttribute<Reflection.Markup.ExposeAttribute>();
-                if(expose != null) {
-                    if (expose.Alias == "<global>") continue;
-                    types.Add(type);
+                Locator loc = new Locator(false);
+                var hirachy = s.Split('.').ToList();
+                foreach (var item in hirachy) {
+                    loc.Add(item);
                 }
+                return loc;
+            } else {
+                Locator loc = new Locator(false);
+                loc.Add(s);
+                return loc;
             }
-            return types;
         }
-
-        public static List<Reflection.Variable> GetAccessableClassVariable(Assembly asm) {
-            List<Reflection.Variable> classes = new List<Reflection.Variable>();
-            foreach (var type in asm.GetTypes()) {
-                Reflection.Markup.ExposeAttribute? expose = type.GetCustomAttribute<Reflection.Markup.ExposeAttribute>();
-                if (expose != null) {
-                    if (expose.Alias == "<global>") continue;
-                    Reflection.Variable var = new Reflection.Variable();
-                    var.FullName = GetModuleHirachy(type.Namespace).Connect(".");
-                    if (var.FullName == "")
-                        var.FullName += expose.Alias;
-                    else var.FullName += ("." + expose.Alias);
-                    var.Name = expose.Alias;
-                    var.Hidden = expose.ToSystemOnly;
-                    var.Object = new Type.Class(type);
-                    var.ModuleHirachy = GetModuleHirachy(type.Namespace);
-                    classes.Add(var);
-                }
-            }
-            return classes;
-        }
-
-        public static List<Reflection.Variable> GetAccessableGlobalVariable(Assembly asm) {
-            List<Reflection.Variable> globals = new List<Reflection.Variable>();
-            foreach (var type in asm.GetTypes()) {
-                Reflection.Markup.ExposeAttribute? expose = type.GetCustomAttribute<Reflection.Markup.ExposeAttribute>();
-                if (expose != null) {
-                    if (expose.Alias == "<global>") {
-                        var functions = type.GetMethods();
-                        var fields = type.GetFields();
-
-                        foreach (var item in functions) {
-                            expose = item.GetCustomAttribute<Reflection.Markup.ExposeAttribute>();
-                            if (item.IsStatic && expose!=null) {
-                                Reflection.Variable var = new Reflection.Variable();
-                                var.FullName = GetModuleHirachy(type.Namespace).Connect(".");
-                                if (var.FullName == "")
-                                    var.FullName += expose.Alias;
-                                else var.FullName += ("." + expose.Alias);
-                                var.Name = expose.Alias;
-                                var.Hidden = expose.ToSystemOnly;
-                                var.Object = new Type.Function(item, null);
-                                var.ModuleHirachy = GetModuleHirachy(type.Namespace);
-                                globals.Add(var);
-                            }
-                        }
-
-                        foreach (var item in fields) {
-                            expose = item.GetCustomAttribute<Reflection.Markup.ExposeAttribute>();
-                            if (item.IsStatic && expose != null) {
-                                Reflection.Variable var = new Reflection.Variable();
-                                var.FullName = GetModuleHirachy(type.Namespace).Connect(".");
-                                if (var.FullName == "")
-                                    var.FullName += expose.Alias;
-                                else var.FullName += ("." + expose.Alias);
-                                var.Name = expose.Alias;
-                                var.Hidden = expose.ToSystemOnly;
-                                var.Object = (Type.Var)((item.GetValue(null)) ?? Type.Global.Null);
-                                var.ModuleHirachy = GetModuleHirachy(type.Namespace);
-                                globals.Add(var);
-                            }
-                        }
-                    }
-                }
-            }
-            return globals;
-        }
-
-        public static void SetVariable(List<string> module, Reflection.Variable variable, Dictionary<string, Reflection.Module> destinationArray) {
-            Reflection.Module? current = null;
-            foreach (var submod in module) {
-                if(current == null) {
-                    if (destinationArray.ContainsKey(submod))
-                        current = destinationArray[submod];
-                    else {
-                        current = new Reflection.Module();
-                        current.Name = submod;
-                        current.Compiled = true;
-                        destinationArray.Add(submod, current);
-                    }
-                } else if(current.SubModules.ContainsKey(submod)) {
-                    current = current.SubModules[submod];
-                } else {
-                    var i = new Reflection.Module();
-                    i.Name = submod;
-                    i.Compiled = true;
-                    current.SubModules.Add(submod, i);
-                    current = i;
-                }
-            }
-
-            if (current.Variables.ContainsKey(variable.Name)) {
-                variable.Conflict = current.Variables[variable.Name];
-                current.Variables[variable.Name] = variable;
-            } else
-                current.Variables.Add(variable.Name, variable);
-        }
-
-        public static void SetAbstractClass(List<string> module, Reflection.AbstractClass variable, Dictionary<string, Reflection.Module> destinationArray) {
-            Reflection.Module? current = null;
-            foreach (var submod in module) {
-                if (current == null) {
-                    if (destinationArray.ContainsKey(submod))
-                        current = destinationArray[submod];
-                    else {
-                        current = new Reflection.Module();
-                        current.Name = submod;
-                        current.Compiled = true;
-                        destinationArray.Add(submod, current);
-                    }
-                } else if (current.SubModules.ContainsKey(submod)) {
-                    current = current.SubModules[submod];
-                } else {
-                    var i = new Reflection.Module();
-                    i.Name = submod;
-                    i.Compiled = true;
-                    current.SubModules.Add(submod, i);
-                    current = i;
-                }
-            }
-
-            if (current.Classes.ContainsKey(variable.Name)) {
-                variable.Conflict = current.Classes[variable.Name];
-                current.Classes[variable.Name] = variable;
-            } else
-                current.Classes.Add(variable.Name, variable);
-        }
-
-        public static void SetIdentityClass(List<string> module, Reflection.IdentityClass variable, Dictionary<string, Reflection.Module> destinationArray) {
-            Reflection.Module? current = null;
-            foreach (var submod in module) {
-                if (current == null) {
-                    if (destinationArray.ContainsKey(submod))
-                        current = destinationArray[submod];
-                    else {
-                        current = new Reflection.Module();
-                        current.Name = submod;
-                        current.Compiled = true;
-                        destinationArray.Add(submod, current);
-                    }
-                } else if (current.SubModules.ContainsKey(submod)) {
-                    current = current.SubModules[submod];
-                } else {
-                    var i = new Reflection.Module();
-                    i.Name = submod;
-                    i.Compiled = true;
-                    current.SubModules.Add(submod, i);
-                    current = i;
-                }
-            }
-
-            if (current.IdentityClasses.ContainsKey(variable.Name)) {
-                variable.Conflict = current.IdentityClasses[variable.Name];
-                current.IdentityClasses[variable.Name] = variable;
-            } else
-                current.IdentityClasses.Add(variable.Name, variable);
-        }
-
-        public static void SetInstance(List<string> module, Reflection.Instance variable, Dictionary<string, Reflection.Module> destinationArray) {
-            Reflection.Module? current = null;
-            foreach (var submod in module) {
-                if (current == null) {
-                    if (destinationArray.ContainsKey(submod))
-                        current = destinationArray[submod];
-                    else {
-                        current = new Reflection.Module();
-                        current.Name = submod;
-                        current.Compiled = true;
-                        destinationArray.Add(submod, current);
-                    }
-                } else if (current.SubModules.ContainsKey(submod)) {
-                    current = current.SubModules[submod];
-                } else {
-                    var i = new Reflection.Module();
-                    i.Name = submod;
-                    i.Compiled = true;
-                    current.SubModules.Add(submod, i);
-                    current = i;
-                }
-            }
-
-            if (current.Instances.ContainsKey(variable.Name)) {
-                variable.Conflict = current.Instances[variable.Name];
-                current.Instances[variable.Name] = variable;
-            } else
-                current.Instances.Add(variable.Name, variable);
-        }
-
-        public static void SetFunction(List<string> module, Reflection.Function variable, Dictionary<string, Reflection.Module> destinationArray) {
-            Reflection.Module? current = null;
-            foreach (var submod in module) {
-                if (current == null) {
-                    if (destinationArray.ContainsKey(submod))
-                        current = destinationArray[submod];
-                    else {
-                        current = new Reflection.Module();
-                        current.Name = submod;
-                        current.Compiled = true;
-                        destinationArray.Add(submod, current);
-                    }
-                } else if (current.SubModules.ContainsKey(submod)) {
-                    current = current.SubModules[submod];
-                } else {
-                    var i = new Reflection.Module();
-                    i.Name = submod;
-                    i.Compiled = true;
-                    current.SubModules.Add(submod, i);
-                    current = i;
-                }
-            }
-
-            if (current.Functions.ContainsKey(variable.Name)) {
-                variable.Conflict = current.Functions[variable.Name];
-                current.Functions[variable.Name] = variable;
-            } else
-                current.Functions.Add(variable.Name, variable);
-        }
-
-        public static void RemoveVariable(List<string> module, Reflection.Variable variable, Dictionary<string, Reflection.Module> destinationArray) {
-            Reflection.Module? current = null;
-            foreach (var submod in module) {
-                if (current == null) {
-                    if (destinationArray.ContainsKey(submod))
-                        current = destinationArray[submod];
-                    else return;
-                } else if (current.SubModules.ContainsKey(submod)) {
-                    current = current.SubModules[submod];
-                } else return;
-            }
-
-            if (current.Variables.ContainsKey(variable.Name)) {
-                Reflection.Variable varia = current.Variables[variable.Name];
-                while(varia != variable) {
-                    if (varia.Conflict == null) return;
-                    varia = varia.Conflict;
-
-                    if(varia.Conflict == variable) {
-                        varia.Conflict = variable.Conflict;
-                        return;
-                    }
-                }
-            } else return;
-        }
-
-        public static void RemoveAbstractClass(List<string> module, Reflection.AbstractClass variable, Dictionary<string, Reflection.Module> destinationArray) {
-            Reflection.Module? current = null;
-            foreach (var submod in module) {
-                if (current == null) {
-                    if (destinationArray.ContainsKey(submod))
-                        current = destinationArray[submod];
-                    else return;
-                } else if (current.SubModules.ContainsKey(submod)) {
-                    current = current.SubModules[submod];
-                } else return;
-            }
-
-            if (current.Classes.ContainsKey(variable.Name)) {
-                Reflection.AbstractClass varia = current.Classes[variable.Name];
-                while (varia != variable) {
-                    if (varia.Conflict == null) return;
-                    varia = varia.Conflict;
-
-                    if (varia.Conflict == variable) {
-                        varia.Conflict = variable.Conflict;
-                        return;
-                    }
-                }
-            } else return;
-        }
-
-        public static void RemoveIdentityClass(List<string> module, Reflection.IdentityClass variable, Dictionary<string, Reflection.Module> destinationArray) {
-            Reflection.Module? current = null;
-            foreach (var submod in module) {
-                if (current == null) {
-                    if (destinationArray.ContainsKey(submod))
-                        current = destinationArray[submod];
-                    else return;
-                } else if (current.SubModules.ContainsKey(submod)) {
-                    current = current.SubModules[submod];
-                } else return;
-            }
-
-            if (current.IdentityClasses.ContainsKey(variable.Name)) {
-                Reflection.IdentityClass varia = current.IdentityClasses[variable.Name];
-                while (varia != variable) {
-                    if (varia.Conflict == null) return;
-                    varia = varia.Conflict;
-
-                    if (varia.Conflict == variable) {
-                        varia.Conflict = variable.Conflict;
-                        return;
-                    }
-                }
-            } else return;
-        }
-
-        public static void RemoveFunction(List<string> module, Reflection.Function variable, Dictionary<string, Reflection.Module> destinationArray) {
-            Reflection.Module? current = null;
-            foreach (var submod in module) {
-                if (current == null) {
-                    if (destinationArray.ContainsKey(submod))
-                        current = destinationArray[submod];
-                    else return;
-                } else if (current.SubModules.ContainsKey(submod)) {
-                    current = current.SubModules[submod];
-                } else return;
-            }
-
-            if (current.Functions.ContainsKey(variable.Name)) {
-                Reflection.Function varia = current.Functions[variable.Name];
-                while (varia != variable) {
-                    if (varia.Conflict == null) return;
-                    varia = varia.Conflict;
-
-                    if (varia.Conflict == variable) {
-                        varia.Conflict = variable.Conflict;
-                        return;
-                    }
-                }
-            } else return;
-        }
-
-        public static void RemoveInstance(List<string> module, Reflection.Instance variable, Dictionary<string, Reflection.Module> destinationArray) {
-            Reflection.Module? current = null;
-            foreach (var submod in module) {
-                if (current == null) {
-                    if (destinationArray.ContainsKey(submod))
-                        current = destinationArray[submod];
-                    else return;
-                } else if (current.SubModules.ContainsKey(submod)) {
-                    current = current.SubModules[submod];
-                } else return;
-            }
-
-            if (current.Instances.ContainsKey(variable.Name)) {
-                Reflection.Instance varia = current.Instances[variable.Name];
-                while (varia != variable) {
-                    if (varia.Conflict == null) return;
-                    varia = varia.Conflict;
-
-                    if (varia.Conflict == variable) {
-                        varia.Conflict = variable.Conflict;
-                        return;
-                    }
-                }
-            } else return;
-        }
-
-        public static Reflection.Module? GetModule(List<string> module, Dictionary<string, Reflection.Module> destinationArray) {
-            Reflection.Module? current = null;
-            foreach (var submod in module) {
-                if (current == null) {
-                    if (destinationArray.ContainsKey(submod))
-                        current = destinationArray[submod];
-                    else return null;
-                } else if (current.SubModules.ContainsKey(submod)) {
-                    current = current.SubModules[submod];
-                } else return null;
-            }
-            return current;
-        }
-
     }
 }

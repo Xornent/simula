@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Simula.Scripting.Debugging;
 using Simula.Scripting.Token;
 
 namespace Simula.Scripting.Syntax {
@@ -27,22 +28,27 @@ namespace Simula.Scripting.Syntax {
             Right.Parse(lr[1]);
         }
 
-        public override (dynamic value, Debugging.ExecutableFlag flag) Execute(Compilation.RuntimeContext ctx) {
-            if (Left == null) { this.Right?.Execute(ctx); return (Type.Global.Null, Debugging.ExecutableFlag.Pass); };
-            if (Right == null) { return (Type.Global.Null, Debugging.ExecutableFlag.Pass); }
-            dynamic? evalLeft = this.Left?.Execute(ctx).value;
-            dynamic? evalRight = this.Right?.Execute(ctx).value;
+        public override ExecutionResult Execute(Compilation.RuntimeContext ctx) {
+            if (Left == null) {
+                this.Right?.Execute(ctx);
+                return new ExecutionResult();
+            };
+            if (Right == null) return new ExecutionResult();
 
-            if (evalLeft == null) return (Type.Global.Null, Debugging.ExecutableFlag.Pass);
-            if (evalRight == null) return (Type.Global.Null, Debugging.ExecutableFlag.Pass);
-            if (evalLeft is Type._Null) { 
+            ExecutionResult? evalLeft = this.Left?.Execute(ctx);
+            ExecutionResult? evalRight = this.Right?.Execute(ctx);
+
+            if (evalLeft == null) return new ExecutionResult();
+            if (evalRight == null) return new ExecutionResult();
+
+            if (evalLeft.Pointer == 0) { 
                 if(Left.EvaluateOperators.Count == 1) 
                     if(Left.EvaluateOperators[0] is SelfOperation)
-                        ctx.CallStack.Peek().SetMember(((SelfOperation)Left.EvaluateOperators[0]).Self.Value, evalRight);
+                        ctx.CallStack.Peek().SetMember(((SelfOperation)Left.EvaluateOperators[0]).Self.Value, evalRight.Result);
             } else {
-                ctx.SetMember(evalLeft, evalRight);
+                ctx.CallStack.Peek().SetMember(evalLeft.Pointer, evalRight.Result);
             }
-            return (evalRight, Debugging.ExecutableFlag.Pass);
+            return new ExecutionResult(evalRight.Result, ctx) { Flag = ExecutableFlag.Pass };
         }
     }
 }

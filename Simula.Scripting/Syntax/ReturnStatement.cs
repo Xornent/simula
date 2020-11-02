@@ -19,11 +19,12 @@ namespace Simula.Scripting.Syntax {
             }
         }
 
-        public override (dynamic value, ExecutableFlag flag) Execute(RuntimeContext ctx) {
-            if (Evaluation == null) return (Type.Global.Null, ExecutableFlag.Return);
+        public override ExecutionResult Execute(RuntimeContext ctx) {
+            if (Evaluation == null) return new ExecutionResult();
             else {
                 var result = Evaluation.Execute(ctx);
-                return (result.value, ExecutableFlag.Return);
+                result.Flag = ExecutableFlag.Return;
+                return result;
             }
         }
     }

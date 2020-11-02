@@ -1,4 +1,5 @@
-﻿using Simula.Scripting.Reflection.Markup;
+﻿using Simula.Scripting.Reflection;
+using Simula.Scripting.Reflection.Markup;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -15,7 +16,7 @@ namespace Simula.Scripting.Type {
         public static readonly Boolean False = Boolean.False;
 
         [Expose("null")]
-        public static readonly _Null Null = new _Null();
+        public static readonly NullType Null = NullType.Null;
 
         [Expose("alert")]
         public static void Alert(Var str) {

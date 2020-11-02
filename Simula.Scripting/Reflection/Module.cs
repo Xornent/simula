@@ -1,138 +1,117 @@
-﻿using System;
+﻿using Simula.Scripting.Compilation;
+using Simula.Scripting.Debugging;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Simula.Scripting.Reflection {
 
-    public class Module : Base {
-        public Dictionary<string, Module> SubModules = new Dictionary<string, Module>();
-        public Dictionary<string, AbstractClass> Classes = new Dictionary<string, AbstractClass>();
-        public Dictionary<string, IdentityClass> IdentityClasses = new Dictionary<string, IdentityClass>();
-        public Dictionary<string, Function> Functions = new Dictionary<string, Function>();
-        public Dictionary<string, Instance> Instances = new Dictionary<string, Instance>();
-        public Dictionary<string, Variable> Variables = new Dictionary<string, Variable>();
+    public class Module : Member {
+        public Module(RuntimeContext runtime) {
+            this.Type = MemberType.Module;
+            this.Runtime = runtime;
+        }
+            
+        public RuntimeContext? Runtime { get; internal set; }
+    
         public List<Syntax.Statement> Startup = new List<Syntax.Statement>();
-        public Documentation DocumentationSource = new Documentation();
+        public Locator Path = new Locator(true);
+        public Dictionary<string, Metadata> Members = new Dictionary<string, Metadata>();
 
-        public bool Compiled = false;
-        public Module? Conflict;
+        internal bool IsDirty = true;
 
-        public dynamic GetMember(string name) {
+        private Dictionary<string, Class> classes = new Dictionary<string, Class>();
+        private Dictionary<string, Instance> instances = new Dictionary<string, Instance>();
+        private Dictionary<string, Function> functions = new Dictionary<string, Function>();
+        private Dictionary<string, Module> modules = new Dictionary<string, Module>();
 
-            // 这是 RuntimeContext.GetMember 的衍生.
-
-            // 先从调用栈的顶层(如果有)寻找对象.
-
-            var current = this;
-            if (current.Classes.ContainsKey(name)) return current.Classes[name];
-            if (current.Functions.ContainsKey(name)) return current.Functions[name];
-            if (current.IdentityClasses.ContainsKey(name)) return current.IdentityClasses[name];
-            if (current.Instances.ContainsKey(name)) return current.Instances[name];
-            if (current.Variables.ContainsKey(name)) return current.Variables[name];
-            if (current.SubModules.ContainsKey(name)) return current.SubModules[name];
-
-            return Type.Global.Null;
+        public Dictionary<string, Class> Classes {
+            get {
+                if (IsDirty) ClearDirtyState();
+                return this.classes;
+            }
         }
 
-        public dynamic GetMemberModulePrior(string name) {
-
-            // 这是 RuntimeContext.GetMemberModulePrior 的衍生.
-
-            // 先从调用栈的顶层(如果有)寻找对象.
-
-            var current = this;
-
-            if (current.SubModules.ContainsKey(name)) return current.SubModules[name];
-            if (current.Classes.ContainsKey(name)) return current.Classes[name];
-            if (current.Functions.ContainsKey(name)) return current.Functions[name];
-            if (current.IdentityClasses.ContainsKey(name)) return current.IdentityClasses[name];
-            if (current.Instances.ContainsKey(name)) return current.Instances[name];
-            if (current.Variables.ContainsKey(name)) return current.Variables[name];
-
-            return Type.Global.Null;
+        public Dictionary<string, Instance> Instances {
+            get {
+                if (IsDirty) ClearDirtyState();
+                return this.instances;
+            }
         }
 
-        private dynamic? GetMemberNull(string name) {
-            if (this.Classes.ContainsKey(name)) return this.Classes[name];
-            if (this.Functions.ContainsKey(name)) return this.Functions[name];
-            if (this.IdentityClasses.ContainsKey(name)) return this.IdentityClasses[name];
-            if (this.Instances.ContainsKey(name)) return this.Instances[name];
-            if (this.SubModules.ContainsKey(name)) return this.SubModules[name];
-            if (this.Variables.ContainsKey(name)) return this.Variables[name];
-            return null;
+        public Dictionary<string, Function> Functions {
+            get {
+                if (IsDirty) ClearDirtyState();
+                return this.functions;
+            }
         }
 
-        public void SetMember(string name, dynamic obj) {
-            dynamic? m = GetMemberNull(name);
+        public Dictionary<string, Module> Modules {
+            get {
+                if (IsDirty) ClearDirtyState();
+                return this.modules;
+            }
+        }
 
-            if (m == null) {
-                if (obj is Type.Var) {
-                    Variable v = new Variable();
-                    v.Name = name;
-                    v.Object = (Type.Var)obj;
-                    this.Variables.OverflowAddVariable(v.Name, v);
-                } else if (obj is Variable) {
-                    this.Variables.OverflowAddVariable(name, (Variable)obj);
-                } else if (obj is Module) {
-                    this.SubModules.OverflowAddModule(name, (Module)obj);
-                } else if (obj is AbstractClass) {
-                    this.Classes.OverflowAddAbstractClass(name, (AbstractClass)obj);
-                } else if (obj is IdentityClass) {
-                    this.IdentityClasses.OverflowAddIdentityClass(name, (IdentityClass)obj);
-                } else if (obj is Instance) {
-                    this.Instances.OverflowAddInstance(name, (Instance)obj);
-                } else if (obj is Function) {
-                    this.Functions.OverflowAddFunction(name, (Function)obj);
+        public void ClearDirtyState() {
+            if (IsDirty && this.Runtime != null) {
+                Dictionary<string, Module> mods = new Dictionary<string, Module>();
+                foreach (var item in Members) {
+                    if (item.Value.Type == MemberType.Module)
+                        mods.Add(item.Key, (Module)this.Runtime.GetMemberByMetadata(this.Members[item.Key]));
+                }
+                this.modules = mods;
+
+                Dictionary<string, Function> func = new Dictionary<string, Function>();
+                foreach (var item in Members) {
+                    if (item.Value.Type == MemberType.Function)
+                        func.Add(item.Key, (Function)this.Runtime.GetMemberByMetadata(this.Members[item.Key]));
+                }
+                this.functions = func;
+
+                Dictionary<string, Instance> inst = new Dictionary<string, Instance>();
+                foreach (var item in Members) {
+                    if (item.Value.Type == MemberType.Instance)
+                        inst.Add(item.Key, (Instance)this.Runtime.GetMemberByMetadata(this.Members[item.Key]));
+                }
+                this.instances = inst;
+
+                Dictionary<string, Class> cls = new Dictionary<string, Class>();
+                foreach (var item in Members) {
+                    if (item.Value.Type == MemberType.Class)
+                        cls.Add(item.Key, (Class)this.Runtime.GetMemberByMetadata(this.Members[item.Key]));
+                }
+                this.classes = cls;
+
+                this.IsDirty = false;
+            }
+        }
+
+        public ExecutionResult GetMember(string name) {
+            if (this.Members.ContainsKey(name))
+                if (this.Runtime != null)
+                    return new ExecutionResult(this.Members[name].Pointer, this.Runtime);
+            return new ExecutionResult();
+        }
+
+        public bool SetMember(string name, Member value) {
+            if (this.Members.ContainsKey(name)) {
+                if (this.GetMember(name).Result.Writable == false) return false;
+                if (this.Runtime != null) {
+                    this.Runtime.SetMemberByMetadata(this.Members[name], value);
+                    this.IsDirty = true;
+                    return true;
                 }
             } else {
-                List<string> keys = new List<string>();
-                if (m is Variable) {
-                    keys = this.Variables.RemoveValue((Variable)m);
-                } else if (m is Module) {
-                    keys = this.SubModules.RemoveValue((Module)m);
-                } else if (m is AbstractClass) {
-                    keys = this.Classes.RemoveValue((AbstractClass)m);
-                } else if (m is IdentityClass) {
-                    keys = this.IdentityClasses.RemoveValue((IdentityClass)m);
-                } else if (m is Instance) {
-                    keys = this.Instances.RemoveValue((Instance)m);
-                } else if (m is Function) {
-                    keys = this.Functions.RemoveValue((Function)m);
-                }
-
-                if (obj is Type.Var) {
-                    Variable v = new Variable();
-                    v.Name = name;
-                    v.Object = (Type.Var)obj;
-                    foreach (var item in keys) {
-                        this.Variables.OverflowAddVariable(item, v);
-                    }
-                } else if (obj is Variable) {
-                    foreach (var item in keys) {
-                        this.Variables.OverflowAddVariable(item, (Variable) obj);
-                    }
-                } else if (obj is Module) {
-                    foreach (var item in keys) {
-                        this.SubModules.OverflowAddModule(item, (Module)obj);
-                    }
-                } else if (obj is AbstractClass) {
-                    foreach (var item in keys) {
-                        this.Classes.OverflowAddAbstractClass(item, (AbstractClass)obj);
-                    }
-                } else if (obj is IdentityClass) {
-                    foreach (var item in keys) {
-                        this.IdentityClasses.OverflowAddIdentityClass(item, (IdentityClass)obj);
-                    }
-                } else if (obj is Instance) {
-                    foreach (var item in keys) {
-                        this.Instances.OverflowAddInstance(item, (Instance)obj);
-                    }
-                } else if (obj is Function) {
-                    foreach (var item in keys) {
-                        this.Functions.OverflowAddFunction(item, (Function)obj);
-                    }
+                if (this.Runtime != null) {
+                    ExecutionResult result = new ExecutionResult(value, this.Runtime);
+                    this.Members.Add(name, new Metadata(result.Pointer, result.Result.Type));
+                    this.IsDirty = true;
+                    return true;
                 }
             }
+
+            return false;
         }
     }
 }

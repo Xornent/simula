@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -34,28 +35,20 @@ namespace Simula {
             SizeChangeEnquiry.Tick += SizeChangeEnquiry_Tick;
             SizeChangeEnquiry.Start();
 
-            editor_console.TextChanged += HandleConsoleEditorTextChanged;
-        }
+            // this application supports only left-handed operation. otherwise, it will 
+            // naturally occur many layout problems
 
-        private void HandleConsoleEditorTextChanged(object sender, EventArgs e) {
-            
-            Scripting.Compilation.RuntimeContext ctx = new Scripting.Compilation.RuntimeContext();
-
-            Scripting.Compilation.LibraryCompilationUnit lib = new Scripting.Compilation.LibraryCompilationUnit(
-                Environment.CurrentDirectory + @"\simula.scripting.dll", System.IO.FileMode.Open);
-            lib.Register(ctx);
-
-            Scripting.Compilation.SourceCompilationUnit src = new Scripting.Compilation.SourceCompilationUnit(editor_console.Text);
-            src.Register(ctx);
-
-            src.Run(ctx);
-
-            System.Windows.MessageBox.Show("Complete");
+            var isleft = SystemParameters.MenuDropAlignment;
+            if(isleft) {
+                var sys = typeof(SystemParameters);
+                var alignment = sys.GetField("_menuDropAlignment", BindingFlags.NonPublic | BindingFlags.Static);
+                alignment.SetValue(null, false);
+            }
         }
 
         private void Window_StateChanged(object sender, EventArgs e) {
             if (WindowState == WindowState.Maximized)
-                Margin = new Thickness(8, 8, 8, 8);
+                Margin = new Thickness(8, 7, 8, 8);
             else
                 Margin = new Thickness(0);
         }
@@ -72,9 +65,11 @@ namespace Simula {
             if (WindowState == WindowState.Maximized) {
                 WindowState = WindowState.Normal;
                 MainGrid.Margin = new Thickness(0, 0, 0, 0);
+                InstallMainGrid.Margin = new Thickness(0, 0, 0, 0);
             } else {
                 WindowState = WindowState.Maximized;
-                MainGrid.Margin = new Thickness(8, 8, 8, 8);
+                MainGrid.Margin = new Thickness(8, 7, 8, 8);
+                InstallMainGrid.Margin = new Thickness(8, 7, 8, 8);
             }
         }
 
@@ -159,11 +154,13 @@ namespace Simula {
             blockImg.TextAlignment = TextAlignment.Center;
             blockImg.FontFamily = new FontFamily("Segoe MDL2 Assets");
             TextBlock block = new TextBlock();
-            block.FontFamily = new FontFamily("PingFang SC Bold");
+            block.FontFamily = new FontFamily("Adobe Clean Han SC");
+            block.FontWeight = FontWeights.Bold;
             block.TextAlignment = TextAlignment.Center;
             block.VerticalAlignment = VerticalAlignment.Center;
             block.Text = text;
-            block.Width = Math.Max(1, Math.Min(GetStringWidth(block), width - 40));
+            block.FontSize = 12;
+            block.Width = Math.Max(1, Math.Min(GetStringWidth(block) + 15, width - 40));
             block.TextTrimming = TextTrimming.CharacterEllipsis;
 
             StackPanel dockinner = new StackPanel();
@@ -268,7 +265,7 @@ namespace Simula {
             TabPages.Add(pg);
             var id = Guid.NewGuid();
             TabIndices.Add(id.ToString().Replace("-", "_"));
-            var newtab = CreateTabWindow(0, id.ToString().Replace("-", "_"), null," Simula Workspace");
+            var newtab = CreateTabWindow(0, id.ToString().Replace("-", "_"), null," Simula Workspace   ");
             TabContainer.Children.Add(newtab);
             TabWindows.Add(newtab);
 
@@ -379,6 +376,16 @@ namespace Simula {
 
         private void Menu_ManageExtensions(object sender, EventArgs e) {
             new Scripting.Packaging.PackageExplorer().ShowDialog();
+        }
+
+        private void Menu_CheckUpdate(object sender, EventArgs e) {
+            this.MainGrid.Visibility = Visibility.Hidden;
+            this.InstallMainGrid.Visibility = Visibility.Visible;
+        }
+
+        private void Installer_Cancel(object sender, EventArgs e) {
+            this.InstallMainGrid.Visibility = Visibility.Hidden;
+            this.MainGrid.Visibility = Visibility.Visible;
         }
     }
 }

@@ -32,16 +32,12 @@ namespace Simula.Scripting.Type {
             return value;
         }
 
-        [Expose("_create", true)]
-        public Function _create() {
-            return new Function(this.GetType().GetMethod("_init"), this);
-        }
-
         [Expose("_init", true)]
         public String _init() {
             return this;
         }
 
+        [Expose("lower")]
         public String to_lower() {
             return value.ToLower();
         }

@@ -119,7 +119,7 @@ namespace Simula.Scripting.Syntax {
             }
         }
 
-        public override (dynamic value, Debugging.ExecutableFlag flag) Execute(Compilation.RuntimeContext ctx) {
+        public override ExecutionResult Execute(Compilation.RuntimeContext ctx) {
             bool skipif = false;
             foreach (var item in this.Children) {
                 if (item is DefinitionBlock) { }
@@ -133,29 +133,29 @@ namespace Simula.Scripting.Syntax {
                     var result = item.Execute(ctx);
 
                     if (item is IfBlock || item is ElseIfBlock || item is ElseBlock) {
-                        if (result.flag == ExecutableFlag.Else) {
+                        if (result.Flag == ExecutableFlag.Else) {
                             skipif = false;
                         } else {
                             skipif = true;
                         }
                     }
 
-                    switch (result.flag) {
+                    switch (result.Flag) {
                         case Debugging.ExecutableFlag.Pass:
                             break;
                         case Debugging.ExecutableFlag.Return:
-                            return (result.value, Debugging.ExecutableFlag.Return);
+                            return new ExecutionResult(result.Pointer, ctx, ExecutableFlag.Return);
                         case Debugging.ExecutableFlag.Break:
-                            return (result.value, Debugging.ExecutableFlag.Break);
+                            return new ExecutionResult(result.Pointer, ctx, ExecutableFlag.Break);
                         case Debugging.ExecutableFlag.Continue:
-                            return (result.value, Debugging.ExecutableFlag.Continue);
+                            return new ExecutionResult(result.Pointer, ctx, ExecutableFlag.Continue);
                         default:
                             break;
                     }
                 }
             }
 
-            return (Type.Global.Null, Debugging.ExecutableFlag.Pass);
+            return new ExecutionResult(0, ctx, ExecutableFlag.Pass);
         }
     }
 }
