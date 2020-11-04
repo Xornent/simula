@@ -205,6 +205,7 @@ namespace Simula.Scripting.Reflection {
                 foreach (var item in parameters) {
                     switch (item.Type) {
                         case MemberType.Class:
+                            objectParameters.Add(new Type._Class(((ClrClass)item).Reflection));
                             break;
                         case MemberType.Instance:
                             objectParameters.Add(((ClrInstance)item).Reflection);

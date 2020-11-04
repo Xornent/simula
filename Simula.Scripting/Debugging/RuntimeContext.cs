@@ -21,7 +21,8 @@ namespace Simula.Scripting.Compilation {
             Pointers.Add(6, ClrClass.Create(typeof(Type.Float)));
             Pointers.Add(7, ClrClass.Create(typeof(Type.String)));
             Pointers.Add(8, ClrClass.Create(typeof(Type.Dimension)));
-            Pointers.Add(9, new ClrFunction(typeof(Type.Global).GetMethod("Alert")));
+            Pointers.Add(9, ClrClass.Create(typeof(Type._Class)));
+            Pointers.Add(10, new ClrFunction(typeof(Type.Global).GetMethod("Alert")));
         }
 
         // 对于已编译的对象 (从 LiraryCompilationUnit 注册, 后缀名 .scl Simula 已编译库)
@@ -30,7 +31,7 @@ namespace Simula.Scripting.Compilation {
 
         public List<CompilationUnit> Registry = new List<CompilationUnit>();
 
-        public uint MaximumAllocatedPointer = 10;
+        public uint MaximumAllocatedPointer = 1000;
         public Dictionary<uint, Member> Pointers = new Dictionary<uint, Member>();
 
         public Member AllocateMember(Member member, uint pointer = 0) {
@@ -66,7 +67,8 @@ namespace Simula.Scripting.Compilation {
             { "float", new Metadata(6, MemberType.Class) },
             { "string", new Metadata(7, MemberType.Class) },
             { "dimension", new Metadata(8, MemberType.Class) },
-            { "alert", new Metadata(9, MemberType.Function) }
+            { "class", new Metadata(9, MemberType.Class)},
+            { "alert", new Metadata(10, MemberType.Function) }
         };
 
         public List<RuntimeError> Errors = new List<RuntimeError>();

@@ -35,6 +35,7 @@ namespace Simula.Scripting.Reflection {
 
         public Class? Inheritage;
         public Syntax.DefinitionBlock? Definition;
+        public Function? Startup;
 
         // 这一组运算符字典是可以自行扩充的, 调用 class.register_operator(string, string, int).
         // 可以注册一个成员函数和符号序列的关联. 并且指定一个可用的运算符类型.
@@ -229,6 +230,11 @@ namespace Simula.Scripting.Reflection {
                 instance.SetMember(attribute.Alias, field);
             }
 
+            var initializer = instance.GetMember("_init");
+            if(!initializer.IsNull())
+                if(initializer.Result.Type == MemberType.Function) {
+                    ((Function)initializer.Result).Invoke(parameters, ctx);
+                } 
             return instance;
         }
 

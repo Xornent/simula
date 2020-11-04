@@ -20,10 +20,10 @@ namespace Simula.Scripting.Syntax {
             Function? target = null;
             switch (evalLeft.Result.Type) {
                 case MemberType.Class:
-
-                    // TODO: initializing classes.
-
-                    break;
+                    var abstracts = ((Class)evalLeft.Result);
+                    foreach (var item in parameterResults) 
+                        raws.Add(item.Result);
+                    return new ExecutionResult(abstracts.CreateInstance(raws, ctx), ctx);
                 case MemberType.Instance:
                     var instance = ((Instance)evalLeft.Result).GetMember("_call");
                     if (instance.Result.Type == MemberType.Function)

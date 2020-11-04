@@ -227,31 +227,7 @@ namespace Simula.Scripting.Syntax {
         }
 
         private void ParseAbsoluteClassName(TokenCollection collection) {
-
             this.ClassName = collection[0];
-            if(collection.Count == 1) {
-                collection[0].Error = new TokenizerException("ss0022");
-                return;
-            }
-            if (collection[1] == "{}") { } else {
-                TokenCollection tk = new TokenCollection();
-                for (int i = 2; i < collection.Count; i++) {
-                    if (collection[i] == "}") break;
-                    else tk.Add(collection[i]);
-                }
-
-                var funcParam = tk.Split(new Token.Token(","));
-                this.ClassParameters.Clear();
-                foreach (var item in funcParam) {
-                    Parameter par = new Parameter();
-                    par.Name = item.Last();
-                    item.RemoveLast();
-                    EvaluationStatement e = new EvaluationStatement();
-                    e.Parse(item);
-                    par.Type = e;
-                    this.ClassParameters.Add(par);
-                }
-            }
         }
 
         private void ParseAbsoluteFunctionDefinition(TokenCollection collection) {
