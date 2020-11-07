@@ -12,6 +12,7 @@
         Icon="pack://siteoforigin:,,,/app.icon.ico"
         FontFamily="{StaticResource default}"
         Title="无工作区 -  Simula" Height="690" Width="1050" MinWidth="895" MinHeight="570" WindowStartupLocation="CenterScreen">
+    
     <Window.Resources>
 
         <LinearGradientBrush x:Key="headerPanel" StartPoint="0,0" EndPoint="0,1" ColorInterpolationMode="ScRgbLinearInterpolation">

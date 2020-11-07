@@ -20,14 +20,7 @@ namespace Simula.Scripting.Syntax {
                 Evaluation.Parse(collection);
             } else collection[0].Error = new TokenizerException("SS0009");
         }
-        /*
-counter = 1
-while (counter % 10 != 9)
-    counter = counter + 1
-    alert(counter)
-end
-alert(counter + 1)
-*/
+        
         public override ExecutionResult Execute(RuntimeContext ctx) {
             bool evaluate = true;
             if (Evaluation == null) evaluate = false;
@@ -38,19 +31,20 @@ alert(counter + 1)
                         evaluate = true;
                         break;
                     case Reflection.MemberType.Instance:
-                        if(eval.Pointer == 3) {
-                            evaluate = true;
-                            break;
-                        } else if (eval.Pointer == 4) {
-                            evaluate = false;
-                            break;
-                        }
+                        if(eval.Result is ClrInstance inst)
+                            if(inst.GetNative() is Type.Boolean b)
+                                if(b == true)
+                                    evaluate = true;
+                        evaluate = false;
 
                         var evalFunction = ((Instance)eval.Result).GetMember("__eval");
                         if (evalFunction.Result is Function) {
                             var result = ((Function)evalFunction.Result).Invoke(new List<Member>(), ctx);
-                            if (result.Pointer == 3) evaluate = true;
-                            else evaluate = false;
+                            if(result.Result is ClrInstance ins)
+                                if(ins.GetNative() is Type.Boolean b)
+                                    if(b == true)
+                                        evaluate = true;
+                            evaluate = false;
                         } else evaluate = true;
                         break;
                     case Reflection.MemberType.Function:

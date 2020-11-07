@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Simula.Scripting.Reflection {
     
+    [Markup.Expose("object")]
     public class Member {
         public string Name { get; internal set; } = "";
         public string FullName { get; internal set; } = "";

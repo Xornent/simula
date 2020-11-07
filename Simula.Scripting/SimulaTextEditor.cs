@@ -16,6 +16,7 @@ using System.Linq;
 using System.Windows.Input;
 using System.Xml;
 using System.Windows.Controls.Primitives;
+using Simula.Editor.Folding;
 
 namespace Simula.Scripting {
 
@@ -25,13 +26,15 @@ namespace Simula.Scripting {
         private Popup? toolTip;
         System.ComponentModel.BackgroundWorker worker = new System.ComponentModel.BackgroundWorker();
         bool usingValidation = false;
+        FoldingManager manager;
+        SimulaFoldingStrategy folding = new SimulaFoldingStrategy();
 
         public SimulaTextEditor() : base() {
             textMarkerService = new TextMarkerService(this);
             TextView textView = this.TextArea.TextView;
             this.SyntaxHighlighting = Simula.Editor.Highlighting.HighlightingManager.Instance.GetDefinition("Simula");
             this.FontFamily = new System.Windows.Media.FontFamily("Consolas, Simsun");
-            this.FontSize = 13;
+            this.FontSize = 14;
 
             textView.BackgroundRenderers.Add(textMarkerService);
             textView.LineTransformers.Add(textMarkerService);
@@ -45,11 +48,16 @@ namespace Simula.Scripting {
             this.TextChanged += HandleTextChanged;
             worker.DoWork += Worker_DoWork;
             worker.RunWorkerCompleted += Worker_RunWorkerCompleted;
+            
+            manager = FoldingManager.Install(this.TextArea);
+            folding = new SimulaFoldingStrategy();
+            folding.UpdateFoldings(manager, this.Document);
         }
 
         private void HandleTextChanged(object? sender, EventArgs e) {
             usingValidation = true;
             Validate(null, null);
+            folding.UpdateFoldings(manager, this.Document);
             usingValidation = false;
         }
 
@@ -139,10 +147,6 @@ namespace Simula.Scripting {
             markerService.Clear();
 
             Compilation.RuntimeContext ctx = new Scripting.Compilation.RuntimeContext();
-
-            // Compilation.LibraryCompilationUnit lib = new Scripting.Compilation.LibraryCompilationUnit(
-            //     Environment.CurrentDirectory + @"\simula.scripting.dll", System.IO.FileMode.Open);
-            // lib.Register(ctx);
             Compilation.SourceCompilationUnit src = new Scripting.Compilation.SourceCompilationUnit(this.Text);
 
             try {
@@ -238,7 +242,11 @@ namespace Simula.Scripting {
         }
 
         private void TextArea_TextEntering(object sender, System.Windows.Input.TextCompositionEventArgs e) {
-            if (char.IsLetter(e.Text[0]) || e.Text == "_") {
+            if (e.Text.Length > 0 && completionWindow != null) {
+                if (!char.IsLetterOrDigit(e.Text[0])) {
+                    completionWindow.CompletionList.RequestInsertion(e);
+                }
+            } else if (char.IsLetter(e.Text[0]) || e.Text == "_") {
                 List<string> lines = new List<string>();
                 int linecount = this.TextArea.Caret.Line;
                 string curLine = "";
@@ -251,7 +259,10 @@ namespace Simula.Scripting {
                     }
                     l++;
                 }
+
                 var availableKeys = Completion.CompletionProvider.AllowedKeywords(lines, curLine);
+                var word = curLine.Split(" ").Last();
+                CurrentWord = new Completion.Data.KeywordData(word);
 
                 if (availableKeys.Count > 0) {
                     completionWindow = new CompletionWindow(this.TextArea);
@@ -259,19 +270,17 @@ namespace Simula.Scripting {
                     foreach (var item in availableKeys) {
                         data.Add(item);
                     }
+                    
+                    data.Add(CurrentWord);
                     completionWindow.Show();
                     completionWindow.Closed += delegate {
                         completionWindow = null;
                     };
                 }
             }
-
-            if (e.Text.Length > 0 && completionWindow != null) {
-                if (!char.IsLetterOrDigit(e.Text[0])) {
-                    completionWindow.CompletionList.RequestInsertion(e);
-                }
-            }
         }
+
+        Completion.Data.KeywordData CurrentWord = new Completion.Data.KeywordData("");
     }
 
     public class TextMarkerService : IBackgroundRenderer, IVisualLineTransformer {
@@ -382,4 +391,81 @@ namespace Simula.Scripting {
             return markers == null ? Enumerable.Empty<TextMarker>() : markers.FindSegmentsContaining(offset);
         }
     }
+
+    public class SimulaFoldingStrategy
+	{
+        public bool ShowAttributesWhenFolded { get; set; }
+
+		public void UpdateFoldings(FoldingManager manager, TextDocument document)
+		{
+			int firstErrorOffset;
+			IEnumerable<NewFolding> foldings = CreateNewFoldings(document, out firstErrorOffset);
+			manager.UpdateFoldings(foldings, firstErrorOffset);
+		}
+
+		public IEnumerable<NewFolding> CreateNewFoldings(TextDocument document, out int firstErrorOffset)
+		{
+			try {
+                List<NewFolding> foldings = new List<NewFolding>();
+				Stack<NewFolding> context = new Stack<NewFolding>();
+
+                int position = 0;
+                foreach (var ln in document.Text.Split('\n')) {
+                    string s = ln.Trim();
+                    position += (ln.Length - ln.TrimStart().Length);
+                    if (s.StartsWith("while")) context.Push(new NewFolding() { StartOffset = position, Name = ln.Trim() });
+                    if (s.StartsWith("expose")) {
+                        if (s.Remove(0, 6).Trim().StartsWith("def")) s = s.Remove(0, 6).Trim();
+                        if (s.Remove(0, 6).Trim().StartsWith("func")) context.Push(new NewFolding() { StartOffset = position, Name =  ln.Trim() }); ;
+                        if (s.Remove(0, 6).Trim().StartsWith("class")) context.Push(new NewFolding() { StartOffset = position, Name =  ln.Trim() }); ;
+                    }
+                    if (s.StartsWith("hidden")) {
+                        if (s.Remove(0, 6).Trim().StartsWith("def")) s = s.Remove(0, 6).Trim();
+                        if (s.Remove(0, 6).Trim().StartsWith("func")) context.Push(new NewFolding() { StartOffset = position, Name =  ln.Trim()}); ;
+                        if (s.Remove(0, 6).Trim().StartsWith("class")) context.Push(new NewFolding() { StartOffset = position, Name =  ln.Trim() }); ;
+                    }
+                    if (s.StartsWith("def")) {
+                        if (s.Remove(0, 3).Trim().StartsWith("func")) context.Push(new NewFolding() { StartOffset = position, Name =  ln.Trim() }); ;
+                        if (s.Remove(0, 3).Trim().StartsWith("class")) context.Push(new NewFolding() { StartOffset = position, Name =  ln.Trim() }); ;
+                    }
+
+                    if (s.StartsWith("if")) context.Push(new NewFolding() { StartOffset = position, Name =  ln.Trim() }); ;
+                    if (s.StartsWith("eif")) {
+                        if (context.Count > 0) {
+                            var fold = context.Pop();
+                            fold.EndOffset = position - (ln.Length - ln.TrimStart().Length) - 2;
+                            foldings.Add(fold);
+                        }
+
+                        context.Push(new NewFolding() { StartOffset = position, Name =  ln.Trim() });
+                    }
+                    if (s.StartsWith("else")) {
+                        if (context.Count > 0) {
+                            var fold = context.Pop();
+                            fold.EndOffset = position - (ln.Length - ln.TrimStart().Length) - 2;
+                            foldings.Add(fold);
+                        }
+
+                        context.Push(new NewFolding() { StartOffset = position, Name =  ln.Trim() });
+                    }
+                    if (s.StartsWith("end")) {
+                        if (context.Count > 0) {
+                            var fold = context.Pop();
+                            fold.EndOffset = position - (ln.Length - ln.TrimStart().Length) - 2;
+                            foldings.Add(fold);
+                        }
+                    }
+
+                    position += ln.TrimStart().Length + 1;
+                }
+
+                firstErrorOffset = 0;
+                foldings.Sort((X, Y) => { return X.StartOffset.CompareTo(Y.StartOffset); });
+                return foldings;
+            } catch (XmlException) {
+				firstErrorOffset = 0;
+				return Enumerable.Empty<NewFolding>();
+			}
+		}
+	}
 }

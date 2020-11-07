@@ -7,18 +7,21 @@ namespace Simula.Scripting.Type {
 
     [Expose("bool")]
     public class Boolean : Var{
-        private bool value = false;
+        public Boolean(string eval) {
+            if(eval.ToLower().Trim() == "true")
+                this.value = true;
+            else this.value = false;
+        }
 
-        public static readonly Boolean True = new Boolean() { value = true };
-        public static readonly Boolean False = new Boolean() { value = false };
+        private bool value = false;
 
         public static implicit operator bool(Boolean b) {
             return b.value;
         }
 
         public static implicit operator Boolean(bool b) {
-            if (b) return True;
-            else return False;
+            if (b) return new Boolean("true");
+            else return new Boolean("false");
         }
 
         public override bool Equals(object? obj) {
@@ -40,18 +43,18 @@ namespace Simula.Scripting.Type {
         [Expose("_init", true)]
         public Boolean _init(String evaluation) {
             if (evaluation.to_lower() == "true")
-                return True;
-            else return False;
+                return new Boolean("true");
+            else return new Boolean("false");
         }
 
         [Expose("_bitlshift", true)]
         public Boolean _bitleft(Integer evaluation) {
-            return False;
+            return new Boolean("false");
         }
 
         [Expose("_bitrshift", true)]
         public Boolean _bitright(Integer evaluation) {
-            return False;
+            return new Boolean("false");
         }
 
         [Expose("_equal", true)]

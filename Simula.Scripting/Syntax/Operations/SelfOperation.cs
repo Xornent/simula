@@ -43,6 +43,9 @@ namespace Simula.Scripting.Syntax {
                 return new ExecutionResult(new ClrInstance(s, ctx), ctx);
             }
 
+            if(raw.ToLower() == "true") return new ExecutionResult(new ClrInstance(new Type.Boolean("true"), ctx), ctx);
+            if(raw.ToLower() == "false") return new ExecutionResult(new ClrInstance(new Type.Boolean("false"), ctx), ctx);
+
             System.Numerics.BigInteger tempInt;
             bool successInt = System.Numerics.BigInteger.TryParse(raw, out tempInt);
             if (successInt) {
@@ -57,7 +60,15 @@ namespace Simula.Scripting.Syntax {
                 return new ExecutionResult(new ClrInstance(f, ctx), ctx);
             }
 
-            return ctx.CallStack.Peek().GetMember(Self.Value.Replace("\n",""));
-        }
+            var exec = ctx.CallStack.Peek().GetMember(Self.Value.Replace("\n",""));
+            if(exec.Result.Type == MemberType.Instance) {
+                var selfFunction = ((Instance)exec.Result).GetMember("_self");
+                if(selfFunction.Pointer != 0) {
+                    if(selfFunction.Result.Type == MemberType.Function)
+                        return ((Function)selfFunction.Result).Invoke(new List<Member>(), ctx);
+                    else return exec;
+                } else return exec;
+            } else return exec;
+        } 
     }
 }

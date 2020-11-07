@@ -7,13 +7,18 @@ namespace Simula.Scripting.Type {
 
     [Expose("class")]
     public class _Class : Var{
-        public _Class(System.Type t) {
+        public _Class(Reflection.Class t) {
             this.value = t;
         }
 
-        public System.Type? value;
+        public Reflection.Class? value;
         public override string ToString() {
-            return value != null ? "class: " + value.ToString() : "class: <empty>";
+            return value != null ? "class: " + value.Name.ToString() : "class: <empty>";
+        }
+
+        [Expose("_self")]
+        public object _self() {
+            return this.value ?? new Reflection.Class();
         }
     }
 }

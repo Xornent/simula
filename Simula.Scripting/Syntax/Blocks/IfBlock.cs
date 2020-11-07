@@ -29,19 +29,20 @@ namespace Simula.Scripting.Syntax {
                     success = true;
                     break;
                 case Reflection.MemberType.Instance:
-                    if (eval.Pointer == 3) {
-                        success = true;
-                        break;
-                    } else if (eval.Pointer == 4) {
-                        success = false;
-                        break;
-                    }
+                    if(eval.Result is ClrInstance inst)
+                        if(inst.GetNative() is Type.Boolean b)
+                            if(b == true)
+                                success = true;
+                    success = false;
 
                     var evalFunction = ((Instance)eval.Result).GetMember("__eval");
                     if (evalFunction.Result is Function) {
                         var result = ((Function)evalFunction.Result).Invoke(new List<Member>(), ctx);
-                        if (result.Pointer == 1) success = true;
-                        else success = false;
+                        if(result.Result is ClrInstance ins)
+                            if(ins.GetNative() is Type.Boolean b)
+                                if(b == true)
+                                    success = true;
+                        success = false;
                     } else success = true;
                     break;
                 case Reflection.MemberType.Function:

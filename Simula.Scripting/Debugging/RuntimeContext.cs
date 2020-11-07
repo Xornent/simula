@@ -14,15 +14,19 @@ namespace Simula.Scripting.Compilation {
             Pointers.Add(0, new ClrInstance(Type.Global.Null, this));
 
             Pointers.Add(2, ClrClass.Create(typeof(Type.Boolean)));
-            Pointers.Add(3, new ClrInstance(Type.Global.True, this));
-            Pointers.Add(4, new ClrInstance(Type.Global.False, this));
 
-            Pointers.Add(5, ClrClass.Create(typeof(Type.Integer)));
-            Pointers.Add(6, ClrClass.Create(typeof(Type.Float)));
-            Pointers.Add(7, ClrClass.Create(typeof(Type.String)));
-            Pointers.Add(8, ClrClass.Create(typeof(Type.Dimension)));
-            Pointers.Add(9, ClrClass.Create(typeof(Type._Class)));
-            Pointers.Add(10, new ClrFunction(typeof(Type.Global).GetMethod("Alert")));
+            Pointers.Add(3, ClrClass.Create(typeof(Type.Integer)));
+            Pointers.Add(4, ClrClass.Create(typeof(Type.Float)));
+            Pointers.Add(5, ClrClass.Create(typeof(Type.String)));
+            Pointers.Add(6, ClrClass.Create(typeof(Type.Dimension)));
+            Pointers.Add(7, ClrClass.Create(typeof(Type._Class)));
+            Pointers.Add(8, ClrClass.Create(typeof(Type._Function)));
+            Pointers.Add(9, new ClrFunction(typeof(Type.Global).GetMethod("Alert")));
+        }
+
+        public RuntimeContext(bool debug, bool check) : this() {
+            this.Debug = debug;
+            this.Check = check;
         }
 
         // 对于已编译的对象 (从 LiraryCompilationUnit 注册, 后缀名 .scl Simula 已编译库)
@@ -61,18 +65,20 @@ namespace Simula.Scripting.Compilation {
             { "null", new Metadata(0, MemberType.Instance) },
             { "__nulltype__", new Metadata(1, MemberType.Class) },
             { "bool", new Metadata(2, MemberType.Class) },
-            { "true", new Metadata(3, MemberType.Instance) },
-            { "false", new Metadata(4, MemberType.Instance) },
-            { "int", new Metadata(5, MemberType.Class) },
-            { "float", new Metadata(6, MemberType.Class) },
-            { "string", new Metadata(7, MemberType.Class) },
-            { "dimension", new Metadata(8, MemberType.Class) },
-            { "class", new Metadata(9, MemberType.Class)},
-            { "alert", new Metadata(10, MemberType.Function) }
+            { "int", new Metadata(3, MemberType.Class) },
+            { "float", new Metadata(4, MemberType.Class) },
+            { "string", new Metadata(5, MemberType.Class) },
+            { "dimension", new Metadata(6, MemberType.Class) },
+            { "class", new Metadata(7, MemberType.Class)},
+            { "func", new Metadata(8, MemberType.Function)},
+            { "alert", new Metadata(9, MemberType.Function) }
         };
 
         public List<RuntimeError> Errors = new List<RuntimeError>();
         public Stack<TemperaryContext> CallStack = new Stack<TemperaryContext>();
+
+        public bool Debug {get;set;} = false;
+        public bool Check {get;set;} = false;
 
         // 在此处, 或者是任意一个返回值的 Statement 中, 返回的值是 ExecutionResult . 即如果遇到所有的异常, 
         // 统一返回 Null. 反之, 则返回的如下类型中的一种:

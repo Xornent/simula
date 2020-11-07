@@ -54,13 +54,11 @@ namespace Simula.Scripting.Debugging {
                 bool found = false;
                 foreach (var item in ctx.Pointers) {
                     if(item.Value is ClrMember compare) {
-                        if(compare.GetNative() == clr.GetNative()) {
-                            if (compare.GetNative() is Simula.Scripting.Type.Boolean) {
-                                this.Pointer = item.Key;
-                                this.Result = result;
-                                found = true;
-                                break;
-                            }
+                        if(object.ReferenceEquals(compare.GetNative(), clr.GetNative())) {
+                            this.Pointer = item.Key;
+                            this.Result = result;
+                            found = true;
+                            break;
                         }
                     }
                 }

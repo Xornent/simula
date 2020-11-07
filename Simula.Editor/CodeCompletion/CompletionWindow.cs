@@ -32,6 +32,7 @@ namespace Simula.Editor.CodeCompletion
 		public CompletionWindow(TextArea textArea) : base(textArea)
 		{
 			toolTip.AllowsTransparency = true;
+			toolTip.UseLayoutRounding = true;
 
 			this.WindowStyle = WindowStyle.None;
 			this.AllowsTransparency = true;

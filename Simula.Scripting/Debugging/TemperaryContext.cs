@@ -203,7 +203,6 @@ namespace Simula.Scripting.Compilation {
             } else {
                 if(this.Runtime != null) {
                     ExecutionResult result = new ExecutionResult(value, this.Runtime);
-                    result.Result.Name = name;
                     this.members.Add(name, new Metadata(result.Pointer, result.Result.Type));
                     this.IsDirty = true;
                     return true;

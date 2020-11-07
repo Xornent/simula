@@ -31,9 +31,11 @@ namespace Simula.Scripting.Reflection {
     public class Class : Member {
         public Class() {
             this.Type = MemberType.Class;
+            this.RuntimeObject = new _Class(this);
         }
 
         public Class? Inheritage;
+        public _Class? RuntimeObject = null;
         public Syntax.DefinitionBlock? Definition;
         public Function? Startup;
 
@@ -108,10 +110,11 @@ namespace Simula.Scripting.Reflection {
                             func.ModuleHierarchy = locModule;
                             func.Name = defs.FunctionName?.Value ?? "";
                             func.Startup = defs.Children;
+                            func.Parent = inst;
 
                             foreach (var par in defs.FunctionParameters) {
                                 var typeResult = par.Type?.Execute(ctx).Result;
-                                if (typeResult.Type != MemberType.Class) {
+                                if (typeResult?.Type != MemberType.Class) {
                                     ctx.Errors.Add(new RuntimeError(1, "函数的参数类型不是可用的类型.", defs.FunctionName?.Location));
                                     break;
                                 }
@@ -150,7 +153,7 @@ namespace Simula.Scripting.Reflection {
 
                     // TODO: 这里还没有考虑类的继承.
 
-                    if (this.ModuleHierarchy.Connect(".") == ((Instance)target).Parent.ModuleHierarchy.Connect(".") &&
+                    if (this.ModuleHierarchy.Connect(".") == ((Instance)target).Parent?.ModuleHierarchy.Connect(".") &&
                         this.Name == target.Name) return true;
                     return false;
                 case MemberType.Function:
@@ -172,6 +175,12 @@ namespace Simula.Scripting.Reflection {
     }
 
     public class ClrClass : Class, ClrMember {
+        public ClrClass(): base(){
+            this.Reflection = null;
+            this.RuntimeObject = null;
+            this.RuntimeObject = new _Class(this);
+        }
+
         public static ClrClass Create(System.Type type) {
             var attribute = type.GetCustomAttribute<ExposeAttribute>();
             if (attribute == null) return new ClrClass();
@@ -199,17 +208,17 @@ namespace Simula.Scripting.Reflection {
         }
 
         public new ClrClass? Inheritage { get; internal set; }
-        public System.Type Reflection { get; internal set; }
+        public System.Type? Reflection { get; internal set; }
         public override Instance CreateInstance(List<Member> parameters, RuntimeContext ctx) {
             var type = this.Reflection;
             ClrInstance instance = new ClrInstance();
             instance.Parent = this;
-            instance.Reflection = Activator.CreateInstance(this.Reflection);
+            instance.Reflection = Activator.CreateInstance(this.Reflection ?? typeof(Var));
 
             // 解析这个类型中的所有字段和函数(非静态的), 并把它转换到包装抽象的
             // ClrInstance 和 ClrFunction.
 
-            foreach (var item in type.GetMethods()) {
+            foreach (var item in (type ?? typeof(Var)).GetMethods()) {
                 if (item.IsStatic) continue;
                 var attribute = item.GetCustomAttribute<ExposeAttribute>();
                 if (attribute == null) continue;
@@ -220,7 +229,7 @@ namespace Simula.Scripting.Reflection {
                 instance.SetMember(attribute.Alias, funcs);
             }
 
-            foreach (var item in type.GetFields()) {
+            foreach (var item in (type ?? typeof(Var)).GetFields()) {
                 if (item.IsStatic) continue;
                 var attribute = item.GetCustomAttribute<ExposeAttribute>();
                 if (attribute == null) continue;

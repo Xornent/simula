@@ -33,6 +33,7 @@ namespace Simula.Scripting.Reflection {
     public class Function : Member {
         public Function() : base() {
             this.Type = MemberType.Function;
+            this.RuntimeObject = new Type._Function(this);
         }
 
         /// <summary>
@@ -42,6 +43,7 @@ namespace Simula.Scripting.Reflection {
         public List<NamedType> Parameters { get; internal set; } = new List<NamedType>();
 
         public List<Syntax.Statement> Startup = new List<Syntax.Statement>();
+        public Type._Function? RuntimeObject = null;
         public Instance? Parent = null;
         public bool IsStatic { get { return Parent == null; } }
 
@@ -185,7 +187,11 @@ namespace Simula.Scripting.Reflection {
 
     public class ClrFunction : Function, ClrMember {
         public ClrFunction(MethodInfo function) : base() {
+            Markup.ExposeAttribute? expose = function.GetCustomAttribute<Markup.ExposeAttribute>();
             this.Reflection = function;
+            this.Name = expose != null ? expose.Alias : function.Name;
+            this.RuntimeObject = null;
+            this.RuntimeObject = new Type._Function(this);
 
             this.Parameters.Clear();
             foreach (var item in function.GetParameters()) {
@@ -205,12 +211,17 @@ namespace Simula.Scripting.Reflection {
                 foreach (var item in parameters) {
                     switch (item.Type) {
                         case MemberType.Class:
-                            objectParameters.Add(new Type._Class(((ClrClass)item).Reflection));
+                            objectParameters.Add(((Class)item).RuntimeObject);
                             break;
                         case MemberType.Instance:
-                            objectParameters.Add(((ClrInstance)item).Reflection);
+                            if(item is ClrInstance) {
+                                objectParameters.Add(((ClrInstance)item).Reflection);
+                            } else {
+                                objectParameters.Add(item);
+                            }
                             break;
                         case MemberType.Function:
+                            objectParameters.Add(((Function)item).RuntimeObject);
                             break;
                         case MemberType.Unknown:
                             objectParameters.Add(Simula.Scripting.Type.Global.Null);
@@ -218,7 +229,16 @@ namespace Simula.Scripting.Reflection {
                     }
                 }
                 var raw = Reflection?.Invoke(Parent?.Reflection, objectParameters.ToArray());
-                var result = new ClrInstance(raw, ctx);
+                
+                object? result;
+                if(raw is Type.Var variable)
+                    result = new ClrInstance(variable, ctx);
+                else if(raw is Member)
+                    result = raw;
+                else if(raw is ExecutionResult exec)
+                    return exec;
+                else result = null;
+
                 if (result == null) return new ExecutionResult();
                 else return new ExecutionResult((Member)result, ctx);
             } catch (Exception ex) {
