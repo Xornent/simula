@@ -17,8 +17,8 @@ namespace Simula.Scripting.Type {
         }
 
         [Expose("_self")]
-        public object _self() {
-            return this.value ?? new Reflection.Class();
+        public object? _self() {
+            return this.value ?? null;
         }
     }
 }

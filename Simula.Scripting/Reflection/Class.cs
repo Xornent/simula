@@ -29,12 +29,14 @@ namespace Simula.Scripting.Reflection {
     }
 
     public class Class : Member {
-        public Class() {
+        public Class(ref RuntimeContext context) {
             this.Type = MemberType.Class;
             this.RuntimeObject = new _Class(this);
+            this.Runtime = context;
         }
 
         public Class? Inheritage;
+        public RuntimeContext Runtime; 
         public _Class? RuntimeObject = null;
         public Syntax.DefinitionBlock? Definition;
         public Function? Startup;
@@ -74,9 +76,12 @@ namespace Simula.Scripting.Reflection {
             { "!", new OperatorRegistry("_not", OperatorType.UnaryLeft) }
         };
 
-        public virtual Instance CreateInstance(List<Member> parameters, RuntimeContext ctx) {
-            Instance inst = new Instance(ctx);
+        public virtual Instance CreateInstance(List<Member> parameters, ref RuntimeContext ctx) {
+            Instance inst = new Instance(ref ctx);
             inst.Parent = this;
+            
+            if(this.Inheritage != null)
+                inst.ParentalInstance = this.Inheritage.CreateInstance(new List<Member>(), ref ctx);
             
             // 在正常情况下这一句恒为假.
             if (Definition?.Children == null) return inst;
@@ -106,7 +111,7 @@ namespace Simula.Scripting.Reflection {
                             }
                             break;
                         case DefinitionType.Function:
-                            Reflection.Function func = new Reflection.Function();
+                            Reflection.Function func = new Reflection.Function(ref this.Runtime);
                             func.ModuleHierarchy = locModule;
                             func.Name = defs.FunctionName?.Value ?? "";
                             func.Startup = defs.Children;
@@ -138,7 +143,7 @@ namespace Simula.Scripting.Reflection {
             var initializer = inst.GetMember("_init");
             if(!initializer.IsNull())
                 if(initializer.Result.Type == MemberType.Function) {
-                    ((Function)initializer.Result).Invoke(parameters, ctx);
+                    ((Function)initializer.Result).Invoke(parameters,ref ctx);
                 }
 
             return inst;
@@ -175,44 +180,48 @@ namespace Simula.Scripting.Reflection {
     }
 
     public class ClrClass : Class, ClrMember {
-        public ClrClass(): base(){
+        public ClrClass(ref RuntimeContext ctx): base(ref ctx){
             this.Reflection = null;
             this.RuntimeObject = null;
             this.RuntimeObject = new _Class(this);
         }
 
-        public static ClrClass Create(System.Type type) {
+        public static ClrClass Create(System.Type type, ref RuntimeContext ctx) {
             var attribute = type.GetCustomAttribute<ExposeAttribute>();
-            if (attribute == null) return new ClrClass();
+            if (attribute == null) return new ClrClass(ref ctx);
 
             if (attribute.Alias == "<global>") {
-                return new ClrClass();
+                return new ClrClass(ref ctx);
             } else {
-                ClrClass cls = new ClrClass();
+                ClrClass cls = new ClrClass(ref ctx);
+                ExecutionResult result = new ExecutionResult(cls, ctx);
                 cls.Name = attribute.Alias;
                 if (Registry.ContainsKey(type))
                     return Registry[type];
                 cls.Reflection = type;
                 Registry.Add(type, cls);
                 if (type.BaseType == null) return cls;
-                if (type.BaseType == typeof(Var)) {
+                if (type.BaseType == typeof(Reflect)) {
                     cls.Inheritage = null;
-                } else if (type.IsSubclassOf(typeof(Var))) {
+                } else if (type.IsSubclassOf(typeof(Reflect))) {
                     if (Registry.ContainsKey(type.BaseType))
                         cls.Inheritage = Registry[type.BaseType];
-                    cls.Inheritage = ClrClass.Create(type.BaseType);
+                    cls.Inheritage = ClrClass.Create(type.BaseType, ref ctx);
                 }
 
                 return cls;
             }
         }
 
+        
         public new ClrClass? Inheritage { get; internal set; }
         public System.Type? Reflection { get; internal set; }
-        public override Instance CreateInstance(List<Member> parameters, RuntimeContext ctx) {
+        public override Instance CreateInstance(List<Member> parameters, ref RuntimeContext ctx) {
             var type = this.Reflection;
-            ClrInstance instance = new ClrInstance();
+            ClrInstance instance = new ClrInstance(ref this.Runtime);
             instance.Parent = this;
+            if(this.Inheritage != null)
+                instance.ParentalInstance = this.Inheritage.CreateInstance(new List<Member>(), ref ctx);
             instance.Reflection = Activator.CreateInstance(this.Reflection ?? typeof(Var));
 
             // 解析这个类型中的所有字段和函数(非静态的), 并把它转换到包装抽象的
@@ -223,10 +232,12 @@ namespace Simula.Scripting.Reflection {
                 var attribute = item.GetCustomAttribute<ExposeAttribute>();
                 if (attribute == null) continue;
 
-                var funcs = new ClrFunction(item);
+                var funcs = new ClrFunction(item, ref this.Runtime);
                 funcs.Parent = instance;
                 funcs.Name = attribute.Alias;
-                instance.SetMember(attribute.Alias, funcs);
+                
+                var result = new ExecutionResult(funcs, this.Runtime);
+                instance.SetMember(attribute.Alias, result.Result);
             }
 
             foreach (var item in (type ?? typeof(Var)).GetFields()) {
@@ -234,15 +245,17 @@ namespace Simula.Scripting.Reflection {
                 var attribute = item.GetCustomAttribute<ExposeAttribute>();
                 if (attribute == null) continue;
 
-                var field = new ClrInstance(item);
+                var field = new ClrInstance(item, ref ctx);
                 field.Name = attribute.Alias;
-                instance.SetMember(attribute.Alias, field);
+                
+                var result = new ExecutionResult(field, this.Runtime);
+                instance.SetMember(attribute.Alias, result.Result);
             }
 
             var initializer = instance.GetMember("_init");
             if(!initializer.IsNull())
                 if(initializer.Result.Type == MemberType.Function) {
-                    ((Function)initializer.Result).Invoke(parameters, ctx);
+                    ((Function)initializer.Result).Invoke(parameters, ref ctx);
                 } 
             return instance;
         }

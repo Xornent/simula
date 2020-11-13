@@ -99,7 +99,7 @@ namespace Simula.Scripting.Compilation {
                             }
                             break;
                         case DefinitionType.Function:
-                            Reflection.Function func = new Reflection.Function();
+                            Reflection.Function func = new Reflection.Function(ref ctx);
                             func.ModuleHierarchy = locModule;
                             func.Name = defs.FunctionName?.Value ?? "";
                             func.Startup = defs.Children;
@@ -117,7 +117,7 @@ namespace Simula.Scripting.Compilation {
                             module.SetMember(func.Name, func);
                             break;
                         case DefinitionType.Class:
-                            Class cls = new Class();
+                            Class cls = new Class(ref ctx);
                             cls.ModuleHierarchy = locModule;
                             cls.Name = defs.ClassName?.Value ?? "";
                             cls.Definition = defs;
@@ -202,7 +202,7 @@ namespace Simula.Scripting.Compilation {
                                     ExecutionResult moduleresult = new ExecutionResult(glb, ctx);
                                     if (!ctx.PredefinedObjects.ContainsKey("")) ctx.PredefinedObjects.Add("", new Metadata(moduleresult.Pointer, MemberType.Module));
                                     if (ctx.PredefinedObjects.ContainsKey("")) 
-                                        ((Reflection.Module)(ctx.GetMemberByMetadata(ctx.PredefinedObjects[""]))).SetMember(item.Name, new ClrInstance(value)); 
+                                        ((Reflection.Module)(ctx.GetMemberByMetadata(ctx.PredefinedObjects[""]))).SetMember(item.Name, new ClrInstance(item, ref ctx)); 
                                 }
                             }
                         }
@@ -210,11 +210,11 @@ namespace Simula.Scripting.Compilation {
                         foreach (var item in type.GetMethods()) {
                             expose = item.GetCustomAttribute<Reflection.Markup.ExposeAttribute>();
                             if (expose != null) {
-                                module?.SetMember(expose.Alias, new ClrFunction(item));
+                                module?.SetMember(expose.Alias, new ClrFunction(item, ref ctx));
                             }
                         }
                     } else {
-                        module?.SetMember(expose.Alias, ClrClass.Create(type));
+                        module?.SetMember(expose.Alias, ClrClass.Create(type, ref ctx));
                     }
                 }
             }

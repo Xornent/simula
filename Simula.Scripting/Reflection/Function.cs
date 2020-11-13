@@ -31,9 +31,10 @@ namespace Simula.Scripting.Reflection {
     }
 
     public class Function : Member {
-        public Function() : base() {
+        public Function(ref RuntimeContext ctx) : base() {
             this.Type = MemberType.Function;
-            this.RuntimeObject = new Type._Function(this);
+            this.RuntimeObject = new Type._Function(this); 
+            this.Runtime = ctx;
         }
 
         /// <summary>
@@ -43,11 +44,12 @@ namespace Simula.Scripting.Reflection {
         public List<NamedType> Parameters { get; internal set; } = new List<NamedType>();
 
         public List<Syntax.Statement> Startup = new List<Syntax.Statement>();
+        public RuntimeContext Runtime;
         public Type._Function? RuntimeObject = null;
         public Instance? Parent = null;
         public bool IsStatic { get { return Parent == null; } }
 
-        public virtual ExecutionResult Invoke(List<Member> parameters, Compilation.RuntimeContext ctx) {
+        public virtual ExecutionResult Invoke(List<Member> parameters, ref Compilation.RuntimeContext ctx) {
 
             // 每个函数变量的 Conflict 链中写着与其同名的函数组. 我们要遍历整个函数组, 来选择其
             // 变量类型表与调用传入参数的变量类型表完全相同的函数, 如果没有找到, 返回 Null 常量,
@@ -71,7 +73,7 @@ namespace Simula.Scripting.Reflection {
                 return new ExecutionResult();
 
             if (parameters.Count != selection.Parameters.Count) {
-                Function func = new Function();
+                Function func = new Function(ref this.Runtime);
                 func.Name = this.Name;
                 func.Parent = this.Parent;
                 func.ModuleHierarchy = this.ModuleHierarchy;
@@ -114,7 +116,7 @@ namespace Simula.Scripting.Reflection {
             return result;
         }
 
-        public virtual ExecutionResult Invoke(List<NamedValue> parameters, Compilation.RuntimeContext ctx) {
+        public virtual ExecutionResult Invoke(List<NamedValue> parameters, ref Compilation.RuntimeContext ctx) {
             Function? selection = this;
             bool notMatch = true;
 
@@ -143,7 +145,7 @@ namespace Simula.Scripting.Reflection {
                 return new ExecutionResult();
 
             if(parameters.Count != selection.Parameters.Count) {
-                Function func = new Function();
+                Function func = new Function(ref this.Runtime);
                 func.Name = this.Name;
                 func.Parent = this.Parent;
                 func.ModuleHierarchy = this.ModuleHierarchy;
@@ -186,7 +188,7 @@ namespace Simula.Scripting.Reflection {
     }
 
     public class ClrFunction : Function, ClrMember {
-        public ClrFunction(MethodInfo function) : base() {
+        public ClrFunction(MethodInfo function, ref RuntimeContext ctx) : base(ref ctx) {
             Markup.ExposeAttribute? expose = function.GetCustomAttribute<Markup.ExposeAttribute>();
             this.Reflection = function;
             this.Name = expose != null ? expose.Alias : function.Name;
@@ -197,7 +199,7 @@ namespace Simula.Scripting.Reflection {
             foreach (var item in function.GetParameters()) {
                 NamedType type = new NamedType();
                 type.Name = item.Name ?? "<annoymous>";
-                type.Type = ClrClass.Create(item.ParameterType);
+                type.Type = ClrClass.Create(item.ParameterType, ref ctx);
                 this.Parameters.Add(type);
             }
         }
@@ -205,7 +207,7 @@ namespace Simula.Scripting.Reflection {
         public new ClrInstance? Parent = null;
         public new bool IsStatic { get { return Parent == null; } }
         MethodInfo? Reflection = null; 
-        public override ExecutionResult Invoke(List<Member> parameters, RuntimeContext ctx) {
+        public override ExecutionResult Invoke(List<Member> parameters, ref RuntimeContext ctx) {
             try {
                 List<object?> objectParameters = new List<object?>();
                 foreach (var item in parameters) {
@@ -232,7 +234,7 @@ namespace Simula.Scripting.Reflection {
                 
                 object? result;
                 if(raw is Type.Var variable)
-                    result = new ClrInstance(variable, ctx);
+                    result = new ClrInstance(variable, ref ctx);
                 else if(raw is Member)
                     result = raw;
                 else if(raw is ExecutionResult exec)
@@ -250,7 +252,7 @@ namespace Simula.Scripting.Reflection {
             return new ExecutionResult();
         }
 
-        public override ExecutionResult Invoke(List<NamedValue> parameters, RuntimeContext ctx) {
+        public override ExecutionResult Invoke(List<NamedValue> parameters, ref RuntimeContext ctx) {
             return new ExecutionResult();
         }
 

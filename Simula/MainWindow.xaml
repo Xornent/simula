@@ -8,6 +8,7 @@
         xmlns:ui ="clr-namespace:Simula.UI"
         xmlns:editor ="http://xornent.org/simula/editor"
         xmlns:package="clr-namespace:Simula.Scripting.Packaging"
+        xmlns:script="clr-namespace:Simula.Scripting;assembly=Simula.Scripting"
         mc:Ignorable="d" UseLayoutRounding="True"
         Icon="pack://siteoforigin:,,,/app.icon.ico"
         FontFamily="{StaticResource default}"
@@ -357,23 +358,23 @@
                 <Grid >
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
-                        <RowDefinition Height="0"/>
-                        <RowDefinition Height="0" MinHeight="23"/>
+                        <RowDefinition Height="2"/>
+                        <RowDefinition Height="300" MinHeight="23"/>
                     </Grid.RowDefinitions>
                     <Grid x:Name="Host" Grid.Row="0"></Grid>
                     <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch"/>
-                    <Grid x:Name="Panels" Grid.Row="2" SnapsToDevicePixels="True" TextElement.FontWeight="Bold" Visibility="Hidden">
+                    <Grid x:Name="Panels" Grid.Row="2" SnapsToDevicePixels="True" TextElement.FontWeight="Bold" Visibility="Visible">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="3*" MaxWidth="315"/>
-                            <ColumnDefinition Width="1"/>
+                            <ColumnDefinition Width="2"/>
                             <ColumnDefinition Width="4*"/>
-                            <ColumnDefinition Width="1"/>
+                            <ColumnDefinition Width="2"/>
                             <ColumnDefinition Width="3*"/>
                         </Grid.ColumnDefinitions>
                         <TabControl TabStripPlacement="Bottom" Grid.Column="0" MaxWidth="315">
                             <TabControl.Items>
                                 <TabItem Header="工作区资源浏览器">
-                                    <TreeView TextElement.FontWeight="Regular">
+                                    <TreeView TextElement.FontWeight="Regular" TextElement.FontFamily="{StaticResource default}">
                                         <TreeView.Items>
                                             <TreeViewItem Header="Simula 基本组件" Tag=" &#xE118;">
                                                 <TreeViewItem.Items>
@@ -404,8 +405,8 @@
                                             <RowDefinition Height="*"/>
                                             <RowDefinition Height="auto"/>
                                         </Grid.RowDefinitions>
-                                        <!--<script:SimulaTextEditor x:Name="editor_console"  FontWeight="Regular" Grid.Row="0" Text="" SyntaxHighlighting="Simula" FontFamily="Consolas, Simsun" FontSize="13"/>
-                                        <script:SimulaTextEditor x:Name="editor_consoleInput"  FontWeight="Regular" Grid.Row="1" Text="" SyntaxHighlighting="Simula" FontFamily="Consolas, Simsun" FontSize="13" ShowLineNumbers="True" MaxHeight="200"/>-->
+                                        <script:SimulaTextEditor x:Name="editor_console"  FontWeight="Regular" Grid.Row="0" Text="" SyntaxHighlighting="Simula" FontFamily="Consolas, Simsun" FontSize="13"/>
+                                        <script:SimulaTextEditor x:Name="editor_consoleInput"  FontWeight="Regular" Grid.Row="1" Text="" SyntaxHighlighting="Simula" FontFamily="Consolas, Simsun" FontSize="13" ShowLineNumbers="True" MaxHeight="200"/>
                                     </Grid>
                                 </TabItem>
                                 <TabItem Header="版式"></TabItem>

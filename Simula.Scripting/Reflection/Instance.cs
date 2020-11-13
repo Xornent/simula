@@ -10,13 +10,14 @@ using System.Text;
 namespace Simula.Scripting.Reflection {
 
     public class Instance : Member {
-        public Instance(RuntimeContext? runtime) {
+        public Instance(ref RuntimeContext runtime) {
             this.Type = MemberType.Instance;
             this.Runtime = runtime;
         }
 
-        public RuntimeContext? Runtime { get; internal set; }
+        public RuntimeContext? Runtime;
         public Class? Parent { get; set; }
+        public Instance? ParentalInstance {get; set;}
         public Dictionary<string, Metadata> Members = new Dictionary<string, Metadata>();
 
         internal bool IsDirty = true;
@@ -89,9 +90,11 @@ namespace Simula.Scripting.Reflection {
         }
 
         public virtual ExecutionResult GetMember(string name) {
-            if (this.Members.ContainsKey(name))
+             if (this.Members.ContainsKey(name))
                 if (this.Runtime != null)
                     return new ExecutionResult(this.Members[name].Pointer, this.Runtime);
+            if(this.ParentalInstance != null) 
+                return this.ParentalInstance.GetMember(name);
             return new ExecutionResult();
         }
 
@@ -117,21 +120,45 @@ namespace Simula.Scripting.Reflection {
     }
 
     public class ClrInstance : Instance, ClrMember {
-        public ClrInstance(RuntimeContext? context = null) : base(context) { }
-        public ClrInstance(FieldInfo field, RuntimeContext? context = null) : base(context) {
+        public ClrInstance(ref RuntimeContext context) : base(ref context) { }
+        public ClrInstance(FieldInfo field, ref RuntimeContext context) : base(ref context) {
             this.Reflection = field.GetValue(null);
             if (field.DeclaringType == null)
                 this.Parent = null;
             else
-                this.Parent = ClrClass.Create(field.DeclaringType.GetType());
+                this.Parent = ClrClass.Create(field.DeclaringType.GetType(), ref context);
+            
+            if (Reflection == null) return;
+            foreach (var item in Reflection.GetType().GetMethods()) {
+                if (item.IsStatic) continue;
+                var attribute = item.GetCustomAttribute<ExposeAttribute>();
+                if (attribute == null) continue;
+
+                var funcs = new ClrFunction(item, ref this.Runtime);
+                ExecutionResult result = new ExecutionResult(funcs, context);
+                funcs.Parent = this;
+                funcs.Name = attribute.Alias;
+                this.SetMember(attribute.Alias, funcs);
+            }
+
+            foreach (var item in Reflection.GetType().GetFields()) {
+                if (item.IsStatic) continue;
+                var attribute = item.GetCustomAttribute<ExposeAttribute>();
+                if (attribute == null) continue;
+
+                var child = new ClrInstance(item, ref context);
+                ExecutionResult result = new ExecutionResult(child, context);
+                child.Name = attribute.Alias;
+                this.SetMember(attribute.Alias, child);
+            }
         }
 
-        public ClrInstance(object? field, RuntimeContext? context = null) : base(context) {
+        public ClrInstance(object? field, ref RuntimeContext context) : base(ref context) {
             this.Reflection = field;
             if (field == null)
                 this.Parent = null;
             else
-                this.Parent = ClrClass.Create(field.GetType());
+                this.Parent = ClrClass.Create(field.GetType(), ref context);
 
             if (field == null) return;
             foreach (var item in field.GetType().GetMethods()) {
@@ -139,7 +166,8 @@ namespace Simula.Scripting.Reflection {
                 var attribute = item.GetCustomAttribute<ExposeAttribute>();
                 if (attribute == null) continue;
 
-                var funcs = new ClrFunction(item);
+                var funcs = new ClrFunction(item, ref this.Runtime);
+                ExecutionResult result = new ExecutionResult(funcs, context);
                 funcs.Parent = this;
                 funcs.Name = attribute.Alias;
                 this.SetMember(attribute.Alias, funcs);
@@ -150,24 +178,14 @@ namespace Simula.Scripting.Reflection {
                 var attribute = item.GetCustomAttribute<ExposeAttribute>();
                 if (attribute == null) continue;
 
-                var child = new ClrInstance(item);
+                var child = new ClrInstance(item, ref context);
+                ExecutionResult result = new ExecutionResult(child, context);
                 child.Name = attribute.Alias;
                 this.SetMember(attribute.Alias, child);
             }
         }
 
-        public ClrInstance(object field) : base(null) {
-            this.Reflection = field;
-        }
-
         public object? Reflection = null;
-        public override ExecutionResult GetMember(string name) {
-            return base.GetMember(name);
-        }
-
-        public override bool SetMember(string name, Member value) {
-            return base.SetMember(name, value);
-        }
 
         public object? GetNative() {
             return this.Reflection;

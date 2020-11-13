@@ -34,7 +34,7 @@ namespace Simula.Scripting {
             TextView textView = this.TextArea.TextView;
             this.SyntaxHighlighting = Simula.Editor.Highlighting.HighlightingManager.Instance.GetDefinition("Simula");
             this.FontFamily = new System.Windows.Media.FontFamily("Consolas, Simsun");
-            this.FontSize = 14;
+            this.FontSize = 13;
 
             textView.BackgroundRenderers.Add(textMarkerService);
             textView.LineTransformers.Add(textMarkerService);
@@ -146,7 +146,7 @@ namespace Simula.Scripting {
             var markerService = (TextMarkerService)sp.GetService(typeof(TextMarkerService));
             markerService.Clear();
 
-            Compilation.RuntimeContext ctx = new Scripting.Compilation.RuntimeContext();
+            Compilation.RuntimeContext ctx = Scripting.Compilation.RuntimeContext.Create();
             Compilation.SourceCompilationUnit src = new Scripting.Compilation.SourceCompilationUnit(this.Text);
 
             try {

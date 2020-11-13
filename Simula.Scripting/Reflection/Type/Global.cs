@@ -14,7 +14,7 @@ namespace Simula.Scripting.Type {
 
         [Expose("alert")]
         public static void Alert(Member str) {
-            System.Windows.MessageBox.Show(str.ToString());
+            Compilation.RuntimeContext.RequestStandardOutput(str.ToString());
         }
     }
 }

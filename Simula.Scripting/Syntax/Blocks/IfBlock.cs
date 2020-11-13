@@ -37,7 +37,7 @@ namespace Simula.Scripting.Syntax {
 
                     var evalFunction = ((Instance)eval.Result).GetMember("__eval");
                     if (evalFunction.Result is Function) {
-                        var result = ((Function)evalFunction.Result).Invoke(new List<Member>(), ctx);
+                        var result = ((Function)evalFunction.Result).Invoke(new List<Member>(),ref ctx);
                         if(result.Result is ClrInstance ins)
                             if(ins.GetNative() is Type.Boolean b)
                                 if(b == true)

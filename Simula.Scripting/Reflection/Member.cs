@@ -1,12 +1,15 @@
 ﻿using Simula.Scripting.Debugging;
+using Simula.Scripting.Reflection.Markup;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Simula.Scripting.Reflection {
+
+    public class Reflect {}
     
     [Markup.Expose("object")]
-    public class Member {
+    public class Member : Reflect {
         public string Name { get; internal set; } = "";
         public string FullName { get; internal set; } = "";
         public Locator ModuleHierarchy { get; internal set; } = new Locator(true);
@@ -21,6 +24,41 @@ namespace Simula.Scripting.Reflection {
         public bool Restricted { get; set; } = false;
 
         public uint Handle { get; set; } = 0;
+
+        [Expose("isCompiled")]
+        public Type.Boolean isCompiled() {
+            return this.Compiled;
+        }
+
+        [Expose("name")]
+        public Type.String name(){
+            return this.Name;
+        }
+        
+        [Expose("type")]
+        public Type.String type(){
+            return this.Type.ToString();
+        }
+
+        [Expose("pointer")]
+        public Type.Integer pointer(){
+            return new Type.Integer(){ value = Convert.ToInt32(this.Handle) } ;
+        }
+        
+        [Expose("moduleHierarchy")]
+        public Type.String moduleHierarchy() {
+            return this.ModuleHierarchy.JoinString(".");
+        }
+
+        [Expose("readable")]
+        public Type.Boolean readable(){
+            return this.Readable;
+        }
+
+        [Expose("writable")]
+        public Type.Boolean writable() {
+            return this.Writable;
+        }
     }
 
     public interface ClrMember {

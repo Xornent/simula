@@ -35,9 +35,10 @@ namespace Simula.Scripting.Debugging {
         }
 
         public ExecutionResult (Member result, uint pointer, Compilation.RuntimeContext ctx) : base() {
-            if (ctx.Pointers.ContainsKey(pointer))
+            if (ctx.Pointers.ContainsKey(pointer)) {
                 ctx.Pointers[pointer] = result;
-            else
+                result.Handle = pointer;
+            } else
                 ctx.Pointers.Add(pointer, result);
 
             this.Result = result;
@@ -49,40 +50,36 @@ namespace Simula.Scripting.Debugging {
             this.Flag = flag;
         }
 
-        public ExecutionResult(Member result, Compilation.RuntimeContext ctx) : base() {
-            if(result is ClrMember clr) {
-                bool found = false;
-                foreach (var item in ctx.Pointers) {
-                    if(item.Value is ClrMember compare) {
-                        if(object.ReferenceEquals(compare.GetNative(), clr.GetNative())) {
+        public ExecutionResult(Member result, Compilation.RuntimeContext ctx) : base()
+        {
+            bool found = false;
+            foreach (var item in ctx.Pointers) {
+                if (result is ClrMember clr) {
+                    if (item.Value is ClrMember compare) {
+                        if (object.ReferenceEquals(compare.GetNative(), clr.GetNative())) {
                             this.Pointer = item.Key;
+                            result.Handle = item.Key;
                             this.Result = result;
                             found = true;
                             break;
                         }
                     }
                 }
-
-                if (found) return;
-                else {
-                    ctx.Pointers.Add(ctx.MaximumAllocatedPointer, result);
-                    ctx.MaximumAllocatedPointer++;
-                    this.Pointer = ctx.MaximumAllocatedPointer - 1;
+                
+                if (item.Value == result) {
+                    this.Pointer = item.Key;
+                    result.Handle = item.Key;
                     this.Result = result;
+                    found = true;
+                    break;
                 }
             }
-
-            if(ctx.Pointers.ContainsValue(result)) {
-                foreach (var item in ctx.Pointers) {
-                    if(item.Value == result) {
-                        this.Pointer = item.Key;
-                        this.Result = result;
-                    }
-                }
-            } else {
+            
+            if(!found) {
                 ctx.Pointers.Add(ctx.MaximumAllocatedPointer, result);
                 ctx.MaximumAllocatedPointer++;
                 this.Pointer = ctx.MaximumAllocatedPointer - 1;
+                result.Handle = this.Pointer;
                 this.Result = result;
             }
         }

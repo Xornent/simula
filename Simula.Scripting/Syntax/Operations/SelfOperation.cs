@@ -19,6 +19,20 @@ namespace Simula.Scripting.Syntax {
         // system               : 一个 module
 
         public override ExecutionResult Operate(Compilation.RuntimeContext ctx) {
+            var operate = GetResultWithoutInheritage(ctx);
+            if(operate.Result is ClrInstance inst) {
+                if(inst.Parent == null) {
+                    inst.Parent = ClrClass.Create(inst.Reflection?.GetType() ?? typeof(Type.Var), ref ctx);
+                    var cls = inst.Parent;
+                    if(cls.Inheritage != null) {
+                        inst.ParentalInstance = cls.CreateInstance(new List<Member>(), ref ctx);
+                    }
+                }
+            }
+            return operate;
+        }
+
+        public ExecutionResult GetResultWithoutInheritage(Compilation.RuntimeContext ctx) {
 
             // 解析成字符串:
 
@@ -40,24 +54,24 @@ namespace Simula.Scripting.Syntax {
                     .Replace("\\t", "\t")
                     .Replace("\\v", "\v");
                     
-                return new ExecutionResult(new ClrInstance(s, ctx), ctx);
+                return new ExecutionResult(new ClrInstance(s, ref ctx) , ctx);
             }
 
-            if(raw.ToLower() == "true") return new ExecutionResult(new ClrInstance(new Type.Boolean("true"), ctx), ctx);
-            if(raw.ToLower() == "false") return new ExecutionResult(new ClrInstance(new Type.Boolean("false"), ctx), ctx);
+            if(raw.ToLower() == "true") return new ExecutionResult(new ClrInstance(new Type.Boolean("true"), ref ctx), ctx);
+            if(raw.ToLower() == "false") return new ExecutionResult(new ClrInstance(new Type.Boolean("false"), ref ctx), ctx);
 
             System.Numerics.BigInteger tempInt;
             bool successInt = System.Numerics.BigInteger.TryParse(raw, out tempInt);
             if (successInt) {
                 Type.Integer i = tempInt;
-                return new ExecutionResult(new ClrInstance(i, ctx), ctx);
+                return new ExecutionResult(new ClrInstance(i, ref ctx), ctx);
             }
 
             float tempFloat;
             bool successFloat = float.TryParse(raw, out tempFloat);
             if (successFloat) {
                 Type.Float f = tempFloat;
-                return new ExecutionResult(new ClrInstance(f, ctx), ctx);
+                return new ExecutionResult(new ClrInstance(f, ref ctx), ctx);
             }
 
             var exec = ctx.CallStack.Peek().GetMember(Self.Value.Replace("\n",""));
@@ -65,7 +79,7 @@ namespace Simula.Scripting.Syntax {
                 var selfFunction = ((Instance)exec.Result).GetMember("_self");
                 if(selfFunction.Pointer != 0) {
                     if(selfFunction.Result.Type == MemberType.Function)
-                        return ((Function)selfFunction.Result).Invoke(new List<Member>(), ctx);
+                        return ((Function)selfFunction.Result).Invoke(new List<Member>(), ref ctx);
                     else return exec;
                 } else return exec;
             } else return exec;

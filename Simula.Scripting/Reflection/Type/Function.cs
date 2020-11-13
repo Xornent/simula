@@ -25,8 +25,8 @@ namespace Simula.Scripting.Type {
         }
 
         [Expose("_self")]
-        public object _self() {
-            return value ?? new Reflection.Function();
+        public object? _self() {
+            return value ?? null;
         }
     }
 }

@@ -7,6 +7,10 @@ namespace Simula.Scripting.Type {
 
     [Expose("bool")]
     public class Boolean : Var{
+        public Boolean() {
+
+        }
+        
         public Boolean(string eval) {
             if(eval.ToLower().Trim() == "true")
                 this.value = true;

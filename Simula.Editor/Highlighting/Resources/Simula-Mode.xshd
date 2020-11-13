@@ -35,7 +35,7 @@
 		<Keywords color="BasicKeys">
 			<Word>class</Word>
 	        <Word>func</Word>
-			<Word>const</Word>
+			<Word>var</Word>
 	        <Word>null</Word>
 		</Keywords>
 	    <Keywords color="VisibilityKeys">
@@ -43,7 +43,7 @@
 	        <Word>hidden</Word>
 		</Keywords>
 	    <Keywords color="ContextKeys">
-			<Word>label</Word>
+			<Word>continue</Word>
 	        <Word>pass</Word>
 		    <Word>go</Word>
 		    <Word>return</Word>
@@ -52,20 +52,11 @@
 		</Keywords>
 		<Keywords color="BuiltinTypeKeys">
 			<Word>object</Word>
-	        <Word>digit</Word>
+	        <Word>int</Word>
+		    <Word>float</Word>
 		    <Word>dimension</Word>
-		    <Word>rational</Word>
-		    <Word>irrational</Word>
-		    <Word>array</Word>
-		    <Word>matrix</Word>
-		    <Word>dom</Word>
-		    <Word>functype</Word>
-		    <Word>classtype</Word>
-		    <Word>enumtype</Word>
-		    <Word>moduletype</Word>
-		    <Word>string</Word>
-		    <Word>char</Word>
 		    <Word>bool</Word>
+		    <Word>string</Word>
 		</Keywords>
 		<Keywords color="BlockKeys">
 			<Word>if</Word>
@@ -76,13 +67,6 @@
 		    <Word>while</Word>
 			<Word>enum</Word>
 		</Keywords>
-	
-		<Rule color="Class">
-		(?&lt;=class\s)
-		\b
-		[\d\w_]+  # an identifier
-		(?=\s*\&lt;) # followed by (
-		</Rule>
 		
         <Rule color="Function">
 		(?&lt;=func\s|\.)

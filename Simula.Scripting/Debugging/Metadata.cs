@@ -8,9 +8,8 @@ namespace Simula.Scripting.Debugging {
 
     public struct Metadata {
         public Metadata(Member obj, RuntimeContext ctx) {
-            ExecutionResult result = new ExecutionResult(obj, ctx);
-            this.Pointer = result.Pointer;
-            this.Type = result.Result.Type;
+            this.Pointer = obj.Handle;
+            this.Type = obj.Type;
         }
 
         public Metadata(uint pointer, Reflection.MemberType type) {

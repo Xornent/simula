@@ -44,6 +44,8 @@ namespace Simula {
                 var alignment = sys.GetField("_menuDropAlignment", BindingFlags.NonPublic | BindingFlags.Static);
                 alignment.SetValue(null, false);
             }
+
+            Scripting.Compilation.RuntimeContext.StandardOutput += ConsoleOutput;
         }
 
         private void Window_StateChanged(object sender, EventArgs e) {
@@ -386,6 +388,10 @@ namespace Simula {
         private void Installer_Cancel(object sender, EventArgs e) {
             this.InstallMainGrid.Visibility = Visibility.Hidden;
             this.MainGrid.Visibility = Visibility.Visible;
+        }
+
+        private void ConsoleOutput(object sender, Scripting.Compilation.RuntimeContext.StandardOutputEventArgs args) {
+            this.editor_console.Text += (args.Text + "\n");
         }
     }
 }

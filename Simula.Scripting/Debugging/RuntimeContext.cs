@@ -10,18 +10,26 @@ namespace Simula.Scripting.Compilation {
 
     public class RuntimeContext {
         public RuntimeContext() {
-            Pointers.Add(1, ClrClass.Create(typeof(Type.NullType)));
-            Pointers.Add(0, new ClrInstance(Type.Global.Null, this));
+            
+        }
 
-            Pointers.Add(2, ClrClass.Create(typeof(Type.Boolean)));
+        public static RuntimeContext Create() {
+            RuntimeContext ctx = new RuntimeContext();
+            ctx.Pointers.Add(10, ClrClass.Create(typeof(Member), ref ctx));
+            ctx.Pointers.Add(11, ClrClass.Create(typeof(Type.Var), ref ctx));
+            ctx.Pointers.Add(1, ClrClass.Create(typeof(Type.NullType), ref ctx));
+            ctx.Pointers.Add(0, new ClrInstance(Type.Global.Null, ref ctx));
 
-            Pointers.Add(3, ClrClass.Create(typeof(Type.Integer)));
-            Pointers.Add(4, ClrClass.Create(typeof(Type.Float)));
-            Pointers.Add(5, ClrClass.Create(typeof(Type.String)));
-            Pointers.Add(6, ClrClass.Create(typeof(Type.Dimension)));
-            Pointers.Add(7, ClrClass.Create(typeof(Type._Class)));
-            Pointers.Add(8, ClrClass.Create(typeof(Type._Function)));
-            Pointers.Add(9, new ClrFunction(typeof(Type.Global).GetMethod("Alert")));
+            ctx.Pointers.Add(2, ClrClass.Create(typeof(Type.Boolean), ref ctx));
+
+            ctx.Pointers.Add(3, ClrClass.Create(typeof(Type.Integer), ref ctx));
+            ctx.Pointers.Add(4, ClrClass.Create(typeof(Type.Float), ref ctx));
+            ctx.Pointers.Add(5, ClrClass.Create(typeof(Type.String), ref ctx));
+            ctx.Pointers.Add(6, ClrClass.Create(typeof(Type.Dimension), ref ctx));
+            ctx.Pointers.Add(7, ClrClass.Create(typeof(Type._Class), ref ctx));
+            ctx.Pointers.Add(8, ClrClass.Create(typeof(Type._Function), ref ctx));
+            ctx.Pointers.Add(9, new ClrFunction(typeof(Type.Global).GetMethod("Alert"), ref ctx));
+            return ctx;
         }
 
         public RuntimeContext(bool debug, bool check) : this() {
@@ -71,8 +79,25 @@ namespace Simula.Scripting.Compilation {
             { "dimension", new Metadata(6, MemberType.Class) },
             { "class", new Metadata(7, MemberType.Class)},
             { "func", new Metadata(8, MemberType.Function)},
-            { "alert", new Metadata(9, MemberType.Function) }
+            { "alert", new Metadata(9, MemberType.Function) },
+            { "object", new Metadata(10, MemberType.Class) },
+            { "runtimeObject", new Metadata(11, MemberType.Class)}
         };
+
+        public enum PredefinedIndex {
+            NULL = 0,
+            __NULLTYPE__,
+            BOOL,
+            INT,
+            FLOAT,
+            STRING,
+            DIMENSION,
+            CLASS,
+            FUNC,
+            ALERT,
+            OBJECT,
+            RUNTIMEOBJECT
+        }
 
         public List<RuntimeError> Errors = new List<RuntimeError>();
         public Stack<TemperaryContext> CallStack = new Stack<TemperaryContext>();
@@ -171,5 +196,15 @@ namespace Simula.Scripting.Compilation {
 
             return new ExecutionResult();
         }
+
+        public static void RequestStandardOutput(string value) {
+            StandardOutput?.Invoke(null, new StandardOutputEventArgs(){Text = value});
+        }
+
+        public class StandardOutputEventArgs : EventArgs {
+            public string Text;
+        }
+
+        public static event EventHandler<StandardOutputEventArgs> StandardOutput;
     }
 }

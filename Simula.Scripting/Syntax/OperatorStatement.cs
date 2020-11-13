@@ -28,7 +28,7 @@ namespace Simula.Scripting.Syntax {
                     var member = instance.GetMember(name);
                     if(member.Pointer != 0) {
                         if (member.Result.Type == MemberType.Function) {
-                            var result = ((Function)member.Result).Invoke(new List<Member>() { evalRight.Result }, ctx);
+                            var result = ((Function)member.Result).Invoke(new List<Member>() { evalRight.Result }, ref ctx);
                             return result;
                         }
                     }

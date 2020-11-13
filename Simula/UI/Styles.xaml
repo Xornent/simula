@@ -368,7 +368,6 @@
        TargetType="{x:Type Menu}">
         <Setter Property="OverridesDefaultStyle"
           Value="True" />
-        <Setter Property="FontFamily" Value="PingFang SC, Segoe UI, Consolas, Simsun"/>
         <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="SnapsToDevicePixels"
           Value="True" />
@@ -886,7 +885,6 @@
           Value="True" />
         <Setter Property="SnapsToDevicePixels"
           Value="True" />
-        <Setter Property="FontFamily" Value="PingFang SC, Segoe UI, Consolas, Simsun"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type TabControl}">
@@ -1140,7 +1138,6 @@
         <Setter Property="Padding" Value="0,0,0,0" />
         <Setter Property="Foreground" Value="Black" />
         <Setter Property="FocusVisualStyle" Value="{StaticResource TreeViewItemFocusVisual}" />
-        <Setter Property="FontFamily" Value="Segoe UI, Consolas, Simsun"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type TreeViewItem}">
@@ -1192,8 +1189,8 @@
                                     <TextBlock Width="16" Height="16" Text="{TemplateBinding Tag}" Margin="0,2,0,0" FontFamily="Segoe MDL2 Assets"/>
                                 </Grid>
 
-                                <ContentPresenter x:Name="PART_Header" ContentSource="Header" Margin="0, 1,0,0"
-                                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                                <ContentPresenter x:Name="PART_Header" ContentSource="Header" Margin="0, 0,0,0"
+                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
                             </StackPanel>
                         </Border>
                         <ItemsPresenter x:Name="ItemsHost"

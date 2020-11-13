@@ -23,7 +23,7 @@ namespace Simula.Scripting.Syntax {
                     var abstracts = ((Class)evalLeft.Result);
                     foreach (var item in parameterResults) 
                         raws.Add(item.Result);
-                    return new ExecutionResult(abstracts.CreateInstance(raws, ctx), ctx);
+                    return new ExecutionResult(abstracts.CreateInstance(raws, ref ctx), ctx);
                 case MemberType.Instance:
                     var instance = ((Instance)evalLeft.Result).GetMember("_call");
                     if (instance.Result.Type == MemberType.Function)
@@ -35,7 +35,7 @@ namespace Simula.Scripting.Syntax {
                         target = (Function)evalLeft.Result;
                     foreach (var item in parameterResults) 
                         raws.Add(item.Result);
-                    return target.Invoke(raws, ctx);
+                    return target.Invoke(raws, ref ctx);
                 case MemberType.Module:
                     break;
                 case MemberType.Unknown:

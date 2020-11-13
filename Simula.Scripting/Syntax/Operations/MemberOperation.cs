@@ -49,13 +49,13 @@ namespace Simula.Scripting.Syntax {
                     break;
                 case Reflection.MemberType.Instance:
                     var result = ((Instance)evalLeft.Result).GetMember(member);
-                    return new ExecutionResult(result.Pointer, ctx, ExecutableFlag.Pass);
+                    var display = new ExecutionResult(result.Pointer, ctx);
+                    return display;
                 case Reflection.MemberType.Function:
                     break;
                 case Reflection.MemberType.Module:
                     result = ((Module)evalLeft.Result).GetMember(member);
-                    return new ExecutionResult(result.Pointer, ctx, ExecutableFlag.Pass);
-                    break;
+                    return new ExecutionResult(result.Pointer, ctx);
                 case Reflection.MemberType.Unknown:
                     break;
                 default:

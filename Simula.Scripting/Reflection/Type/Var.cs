@@ -20,9 +20,9 @@ namespace Simula.Scripting.Type {
     // 10. 布尔逻辑运算符 (_or, _and)
     // 11. 位逻辑运算符 (_bitor, _bitand, _bitnot)
 
-    
-    public abstract class Var : Member {
-
+    [Expose("runtimeObject")]
+    public class Var : Member {
+        
     }
 
     [Expose("_null")]

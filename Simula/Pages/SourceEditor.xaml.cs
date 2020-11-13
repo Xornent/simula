@@ -21,12 +21,7 @@ namespace Simula.Pages {
         }
 
         public void HandleRun(object sender, EventArgs e) {
-            Scripting.Compilation.RuntimeContext ctx = new Scripting.Compilation.RuntimeContext();
-
-            // Scripting.Compilation.LibraryCompilationUnit lib = new Scripting.Compilation.LibraryCompilationUnit(
-            //     Environment.CurrentDirectory + @"\simula.scripting.dll", System.IO.FileMode.Open);
-            // lib.Register(ctx);
-
+            Scripting.Compilation.RuntimeContext ctx = Scripting.Compilation.RuntimeContext.Create();
             Scripting.Compilation.SourceCompilationUnit src = new Scripting.Compilation.SourceCompilationUnit(editor.Text);
             src.Register(ctx);
 
