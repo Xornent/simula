@@ -1,15 +1,11 @@
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 #if HAVE_BIG_INTEGER
 using System.Numerics;
 #endif
-using System.Text;
 using System.IO;
-using System.Xml;
 using Simula.Scripting.Json.Utilities;
-using System.Diagnostics;
 
 namespace Simula.Scripting.Json
 {
@@ -27,51 +23,39 @@ namespace Simula.Scripting.Json
         private IArrayPool<char>? _arrayPool;
         private char[]? _indentChars;
 
-        private Base64Encoder Base64Encoder
-        {
-            get
-            {
-                if (_base64Encoder == null)
-                {
+        private Base64Encoder Base64Encoder {
+            get {
+                if (_base64Encoder == null) {
                     _base64Encoder = new Base64Encoder(_writer);
                 }
 
                 return _base64Encoder;
             }
         }
-        public IArrayPool<char>? ArrayPool
-        {
+        public IArrayPool<char>? ArrayPool {
             get => _arrayPool;
-            set
-            {
-                if (value == null)
-                {
+            set {
+                if (value == null) {
                     throw new ArgumentNullException(nameof(value));
                 }
 
                 _arrayPool = value;
             }
         }
-        public int Indentation
-        {
+        public int Indentation {
             get => _indentation;
-            set
-            {
-                if (value < 0)
-                {
+            set {
+                if (value < 0) {
                     throw new ArgumentException("Indentation value must be greater than 0.");
                 }
 
                 _indentation = value;
             }
         }
-        public char QuoteChar
-        {
+        public char QuoteChar {
             get => _quoteChar;
-            set
-            {
-                if (value != '"' && value != '\'')
-                {
+            set {
+                if (value != '"' && value != '\'') {
                     throw new ArgumentException(@"Invalid JavaScript string quote character. Valid quote characters are ' and "".");
                 }
 
@@ -79,27 +63,22 @@ namespace Simula.Scripting.Json
                 UpdateCharEscapeFlags();
             }
         }
-        public char IndentChar
-        {
+        public char IndentChar {
             get => _indentChar;
-            set
-            {
-                if (value != _indentChar)
-                {
+            set {
+                if (value != _indentChar) {
                     _indentChar = value;
                     _indentChars = null;
                 }
             }
         }
-        public bool QuoteName
-        {
+        public bool QuoteName {
             get => _quoteName;
             set => _quoteName = value;
         }
         public JsonTextWriter(TextWriter textWriter)
         {
-            if (textWriter == null)
-            {
+            if (textWriter == null) {
                 throw new ArgumentNullException(nameof(textWriter));
             }
 
@@ -128,14 +107,12 @@ namespace Simula.Scripting.Json
 
         private void CloseBufferAndWriter()
         {
-            if (_writeBuffer != null)
-            {
+            if (_writeBuffer != null) {
                 BufferUtils.ReturnBuffer(_arrayPool, _writeBuffer);
                 _writeBuffer = null;
             }
 
-            if (CloseOutput)
-            {
+            if (CloseOutput) {
 #if HAVE_STREAM_READER_WRITER_CLOSE
                 _writer?.Close();
 #else
@@ -165,8 +142,7 @@ namespace Simula.Scripting.Json
         }
         protected override void WriteEnd(JsonToken token)
         {
-            switch (token)
-            {
+            switch (token) {
                 case JsonToken.EndObject:
                     _writer.Write('}');
                     break;
@@ -192,21 +168,16 @@ namespace Simula.Scripting.Json
         {
             InternalWritePropertyName(name);
 
-            if (escape)
-            {
+            if (escape) {
                 WriteEscapedString(name, _quoteName);
-            }
-            else
-            {
-                if (_quoteName)
-                {
+            } else {
+                if (_quoteName) {
                     _writer.Write(_quoteChar);
                 }
 
                 _writer.Write(name);
 
-                if (_quoteName)
-                {
+                if (_quoteName) {
                     _writer.Write(_quoteChar);
                 }
             }
@@ -231,8 +202,7 @@ namespace Simula.Scripting.Json
 
             _writer.Write(_indentChars, 0, newLineLen + Math.Min(currentIndentCount, IndentCharBufferSize));
 
-            while ((currentIndentCount -= IndentCharBufferSize) > 0)
-            {
+            while ((currentIndentCount -= IndentCharBufferSize) > 0) {
                 _writer.Write(_indentChars, newLineLen, Math.Min(currentIndentCount, IndentCharBufferSize));
             }
         }
@@ -242,20 +212,16 @@ namespace Simula.Scripting.Json
             string writerNewLine = _writer.NewLine;
             int newLineLen = writerNewLine.Length;
             bool match = _indentChars != null && _indentChars.Length == IndentCharBufferSize + newLineLen;
-            if (match)
-            {
-                for (int i = 0; i != newLineLen; ++i)
-                {
-                    if (writerNewLine[i] != _indentChars![i])
-                    {
+            if (match) {
+                for (int i = 0; i != newLineLen; ++i) {
+                    if (writerNewLine[i] != _indentChars![i]) {
                         match = false;
                         break;
                     }
                 }
             }
 
-            if (!match)
-            {
+            if (!match) {
                 _indentChars = (writerNewLine + new string(_indentChar, IndentCharBufferSize)).ToCharArray();
             }
 
@@ -310,12 +276,9 @@ namespace Simula.Scripting.Json
         {
             InternalWriteValue(JsonToken.String);
 
-            if (value == null)
-            {
+            if (value == null) {
                 WriteValueInternal(JsonConvert.Null, JsonToken.Null);
-            }
-            else
-            {
+            } else {
                 WriteEscapedString(value, true);
             }
         }
@@ -354,12 +317,9 @@ namespace Simula.Scripting.Json
         }
         public override void WriteValue(float? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 InternalWriteValue(JsonToken.Float);
                 WriteValueInternal(JsonConvert.ToString(value.GetValueOrDefault(), FloatFormatHandling, QuoteChar, true), JsonToken.Float);
             }
@@ -371,12 +331,9 @@ namespace Simula.Scripting.Json
         }
         public override void WriteValue(double? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 InternalWriteValue(JsonToken.Float);
                 WriteValueInternal(JsonConvert.ToString(value.GetValueOrDefault(), FloatFormatHandling, QuoteChar, true), JsonToken.Float);
             }
@@ -423,14 +380,11 @@ namespace Simula.Scripting.Json
             InternalWriteValue(JsonToken.Date);
             value = DateTimeUtils.EnsureDateTime(value, DateTimeZoneHandling);
 
-            if (StringUtils.IsNullOrEmpty(DateFormatString))
-            {
+            if (StringUtils.IsNullOrEmpty(DateFormatString)) {
                 int length = WriteValueToBuffer(value);
 
                 _writer.Write(_writeBuffer, 0, length);
-            }
-            else
-            {
+            } else {
                 _writer.Write(_quoteChar);
                 _writer.Write(value.ToString(DateFormatString, Culture));
                 _writer.Write(_quoteChar);
@@ -450,12 +404,9 @@ namespace Simula.Scripting.Json
         }
         public override void WriteValue(byte[]? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 InternalWriteValue(JsonToken.Bytes);
                 _writer.Write(_quoteChar);
                 Base64Encoder.Encode(value, 0, value.Length);
@@ -469,14 +420,11 @@ namespace Simula.Scripting.Json
         {
             InternalWriteValue(JsonToken.Date);
 
-            if (StringUtils.IsNullOrEmpty(DateFormatString))
-            {
+            if (StringUtils.IsNullOrEmpty(DateFormatString)) {
                 int length = WriteValueToBuffer(value);
 
                 _writer.Write(_writeBuffer, 0, length);
-            }
-            else
-            {
+            } else {
                 _writer.Write(_quoteChar);
                 _writer.Write(value.ToString(DateFormatString, Culture));
                 _writer.Write(_quoteChar);
@@ -528,12 +476,9 @@ namespace Simula.Scripting.Json
         }
         public override void WriteValue(Uri? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 InternalWriteValue(JsonToken.String);
                 WriteEscapedString(value.OriginalString, true);
             }
@@ -556,20 +501,16 @@ namespace Simula.Scripting.Json
 
         private void EnsureWriteBuffer()
         {
-            if (_writeBuffer == null)
-            {
+            if (_writeBuffer == null) {
                 _writeBuffer = BufferUtils.RentBuffer(_arrayPool, 35);
             }
         }
 
         private void WriteIntegerValue(long value)
         {
-            if (value >= 0 && value <= 9)
-            {
+            if (value >= 0 && value <= 9) {
                 _writer.Write((char)('0' + value));
-            }
-            else
-            {
+            } else {
                 bool negative = value < 0;
                 WriteIntegerValue(negative ? (ulong)-value : (ulong)value, negative);
             }
@@ -577,12 +518,9 @@ namespace Simula.Scripting.Json
 
         private void WriteIntegerValue(ulong value, bool negative)
         {
-            if (!negative & value <= 9)
-            {
+            if (!negative & value <= 9) {
                 _writer.Write((char)('0' + value));
-            }
-            else
-            {
+            } else {
                 int length = WriteNumberToBuffer(value, negative);
                 _writer.Write(_writeBuffer, 0, length);
             }
@@ -590,8 +528,7 @@ namespace Simula.Scripting.Json
 
         private int WriteNumberToBuffer(ulong value, bool negative)
         {
-            if (value <= uint.MaxValue)
-            {
+            if (value <= uint.MaxValue) {
                 return WriteNumberToBuffer((uint)value, negative);
             }
 
@@ -600,16 +537,14 @@ namespace Simula.Scripting.Json
 
             int totalLength = MathUtils.IntLength(value);
 
-            if (negative)
-            {
+            if (negative) {
                 totalLength++;
                 _writeBuffer[0] = '-';
             }
 
             int index = totalLength;
 
-            do
-            {
+            do {
                 ulong quotient = value / 10;
                 ulong digit = value - (quotient * 10);
                 _writeBuffer[--index] = (char)('0' + digit);
@@ -621,12 +556,9 @@ namespace Simula.Scripting.Json
 
         private void WriteIntegerValue(int value)
         {
-            if (value >= 0 && value <= 9)
-            {
+            if (value >= 0 && value <= 9) {
                 _writer.Write((char)('0' + value));
-            }
-            else
-            {
+            } else {
                 bool negative = value < 0;
                 WriteIntegerValue(negative ? (uint)-value : (uint)value, negative);
             }
@@ -634,12 +566,9 @@ namespace Simula.Scripting.Json
 
         private void WriteIntegerValue(uint value, bool negative)
         {
-            if (!negative & value <= 9)
-            {
+            if (!negative & value <= 9) {
                 _writer.Write((char)('0' + value));
-            }
-            else
-            {
+            } else {
                 int length = WriteNumberToBuffer(value, negative);
                 _writer.Write(_writeBuffer, 0, length);
             }
@@ -652,16 +581,14 @@ namespace Simula.Scripting.Json
 
             int totalLength = MathUtils.IntLength(value);
 
-            if (negative)
-            {
+            if (negative) {
                 totalLength++;
                 _writeBuffer[0] = '-';
             }
 
             int index = totalLength;
 
-            do
-            {
+            do {
                 uint quotient = value / 10;
                 uint digit = value - (quotient * 10);
                 _writeBuffer[--index] = (char)('0' + digit);

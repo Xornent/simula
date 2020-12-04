@@ -1,8 +1,6 @@
 
-using System;
-using System.Diagnostics;
-using System.Reflection;
 using Simula.Scripting.Json.Utilities;
+using System;
 
 #if !HAVE_LINQ
 using Simula.Scripting.Json.Utilities.LinqBridge;
@@ -21,11 +19,9 @@ namespace Simula.Scripting.Json.Serialization
         internal bool _skipPropertyNameEscape;
         private Type? _propertyType;
         internal JsonContract? PropertyContract { get; set; }
-        public string? PropertyName
-        {
+        public string? PropertyName {
             get => _propertyName;
-            set
-            {
+            set {
                 _propertyName = value;
                 _skipPropertyNameEscape = !JavaScriptUtils.ShouldEscapeJavaScriptString(_propertyName, JavaScriptUtils.HtmlCharEscapeFlags);
             }
@@ -35,13 +31,10 @@ namespace Simula.Scripting.Json.Serialization
         public string? UnderlyingName { get; set; }
         public IValueProvider? ValueProvider { get; set; }
         public IAttributeProvider? AttributeProvider { get; set; }
-        public Type? PropertyType
-        {
+        public Type? PropertyType {
             get => _propertyType;
-            set
-            {
-                if (_propertyType != value)
-                {
+            set {
+                if (_propertyType != value) {
                     _propertyType = value;
                     _hasGeneratedDefaultValue = false;
                 }
@@ -49,8 +42,7 @@ namespace Simula.Scripting.Json.Serialization
         }
         public JsonConverter? Converter { get; set; }
         [Obsolete("MemberConverter is obsolete. Use Converter instead.")]
-        public JsonConverter? MemberConverter
-        {
+        public JsonConverter? MemberConverter {
             get => Converter;
             set => Converter = value;
         }
@@ -58,19 +50,15 @@ namespace Simula.Scripting.Json.Serialization
         public bool Readable { get; set; }
         public bool Writable { get; set; }
         public bool HasMemberAttribute { get; set; }
-        public object? DefaultValue
-        {
-            get
-            {
-                if (!_hasExplicitDefaultValue)
-                {
+        public object? DefaultValue {
+            get {
+                if (!_hasExplicitDefaultValue) {
                     return null;
                 }
 
                 return _defaultValue;
             }
-            set
-            {
+            set {
                 _hasExplicitDefaultValue = true;
                 _defaultValue = value;
             }
@@ -78,21 +66,18 @@ namespace Simula.Scripting.Json.Serialization
 
         internal object? GetResolvedDefaultValue()
         {
-            if (_propertyType == null)
-            {
+            if (_propertyType == null) {
                 return null;
             }
 
-            if (!_hasExplicitDefaultValue && !_hasGeneratedDefaultValue)
-            {
+            if (!_hasExplicitDefaultValue && !_hasGeneratedDefaultValue) {
                 _defaultValue = ReflectionUtils.GetDefaultValue(_propertyType);
                 _hasGeneratedDefaultValue = true;
             }
 
             return _defaultValue;
         }
-        public Required Required
-        {
+        public Required Required {
             get => _required ?? Required.Default;
             set => _required = value;
         }
@@ -121,12 +106,9 @@ namespace Simula.Scripting.Json.Serialization
             string? propertyName = PropertyName;
             MiscellaneousUtils.Assert(propertyName != null);
 
-            if (_skipPropertyNameEscape)
-            {
+            if (_skipPropertyNameEscape) {
                 writer.WritePropertyName(propertyName, false);
-            }
-            else
-            {
+            } else {
                 writer.WritePropertyName(propertyName);
             }
         }

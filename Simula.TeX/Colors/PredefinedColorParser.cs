@@ -17,8 +17,7 @@ namespace Simula.TeX.Colors
 
         private PredefinedColorParser(string resourceName)
         {
-            using (var resource = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
-            {
+            using (var resource = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName)) {
                 var doc = XDocument.Load(resource);
                 _colors = Parse(doc.Root);
             }
@@ -36,19 +35,18 @@ namespace Simula.TeX.Colors
                 return null;
 
             byte? alpha = 255;
-            if (hasAlphaComponent)
-            {
+            if (hasAlphaComponent) {
                 var alphaFraction = double.TryParse(
                     componentList[1],
                     NumberStyles.AllowDecimalPoint,
                     CultureInfo.InvariantCulture,
                     out var a)
-                    ? (double?) a
+                    ? (double?)a
                     : null;
                 if (alphaFraction == null || alphaFraction < 0.0 || alphaFraction > 1.0)
                     return null;
 
-                alpha = (byte) Math.Round(255.0 * a, MidpointRounding.AwayFromZero);
+                alpha = (byte)Math.Round(255.0 * a, MidpointRounding.AwayFromZero);
             }
 
             if (alpha == null)
@@ -61,8 +59,7 @@ namespace Simula.TeX.Colors
         private Dictionary<string, Color> Parse(XElement rootElement)
         {
             var colors = new Dictionary<string, Color>();
-            foreach (var colorElement in rootElement.Elements("color"))
-            {
+            foreach (var colorElement in rootElement.Elements("color")) {
                 var name = colorElement.AttributeValue("name");
                 var r = colorElement.AttributeValue("r");
                 var g = colorElement.AttributeValue("g");

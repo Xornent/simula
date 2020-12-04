@@ -8,7 +8,7 @@ namespace Simula.TeX.Atoms
         public UnderlinedAtom(SourceSpan? source, Atom? baseAtom)
             : base(source)
         {
-            this.BaseAtom = baseAtom;
+            BaseAtom = baseAtom;
         }
 
         public Atom? BaseAtom { get; }
@@ -18,7 +18,7 @@ namespace Simula.TeX.Atoms
             var defaultLineThickness = environment.MathFont.GetDefaultLineThickness(environment.Style);
 
             // Create box for base atom.
-            var baseBox = this.BaseAtom == null ? StrutBox.Empty : this.BaseAtom.CreateBox(environment);
+            var baseBox = BaseAtom == null ? StrutBox.Empty : BaseAtom.CreateBox(environment);
 
             // Create result box.
             var resultBox = new VerticalBox();

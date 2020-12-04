@@ -7,8 +7,8 @@ namespace Simula.TeX.Atoms
     {
         protected Atom(SourceSpan? source, TexAtomType type = TexAtomType.Ordinary)
         {
-            this.Source = source;
-            this.Type = type;
+            Source = source;
+            Type = type;
         }
 
         public TexAtomType Type { get; }
@@ -17,10 +17,9 @@ namespace Simula.TeX.Atoms
 
         public Box CreateBox(TexEnvironment environment)
         {
-            var box = this.CreateBoxCore(environment);
-            if (box.Source == null)
-            {
-                box.Source = this.Source;
+            var box = CreateBoxCore(environment);
+            if (box.Source == null) {
+                box.Source = Source;
             }
 
             return box;
@@ -31,13 +30,13 @@ namespace Simula.TeX.Atoms
         // Gets type of leftmost child item.
         public virtual TexAtomType GetLeftType()
         {
-            return this.Type;
+            return Type;
         }
 
         // Gets type of leftmost child item.
         public virtual TexAtomType GetRightType()
         {
-            return this.Type;
+            return Type;
         }
     }
 }

@@ -1,5 +1,4 @@
 using System.Resources;
-using System.Windows;
 using System.Windows.Markup;
 
 [assembly: System.Runtime.InteropServices.ComVisible(false)]

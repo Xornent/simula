@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Simula.TeX.Boxes;
 
 namespace Simula.TeX
@@ -18,20 +14,16 @@ namespace Simula.TeX
             // Find first version of character that has at least minimum height.
             var metrics = charInfo.Metrics;
             var totalHeight = metrics.Height + metrics.Depth;
-            while (totalHeight < minHeight && texFont.HasNextLarger(charInfo))
-            {
+            while (totalHeight < minHeight && texFont.HasNextLarger(charInfo)) {
                 charInfo = texFont.GetNextLargerCharInfo(charInfo, style);
                 metrics = charInfo.Metrics;
                 totalHeight = metrics.Height + metrics.Depth;
             }
 
-            if (totalHeight >= minHeight)
-            {
+            if (totalHeight >= minHeight) {
                 // Character of sufficient height was found.
                 return new CharBox(environment, charInfo);
-            }
-            else if (texFont.IsExtensionChar(charInfo))
-            {
+            } else if (texFont.IsExtensionChar(charInfo)) {
                 var resultBox = new VerticalBox() { Source = source };
 
                 // Construct box from extension character.
@@ -43,33 +35,24 @@ namespace Simula.TeX
                 if (extension.Bottom != null)
                     resultBox.Add(new CharBox(environment, extension.Bottom) { Source = source });
 
-                if (extension.Repeat != null)
-                {
+                if (extension.Repeat != null) {
                     // Insert repeatable part multiple times until box is high enough.
                     var repeatBox = new CharBox(environment, extension.Repeat) { Source = source };
-                    do
-                    {
-                        if (extension.Top != null && extension.Bottom != null)
-                        {
+                    do {
+                        if (extension.Top != null && extension.Bottom != null) {
                             resultBox.Add(1, repeatBox);
                             if (extension.Middle != null)
                                 resultBox.Add(resultBox.Children.Count - 1, repeatBox);
-                        }
-                        else if (extension.Bottom != null)
-                        {
+                        } else if (extension.Bottom != null) {
                             resultBox.Add(0, repeatBox);
-                        }
-                        else
-                        {
+                        } else {
                             resultBox.Add(repeatBox);
                         }
                     } while (resultBox.Height + resultBox.Depth < minHeight);
                 }
 
                 return resultBox;
-            }
-            else
-            {
+            } else {
                 // No extensions available, so use tallest available version of character.
                 return new CharBox(environment, charInfo) { Source = source };
             }

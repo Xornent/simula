@@ -1,5 +1,3 @@
-
-using System;
 using Simula.Scripting.Json.Utilities;
 using System.Globalization;
 
@@ -11,14 +9,10 @@ namespace Simula.Scripting.Json.Serialization
 
         private BidirectionalDictionary<string, object> GetMappings(object context)
         {
-            if (!(context is JsonSerializerInternalBase internalSerializer))
-            {
-                if (context is JsonSerializerProxy proxy)
-                {
+            if (!(context is JsonSerializerInternalBase internalSerializer)) {
+                if (context is JsonSerializerProxy proxy) {
                     internalSerializer = proxy.GetInternalSerializer();
-                }
-                else
-                {
+                } else {
                     throw new JsonException("The DefaultReferenceResolver can only be used internally.");
                 }
             }
@@ -36,8 +30,7 @@ namespace Simula.Scripting.Json.Serialization
         {
             BidirectionalDictionary<string, object> mappings = GetMappings(context);
 
-            if (!mappings.TryGetBySecond(value, out string reference))
-            {
+            if (!mappings.TryGetBySecond(value, out string reference)) {
                 _referenceCount++;
                 reference = _referenceCount.ToString(CultureInfo.InvariantCulture);
                 mappings.Set(reference, value);

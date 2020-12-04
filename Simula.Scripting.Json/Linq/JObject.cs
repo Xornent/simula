@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 #if HAVE_INOTIFY_COLLECTION_CHANGED
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 #endif
 using System.ComponentModel;
@@ -13,7 +12,6 @@ using System.Linq.Expressions;
 using System.IO;
 using Simula.Scripting.Json.Utilities;
 using System.Globalization;
-using System.Runtime.CompilerServices;
 using System.Diagnostics.CodeAnalysis;
 #if !HAVE_LINQ
 using Simula.Scripting.Json.Utilities.LinqBridge;
@@ -56,8 +54,7 @@ namespace Simula.Scripting.Json.Linq
 
         internal override bool DeepEquals(JToken node)
         {
-            if (!(node is JObject t))
-            {
+            if (!(node is JObject t)) {
                 return false;
             }
 
@@ -66,8 +63,7 @@ namespace Simula.Scripting.Json.Linq
 
         internal override int IndexOfItem(JToken? item)
         {
-            if (item == null)
-            {
+            if (item == null) {
                 return -1;
             }
 
@@ -76,8 +72,7 @@ namespace Simula.Scripting.Json.Linq
 
         internal override void InsertItem(int index, JToken? item, bool skipParentCheck)
         {
-            if (item != null && item.Type == JTokenType.Comment)
-            {
+            if (item != null && item.Type == JTokenType.Comment) {
                 return;
             }
 
@@ -88,55 +83,42 @@ namespace Simula.Scripting.Json.Linq
         {
             ValidationUtils.ArgumentNotNull(o, nameof(o));
 
-            if (o.Type != JTokenType.Property)
-            {
+            if (o.Type != JTokenType.Property) {
                 throw new ArgumentException("Can not add {0} to {1}.".FormatWith(CultureInfo.InvariantCulture, o.GetType(), GetType()));
             }
 
             JProperty newProperty = (JProperty)o;
 
-            if (existing != null)
-            {
+            if (existing != null) {
                 JProperty existingProperty = (JProperty)existing;
 
-                if (newProperty.Name == existingProperty.Name)
-                {
+                if (newProperty.Name == existingProperty.Name) {
                     return;
                 }
             }
 
-            if (_properties.TryGetValue(newProperty.Name, out existing))
-            {
+            if (_properties.TryGetValue(newProperty.Name, out existing)) {
                 throw new ArgumentException("Can not add property {0} to {1}. Property with the same name already exists on object.".FormatWith(CultureInfo.InvariantCulture, newProperty.Name, GetType()));
             }
         }
 
         internal override void MergeItem(object content, JsonMergeSettings? settings)
         {
-            if (!(content is JObject o))
-            {
+            if (!(content is JObject o)) {
                 return;
             }
 
-            foreach (KeyValuePair<string, JToken?> contentItem in o)
-            {
+            foreach (KeyValuePair<string, JToken?> contentItem in o) {
                 JProperty? existingProperty = Property(contentItem.Key, settings?.PropertyNameComparison ?? StringComparison.Ordinal);
 
-                if (existingProperty == null)
-                {
+                if (existingProperty == null) {
                     Add(contentItem.Key, contentItem.Value);
-                }
-                else if (contentItem.Value != null)
-                {
-                    if (!(existingProperty.Value is JContainer existingContainer) || existingContainer.Type != contentItem.Value.Type)
-                    {
-                        if (!IsNull(contentItem.Value) || settings?.MergeNullValueHandling == MergeNullValueHandling.Merge)
-                        {
+                } else if (contentItem.Value != null) {
+                    if (!(existingProperty.Value is JContainer existingContainer) || existingContainer.Type != contentItem.Value.Type) {
+                        if (!IsNull(contentItem.Value) || settings?.MergeNullValueHandling == MergeNullValueHandling.Merge) {
                             existingProperty.Value = contentItem.Value;
                         }
-                    }
-                    else
-                    {
+                    } else {
                         existingContainer.Merge(contentItem.Value, settings);
                     }
                 }
@@ -145,13 +127,11 @@ namespace Simula.Scripting.Json.Linq
 
         private static bool IsNull(JToken token)
         {
-            if (token.Type == JTokenType.Null)
-            {
+            if (token.Type == JTokenType.Null) {
                 return true;
             }
 
-            if (token is JValue v && v.Value == null)
-            {
+            if (token is JValue v && v.Value == null) {
                 return true;
             }
 
@@ -168,8 +148,7 @@ namespace Simula.Scripting.Json.Linq
             }
 #endif
 #if HAVE_INOTIFY_COLLECTION_CHANGED
-            if (_collectionChanged != null)
-            {
+            if (_collectionChanged != null) {
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, childProperty, childProperty, IndexOfItem(childProperty)));
             }
 #endif
@@ -197,22 +176,17 @@ namespace Simula.Scripting.Json.Linq
         }
         public JProperty? Property(string name, StringComparison comparison)
         {
-            if (name == null)
-            {
+            if (name == null) {
                 return null;
             }
 
-            if (_properties.TryGetValue(name, out JToken? property))
-            {
+            if (_properties.TryGetValue(name, out JToken? property)) {
                 return (JProperty)property;
             }
-            if (comparison != StringComparison.Ordinal)
-            {
-                for (int i = 0; i < _properties.Count; i++)
-                {
+            if (comparison != StringComparison.Ordinal) {
+                for (int i = 0; i < _properties.Count; i++) {
                     JProperty p = (JProperty)_properties[i];
-                    if (string.Equals(p.Name, name, comparison))
-                    {
+                    if (string.Equals(p.Name, name, comparison)) {
                         return p;
                     }
                 }
@@ -224,50 +198,39 @@ namespace Simula.Scripting.Json.Linq
         {
             return new JEnumerable<JToken>(Properties().Select(p => p.Value));
         }
-        public override JToken? this[object key]
-        {
-            get
-            {
+        public override JToken? this[object key] {
+            get {
                 ValidationUtils.ArgumentNotNull(key, nameof(key));
 
-                if (!(key is string propertyName))
-                {
+                if (!(key is string propertyName)) {
                     throw new ArgumentException("Accessed JObject values with invalid key value: {0}. Object property name expected.".FormatWith(CultureInfo.InvariantCulture, MiscellaneousUtils.ToString(key)));
                 }
 
                 return this[propertyName];
             }
-            set
-            {
+            set {
                 ValidationUtils.ArgumentNotNull(key, nameof(key));
 
-                if (!(key is string propertyName))
-                {
+                if (!(key is string propertyName)) {
                     throw new ArgumentException("Set JObject values with invalid key value: {0}. Object property name expected.".FormatWith(CultureInfo.InvariantCulture, MiscellaneousUtils.ToString(key)));
                 }
 
                 this[propertyName] = value;
             }
         }
-        public JToken? this[string propertyName]
-        {
-            get
-            {
+        public JToken? this[string propertyName] {
+            get {
                 ValidationUtils.ArgumentNotNull(propertyName, nameof(propertyName));
 
                 JProperty? property = Property(propertyName, StringComparison.Ordinal);
 
                 return property?.Value;
             }
-            set
-            {
+            set {
                 JProperty? property = Property(propertyName, StringComparison.Ordinal);
-                if (property != null)
-                {
+                if (property != null) {
                     property.Value = value!;
-                }
-                else
-                {
+                } else {
 #if HAVE_INOTIFY_PROPERTY_CHANGING
                     OnPropertyChanging(propertyName);
 #endif
@@ -284,18 +247,15 @@ namespace Simula.Scripting.Json.Linq
         {
             ValidationUtils.ArgumentNotNull(reader, nameof(reader));
 
-            if (reader.TokenType == JsonToken.None)
-            {
-                if (!reader.Read())
-                {
+            if (reader.TokenType == JsonToken.None) {
+                if (!reader.Read()) {
                     throw JsonReaderException.Create(reader, "Error reading JObject from JsonReader.");
                 }
             }
 
             reader.MoveToContent();
 
-            if (reader.TokenType != JsonToken.StartObject)
-            {
+            if (reader.TokenType != JsonToken.StartObject) {
                 throw JsonReaderException.Create(reader, "Error reading JObject from JsonReader. Current JsonReader item is not an object: {0}".FormatWith(CultureInfo.InvariantCulture, reader.TokenType));
             }
 
@@ -312,12 +272,10 @@ namespace Simula.Scripting.Json.Linq
         }
         public new static JObject Parse(string json, JsonLoadSettings? settings)
         {
-            using (JsonReader reader = new JsonTextReader(new StringReader(json)))
-            {
+            using (JsonReader reader = new JsonTextReader(new StringReader(json))) {
                 JObject o = Load(reader, settings);
 
-                while (reader.Read())
-                {
+                while (reader.Read()) {
                 }
 
                 return o;
@@ -331,8 +289,7 @@ namespace Simula.Scripting.Json.Linq
         {
             JToken token = FromObjectInternal(o, jsonSerializer);
 
-            if (token.Type != JTokenType.Object)
-            {
+            if (token.Type != JTokenType.Object) {
                 throw new ArgumentException("Object serialized to {0}. JObject instance expected.".FormatWith(CultureInfo.InvariantCulture, token.Type));
             }
 
@@ -342,8 +299,7 @@ namespace Simula.Scripting.Json.Linq
         {
             writer.WriteStartObject();
 
-            for (int i = 0; i < _properties.Count; i++)
-            {
+            for (int i = 0; i < _properties.Count; i++) {
                 _properties[i].WriteTo(writer, converters);
             }
 
@@ -355,15 +311,14 @@ namespace Simula.Scripting.Json.Linq
         }
         public JToken? GetValue(string? propertyName, StringComparison comparison)
         {
-            if (propertyName == null)
-            {
+            if (propertyName == null) {
                 return null;
             }
             var property = Property(propertyName, comparison);
 
             return property?.Value;
         }
-        public bool TryGetValue(string propertyName, StringComparison comparison, [NotNullWhen(true)]out JToken? value)
+        public bool TryGetValue(string propertyName, StringComparison comparison, [NotNullWhen(true)] out JToken? value)
         {
             value = GetValue(propertyName, comparison);
             return (value != null);
@@ -385,19 +340,17 @@ namespace Simula.Scripting.Json.Linq
         public bool Remove(string propertyName)
         {
             JProperty? property = Property(propertyName, StringComparison.Ordinal);
-            if (property == null)
-            {
+            if (property == null) {
                 return false;
             }
 
             property.Remove();
             return true;
         }
-        public bool TryGetValue(string propertyName, [NotNullWhen(true)]out JToken? value)
+        public bool TryGetValue(string propertyName, [NotNullWhen(true)] out JToken? value)
         {
             JProperty? property = Property(propertyName, StringComparison.Ordinal);
-            if (property == null)
-            {
+            if (property == null) {
                 value = null;
                 return false;
             }
@@ -424,8 +377,7 @@ namespace Simula.Scripting.Json.Linq
         bool ICollection<KeyValuePair<string, JToken?>>.Contains(KeyValuePair<string, JToken?> item)
         {
             JProperty? property = Property(item.Key, StringComparison.Ordinal);
-            if (property == null)
-            {
+            if (property == null) {
                 return false;
             }
 
@@ -434,26 +386,21 @@ namespace Simula.Scripting.Json.Linq
 
         void ICollection<KeyValuePair<string, JToken?>>.CopyTo(KeyValuePair<string, JToken?>[] array, int arrayIndex)
         {
-            if (array == null)
-            {
+            if (array == null) {
                 throw new ArgumentNullException(nameof(array));
             }
-            if (arrayIndex < 0)
-            {
+            if (arrayIndex < 0) {
                 throw new ArgumentOutOfRangeException(nameof(arrayIndex), "arrayIndex is less than 0.");
             }
-            if (arrayIndex >= array.Length && arrayIndex != 0)
-            {
+            if (arrayIndex >= array.Length && arrayIndex != 0) {
                 throw new ArgumentException("arrayIndex is equal to or greater than the length of array.");
             }
-            if (Count > array.Length - arrayIndex)
-            {
+            if (Count > array.Length - arrayIndex) {
                 throw new ArgumentException("The number of elements in the source JObject is greater than the available space from arrayIndex to the end of the destination array.");
             }
 
             int index = 0;
-            foreach (JProperty property in _properties)
-            {
+            foreach (JProperty property in _properties) {
                 array[arrayIndex + index] = new KeyValuePair<string, JToken?>(property.Name, property.Value);
                 index++;
             }
@@ -463,8 +410,7 @@ namespace Simula.Scripting.Json.Linq
 
         bool ICollection<KeyValuePair<string, JToken?>>.Remove(KeyValuePair<string, JToken?> item)
         {
-            if (!((ICollection<KeyValuePair<string, JToken?>>)this).Contains(item))
-            {
+            if (!((ICollection<KeyValuePair<string, JToken?>>)this).Contains(item)) {
                 return false;
             }
 
@@ -479,8 +425,7 @@ namespace Simula.Scripting.Json.Linq
         }
         public IEnumerator<KeyValuePair<string, JToken?>> GetEnumerator()
         {
-            foreach (JProperty property in _properties)
-            {
+            foreach (JProperty property in _properties) {
                 yield return new KeyValuePair<string, JToken?>(property.Name, property.Value);
             }
         }
@@ -591,8 +536,7 @@ namespace Simula.Scripting.Json.Linq
 
             public override bool TrySetMember(JObject instance, SetMemberBinder binder, object value)
             {
-                if (!(value is JToken v))
-                {
+                if (!(value is JToken v)) {
                     v = new JValue(value);
                 }
 

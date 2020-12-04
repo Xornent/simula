@@ -17,7 +17,7 @@ namespace Simula.TeX.Atoms
             bool useDepth = true)
             : base(source)
         {
-            this.RowAtom = baseAtom == null ? new RowAtom(null) : new RowAtom(null, baseAtom);
+            RowAtom = baseAtom == null ? new RowAtom(null) : new RowAtom(null, baseAtom);
             this.useWidth = useWidth;
             this.useHeight = useHeight;
             this.useDepth = useDepth;
@@ -25,29 +25,29 @@ namespace Simula.TeX.Atoms
 
         public Atom WithPreviousAtom(DummyAtom? previousAtom) =>
             new PhantomAtom(
-                this.Source,
-                this.RowAtom.WithPreviousAtom(previousAtom),
-                this.useWidth,
-                this.useHeight,
-                this.useDepth);
+                Source,
+                RowAtom.WithPreviousAtom(previousAtom),
+                useWidth,
+                useHeight,
+                useDepth);
 
         public RowAtom RowAtom { get; }
 
         protected override Box CreateBoxCore(TexEnvironment environment)
         {
-            var resultBox = this.RowAtom.CreateBox(environment);
-            return new StrutBox((this.useWidth ? resultBox.Width : 0), (this.useHeight ? resultBox.Height : 0),
-                (this.useDepth ? resultBox.Depth : 0), resultBox.Shift);
+            var resultBox = RowAtom.CreateBox(environment);
+            return new StrutBox((useWidth ? resultBox.Width : 0), (useHeight ? resultBox.Height : 0),
+                (useDepth ? resultBox.Depth : 0), resultBox.Shift);
         }
 
         public override TexAtomType GetLeftType()
         {
-            return this.RowAtom.GetLeftType();
+            return RowAtom.GetLeftType();
         }
 
         public override TexAtomType GetRightType()
         {
-            return this.RowAtom.GetRightType();
+            return RowAtom.GetRightType();
         }
     }
 }

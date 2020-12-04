@@ -1,10 +1,10 @@
 
+using Simula.Scripting.Json.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json
 {
@@ -35,8 +35,7 @@ namespace Simula.Scripting.Json
 
         internal int CalculateLength()
         {
-            switch (Type)
-            {
+            switch (Type) {
                 case JsonContainerType.Object:
                     return PropertyName!.Length + 5;
                 case JsonContainerType.Array:
@@ -49,27 +48,21 @@ namespace Simula.Scripting.Json
 
         internal void WriteTo(StringBuilder sb, ref StringWriter? writer, ref char[]? buffer)
         {
-            switch (Type)
-            {
+            switch (Type) {
                 case JsonContainerType.Object:
                     string propertyName = PropertyName!;
-                    if (propertyName.IndexOfAny(SpecialCharacters) != -1)
-                    {
+                    if (propertyName.IndexOfAny(SpecialCharacters) != -1) {
                         sb.Append(@"['");
 
-                        if (writer == null)
-                        {
+                        if (writer == null) {
                             writer = new StringWriter(sb);
                         }
 
                         JavaScriptUtils.WriteEscapedJavaScriptString(writer, propertyName, '\'', false, JavaScriptUtils.SingleQuoteCharEscapeFlags, StringEscapeHandling.Default, null, ref buffer);
 
                         sb.Append(@"']");
-                    }
-                    else
-                    {
-                        if (sb.Length > 0)
-                        {
+                    } else {
+                        if (sb.Length > 0) {
                             sb.Append('.');
                         }
 
@@ -93,30 +86,24 @@ namespace Simula.Scripting.Json
         internal static string BuildPath(List<JsonPosition> positions, JsonPosition? currentPosition)
         {
             int capacity = 0;
-            if (positions != null)
-            {
-                for (int i = 0; i < positions.Count; i++)
-                {
+            if (positions != null) {
+                for (int i = 0; i < positions.Count; i++) {
                     capacity += positions[i].CalculateLength();
                 }
             }
-            if (currentPosition != null)
-            {
+            if (currentPosition != null) {
                 capacity += currentPosition.GetValueOrDefault().CalculateLength();
             }
 
             StringBuilder sb = new StringBuilder(capacity);
             StringWriter? writer = null;
             char[]? buffer = null;
-            if (positions != null)
-            {
-                foreach (JsonPosition state in positions)
-                {
+            if (positions != null) {
+                foreach (JsonPosition state in positions) {
                     state.WriteTo(sb, ref writer, ref buffer);
                 }
             }
-            if (currentPosition != null)
-            {
+            if (currentPosition != null) {
                 currentPosition.GetValueOrDefault().WriteTo(sb, ref writer, ref buffer);
             }
 
@@ -125,12 +112,10 @@ namespace Simula.Scripting.Json
 
         internal static string FormatMessage(IJsonLineInfo? lineInfo, string path, string message)
         {
-            if (!message.EndsWith(Environment.NewLine, StringComparison.Ordinal))
-            {
+            if (!message.EndsWith(Environment.NewLine, StringComparison.Ordinal)) {
                 message = message.Trim();
 
-                if (!message.EndsWith('.'))
-                {
+                if (!message.EndsWith('.')) {
                     message += ".";
                 }
 
@@ -139,8 +124,7 @@ namespace Simula.Scripting.Json
 
             message += "Path '{0}'".FormatWith(CultureInfo.InvariantCulture, path);
 
-            if (lineInfo != null && lineInfo.HasLineInfo())
-            {
+            if (lineInfo != null && lineInfo.HasLineInfo()) {
                 message += ", line {0}, position {1}".FormatWith(CultureInfo.InvariantCulture, lineInfo.LineNumber, lineInfo.LinePosition);
             }
 

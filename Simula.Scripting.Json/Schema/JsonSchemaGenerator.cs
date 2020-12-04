@@ -1,7 +1,6 @@
 
 using System;
 using System.Globalization;
-using System.ComponentModel;
 using System.Collections.Generic;
 using Simula.Scripting.Json.Linq;
 using Simula.Scripting.Json.Utilities;
@@ -23,12 +22,9 @@ namespace Simula.Scripting.Json.Schema
         public UndefinedSchemaIdHandling UndefinedSchemaIdHandling { get; set; }
 
         private IContractResolver _contractResolver;
-        public IContractResolver ContractResolver
-        {
-            get
-            {
-                if (_contractResolver == null)
-                {
+        public IContractResolver ContractResolver {
+            get {
+                if (_contractResolver == null) {
                     return DefaultContractResolver.Instance;
                 }
 
@@ -70,12 +66,9 @@ namespace Simula.Scripting.Json.Schema
             TypeSchema popped = _stack[_stack.Count - 1];
             _stack.RemoveAt(_stack.Count - 1);
             TypeSchema newValue = _stack.LastOrDefault();
-            if (newValue != null)
-            {
+            if (newValue != null) {
                 _currentSchema = newValue.Schema;
-            }
-            else
-            {
+            } else {
                 _currentSchema = null;
             }
 
@@ -107,8 +100,7 @@ namespace Simula.Scripting.Json.Schema
         {
             JsonContainerAttribute containerAttribute = JsonTypeReflector.GetCachedAttribute<JsonContainerAttribute>(type);
 
-            if (!StringUtils.IsNullOrEmpty(containerAttribute?.Title))
-            {
+            if (!StringUtils.IsNullOrEmpty(containerAttribute?.Title)) {
                 return containerAttribute.Title;
             }
 
@@ -119,8 +111,7 @@ namespace Simula.Scripting.Json.Schema
         {
             JsonContainerAttribute containerAttribute = JsonTypeReflector.GetCachedAttribute<JsonContainerAttribute>(type);
 
-            if (!StringUtils.IsNullOrEmpty(containerAttribute?.Description))
-            {
+            if (!StringUtils.IsNullOrEmpty(containerAttribute?.Description)) {
                 return containerAttribute.Description;
             }
 
@@ -136,18 +127,15 @@ namespace Simula.Scripting.Json.Schema
         {
             JsonContainerAttribute containerAttribute = JsonTypeReflector.GetCachedAttribute<JsonContainerAttribute>(type);
 
-            if (!StringUtils.IsNullOrEmpty(containerAttribute?.Id))
-            {
+            if (!StringUtils.IsNullOrEmpty(containerAttribute?.Id)) {
                 return containerAttribute.Id;
             }
 
-            if (explicitOnly)
-            {
+            if (explicitOnly) {
                 return null;
             }
 
-            switch (UndefinedSchemaIdHandling)
-            {
+            switch (UndefinedSchemaIdHandling) {
                 case UndefinedSchemaIdHandling.UseTypeName:
                     return type.FullName;
                 case UndefinedSchemaIdHandling.UseAssemblyQualifiedName:
@@ -164,25 +152,20 @@ namespace Simula.Scripting.Json.Schema
             string resolvedId = GetTypeId(type, false);
             string explicitId = GetTypeId(type, true);
 
-            if (!StringUtils.IsNullOrEmpty(resolvedId))
-            {
+            if (!StringUtils.IsNullOrEmpty(resolvedId)) {
                 JsonSchema resolvedSchema = _resolver.GetSchema(resolvedId);
-                if (resolvedSchema != null)
-                {
-                    if (valueRequired != Required.Always && !HasFlag(resolvedSchema.Type, JsonSchemaType.Null))
-                    {
+                if (resolvedSchema != null) {
+                    if (valueRequired != Required.Always && !HasFlag(resolvedSchema.Type, JsonSchemaType.Null)) {
                         resolvedSchema.Type |= JsonSchemaType.Null;
                     }
-                    if (required && resolvedSchema.Required != true)
-                    {
+                    if (required && resolvedSchema.Required != true) {
                         resolvedSchema.Required = true;
                     }
 
                     return resolvedSchema;
                 }
             }
-            if (_stack.Any(tc => tc.Type == type))
-            {
+            if (_stack.Any(tc => tc.Type == type)) {
                 throw new JsonException("Unresolved circular reference for type '{0}'. Explicitly define an Id for the type using a JsonObject/JsonArray attribute or automatically generate a type Id using the UndefinedSchemaIdHandling property.".FormatWith(CultureInfo.InvariantCulture, type));
             }
 
@@ -191,26 +174,20 @@ namespace Simula.Scripting.Json.Schema
 
             Push(new TypeSchema(type, new JsonSchema()));
 
-            if (explicitId != null)
-            {
+            if (explicitId != null) {
                 CurrentSchema.Id = explicitId;
             }
 
-            if (required)
-            {
+            if (required) {
                 CurrentSchema.Required = true;
             }
             CurrentSchema.Title = GetTitle(type);
             CurrentSchema.Description = GetDescription(type);
 
-            if (converter != null)
-            {
+            if (converter != null) {
                 CurrentSchema.Type = JsonSchemaType.Any;
-            }
-            else
-            {
-                switch (contract.ContractType)
-                {
+            } else {
+                switch (contract.ContractType) {
                     case JsonContractType.Object:
                         CurrentSchema.Type = AddNullType(JsonSchemaType.Object, valueRequired);
                         CurrentSchema.Id = GetTypeId(type, false);
@@ -225,8 +202,7 @@ namespace Simula.Scripting.Json.Schema
                         bool allowNullItem = (arrayAttribute == null || arrayAttribute.AllowNullItems);
 
                         Type collectionItemType = ReflectionUtils.GetCollectionItemType(type);
-                        if (collectionItemType != null)
-                        {
+                        if (collectionItemType != null) {
                             CurrentSchema.Items = new List<JsonSchema>();
                             CurrentSchema.Items.Add(GenerateInternal(collectionItemType, (!allowNullItem) ? Required.Always : Required.Default, false));
                         }
@@ -234,13 +210,11 @@ namespace Simula.Scripting.Json.Schema
                     case JsonContractType.Primitive:
                         CurrentSchema.Type = GetJsonSchemaType(type, valueRequired);
 
-                        if (CurrentSchema.Type == JsonSchemaType.Integer && type.IsEnum() && !type.IsDefined(typeof(FlagsAttribute), true))
-                        {
+                        if (CurrentSchema.Type == JsonSchemaType.Integer && type.IsEnum() && !type.IsDefined(typeof(FlagsAttribute), true)) {
                             CurrentSchema.Enum = new List<JToken>();
 
                             EnumInfo enumValues = EnumUtils.GetEnumValuesAndNames(type);
-                            for (int i = 0; i < enumValues.Names.Length; i++)
-                            {
+                            for (int i = 0; i < enumValues.Names.Length; i++) {
                                 ulong v = enumValues.Values[i];
                                 JToken value = JToken.FromObject(Enum.ToObject(type, v));
 
@@ -262,11 +236,9 @@ namespace Simula.Scripting.Json.Schema
                         Type valueType;
                         ReflectionUtils.GetDictionaryKeyValueTypes(type, out keyType, out valueType);
 
-                        if (keyType != null)
-                        {
+                        if (keyType != null) {
                             JsonContract keyContract = ContractResolver.ResolveContract(keyType);
-                            if (keyContract.ContractType == JsonContractType.Primitive)
-                            {
+                            if (keyContract.ContractType == JsonContractType.Primitive) {
                                 CurrentSchema.AdditionalProperties = GenerateInternal(valueType, Required.Default, false);
                             }
                         }
@@ -294,8 +266,7 @@ namespace Simula.Scripting.Json.Schema
 
         private JsonSchemaType AddNullType(JsonSchemaType type, Required valueRequired)
         {
-            if (valueRequired != Required.Always)
-            {
+            if (valueRequired != Required.Always) {
                 return type | JsonSchemaType.Null;
             }
 
@@ -310,10 +281,8 @@ namespace Simula.Scripting.Json.Schema
         private void GenerateObjectSchema(Type type, JsonObjectContract contract)
         {
             CurrentSchema.Properties = new Dictionary<string, JsonSchema>();
-            foreach (JsonProperty property in contract.Properties)
-            {
-                if (!property.Ignored)
-                {
+            foreach (JsonProperty property in contract.Properties) {
+                if (!property.Ignored) {
                     bool optional = property.NullValueHandling == NullValueHandling.Ignore ||
                                     HasFlag(property.DefaultValueHandling.GetValueOrDefault(), DefaultValueHandling.Ignore) ||
                                     property.ShouldSerialize != null ||
@@ -321,8 +290,7 @@ namespace Simula.Scripting.Json.Schema
 
                     JsonSchema propertySchema = GenerateInternal(property.PropertyType, property.Required, !optional);
 
-                    if (property.DefaultValue != null)
-                    {
+                    if (property.DefaultValue != null) {
                         propertySchema.Default = JToken.FromObject(property.DefaultValue);
                     }
 
@@ -330,8 +298,7 @@ namespace Simula.Scripting.Json.Schema
                 }
             }
 
-            if (type.IsSealed())
-            {
+            if (type.IsSealed()) {
                 CurrentSchema.AllowAdditionalProperties = false;
             }
         }
@@ -345,18 +312,15 @@ namespace Simula.Scripting.Json.Schema
 
         internal static bool HasFlag(JsonSchemaType? value, JsonSchemaType flag)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return true;
             }
 
             bool match = ((value & flag) == flag);
-            if (match)
-            {
+            if (match) {
                 return true;
             }
-            if (flag == JsonSchemaType.Integer && (value & JsonSchemaType.Float) == JsonSchemaType.Float)
-            {
+            if (flag == JsonSchemaType.Integer && (value & JsonSchemaType.Float) == JsonSchemaType.Float) {
                 return true;
             }
 
@@ -366,19 +330,16 @@ namespace Simula.Scripting.Json.Schema
         private JsonSchemaType GetJsonSchemaType(Type type, Required valueRequired)
         {
             JsonSchemaType schemaType = JsonSchemaType.None;
-            if (valueRequired != Required.Always && ReflectionUtils.IsNullable(type))
-            {
+            if (valueRequired != Required.Always && ReflectionUtils.IsNullable(type)) {
                 schemaType = JsonSchemaType.Null;
-                if (ReflectionUtils.IsNullableType(type))
-                {
+                if (ReflectionUtils.IsNullableType(type)) {
                     type = Nullable.GetUnderlyingType(type);
                 }
             }
 
             PrimitiveTypeCode typeCode = ConvertUtils.GetTypeCode(type);
 
-            switch (typeCode)
-            {
+            switch (typeCode) {
                 case PrimitiveTypeCode.Empty:
                 case PrimitiveTypeCode.Object:
                     return schemaType | JsonSchemaType.String;

@@ -1,13 +1,10 @@
 ﻿
 #if HAVE_FSHARP_TYPES
-using System.Threading;
+using Simula.Scripting.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using Simula.Scripting.Json.Serialization;
-using System.Diagnostics;
 
 namespace Simula.Scripting.Json.Utilities
 {
@@ -66,17 +63,15 @@ namespace Simula.Scripting.Json.Utilities
         private static readonly object Lock = new object();
         private static FSharpUtils? _instance;
 
-        public static FSharpUtils Instance
-        {
-            get
-            {
+        public static FSharpUtils Instance {
+            get {
                 MiscellaneousUtils.Assert(_instance != null);
                 return _instance;
             }
         }
 
-        private MethodInfo _ofSeq;
-        private Type _mapType;
+        private readonly MethodInfo _ofSeq;
+        private readonly Type _mapType;
 
         public Assembly FSharpCoreAssembly { get; private set; }
         public MethodCall<object?, object> IsUnion { get; private set; }
@@ -95,12 +90,9 @@ namespace Simula.Scripting.Json.Utilities
 
         public static void EnsureInitialized(Assembly fsharpCoreAssembly)
         {
-            if (_instance == null)
-            {
-                lock (Lock)
-                {
-                    if (_instance == null)
-                    {
+            if (_instance == null) {
+                lock (Lock) {
+                    if (_instance == null) {
                         _instance = new FSharpUtils(fsharpCoreAssembly);
                     }
                 }
@@ -110,8 +102,7 @@ namespace Simula.Scripting.Json.Utilities
         private static MethodInfo GetMethodWithNonPublicFallback(Type type, string methodName, BindingFlags bindingFlags)
         {
             MethodInfo methodInfo = type.GetMethod(methodName, bindingFlags);
-            if (methodInfo == null && (bindingFlags & BindingFlags.NonPublic) != BindingFlags.NonPublic)
-            {
+            if (methodInfo == null && (bindingFlags & BindingFlags.NonPublic) != BindingFlags.NonPublic) {
                 methodInfo = type.GetMethod(methodName, bindingFlags | BindingFlags.NonPublic);
             }
 
@@ -126,8 +117,7 @@ namespace Simula.Scripting.Json.Utilities
             MethodCall<object?, object?> call = JsonTypeReflector.ReflectionDelegateFactory.CreateMethodCall<object?>(innerMethodInfo);
             MethodCall<object?, object> invoke = JsonTypeReflector.ReflectionDelegateFactory.CreateMethodCall<object?>(invokeFunc)!;
 
-            MethodCall<object?, object> createFunction = (target, args) =>
-            {
+            MethodCall<object?, object> createFunction = (target, args) => {
                 object? result = call(target, args);
 
                 FSharpFunction f = new FSharpFunction(result, invoke);
@@ -159,8 +149,7 @@ namespace Simula.Scripting.Json.Utilities
             ConstructorInfo ctor = genericMapType.GetConstructor(new[] { typeof(IEnumerable<Tuple<TKey, TValue>>) });
             ObjectConstructor<object> ctorDelegate = JsonTypeReflector.ReflectionDelegateFactory.CreateParameterizedConstructor(ctor);
 
-            ObjectConstructor<object> creator = args =>
-            {
+            ObjectConstructor<object> creator = args => {
                 IEnumerable<KeyValuePair<TKey, TValue>> values = (IEnumerable<KeyValuePair<TKey, TValue>>)args[0]!;
                 IEnumerable<Tuple<TKey, TValue>> tupleValues = values.Select(kv => new Tuple<TKey, TValue>(kv.Key, kv.Value));
 

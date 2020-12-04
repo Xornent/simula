@@ -1,3 +1,7 @@
+using Simula.TeX.Atoms;
+using Simula.TeX.Colors;
+using Simula.TeX.Exceptions;
+using Simula.TeX.Parsers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -5,11 +9,6 @@ using System.Linq;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Media;
-using Simula.TeX.Atoms;
-using Simula.TeX.Colors;
-using Simula.TeX.Exceptions;
-using Simula.TeX.Parsers;
-using Simula.TeX.Utils;
 
 namespace Simula.TeX
 {
@@ -70,8 +69,7 @@ namespace Simula.TeX
             //
             // If start application isn't WPF, pack isn't registered by defaultTexFontParser
             //
-            if (Application.ResourceAssembly == null)
-            {
+            if (Application.ResourceAssembly == null) {
                 Application.ResourceAssembly = Assembly.GetExecutingAssembly();
                 if (!UriParser.IsKnownScheme("pack"))
                     UriParser.Register(new GenericUriParser(GenericUriParserOptions.GenericAuthority), "pack", -1);
@@ -86,19 +84,15 @@ namespace Simula.TeX
             predefinedFormulasParser.Parse(predefinedFormulas);
         }
 
-        internal static string[][] DelimiterNames
-        {
+        internal static string[][] DelimiterNames {
             get { return delimiterNames; }
         }
 
         internal static string GetDelimeterMapping(char character)
         {
-            try
-            {
+            try {
                 return delimeters[character];
-            }
-            catch (KeyNotFoundException)
-            {
+            } catch (KeyNotFoundException) {
                 throw new DelimiterMappingNotFoundException(character);
             }
         }
@@ -146,13 +140,12 @@ namespace Simula.TeX
 
         public TexFormulaParser(
             IReadOnlyDictionary<string, IColorParser> colorModelParsers,
-            IColorParser defaultColorParser) : this(StandardCommands.Dictionary, colorModelParsers, defaultColorParser)
-        {}
+            IColorParser defaultColorParser) : this(StandardCommands.Dictionary, colorModelParsers, defaultColorParser) { }
 
         public TexFormulaParser() : this(
             StandardColorParsers.Dictionary,
             PredefinedColorParser.Instance)
-        {}
+        { }
 
         public TexFormula Parse(string value, string? textStyle = null) =>
             Parse(new SourceSpan("User input", value, 0, value.Length), textStyle);
@@ -187,22 +180,15 @@ namespace Simula.TeX
                 throw new TexParseException($"Cannot find closing delimiter; got {lastDelimiter} instead");
 
             Atom bodyAtom;
-            if (bodyRow == null)
-            {
+            if (bodyRow == null) {
                 bodyAtom = new RowAtom(source);
-            }
-            else if (bodyRow.Elements.Count > 2)
-            {
+            } else if (bodyRow.Elements.Count > 2) {
                 var row = bodyRow.Elements.Take(bodyRow.Elements.Count - 1)
                     .Aggregate(new RowAtom(source), (r, atom) => r.Add(atom));
                 bodyAtom = row;
-            }
-            else if (bodyRow.Elements.Count == 2)
-            {
+            } else if (bodyRow.Elements.Count == 2) {
                 bodyAtom = bodyRow.Elements[0];
-            }
-            else
-            {
+            } else {
                 throw new NotSupportedException($"Cannot convert {bodyRow} to fenced atom body");
             }
 
@@ -220,21 +206,16 @@ namespace Simula.TeX
             var closedDelimiter = false;
             var skipWhiteSpace = ShouldSkipWhiteSpace(textStyle);
             var initialPosition = position;
-            while (position < value.Length && !(allowClosingDelimiter && closedDelimiter))
-            {
+            while (position < value.Length && !(allowClosingDelimiter && closedDelimiter)) {
                 char ch = value[position];
                 var source = value.Segment(position, 1);
-                if (IsWhiteSpace(ch))
-                {
-                    if (!skipWhiteSpace)
-                    {
+                if (IsWhiteSpace(ch)) {
+                    if (!skipWhiteSpace) {
                         formula.Add(new SpaceAtom(source), source);
                     }
 
                     position++;
-                }
-                else if (ch == escapeChar)
-                {
+                } else if (ch == escapeChar) {
                     ProcessEscapeSequence(
                         formula,
                         value,
@@ -242,9 +223,7 @@ namespace Simula.TeX
                         allowClosingDelimiter,
                         ref closedDelimiter,
                         environment);
-                }
-                else if (ch == leftGroupChar)
-                {
+                } else if (ch == leftGroupChar) {
                     var groupValue = ReadElement(value, ref position);
                     var parsedGroup = Parse(groupValue, textStyle, environment.CreateChildEnvironment());
                     var innerGroupAtom = parsedGroup.RootAtom ?? new RowAtom(groupValue);
@@ -253,28 +232,21 @@ namespace Simula.TeX
                         innerGroupAtom,
                         TexAtomType.Ordinary,
                         TexAtomType.Ordinary);
-                    var scriptsAtom = this.AttachScripts(formula, value, ref position, groupAtom, true, environment);
+                    var scriptsAtom = AttachScripts(formula, value, ref position, groupAtom, true, environment);
                     formula.Add(scriptsAtom, value.Segment(initialPosition, position - initialPosition));
-                }
-                else if (ch == rightGroupChar)
-                {
+                } else if (ch == rightGroupChar) {
                     throw new TexParseException("Found a closing '" + rightGroupChar
                         + "' without an opening '" + leftGroupChar + "'!");
-                }
-                else if (ch == superScriptChar || ch == subScriptChar || ch == primeChar)
-                {
+                } else if (ch == superScriptChar || ch == subScriptChar || ch == primeChar) {
                     if (position == 0)
                         throw new TexParseException("Every script needs a base: \""
                             + superScriptChar + "\", \"" + subScriptChar + "\" and \""
                             + primeChar + "\" can't be the first character!");
                     else
                         throw new TexParseException("Double scripts found! Try using more braces.");
-                }
-                else
-                {
+                } else {
                     var character = ConvertCharacter(formula, ref position, source, environment);
-                    if (character != null)
-                    {
+                    if (character != null) {
                         var scriptsAtom = AttachScripts(
                             formula,
                             value,
@@ -296,12 +268,11 @@ namespace Simula.TeX
 
             var position = 0;
             var initialPosition = position;
-            while (position < value.Length)
-            {
+            while (position < value.Length) {
                 var ch = value[position];
                 var source = value.Segment(position, 1);
                 var atom = IsWhiteSpace(ch)
-                    ? (Atom) new SpaceAtom(source)
+                    ? (Atom)new SpaceAtom(source)
                     : new CharAtom(source, ch, textStyle);
                 position++;
                 formula.Add(atom, value.Segment(initialPosition, position - initialPosition));
@@ -318,8 +289,7 @@ namespace Simula.TeX
             var group = 0;
             position++;
             var start = position;
-            while (position < value.Length && !(value[position] == closeChar && group == 0))
-            {
+            while (position < value.Length && !(value[position] == closeChar && group == 0)) {
                 if (value[position] == openChar)
                     group++;
                 else if (value[position] == closeChar)
@@ -327,8 +297,7 @@ namespace Simula.TeX
                 position++;
             }
 
-            if (position == value.Length)
-            {
+            if (position == value.Length) {
                 // Reached end of formula but group has not been closed.
                 throw new TexParseException("Illegal end,  missing '" + closeChar + "'!");
             }
@@ -359,16 +328,13 @@ namespace Simula.TeX
 
             position++;
             var start = position;
-            while (position < value.Length)
-            {
+            while (position < value.Length) {
                 var ch = value[position];
                 var isEnd = position == value.Length - 1;
-                if (!char.IsLetter(ch) || isEnd)
-                {
+                if (!char.IsLetter(ch) || isEnd) {
                     // Escape sequence has ended
                     // Or it's a symbol. Assuming in this case it will only be a single char.
-                    if ((isEnd && char.IsLetter(ch)) || position - start == 0)
-                    {
+                    if ((isEnd && char.IsLetter(ch)) || position - start == 0) {
                         position++;
                     }
                     break;
@@ -391,8 +357,7 @@ namespace Simula.TeX
             string delimiterName;
             if (delimiter.Length == 1)
                 delimiterName = GetDelimeterMapping(delimiter[0]);
-            else
-            {
+            else {
                 if (delimiter[0] != escapeChar)
                     throw new Exception($"Incorrect parser state: delimiter should start from {escapeChar}: {delimiter}");
 
@@ -450,10 +415,8 @@ namespace Simula.TeX
             int start = position - command.Length;
 
             SourceSpan source;
-            switch (command)
-            {
-                case "frac":
-                    {
+            switch (command) {
+                case "frac": {
                         var numeratorFormula = Parse(
                             ReadElement(value, ref position),
                             formula.TextStyle,
@@ -471,8 +434,7 @@ namespace Simula.TeX
                                 denominatorFormula.RootAtom,
                                 true));
                     }
-                case "left":
-                    {
+                case "left": {
                         SkipWhiteSpace(value, ref position);
                         if (position == value.Length)
                             throw new TexParseException("`left` command should be passed a delimiter");
@@ -485,8 +447,7 @@ namespace Simula.TeX
                             AtomAppendMode.Add,
                             new FencedAtom(source, internals.Body, opening, closing));
                     }
-                case "overline":
-                    {
+                case "overline": {
                         var overlineFormula = Parse(
                             ReadElement(value, ref position),
                             formula.TextStyle,
@@ -496,8 +457,7 @@ namespace Simula.TeX
                             AtomAppendMode.Add,
                             new OverlinedAtom(source, overlineFormula.RootAtom));
                     }
-                case "right":
-                    {
+                case "right": {
                         if (!allowClosingDelimiter)
                             throw new TexParseException("`right` command is not allowed without `left`");
 
@@ -510,14 +470,12 @@ namespace Simula.TeX
                         closedDelimiter = true;
                         return new Tuple<AtomAppendMode, Atom?>(AtomAppendMode.Add, closing);
                     }
-                case "sqrt":
-                    {
+                case "sqrt": {
                         // Command is radical.
                         SkipWhiteSpace(value, ref position);
 
                         TexFormula? degreeFormula = null;
-                        if (value.Length > position && value[position] == leftBracketChar)
-                        {
+                        if (value.Length > position && value[position] == leftBracketChar) {
                             // Degree of radical is specified.
                             degreeFormula = Parse(
                                 ReadElementGroup(value, ref position, leftBracketChar, rightBracketChar),
@@ -525,7 +483,7 @@ namespace Simula.TeX
                                 environment.CreateChildEnvironment());
                         }
 
-                        var sqrtFormula = this.Parse(
+                        var sqrtFormula = Parse(
                             ReadElement(value, ref position),
                             formula.TextStyle,
                             environment.CreateChildEnvironment());
@@ -536,35 +494,32 @@ namespace Simula.TeX
                             AtomAppendMode.Add,
                             new Radical(source, sqrtFormula.RootAtom, degreeFormula?.RootAtom));
                     }
-                case "color":
-                {
-                    var color = ReadColorModelData(value, ref position);
+                case "color": {
+                        var color = ReadColorModelData(value, ref position);
 
-                    var bodyValue = ReadElement(value, ref position);
-                    var bodyFormula = Parse(bodyValue, formula.TextStyle, environment.CreateChildEnvironment());
-                    source = value.Segment(start, position - start);
+                        var bodyValue = ReadElement(value, ref position);
+                        var bodyFormula = Parse(bodyValue, formula.TextStyle, environment.CreateChildEnvironment());
+                        source = value.Segment(start, position - start);
 
-                    return new Tuple<AtomAppendMode, Atom?>(
-                        AtomAppendMode.Add,
-                        new StyledAtom(source, bodyFormula.RootAtom, null, new SolidColorBrush(color)));
-                }
-                case "colorbox":
-                {
-                    var color = ReadColorModelData(value, ref position);
+                        return new Tuple<AtomAppendMode, Atom?>(
+                            AtomAppendMode.Add,
+                            new StyledAtom(source, bodyFormula.RootAtom, null, new SolidColorBrush(color)));
+                    }
+                case "colorbox": {
+                        var color = ReadColorModelData(value, ref position);
 
-                    var bodyValue = ReadElement(value, ref position);
-                    var bodyFormula = Parse(bodyValue, formula.TextStyle, environment.CreateChildEnvironment());
-                    source = value.Segment(start, position - start);
+                        var bodyValue = ReadElement(value, ref position);
+                        var bodyFormula = Parse(bodyValue, formula.TextStyle, environment.CreateChildEnvironment());
+                        source = value.Segment(start, position - start);
 
-                    return new Tuple<AtomAppendMode, Atom?>(
-                        AtomAppendMode.Add,
-                        new StyledAtom(source, bodyFormula.RootAtom, new SolidColorBrush(color), null));
-                }
-                }
+                        return new Tuple<AtomAppendMode, Atom?>(
+                            AtomAppendMode.Add,
+                            new StyledAtom(source, bodyFormula.RootAtom, new SolidColorBrush(color), null));
+                    }
+            }
 
             if (environment.AvailableCommands.TryGetValue(command, out var parser)
-                || _commandRegistry.TryGetValue(command, out parser))
-            {
+                || _commandRegistry.TryGetValue(command, out parser)) {
                 var context = new CommandContext(this, formula, environment, value, start, position);
                 var parseResult = parser.ProcessCommand(context);
                 if (parseResult.NextPosition < position)
@@ -617,42 +572,30 @@ namespace Simula.TeX
             var command = commandSpan.ToString();
             var formulaSource = new SourceSpan(value.SourceName, value.Source, initialSrcPosition, commandSpan.End);
 
-            if (SymbolAtom.TryGetAtom(commandSpan, out SymbolAtom? symbolAtom))
-            {
+            if (SymbolAtom.TryGetAtom(commandSpan, out SymbolAtom? symbolAtom)) {
                 // Symbol was found.
 
-                if (symbolAtom.Type == TexAtomType.Accent)
-                {
+                if (symbolAtom.Type == TexAtomType.Accent) {
                     var helper = new TexFormulaHelper(formula, formulaSource);
                     TexFormula accentFormula = ReadScript(formula, value, ref position, environment);
                     helper.AddAccent(accentFormula, symbolAtom.Name);
-                }
-                else if (symbolAtom.Type == TexAtomType.BigOperator)
-                {
+                } else if (symbolAtom.Type == TexAtomType.BigOperator) {
                     var opAtom = new BigOperatorAtom(formulaSource, symbolAtom, null, null);
                     formula.Add(AttachScripts(formula, value, ref position, opAtom, true, environment), formulaSource);
-                }
-                else
-                {
+                } else {
                     formula.Add(
                         AttachScripts(formula, value, ref position, symbolAtom, true, environment), formulaSource);
                 }
-            }
-            else if (predefinedFormulas.TryGetValue(command, out var factory))
-            {
+            } else if (predefinedFormulas.TryGetValue(command, out var factory)) {
                 // Predefined formula was found.
                 var predefinedFormula = factory(formulaSource);
                 var atom = AttachScripts(formula, value, ref position, predefinedFormula!.RootAtom!, true, environment); // Nullable TODO: This might need null checking
                 formula.Add(atom, formulaSource);
-            }
-            else if (command.Equals("nbsp"))
-            {
+            } else if (command.Equals("nbsp")) {
                 // Space was found.
                 var atom = AttachScripts(formula, value, ref position, new SpaceAtom(formulaSource), true, environment);
                 formula.Add(atom, formulaSource);
-            }
-            else if (textStyles.Contains(command))
-            {
+            } else if (textStyles.Contains(command)) {
                 // Text style was found.
                 SkipWhiteSpace(value, ref position);
 
@@ -664,11 +607,9 @@ namespace Simula.TeX
                 var atom = styledFormula.RootAtom ?? new NullAtom(source);
                 var commandAtom = AttachScripts(formula, value, ref position, atom, true, environment);
                 formula.Add(commandAtom, source);
-            }
-            else if (embeddedCommands.Contains(command)
-                 || environment.AvailableCommands.ContainsKey(command)
-                 || _commandRegistry.ContainsKey(command))
-            {
+            } else if (embeddedCommands.Contains(command)
+                   || environment.AvailableCommands.ContainsKey(command)
+                   || _commandRegistry.ContainsKey(command)) {
                 // Command was found.
                 var (appendMode, commandAtom) = ProcessCommand(
                     formula,
@@ -679,8 +620,7 @@ namespace Simula.TeX
                     ref closedDelimiter,
                     environment);
 
-                if (commandAtom != null)
-                {
+                if (commandAtom != null) {
                     commandAtom = allowClosingDelimiter
                         ? commandAtom
                         : AttachScripts(
@@ -696,8 +636,7 @@ namespace Simula.TeX
                         formulaSource.Source,
                         formulaSource.Start,
                         commandAtom.Source?.End ?? position);
-                    switch (appendMode)
-                    {
+                    switch (appendMode) {
                         case AtomAppendMode.Add:
                             formula.Add(commandAtom, source);
                             break;
@@ -706,9 +645,7 @@ namespace Simula.TeX
                             break;
                     }
                 }
-            }
-            else
-            {
+            } else {
                 // Escape sequence is invalid.
                 throw new TexParseException("Unknown symbol or command or predefined TeXFormula: '" + command + "'");
             }
@@ -722,8 +659,7 @@ namespace Simula.TeX
             bool skipWhiteSpace,
             ICommandEnvironment environment)
         {
-            if (skipWhiteSpace)
-            {
+            if (skipWhiteSpace) {
                 SkipWhiteSpace(value, ref position);
             }
 
@@ -734,14 +670,11 @@ namespace Simula.TeX
             // Check for prime marks.
             var primesRowAtom = new RowAtom(new SourceSpan(value.SourceName, value.Source, position, 0));
             int i = position;
-            while (i < value.Length)
-            {
-                if (value[i] == primeChar)
-                {
+            while (i < value.Length) {
+                if (value[i] == primeChar) {
                     primesRowAtom = primesRowAtom.Add(SymbolAtom.GetAtom("prime", value.Segment(i, 1)));
                     position++;
-                }
-                else if (!IsWhiteSpace(value[i]))
+                } else if (!IsWhiteSpace(value[i]))
                     break;
                 i++;
             }
@@ -763,29 +696,24 @@ namespace Simula.TeX
             TexFormula? subscriptFormula = null;
 
             var ch = value[position];
-            if (ch == superScriptChar)
-            {
+            if (ch == superScriptChar) {
                 // Attach superscript.
                 position++;
                 superscriptFormula = ReadScript(formula, value, ref position, environment);
 
                 SkipWhiteSpace(value, ref position);
-                if (position < value.Length && value[position] == subScriptChar)
-                {
+                if (position < value.Length && value[position] == subScriptChar) {
                     // Attach subscript also.
                     position++;
                     subscriptFormula = ReadScript(formula, value, ref position, environment);
                 }
-            }
-            else if (ch == subScriptChar)
-            {
+            } else if (ch == subScriptChar) {
                 // Add subscript.
                 position++;
                 subscriptFormula = ReadScript(formula, value, ref position, environment);
 
                 SkipWhiteSpace(value, ref position);
-                if (position < value.Length && value[position] == superScriptChar)
-                {
+                if (position < value.Length && value[position] == superScriptChar) {
                     // Attach superscript also.
                     position++;
                     superscriptFormula = ReadScript(formula, value, ref position, environment);
@@ -798,11 +726,9 @@ namespace Simula.TeX
             // Check whether to return Big Operator or Scripts.
             var subscriptAtom = subscriptFormula?.RootAtom;
             var superscriptAtom = superscriptFormula?.RootAtom;
-            if (atom.GetRightType() == TexAtomType.BigOperator)
-            {
+            if (atom.GetRightType() == TexAtomType.BigOperator) {
                 var source = value.Segment(atom.Source!.Start, position - atom.Source.Start);
-                if (atom is BigOperatorAtom typedAtom)
-                {
+                if (atom is BigOperatorAtom typedAtom) {
                     return new BigOperatorAtom(
                         source,
                         typedAtom.BaseAtom,
@@ -812,9 +738,7 @@ namespace Simula.TeX
                 }
 
                 return new BigOperatorAtom(source, atom, subscriptAtom, superscriptAtom);
-            }
-            else
-            {
+            } else {
                 var source = new SourceSpan(
                     value.SourceName,
                     value.Source,
@@ -833,32 +757,26 @@ namespace Simula.TeX
         {
             var character = source[0];
             position++;
-            if (IsSymbol(character) && formula.TextStyle != TexUtilities.TextStyleName)
-            {
+            if (IsSymbol(character) && formula.TextStyle != TexUtilities.TextStyleName) {
                 // Character is symbol.
                 var symbolName = symbols.ElementAtOrDefault(character);
-                if (string.IsNullOrEmpty(symbolName))
-                {
+                if (string.IsNullOrEmpty(symbolName)) {
                     if (environment.ProcessUnknownCharacter(formula, character))
                         return null;
 
                     throw new TexParseException($"Unknown character : '{character}'");
                 }
 
-                try
-                {
+                try {
                     return SymbolAtom.GetAtom(symbolName, source);
-                }
-                catch (SymbolNotFoundException e)
-                {
+                } catch (SymbolNotFoundException e) {
                     throw new TexParseException("The character '"
                             + character.ToString()
                             + "' was mapped to an unknown symbol with the name '"
-                            + (string)symbolName + "'!", e);
+                            + symbolName + "'!", e);
                 }
-            }
-            else // Character is alpha-numeric or should be rendered as text.
-            {
+            } else // Character is alpha-numeric or should be rendered as text.
+              {
                 return new CharAtom(source, character, formula.TextStyle);
             }
         }

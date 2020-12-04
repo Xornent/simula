@@ -1,11 +1,6 @@
 ﻿
-using System;
-using System.Globalization;
-using System.Reflection;
-using System.Runtime.Serialization;
-using System.Security;
 using Simula.Scripting.Json.Linq;
-using Simula.Scripting.Json.Utilities;
+using System;
 
 namespace Simula.Scripting.Json.Serialization
 {
@@ -16,36 +11,29 @@ namespace Simula.Scripting.Json.Serialization
         public Required? ItemRequired { get; set; }
         public NullValueHandling? ItemNullValueHandling { get; set; }
         public JsonPropertyCollection Properties { get; }
-        public JsonPropertyCollection CreatorParameters
-        {
-            get
-            {
-                if (_creatorParameters == null)
-                {
+        public JsonPropertyCollection CreatorParameters {
+            get {
+                if (_creatorParameters == null) {
                     _creatorParameters = new JsonPropertyCollection(UnderlyingType);
                 }
 
                 return _creatorParameters;
             }
         }
-        public ObjectConstructor<object>? OverrideCreator
-        {
+        public ObjectConstructor<object>? OverrideCreator {
             get => _overrideCreator;
             set => _overrideCreator = value;
         }
 
-        internal ObjectConstructor<object>? ParameterizedCreator
-        {
+        internal ObjectConstructor<object>? ParameterizedCreator {
             get => _parameterizedCreator;
             set => _parameterizedCreator = value;
         }
         public ExtensionDataSetter? ExtensionDataSetter { get; set; }
         public ExtensionDataGetter? ExtensionDataGetter { get; set; }
-        public Type? ExtensionDataValueType
-        {
+        public Type? ExtensionDataValueType {
             get => _extensionDataValueType;
-            set
-            {
+            set {
                 _extensionDataValueType = value;
                 ExtensionDataIsJToken = (value != null && typeof(JToken).IsAssignableFrom(value));
             }
@@ -59,24 +47,16 @@ namespace Simula.Scripting.Json.Serialization
         private JsonPropertyCollection? _creatorParameters;
         private Type? _extensionDataValueType;
 
-        internal bool HasRequiredOrDefaultValueProperties
-        {
-            get
-            {
-                if (_hasRequiredOrDefaultValueProperties == null)
-                {
+        internal bool HasRequiredOrDefaultValueProperties {
+            get {
+                if (_hasRequiredOrDefaultValueProperties == null) {
                     _hasRequiredOrDefaultValueProperties = false;
 
-                    if (ItemRequired.GetValueOrDefault(Required.Default) != Required.Default)
-                    {
+                    if (ItemRequired.GetValueOrDefault(Required.Default) != Required.Default) {
                         _hasRequiredOrDefaultValueProperties = true;
-                    }
-                    else
-                    {
-                        foreach (JsonProperty property in Properties)
-                        {
-                            if (property.Required != Required.Default || (property.DefaultValueHandling & DefaultValueHandling.Populate) == DefaultValueHandling.Populate)
-                            {
+                    } else {
+                        foreach (JsonProperty property in Properties) {
+                            if (property.Required != Required.Default || (property.DefaultValueHandling & DefaultValueHandling.Populate) == DefaultValueHandling.Populate) {
                                 _hasRequiredOrDefaultValueProperties = true;
                                 break;
                             }

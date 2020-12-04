@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
 namespace Simula.TeX
 {
     // Extension character that contains character information for each of its parts.
@@ -10,32 +5,28 @@ namespace Simula.TeX
     {
         public ExtensionChar(CharInfo? top, CharInfo? middle, CharInfo? bottom, CharInfo? repeat)
         {
-            this.Top = top;
-            this.Middle = middle;
-            this.Repeat = repeat;
-            this.Bottom = bottom;
+            Top = top;
+            Middle = middle;
+            Repeat = repeat;
+            Bottom = bottom;
         }
 
-        public CharInfo? Top
-        {
+        public CharInfo? Top {
             get;
             private set;
         }
 
-        public CharInfo? Middle
-        {
+        public CharInfo? Middle {
             get;
             private set;
         }
 
-        public CharInfo? Bottom
-        {
+        public CharInfo? Bottom {
             get;
             private set;
         }
 
-        public CharInfo? Repeat
-        {
+        public CharInfo? Repeat {
             get;
             private set;
         }

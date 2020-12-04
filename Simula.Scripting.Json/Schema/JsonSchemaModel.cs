@@ -1,8 +1,8 @@
 ﻿
-using System;
-using System.Collections.Generic;
 using Simula.Scripting.Json.Linq;
 using Simula.Scripting.Json.Utilities;
+using System;
+using System.Collections.Generic;
 
 #nullable disable
 
@@ -47,8 +47,7 @@ namespace Simula.Scripting.Json.Schema
         {
             JsonSchemaModel model = new JsonSchemaModel();
 
-            foreach (JsonSchema schema in schemata)
-            {
+            foreach (JsonSchema schema in schemata) {
                 Combine(model, schema);
             }
 
@@ -75,10 +74,8 @@ namespace Simula.Scripting.Json.Schema
             model.AllowAdditionalProperties = model.AllowAdditionalProperties && schema.AllowAdditionalProperties;
             model.AllowAdditionalItems = model.AllowAdditionalItems && schema.AllowAdditionalItems;
             model.UniqueItems = model.UniqueItems || schema.UniqueItems;
-            if (schema.Enum != null)
-            {
-                if (model.Enum == null)
-                {
+            if (schema.Enum != null) {
+                if (model.Enum == null) {
                     model.Enum = new List<JToken>();
                 }
 
@@ -86,10 +83,8 @@ namespace Simula.Scripting.Json.Schema
             }
             model.Disallow = model.Disallow | (schema.Disallow ?? JsonSchemaType.None);
 
-            if (schema.Pattern != null)
-            {
-                if (model.Patterns == null)
-                {
+            if (schema.Pattern != null) {
+                if (model.Patterns == null) {
                     model.Patterns = new List<string>();
                 }
 

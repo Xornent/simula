@@ -22,6 +22,6 @@ namespace Simula.TeX.Colors
         }
 
         protected override byte GetByteValue(double val) =>
-            (byte) Math.Round(255.0 * val, MidpointRounding.AwayFromZero);
+            (byte)Math.Round(255.0 * val, MidpointRounding.AwayFromZero);
     }
 }

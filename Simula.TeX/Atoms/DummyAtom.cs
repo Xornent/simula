@@ -9,8 +9,8 @@ namespace Simula.TeX.Atoms
         public DummyAtom(TexAtomType type, Atom atom, bool isTextSymbol)
             : base(atom.Source, type)
         {
-            this.Atom = atom;
-            this.IsTextSymbol = isTextSymbol;
+            Atom = atom;
+            IsTextSymbol = isTextSymbol;
         }
 
         public DummyAtom(Atom atom)
@@ -20,9 +20,8 @@ namespace Simula.TeX.Atoms
 
         public Atom WithPreviousAtom(DummyAtom? previousAtom)
         {
-            if (this.Atom is IRow row)
-            {
-                return new DummyAtom(this.Type, row.WithPreviousAtom(previousAtom), this.IsTextSymbol);
+            if (Atom is IRow row) {
+                return new DummyAtom(Type, row.WithPreviousAtom(previousAtom), IsTextSymbol);
             }
 
             return this;
@@ -36,30 +35,29 @@ namespace Simula.TeX.Atoms
         public bool IsTextSymbol { get; }
 
         public DummyAtom WithType(TexAtomType type) =>
-            new DummyAtom(type, this.Atom, this.IsTextSymbol);
+            new DummyAtom(type, Atom, IsTextSymbol);
 
         public DummyAtom AsTextSymbol() =>
-            this.IsTextSymbol ? this : new DummyAtom(this.Type, this.Atom, true);
+            IsTextSymbol ? this : new DummyAtom(Type, Atom, true);
 
-        public bool IsKern
-        {
-            get { return this.Atom is SpaceAtom; }
+        public bool IsKern {
+            get { return Atom is SpaceAtom; }
         }
 
         public Result<CharFont> GetCharFont(ITeXFont texFont) =>
-            ((CharSymbol)this.Atom).GetCharFont(texFont);
+            ((CharSymbol)Atom).GetCharFont(texFont);
 
         protected override Box CreateBoxCore(TexEnvironment environment) =>
-            this.Atom.CreateBox(environment);
+            Atom.CreateBox(environment);
 
         public override TexAtomType GetLeftType()
         {
-            return this.Type == TexAtomType.None ? this.Atom.GetLeftType() : this.Type;
+            return Type == TexAtomType.None ? Atom.GetLeftType() : Type;
         }
 
         public override TexAtomType GetRightType()
         {
-            return this.Type == TexAtomType.None ? this.Atom.GetRightType() : this.Type;
+            return Type == TexAtomType.None ? Atom.GetRightType() : Type;
         }
     }
 }

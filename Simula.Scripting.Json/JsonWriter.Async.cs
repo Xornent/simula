@@ -19,17 +19,14 @@ namespace Simula.Scripting.Json
             State oldState = _currentState;
             State newState = StateArray[(int)tokenBeingWritten][(int)oldState];
 
-            if (newState == State.Error)
-            {
+            if (newState == State.Error) {
                 throw JsonWriterException.Create(this, "Token {0} in state {1} would result in an invalid JSON object.".FormatWith(CultureInfo.InvariantCulture, tokenBeingWritten.ToString(), oldState.ToString()), null);
             }
 
             _currentState = newState;
 
-            if (_formatting == Formatting.Indented)
-            {
-                switch (oldState)
-                {
+            if (_formatting == Formatting.Indented) {
+                switch (oldState) {
                     case State.Start:
                         break;
                     case State.Property:
@@ -41,8 +38,7 @@ namespace Simula.Scripting.Json
                     case State.Constructor:
                         return tokenBeingWritten == JsonToken.Comment ? WriteIndentAsync(cancellationToken) : AutoCompleteAsync(cancellationToken);
                     case State.Object:
-                        switch (tokenBeingWritten)
-                        {
+                        switch (tokenBeingWritten) {
                             case JsonToken.Comment:
                                 break;
                             case JsonToken.PropertyName:
@@ -53,18 +49,14 @@ namespace Simula.Scripting.Json
 
                         break;
                     default:
-                        if (tokenBeingWritten == JsonToken.PropertyName)
-                        {
+                        if (tokenBeingWritten == JsonToken.PropertyName) {
                             return WriteIndentAsync(cancellationToken);
                         }
 
                         break;
                 }
-            }
-            else if (tokenBeingWritten != JsonToken.Comment)
-            {
-                switch (oldState)
-                {
+            } else if (tokenBeingWritten != JsonToken.Comment) {
+                switch (oldState) {
                     case State.Object:
                     case State.Array:
                     case State.Constructor:
@@ -82,8 +74,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task CloseAsync(CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -92,8 +83,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task FlushAsync(CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -102,8 +92,7 @@ namespace Simula.Scripting.Json
         }
         protected virtual Task WriteEndAsync(JsonToken token, CancellationToken cancellationToken)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -112,8 +101,7 @@ namespace Simula.Scripting.Json
         }
         protected virtual Task WriteIndentAsync(CancellationToken cancellationToken)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -122,8 +110,7 @@ namespace Simula.Scripting.Json
         }
         protected virtual Task WriteValueDelimiterAsync(CancellationToken cancellationToken)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -132,8 +119,7 @@ namespace Simula.Scripting.Json
         }
         protected virtual Task WriteIndentSpaceAsync(CancellationToken cancellationToken)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -142,8 +128,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteRawAsync(string? json, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -152,8 +137,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteEndAsync(CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -164,8 +148,7 @@ namespace Simula.Scripting.Json
         internal Task WriteEndInternalAsync(CancellationToken cancellationToken)
         {
             JsonContainerType type = Peek();
-            switch (type)
-            {
+            switch (type) {
                 case JsonContainerType.Object:
                     return WriteEndObjectAsync(cancellationToken);
                 case JsonContainerType.Array:
@@ -173,8 +156,7 @@ namespace Simula.Scripting.Json
                 case JsonContainerType.Constructor:
                     return WriteEndConstructorAsync(cancellationToken);
                 default:
-                    if (cancellationToken.IsCancellationRequested)
-                    {
+                    if (cancellationToken.IsCancellationRequested) {
                         return cancellationToken.FromCanceled();
                     }
 
@@ -184,41 +166,33 @@ namespace Simula.Scripting.Json
 
         internal Task InternalWriteEndAsync(JsonContainerType type, CancellationToken cancellationToken)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
             int levelsToComplete = CalculateLevelsToComplete(type);
-            while (levelsToComplete-- > 0)
-            {
+            while (levelsToComplete-- > 0) {
                 JsonToken token = GetCloseTokenForType(Pop());
 
                 Task t;
-                if (_currentState == State.Property)
-                {
+                if (_currentState == State.Property) {
                     t = WriteNullAsync(cancellationToken);
-                    if (!t.IsCompletedSucessfully())
-                    {
+                    if (!t.IsCompletedSucessfully()) {
                         return AwaitProperty(t, levelsToComplete, token, cancellationToken);
                     }
                 }
 
-                if (_formatting == Formatting.Indented)
-                {
-                    if (_currentState != State.ObjectStart && _currentState != State.ArrayStart)
-                    {
+                if (_formatting == Formatting.Indented) {
+                    if (_currentState != State.ObjectStart && _currentState != State.ArrayStart) {
                         t = WriteIndentAsync(cancellationToken);
-                        if (!t.IsCompletedSucessfully())
-                        {
+                        if (!t.IsCompletedSucessfully()) {
                             return AwaitIndent(t, levelsToComplete, token, cancellationToken);
                         }
                     }
                 }
 
                 t = WriteEndAsync(token, cancellationToken);
-                if (!t.IsCompletedSucessfully())
-                {
+                if (!t.IsCompletedSucessfully()) {
                     return AwaitEnd(t, levelsToComplete, cancellationToken);
                 }
 
@@ -229,10 +203,8 @@ namespace Simula.Scripting.Json
             async Task AwaitProperty(Task task, int LevelsToComplete, JsonToken token, CancellationToken CancellationToken)
             {
                 await task.ConfigureAwait(false);
-                if (_formatting == Formatting.Indented)
-                {
-                    if (_currentState != State.ObjectStart && _currentState != State.ArrayStart)
-                    {
+                if (_formatting == Formatting.Indented) {
+                    if (_currentState != State.ObjectStart && _currentState != State.ArrayStart) {
                         await WriteIndentAsync(CancellationToken).ConfigureAwait(false);
                     }
                 }
@@ -266,19 +238,15 @@ namespace Simula.Scripting.Json
 
             async Task AwaitRemaining(int LevelsToComplete, CancellationToken CancellationToken)
             {
-                while (LevelsToComplete-- > 0)
-                {
+                while (LevelsToComplete-- > 0) {
                     JsonToken token = GetCloseTokenForType(Pop());
 
-                    if (_currentState == State.Property)
-                    {
+                    if (_currentState == State.Property) {
                         await WriteNullAsync(CancellationToken).ConfigureAwait(false);
                     }
 
-                    if (_formatting == Formatting.Indented)
-                    {
-                        if (_currentState != State.ObjectStart && _currentState != State.ArrayStart)
-                        {
+                    if (_formatting == Formatting.Indented) {
+                        if (_currentState != State.ObjectStart && _currentState != State.ArrayStart) {
                             await WriteIndentAsync(CancellationToken).ConfigureAwait(false);
                         }
                     }
@@ -291,8 +259,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteEndArrayAsync(CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -301,8 +268,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteEndConstructorAsync(CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -311,8 +277,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteEndObjectAsync(CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -321,8 +286,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteNullAsync(CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -331,8 +295,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WritePropertyNameAsync(string name, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -341,8 +304,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WritePropertyNameAsync(string name, bool escape, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -352,8 +314,7 @@ namespace Simula.Scripting.Json
 
         internal Task InternalWritePropertyNameAsync(string name, CancellationToken cancellationToken)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -362,8 +323,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteStartArrayAsync(CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -379,8 +339,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteCommentAsync(string? text, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -394,8 +353,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteRawValueAsync(string? json, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -404,8 +362,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteStartConstructorAsync(string name, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -414,8 +371,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteStartObjectAsync(CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -438,13 +394,11 @@ namespace Simula.Scripting.Json
         }
         public Task WriteTokenAsync(JsonToken token, object? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
-            switch (token)
-            {
+            switch (token) {
                 case JsonToken.None:
                     return AsyncUtils.CompletedTask;
                 case JsonToken.StartObject:
@@ -468,18 +422,15 @@ namespace Simula.Scripting.Json
                         WriteValueAsync(Convert.ToInt64(value, CultureInfo.InvariantCulture), cancellationToken);
                 case JsonToken.Float:
                     ValidationUtils.ArgumentNotNull(value, nameof(value));
-                    if (value is decimal dec)
-                    {
+                    if (value is decimal dec) {
                         return WriteValueAsync(dec, cancellationToken);
                     }
 
-                    if (value is double doub)
-                    {
+                    if (value is double doub) {
                         return WriteValueAsync(doub, cancellationToken);
                     }
 
-                    if (value is float f)
-                    {
+                    if (value is float f) {
                         return WriteValueAsync(f, cancellationToken);
                     }
 
@@ -502,8 +453,7 @@ namespace Simula.Scripting.Json
                     return WriteEndConstructorAsync(cancellationToken);
                 case JsonToken.Date:
                     ValidationUtils.ArgumentNotNull(value, nameof(value));
-                    if (value is DateTimeOffset offset)
-                    {
+                    if (value is DateTimeOffset offset) {
                         return WriteValueAsync(offset, cancellationToken);
                     }
 
@@ -512,8 +462,7 @@ namespace Simula.Scripting.Json
                     return WriteRawValueAsync(value?.ToString(), cancellationToken);
                 case JsonToken.Bytes:
                     ValidationUtils.ArgumentNotNull(value, nameof(value));
-                    if (value is Guid guid)
-                    {
+                    if (value is Guid guid) {
                         return WriteValueAsync(guid, cancellationToken);
                     }
 
@@ -527,16 +476,11 @@ namespace Simula.Scripting.Json
         {
             int initialDepth = CalculateWriteTokenInitialDepth(reader);
 
-            do
-            {
-                if (writeDateConstructorAsDate && reader.TokenType == JsonToken.StartConstructor && string.Equals(reader.Value?.ToString(), "Date", StringComparison.Ordinal))
-                {
+            do {
+                if (writeDateConstructorAsDate && reader.TokenType == JsonToken.StartConstructor && string.Equals(reader.Value?.ToString(), "Date", StringComparison.Ordinal)) {
                     await WriteConstructorDateAsync(reader, cancellationToken).ConfigureAwait(false);
-                }
-                else
-                {
-                    if (writeComments || reader.TokenType != JsonToken.Comment)
-                    {
+                } else {
+                    if (writeComments || reader.TokenType != JsonToken.Comment) {
                         await WriteTokenAsync(reader.TokenType, reader.Value, cancellationToken).ConfigureAwait(false);
                     }
                 }
@@ -545,8 +489,7 @@ namespace Simula.Scripting.Json
                 && writeChildren
                 && await reader.ReadAsync(cancellationToken).ConfigureAwait(false));
 
-            if (IsWriteTokenIncomplete(reader, writeChildren, initialDepth))
-            {
+            if (IsWriteTokenIncomplete(reader, writeChildren, initialDepth)) {
                 throw JsonWriterException.Create(this, "Unexpected end when reading token.", null);
             }
         }
@@ -554,45 +497,36 @@ namespace Simula.Scripting.Json
         {
             int initialDepth = CalculateWriteTokenInitialDepth(reader);
 
-            do
-            {
-                if (reader.TokenType == JsonToken.StartConstructor && string.Equals(reader.Value?.ToString(), "Date", StringComparison.Ordinal))
-                {
+            do {
+                if (reader.TokenType == JsonToken.StartConstructor && string.Equals(reader.Value?.ToString(), "Date", StringComparison.Ordinal)) {
                     WriteConstructorDate(reader);
-                }
-                else
-                {
+                } else {
                     WriteToken(reader.TokenType, reader.Value);
                 }
             } while (
                 initialDepth - 1 < reader.Depth - (JsonTokenUtils.IsEndToken(reader.TokenType) ? 1 : 0)
                 && await reader.ReadAsync(cancellationToken).ConfigureAwait(false));
 
-            if (initialDepth < CalculateWriteTokenFinalDepth(reader))
-            {
+            if (initialDepth < CalculateWriteTokenFinalDepth(reader)) {
                 throw JsonWriterException.Create(this, "Unexpected end when reading token.", null);
             }
         }
 
         private async Task WriteConstructorDateAsync(JsonReader reader, CancellationToken cancellationToken)
         {
-            if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-            {
+            if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) {
                 throw JsonWriterException.Create(this, "Unexpected end when reading date constructor.", null);
             }
-            if (reader.TokenType != JsonToken.Integer)
-            {
+            if (reader.TokenType != JsonToken.Integer) {
                 throw JsonWriterException.Create(this, "Unexpected token when reading date constructor. Expected Integer, got " + reader.TokenType, null);
             }
 
             DateTime date = DateTimeUtils.ConvertJavaScriptTicksToDateTime((long)reader.Value!);
 
-            if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-            {
+            if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) {
                 throw JsonWriterException.Create(this, "Unexpected end when reading date constructor.", null);
             }
-            if (reader.TokenType != JsonToken.EndConstructor)
-            {
+            if (reader.TokenType != JsonToken.EndConstructor) {
                 throw JsonWriterException.Create(this, "Unexpected token when reading date constructor. Expected EndConstructor, got " + reader.TokenType, null);
             }
 
@@ -600,8 +534,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(bool value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -610,8 +543,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(bool? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -620,8 +552,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(byte value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -630,8 +561,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(byte? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -640,8 +570,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(byte[]? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -650,8 +579,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(char value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -660,8 +588,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(char? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -670,8 +597,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(DateTime value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -680,8 +606,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(DateTime? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -690,8 +615,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(DateTimeOffset value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -700,8 +624,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(DateTimeOffset? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -710,8 +633,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(decimal value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -720,8 +642,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(decimal? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -730,8 +651,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(double value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -740,8 +660,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(double? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -750,8 +669,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(float value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -760,8 +678,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(float? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -770,8 +687,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(Guid value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -780,8 +696,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(Guid? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -790,8 +705,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(int value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -800,8 +714,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(int? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -810,8 +723,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(long value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -820,8 +732,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(long? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -830,8 +741,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(object? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -841,8 +751,7 @@ namespace Simula.Scripting.Json
         [CLSCompliant(false)]
         public virtual Task WriteValueAsync(sbyte value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -852,8 +761,7 @@ namespace Simula.Scripting.Json
         [CLSCompliant(false)]
         public virtual Task WriteValueAsync(sbyte? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -862,8 +770,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(short value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -872,8 +779,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(short? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -882,8 +788,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(string? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -892,8 +797,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(TimeSpan value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -902,8 +806,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(TimeSpan? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -913,8 +816,7 @@ namespace Simula.Scripting.Json
         [CLSCompliant(false)]
         public virtual Task WriteValueAsync(uint value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -924,8 +826,7 @@ namespace Simula.Scripting.Json
         [CLSCompliant(false)]
         public virtual Task WriteValueAsync(uint? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -935,8 +836,7 @@ namespace Simula.Scripting.Json
         [CLSCompliant(false)]
         public virtual Task WriteValueAsync(ulong value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -946,8 +846,7 @@ namespace Simula.Scripting.Json
         [CLSCompliant(false)]
         public virtual Task WriteValueAsync(ulong? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -956,8 +855,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteValueAsync(Uri? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -967,8 +865,7 @@ namespace Simula.Scripting.Json
         [CLSCompliant(false)]
         public virtual Task WriteValueAsync(ushort value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -978,8 +875,7 @@ namespace Simula.Scripting.Json
         [CLSCompliant(false)]
         public virtual Task WriteValueAsync(ushort? value, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -988,8 +884,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteUndefinedAsync(CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -998,8 +893,7 @@ namespace Simula.Scripting.Json
         }
         public virtual Task WriteWhitespaceAsync(string ws, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -1009,8 +903,7 @@ namespace Simula.Scripting.Json
 
         internal Task InternalWriteValueAsync(JsonToken token, CancellationToken cancellationToken)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
@@ -1019,13 +912,11 @@ namespace Simula.Scripting.Json
         }
         protected Task SetWriteStateAsync(JsonToken token, object value, CancellationToken cancellationToken)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
-            switch (token)
-            {
+            switch (token) {
                 case JsonToken.StartObject:
                     return InternalWriteStartAsync(token, JsonContainerType.Object, cancellationToken);
                 case JsonToken.StartArray:
@@ -1033,8 +924,7 @@ namespace Simula.Scripting.Json
                 case JsonToken.StartConstructor:
                     return InternalWriteStartAsync(token, JsonContainerType.Constructor, cancellationToken);
                 case JsonToken.PropertyName:
-                    if (!(value is string s))
-                    {
+                    if (!(value is string s)) {
                         throw new ArgumentException("A name is required when setting property name state.", nameof(value));
                     }
 
@@ -1065,10 +955,8 @@ namespace Simula.Scripting.Json
 
         internal static Task WriteValueAsync(JsonWriter writer, PrimitiveTypeCode typeCode, object value, CancellationToken cancellationToken)
         {
-            while (true)
-            {
-                switch (typeCode)
-                {
+            while (true) {
+                switch (typeCode) {
                     case PrimitiveTypeCode.Char:
                         return writer.WriteValueAsync((char)value, cancellationToken);
                     case PrimitiveTypeCode.CharNullable:
@@ -1161,8 +1049,7 @@ namespace Simula.Scripting.Json
                             continue;
                         }
 #endif
-                        if (value == null)
-                        {
+                        if (value == null) {
                             return writer.WriteNullAsync(cancellationToken);
                         }
 

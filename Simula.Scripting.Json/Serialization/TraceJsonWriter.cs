@@ -46,12 +46,9 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue)
-            {
+            if (value.HasValue) {
                 base.WriteValue(value.GetValueOrDefault());
-            }
-            else
-            {
+            } else {
                 base.WriteUndefined();
             }
         }
@@ -67,12 +64,9 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue)
-            {
+            if (value.HasValue) {
                 base.WriteValue(value.GetValueOrDefault());
-            }
-            else
-            {
+            } else {
                 base.WriteUndefined();
             }
         }
@@ -88,12 +82,9 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue)
-            {
+            if (value.HasValue) {
                 base.WriteValue(value.GetValueOrDefault());
-            }
-            else
-            {
+            } else {
                 base.WriteUndefined();
             }
         }
@@ -109,12 +100,9 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue)
-            {
+            if (value.HasValue) {
                 base.WriteValue(value.GetValueOrDefault());
-            }
-            else
-            {
+            } else {
                 base.WriteUndefined();
             }
         }
@@ -123,12 +111,9 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value == null)
-            {
+            if (value == null) {
                 base.WriteUndefined();
-            }
-            else
-            {
+            } else {
                 base.WriteValue(value);
             }
         }
@@ -144,12 +129,9 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue)
-            {
+            if (value.HasValue) {
                 base.WriteValue(value.GetValueOrDefault());
-            }
-            else
-            {
+            } else {
                 base.WriteUndefined();
             }
         }
@@ -166,12 +148,9 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue)
-            {
+            if (value.HasValue) {
                 base.WriteValue(value.GetValueOrDefault());
-            }
-            else
-            {
+            } else {
                 base.WriteUndefined();
             }
         }
@@ -188,12 +167,9 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue)
-            {
+            if (value.HasValue) {
                 base.WriteValue(value.GetValueOrDefault());
-            }
-            else
-            {
+            } else {
                 base.WriteUndefined();
             }
         }
@@ -223,12 +199,9 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue)
-            {
+            if (value.HasValue) {
                 base.WriteValue(value.GetValueOrDefault());
-            }
-            else
-            {
+            } else {
                 base.WriteUndefined();
             }
         }
@@ -244,12 +217,9 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue)
-            {
+            if (value.HasValue) {
                 base.WriteValue(value.GetValueOrDefault());
-            }
-            else
-            {
+            } else {
                 base.WriteUndefined();
             }
         }
@@ -265,12 +235,9 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue)
-            {
+            if (value.HasValue) {
                 base.WriteValue(value.GetValueOrDefault());
-            }
-            else
-            {
+            } else {
                 base.WriteUndefined();
             }
         }
@@ -286,12 +253,9 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue)
-            {
+            if (value.HasValue) {
                 base.WriteValue(value.GetValueOrDefault());
-            }
-            else
-            {
+            } else {
                 base.WriteUndefined();
             }
         }
@@ -310,12 +274,9 @@ namespace Simula.Scripting.Json.Serialization
             {
                 _textWriter.WriteValue(value);
                 _innerWriter.WriteValue(value);
-                if (value == null)
-                {
+                if (value == null) {
                     base.WriteUndefined();
-                }
-                else
-                {
+                } else {
                     InternalWriteValue(JsonToken.String);
                 }
             }
@@ -332,12 +293,9 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue)
-            {
+            if (value.HasValue) {
                 base.WriteValue(value.GetValueOrDefault());
-            }
-            else
-            {
+            } else {
                 base.WriteUndefined();
             }
         }
@@ -353,12 +311,9 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue)
-            {
+            if (value.HasValue) {
                 base.WriteValue(value.GetValueOrDefault());
-            }
-            else
-            {
+            } else {
                 base.WriteUndefined();
             }
         }
@@ -381,12 +336,9 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue)
-            {
+            if (value.HasValue) {
                 base.WriteValue(value.GetValueOrDefault());
-            }
-            else
-            {
+            } else {
                 base.WriteUndefined();
             }
         }
@@ -402,12 +354,9 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue)
-            {
+            if (value.HasValue) {
                 base.WriteValue(value.GetValueOrDefault());
-            }
-            else
-            {
+            } else {
                 base.WriteUndefined();
             }
         }
@@ -423,12 +372,9 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue)
-            {
+            if (value.HasValue) {
                 base.WriteValue(value.GetValueOrDefault());
-            }
-            else
-            {
+            } else {
                 base.WriteUndefined();
             }
         }
@@ -437,12 +383,9 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value == null)
-            {
+            if (value == null) {
                 base.WriteUndefined();
-            }
-            else
-            {
+            } else {
                 base.WriteValue(value);
             }
         }
@@ -458,12 +401,9 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue)
-            {
+            if (value.HasValue) {
                 base.WriteValue(value.GetValueOrDefault());
-            }
-            else
-            {
+            } else {
                 base.WriteUndefined();
             }
         }

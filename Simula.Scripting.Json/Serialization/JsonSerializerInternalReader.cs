@@ -2,21 +2,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 #if HAVE_DYNAMIC
-using System.ComponentModel;
 using System.Dynamic;
 #endif
-using System.Diagnostics;
 using System.Globalization;
 #if HAVE_BIG_INTEGER
 using System.Numerics;
 #endif
-using System.Reflection;
-using System.Runtime.Serialization;
 using Simula.Scripting.Json.Linq;
 using Simula.Scripting.Json.Utilities;
-using System.Runtime.CompilerServices;
 using System.Diagnostics.CodeAnalysis;
 #if !HAVE_LINQ
 using Simula.Scripting.Json.Utilities.LinqBridge;
@@ -48,62 +42,46 @@ namespace Simula.Scripting.Json.Serialization
 
             JsonContract contract = Serializer._contractResolver.ResolveContract(objectType);
 
-            if (!reader.MoveToContent())
-            {
+            if (!reader.MoveToContent()) {
                 throw JsonSerializationException.Create(reader, "No JSON content found.");
             }
 
-            if (reader.TokenType == JsonToken.StartArray)
-            {
-                if (contract.ContractType == JsonContractType.Array)
-                {
+            if (reader.TokenType == JsonToken.StartArray) {
+                if (contract.ContractType == JsonContractType.Array) {
                     JsonArrayContract arrayContract = (JsonArrayContract)contract;
 
                     PopulateList((arrayContract.ShouldCreateWrapper) ? arrayContract.CreateWrapper(target) : (IList)target, reader, arrayContract, null, null);
-                }
-                else
-                {
+                } else {
                     throw JsonSerializationException.Create(reader, "Cannot populate JSON array onto type '{0}'.".FormatWith(CultureInfo.InvariantCulture, objectType));
                 }
-            }
-            else if (reader.TokenType == JsonToken.StartObject)
-            {
+            } else if (reader.TokenType == JsonToken.StartObject) {
                 reader.ReadAndAssert();
 
                 string? id = null;
                 if (Serializer.MetadataPropertyHandling != MetadataPropertyHandling.Ignore
                     && reader.TokenType == JsonToken.PropertyName
-                    && string.Equals(reader.Value!.ToString(), JsonTypeReflector.IdPropertyName, StringComparison.Ordinal))
-                {
+                    && string.Equals(reader.Value!.ToString(), JsonTypeReflector.IdPropertyName, StringComparison.Ordinal)) {
                     reader.ReadAndAssert();
                     id = reader.Value?.ToString();
                     reader.ReadAndAssert();
                 }
 
-                if (contract.ContractType == JsonContractType.Dictionary)
-                {
+                if (contract.ContractType == JsonContractType.Dictionary) {
                     JsonDictionaryContract dictionaryContract = (JsonDictionaryContract)contract;
                     PopulateDictionary((dictionaryContract.ShouldCreateWrapper) ? dictionaryContract.CreateWrapper(target) : (IDictionary)target, reader, dictionaryContract, null, id);
-                }
-                else if (contract.ContractType == JsonContractType.Object)
-                {
+                } else if (contract.ContractType == JsonContractType.Object) {
                     PopulateObject(target, reader, (JsonObjectContract)contract, null, id);
-                }
-                else
-                {
+                } else {
                     throw JsonSerializationException.Create(reader, "Cannot populate JSON object onto type '{0}'.".FormatWith(CultureInfo.InvariantCulture, objectType));
                 }
-            }
-            else
-            {
+            } else {
                 throw JsonSerializationException.Create(reader, "Unexpected initial token '{0}' when populating object. Expected JSON object or array.".FormatWith(CultureInfo.InvariantCulture, reader.TokenType));
             }
         }
 
         private JsonContract? GetContractSafe(Type? type)
         {
-            if (type == null)
-            {
+            if (type == null) {
                 return null;
             }
 
@@ -117,21 +95,17 @@ namespace Simula.Scripting.Json.Serialization
 
         public object? Deserialize(JsonReader reader, Type? objectType, bool checkAdditionalContent)
         {
-            if (reader == null)
-            {
+            if (reader == null) {
                 throw new ArgumentNullException(nameof(reader));
             }
 
             JsonContract? contract = GetContractSafe(objectType);
 
-            try
-            {
+            try {
                 JsonConverter? converter = GetConverter(contract, null, null, null);
 
-                if (reader.TokenType == JsonToken.None && !reader.ReadForType(contract, converter != null))
-                {
-                    if (contract != null && !contract.IsNullable)
-                    {
+                if (reader.TokenType == JsonToken.None && !reader.ReadForType(contract, converter != null)) {
+                    if (contract != null && !contract.IsNullable) {
                         throw JsonSerializationException.Create(reader, "No JSON content found and type '{0}' is not nullable.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType));
                     }
 
@@ -140,37 +114,26 @@ namespace Simula.Scripting.Json.Serialization
 
                 object? deserializedValue;
 
-                if (converter != null && converter.CanRead)
-                {
+                if (converter != null && converter.CanRead) {
                     deserializedValue = DeserializeConvertable(converter, reader, objectType!, null);
-                }
-                else
-                {
+                } else {
                     deserializedValue = CreateValueInternal(reader, objectType, contract, null, null, null, null);
                 }
 
-                if (checkAdditionalContent)
-                {
-                    while (reader.Read())
-                    {
-                        if (reader.TokenType != JsonToken.Comment)
-                        {
+                if (checkAdditionalContent) {
+                    while (reader.Read()) {
+                        if (reader.TokenType != JsonToken.Comment) {
                             throw JsonSerializationException.Create(reader, "Additional text found in JSON string after finishing deserializing object.");
                         }
                     }
                 }
 
                 return deserializedValue;
-            }
-            catch (Exception ex)
-            {
-                if (IsErrorHandled(null, contract, null, reader as IJsonLineInfo, reader.Path, ex))
-                {
+            } catch (Exception ex) {
+                if (IsErrorHandled(null, contract, null, reader as IJsonLineInfo, reader.Path, ex)) {
                     HandleError(reader, false, 0);
                     return null;
-                }
-                else
-                {
+                } else {
                     ClearErrorContext();
                     throw;
                 }
@@ -179,8 +142,7 @@ namespace Simula.Scripting.Json.Serialization
 
         private JsonSerializerProxy GetInternalSerializer()
         {
-            if (InternalSerializer == null)
-            {
+            if (InternalSerializer == null) {
                 InternalSerializer = new JsonSerializerProxy(this);
             }
 
@@ -191,22 +153,18 @@ namespace Simula.Scripting.Json.Serialization
         {
             ValidationUtils.ArgumentNotNull(reader, nameof(reader));
 
-            if (contract != null)
-            {
-                if (contract.UnderlyingType == typeof(JRaw))
-                {
+            if (contract != null) {
+                if (contract.UnderlyingType == typeof(JRaw)) {
                     return JRaw.Create(reader);
                 }
                 if (reader.TokenType == JsonToken.Null
-                    && !(contract.UnderlyingType == typeof(JValue) || contract.UnderlyingType == typeof(JToken)))
-                {
+                    && !(contract.UnderlyingType == typeof(JValue) || contract.UnderlyingType == typeof(JToken))) {
                     return null;
                 }
             }
 
             JToken? token;
-            using (JTokenWriter writer = new JTokenWriter())
-            {
+            using (JTokenWriter writer = new JTokenWriter()) {
                 writer.WriteToken(reader);
                 token = writer.Token;
             }
@@ -217,33 +175,24 @@ namespace Simula.Scripting.Json.Serialization
         private JToken CreateJObject(JsonReader reader)
         {
             ValidationUtils.ArgumentNotNull(reader, nameof(reader));
-            using (JTokenWriter writer = new JTokenWriter())
-            {
+            using (JTokenWriter writer = new JTokenWriter()) {
                 writer.WriteStartObject();
 
-                do
-                {
-                    if (reader.TokenType == JsonToken.PropertyName)
-                    {
+                do {
+                    if (reader.TokenType == JsonToken.PropertyName) {
                         string propertyName = (string)reader.Value!;
-                        if (!reader.ReadAndMoveToContent())
-                        {
+                        if (!reader.ReadAndMoveToContent()) {
                             break;
                         }
 
-                        if (CheckPropertyName(reader, propertyName))
-                        {
+                        if (CheckPropertyName(reader, propertyName)) {
                             continue;
                         }
 
                         writer.WritePropertyName(propertyName);
                         writer.WriteToken(reader, true, true, false);
-                    }
-                    else if (reader.TokenType == JsonToken.Comment)
-                    {
-                    }
-                    else
-                    {
+                    } else if (reader.TokenType == JsonToken.Comment) {
+                    } else {
                         writer.WriteEndObject();
                         return writer.Token!;
                     }
@@ -255,15 +204,12 @@ namespace Simula.Scripting.Json.Serialization
 
         private object? CreateValueInternal(JsonReader reader, Type? objectType, JsonContract? contract, JsonProperty? member, JsonContainerContract? containerContract, JsonProperty? containerMember, object? existingValue)
         {
-            if (contract != null && contract.ContractType == JsonContractType.Linq)
-            {
+            if (contract != null && contract.ContractType == JsonContractType.Linq) {
                 return CreateJToken(reader, contract);
             }
 
-            do
-            {
-                switch (reader.TokenType)
-                {
+            do {
+                switch (reader.TokenType) {
                     case JsonToken.StartObject:
                         return CreateObject(reader, objectType, contract, member, containerContract, containerMember, existingValue);
                     case JsonToken.StartArray:
@@ -276,12 +222,10 @@ namespace Simula.Scripting.Json.Serialization
                         return EnsureType(reader, reader.Value, CultureInfo.InvariantCulture, contract, objectType);
                     case JsonToken.String:
                         string s = (string)reader.Value!;
-                        if (objectType == typeof(byte[]))
-                        {
+                        if (objectType == typeof(byte[])) {
                             return Convert.FromBase64String(s);
                         }
-                        if (CoerceEmptyStringToNull(objectType, contract, s))
-                        {
+                        if (CoerceEmptyStringToNull(objectType, contract, s)) {
                             return null;
                         }
 
@@ -319,8 +263,7 @@ namespace Simula.Scripting.Json.Serialization
 
         internal string GetExpectedDescription(JsonContract contract)
         {
-            switch (contract.ContractType)
-            {
+            switch (contract.ContractType) {
                 case JsonContractType.Object:
                 case JsonContractType.Dictionary:
 #if HAVE_BINARY_SERIALIZATION
@@ -344,30 +287,18 @@ namespace Simula.Scripting.Json.Serialization
         private JsonConverter? GetConverter(JsonContract? contract, JsonConverter? memberConverter, JsonContainerContract? containerContract, JsonProperty? containerProperty)
         {
             JsonConverter? converter = null;
-            if (memberConverter != null)
-            {
+            if (memberConverter != null) {
                 converter = memberConverter;
-            }
-            else if (containerProperty?.ItemConverter != null)
-            {
+            } else if (containerProperty?.ItemConverter != null) {
                 converter = containerProperty.ItemConverter;
-            }
-            else if (containerContract?.ItemConverter != null)
-            {
+            } else if (containerContract?.ItemConverter != null) {
                 converter = containerContract.ItemConverter;
-            }
-            else if (contract != null)
-            {
-                if (contract.Converter != null)
-                {
+            } else if (contract != null) {
+                if (contract.Converter != null) {
                     converter = contract.Converter;
-                }
-                else if (Serializer.GetMatchingConverter(contract.UnderlyingType) is JsonConverter matchingConverter)
-                {
+                } else if (Serializer.GetMatchingConverter(contract.UnderlyingType) is JsonConverter matchingConverter) {
                     converter = matchingConverter;
-                }
-                else if (contract.InternalConverter != null)
-                {
+                } else if (contract.InternalConverter != null) {
                     converter = contract.InternalConverter;
                 }
             }
@@ -379,15 +310,11 @@ namespace Simula.Scripting.Json.Serialization
             string? id;
             Type? resolvedObjectType = objectType;
 
-            if (Serializer.MetadataPropertyHandling == MetadataPropertyHandling.Ignore)
-            {
+            if (Serializer.MetadataPropertyHandling == MetadataPropertyHandling.Ignore) {
                 reader.ReadAndAssert();
                 id = null;
-            }
-            else if (Serializer.MetadataPropertyHandling == MetadataPropertyHandling.ReadAhead)
-            {
-                if (!(reader is JTokenReader tokenReader))
-                {
+            } else if (Serializer.MetadataPropertyHandling == MetadataPropertyHandling.ReadAhead) {
+                if (!(reader is JTokenReader tokenReader)) {
                     JToken t = JToken.ReadFrom(reader);
                     tokenReader = (JTokenReader)t.CreateReader();
                     tokenReader.Culture = reader.Culture;
@@ -401,124 +328,98 @@ namespace Simula.Scripting.Json.Serialization
                     reader = tokenReader;
                 }
 
-                if (ReadMetadataPropertiesToken(tokenReader, ref resolvedObjectType, ref contract, member, containerContract, containerMember, existingValue, out object? newValue, out id))
-                {
+                if (ReadMetadataPropertiesToken(tokenReader, ref resolvedObjectType, ref contract, member, containerContract, containerMember, existingValue, out object? newValue, out id)) {
                     return newValue;
                 }
-            }
-            else
-            {
+            } else {
                 reader.ReadAndAssert();
-                if (ReadMetadataProperties(reader, ref resolvedObjectType, ref contract, member, containerContract, containerMember, existingValue, out object? newValue, out id))
-                {
+                if (ReadMetadataProperties(reader, ref resolvedObjectType, ref contract, member, containerContract, containerMember, existingValue, out object? newValue, out id)) {
                     return newValue;
                 }
             }
 
-            if (HasNoDefinedType(contract))
-            {
+            if (HasNoDefinedType(contract)) {
                 return CreateJObject(reader);
             }
 
             MiscellaneousUtils.Assert(resolvedObjectType != null);
             MiscellaneousUtils.Assert(contract != null);
 
-            switch (contract.ContractType)
-            {
-                case JsonContractType.Object:
-                {
-                    bool createdFromNonDefaultCreator = false;
-                    JsonObjectContract objectContract = (JsonObjectContract)contract;
-                    object targetObject;
-                    if (existingValue != null && (resolvedObjectType == objectType || resolvedObjectType.IsAssignableFrom(existingValue.GetType())))
-                    {
-                        targetObject = existingValue;
-                    }
-                    else
-                    {
-                        targetObject = CreateNewObject(reader, objectContract, member, containerMember, id, out createdFromNonDefaultCreator);
-                    }
-                    if (createdFromNonDefaultCreator)
-                    {
-                        return targetObject;
-                    }
-
-                    return PopulateObject(targetObject, reader, objectContract, member, id);
-                }
-                case JsonContractType.Primitive:
-                {
-                    JsonPrimitiveContract primitiveContract = (JsonPrimitiveContract)contract;
-                    if (Serializer.MetadataPropertyHandling != MetadataPropertyHandling.Ignore
-                        && reader.TokenType == JsonToken.PropertyName
-                        && string.Equals(reader.Value!.ToString(), JsonTypeReflector.ValuePropertyName, StringComparison.Ordinal))
-                    {
-                        reader.ReadAndAssert();
-                        if (reader.TokenType == JsonToken.StartObject)
-                        {
-                            throw JsonSerializationException.Create(reader, "Unexpected token when deserializing primitive value: " + reader.TokenType);
+            switch (contract.ContractType) {
+                case JsonContractType.Object: {
+                        bool createdFromNonDefaultCreator = false;
+                        JsonObjectContract objectContract = (JsonObjectContract)contract;
+                        object targetObject;
+                        if (existingValue != null && (resolvedObjectType == objectType || resolvedObjectType.IsAssignableFrom(existingValue.GetType()))) {
+                            targetObject = existingValue;
+                        } else {
+                            targetObject = CreateNewObject(reader, objectContract, member, containerMember, id, out createdFromNonDefaultCreator);
+                        }
+                        if (createdFromNonDefaultCreator) {
+                            return targetObject;
                         }
 
-                        object? value = CreateValueInternal(reader, resolvedObjectType, primitiveContract, member, null, null, existingValue);
-
-                        reader.ReadAndAssert();
-                        return value;
+                        return PopulateObject(targetObject, reader, objectContract, member, id);
                     }
-                    break;
-                }
-                case JsonContractType.Dictionary:
-                {
-                    JsonDictionaryContract dictionaryContract = (JsonDictionaryContract)contract;
-                    object targetDictionary;
-
-                    if (existingValue == null)
-                    {
-                        IDictionary dictionary = CreateNewDictionary(reader, dictionaryContract, out bool createdFromNonDefaultCreator);
-
-                        if (createdFromNonDefaultCreator)
-                        {
-                            if (id != null)
-                            {
-                                throw JsonSerializationException.Create(reader, "Cannot preserve reference to readonly dictionary, or dictionary created from a non-default constructor: {0}.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType));
+                case JsonContractType.Primitive: {
+                        JsonPrimitiveContract primitiveContract = (JsonPrimitiveContract)contract;
+                        if (Serializer.MetadataPropertyHandling != MetadataPropertyHandling.Ignore
+                            && reader.TokenType == JsonToken.PropertyName
+                            && string.Equals(reader.Value!.ToString(), JsonTypeReflector.ValuePropertyName, StringComparison.Ordinal)) {
+                            reader.ReadAndAssert();
+                            if (reader.TokenType == JsonToken.StartObject) {
+                                throw JsonSerializationException.Create(reader, "Unexpected token when deserializing primitive value: " + reader.TokenType);
                             }
 
-                            if (contract.OnSerializingCallbacks.Count > 0)
-                            {
-                                throw JsonSerializationException.Create(reader, "Cannot call OnSerializing on readonly dictionary, or dictionary created from a non-default constructor: {0}.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType));
-                            }
+                            object? value = CreateValueInternal(reader, resolvedObjectType, primitiveContract, member, null, null, existingValue);
 
-                            if (contract.OnErrorCallbacks.Count > 0)
-                            {
-                                throw JsonSerializationException.Create(reader, "Cannot call OnError on readonly list, or dictionary created from a non-default constructor: {0}.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType));
-                            }
-
-                            if (!dictionaryContract.HasParameterizedCreatorInternal)
-                            {
-                                throw JsonSerializationException.Create(reader, "Cannot deserialize readonly or fixed size dictionary: {0}.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType));
-                            }
+                            reader.ReadAndAssert();
+                            return value;
                         }
+                        break;
+                    }
+                case JsonContractType.Dictionary: {
+                        JsonDictionaryContract dictionaryContract = (JsonDictionaryContract)contract;
+                        object targetDictionary;
 
-                        PopulateDictionary(dictionary, reader, dictionaryContract, member, id);
+                        if (existingValue == null) {
+                            IDictionary dictionary = CreateNewDictionary(reader, dictionaryContract, out bool createdFromNonDefaultCreator);
 
-                        if (createdFromNonDefaultCreator)
-                        {
-                            ObjectConstructor<object> creator = (dictionaryContract.OverrideCreator ?? dictionaryContract.ParameterizedCreator)!;
+                            if (createdFromNonDefaultCreator) {
+                                if (id != null) {
+                                    throw JsonSerializationException.Create(reader, "Cannot preserve reference to readonly dictionary, or dictionary created from a non-default constructor: {0}.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType));
+                                }
 
-                            return creator(dictionary);
-                        }
-                        else if (dictionary is IWrappedDictionary wrappedDictionary)
-                        {
-                            return wrappedDictionary.UnderlyingDictionary;
-                        }
+                                if (contract.OnSerializingCallbacks.Count > 0) {
+                                    throw JsonSerializationException.Create(reader, "Cannot call OnSerializing on readonly dictionary, or dictionary created from a non-default constructor: {0}.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType));
+                                }
+
+                                if (contract.OnErrorCallbacks.Count > 0) {
+                                    throw JsonSerializationException.Create(reader, "Cannot call OnError on readonly list, or dictionary created from a non-default constructor: {0}.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType));
+                                }
+
+                                if (!dictionaryContract.HasParameterizedCreatorInternal) {
+                                    throw JsonSerializationException.Create(reader, "Cannot deserialize readonly or fixed size dictionary: {0}.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType));
+                                }
+                            }
+
+                            PopulateDictionary(dictionary, reader, dictionaryContract, member, id);
+
+                            if (createdFromNonDefaultCreator) {
+                                ObjectConstructor<object> creator = (dictionaryContract.OverrideCreator ?? dictionaryContract.ParameterizedCreator)!;
+
+                                return creator(dictionary);
+                            } else if (dictionary is IWrappedDictionary wrappedDictionary) {
+                                return wrappedDictionary.UnderlyingDictionary;
+                            }
 
                             targetDictionary = dictionary;
+                        } else {
+                            targetDictionary = PopulateDictionary(dictionaryContract.ShouldCreateWrapper || !(existingValue is IDictionary) ? dictionaryContract.CreateWrapper(existingValue) : (IDictionary)existingValue, reader, dictionaryContract, member, id);
                         }
-                    else
-                    {
-                        targetDictionary = PopulateDictionary(dictionaryContract.ShouldCreateWrapper || !(existingValue is IDictionary) ? dictionaryContract.CreateWrapper(existingValue) : (IDictionary)existingValue, reader, dictionaryContract, member, id);
-                    }
 
-                    return targetDictionary;
-                }
+                        return targetDictionary;
+                    }
 #if HAVE_DYNAMIC
                 case JsonContractType.Dynamic:
                     JsonDynamicContract dynamicContract = (JsonDynamicContract)contract;
@@ -538,38 +439,32 @@ namespace Simula.Scripting.Json.Serialization
             throw JsonSerializationException.Create(reader, message);
         }
 
-        private bool ReadMetadataPropertiesToken(JTokenReader reader, ref Type? objectType, ref JsonContract? contract, JsonProperty? member, JsonContainerContract? containerContract, JsonProperty? containerMember, object? existingValue, [NotNullWhen(true)]out object? newValue, out string? id)
+        private bool ReadMetadataPropertiesToken(JTokenReader reader, ref Type? objectType, ref JsonContract? contract, JsonProperty? member, JsonContainerContract? containerContract, JsonProperty? containerMember, object? existingValue, [NotNullWhen(true)] out object? newValue, out string? id)
         {
             id = null;
             newValue = null;
 
-            if (reader.TokenType == JsonToken.StartObject)
-            {
+            if (reader.TokenType == JsonToken.StartObject) {
                 JObject current = (JObject)reader.CurrentToken!;
 
                 JProperty? refProperty = current.Property(JsonTypeReflector.RefPropertyName, StringComparison.Ordinal);
-                if (refProperty != null)
-                {
+                if (refProperty != null) {
                     JToken refToken = refProperty.Value;
-                    if (refToken.Type != JTokenType.String && refToken.Type != JTokenType.Null)
-                    {
+                    if (refToken.Type != JTokenType.String && refToken.Type != JTokenType.Null) {
                         throw JsonSerializationException.Create(refToken, refToken.Path, "JSON reference {0} property must have a string or null value.".FormatWith(CultureInfo.InvariantCulture, JsonTypeReflector.RefPropertyName), null);
                     }
 
                     string? reference = (string?)refProperty;
 
-                    if (reference != null)
-                    {
+                    if (reference != null) {
                         JToken? additionalContent = refProperty.Next ?? refProperty.Previous;
-                        if (additionalContent != null)
-                        {
+                        if (additionalContent != null) {
                             throw JsonSerializationException.Create(additionalContent, additionalContent.Path, "Additional content found in JSON reference object. A JSON reference object should only have a {0} property.".FormatWith(CultureInfo.InvariantCulture, JsonTypeReflector.RefPropertyName), null);
                         }
 
                         newValue = Serializer.GetReferenceResolver().ResolveReference(this, reference);
 
-                        if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info)
-                        {
+                        if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info) {
                             TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(reader, reader.Path, "Resolved object reference '{0}' to {1}.".FormatWith(CultureInfo.InvariantCulture, reference, newValue.GetType())), null);
                         }
 
@@ -578,23 +473,18 @@ namespace Simula.Scripting.Json.Serialization
                     }
                 }
                 JToken? typeToken = current[JsonTypeReflector.TypePropertyName];
-                if (typeToken != null)
-                {
+                if (typeToken != null) {
                     string? qualifiedTypeName = (string?)typeToken;
                     JsonReader typeTokenReader = typeToken.CreateReader();
                     typeTokenReader.ReadAndAssert();
                     ResolveTypeName(typeTokenReader, ref objectType, ref contract, member, containerContract, containerMember, qualifiedTypeName!);
 
                     JToken? valueToken = current[JsonTypeReflector.ValuePropertyName];
-                    if (valueToken != null)
-                    {
-                        while (true)
-                        {
+                    if (valueToken != null) {
+                        while (true) {
                             reader.ReadAndAssert();
-                            if (reader.TokenType == JsonToken.PropertyName)
-                            {
-                                if ((string)reader.Value! == JsonTypeReflector.ValuePropertyName)
-                                {
+                            if (reader.TokenType == JsonToken.PropertyName) {
+                                if ((string)reader.Value! == JsonTypeReflector.ValuePropertyName) {
                                     return false;
                                 }
                             }
@@ -605,13 +495,11 @@ namespace Simula.Scripting.Json.Serialization
                     }
                 }
                 JToken? idToken = current[JsonTypeReflector.IdPropertyName];
-                if (idToken != null)
-                {
+                if (idToken != null) {
                     id = (string?)idToken;
                 }
                 JToken? valuesToken = current[JsonTypeReflector.ArrayValuesPropertyName];
-                if (valuesToken != null)
-                {
+                if (valuesToken != null) {
                     JsonReader listReader = valuesToken.CreateReader();
                     listReader.ReadAndAssert();
                     newValue = CreateList(listReader, objectType, contract, member, existingValue, id);
@@ -630,23 +518,18 @@ namespace Simula.Scripting.Json.Serialization
             id = null;
             newValue = null;
 
-            if (reader.TokenType == JsonToken.PropertyName)
-            {
+            if (reader.TokenType == JsonToken.PropertyName) {
                 string propertyName = reader.Value!.ToString();
 
-                if (propertyName.Length > 0 && propertyName[0] == '$')
-                {
+                if (propertyName.Length > 0 && propertyName[0] == '$') {
                     bool metadataProperty;
 
-                    do
-                    {
+                    do {
                         propertyName = reader.Value!.ToString();
 
-                        if (string.Equals(propertyName, JsonTypeReflector.RefPropertyName, StringComparison.Ordinal))
-                        {
+                        if (string.Equals(propertyName, JsonTypeReflector.RefPropertyName, StringComparison.Ordinal)) {
                             reader.ReadAndAssert();
-                            if (reader.TokenType != JsonToken.String && reader.TokenType != JsonToken.Null)
-                            {
+                            if (reader.TokenType != JsonToken.String && reader.TokenType != JsonToken.Null) {
                                 throw JsonSerializationException.Create(reader, "JSON reference {0} property must have a string or null value.".FormatWith(CultureInfo.InvariantCulture, JsonTypeReflector.RefPropertyName));
                             }
 
@@ -654,29 +537,22 @@ namespace Simula.Scripting.Json.Serialization
 
                             reader.ReadAndAssert();
 
-                            if (reference != null)
-                            {
-                                if (reader.TokenType == JsonToken.PropertyName)
-                                {
+                            if (reference != null) {
+                                if (reader.TokenType == JsonToken.PropertyName) {
                                     throw JsonSerializationException.Create(reader, "Additional content found in JSON reference object. A JSON reference object should only have a {0} property.".FormatWith(CultureInfo.InvariantCulture, JsonTypeReflector.RefPropertyName));
                                 }
 
                                 newValue = Serializer.GetReferenceResolver().ResolveReference(this, reference);
 
-                                if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info)
-                                {
+                                if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info) {
                                     TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(reader as IJsonLineInfo, reader.Path, "Resolved object reference '{0}' to {1}.".FormatWith(CultureInfo.InvariantCulture, reference, newValue!.GetType())), null);
                                 }
 
                                 return true;
-                            }
-                            else
-                            {
+                            } else {
                                 metadataProperty = true;
                             }
-                        }
-                        else if (string.Equals(propertyName, JsonTypeReflector.TypePropertyName, StringComparison.Ordinal))
-                        {
+                        } else if (string.Equals(propertyName, JsonTypeReflector.TypePropertyName, StringComparison.Ordinal)) {
                             reader.ReadAndAssert();
                             string qualifiedTypeName = reader.Value!.ToString();
 
@@ -685,26 +561,20 @@ namespace Simula.Scripting.Json.Serialization
                             reader.ReadAndAssert();
 
                             metadataProperty = true;
-                        }
-                        else if (string.Equals(propertyName, JsonTypeReflector.IdPropertyName, StringComparison.Ordinal))
-                        {
+                        } else if (string.Equals(propertyName, JsonTypeReflector.IdPropertyName, StringComparison.Ordinal)) {
                             reader.ReadAndAssert();
 
                             id = reader.Value?.ToString();
 
                             reader.ReadAndAssert();
                             metadataProperty = true;
-                        }
-                        else if (string.Equals(propertyName, JsonTypeReflector.ArrayValuesPropertyName, StringComparison.Ordinal))
-                        {
+                        } else if (string.Equals(propertyName, JsonTypeReflector.ArrayValuesPropertyName, StringComparison.Ordinal)) {
                             reader.ReadAndAssert();
                             object? list = CreateList(reader, objectType, contract, member, existingValue, id);
                             reader.ReadAndAssert();
                             newValue = list;
                             return true;
-                        }
-                        else
-                        {
+                        } else {
                             metadataProperty = false;
                         }
                     } while (metadataProperty && reader.TokenType == JsonToken.PropertyName);
@@ -721,27 +591,21 @@ namespace Simula.Scripting.Json.Serialization
                 ?? containerMember?.ItemTypeNameHandling
                 ?? Serializer._typeNameHandling;
 
-            if (resolvedTypeNameHandling != TypeNameHandling.None)
-            {
+            if (resolvedTypeNameHandling != TypeNameHandling.None) {
                 StructMultiKey<string?, string> typeNameKey = ReflectionUtils.SplitFullyQualifiedTypeName(qualifiedTypeName);
 
                 Type specifiedType;
-                try
-                {
+                try {
                     specifiedType = Serializer._serializationBinder.BindToType(typeNameKey.Value1, typeNameKey.Value2);
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     throw JsonSerializationException.Create(reader, "Error resolving type specified in JSON '{0}'.".FormatWith(CultureInfo.InvariantCulture, qualifiedTypeName), ex);
                 }
 
-                if (specifiedType == null)
-                {
+                if (specifiedType == null) {
                     throw JsonSerializationException.Create(reader, "Type specified in JSON '{0}' was not resolved.".FormatWith(CultureInfo.InvariantCulture, qualifiedTypeName));
                 }
 
-                if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
-                {
+                if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose) {
                     TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(reader as IJsonLineInfo, reader.Path, "Resolved type '{0}' to {1}.".FormatWith(CultureInfo.InvariantCulture, qualifiedTypeName, specifiedType)), null);
                 }
 
@@ -749,8 +613,7 @@ namespace Simula.Scripting.Json.Serialization
 #if HAVE_DYNAMIC
                     && objectType != typeof(IDynamicMetaObjectProvider)
 #endif
-                    && !objectType.IsAssignableFrom(specifiedType))
-                {
+                    && !objectType.IsAssignableFrom(specifiedType)) {
                     throw JsonSerializationException.Create(reader, "Type specified in JSON '{0}' is not compatible with '{1}'.".FormatWith(CultureInfo.InvariantCulture, specifiedType.AssemblyQualifiedName, objectType.AssemblyQualifiedName));
                 }
 
@@ -761,13 +624,11 @@ namespace Simula.Scripting.Json.Serialization
 
         private JsonArrayContract EnsureArrayContract(JsonReader reader, Type objectType, JsonContract contract)
         {
-            if (contract == null)
-            {
+            if (contract == null) {
                 throw JsonSerializationException.Create(reader, "Could not resolve type '{0}' to a JsonContract.".FormatWith(CultureInfo.InvariantCulture, objectType));
             }
 
-            if (!(contract is JsonArrayContract arrayContract))
-            {
+            if (!(contract is JsonArrayContract arrayContract)) {
                 string message = @"Cannot deserialize the current JSON array (e.g. [1,2,3]) into type '{0}' because the type requires a {1} to deserialize correctly." + Environment.NewLine +
                                  @"To fix this error either change the JSON to a {1} or change the deserialized type to an array or a type that implements a collection interface (e.g. ICollection, IList) like List<T> that can be deserialized from a JSON array. JsonArrayAttribute can also be added to the type to force it to deserialize from a JSON array." + Environment.NewLine;
                 message = message.FormatWith(CultureInfo.InvariantCulture, objectType, GetExpectedDescription(contract));
@@ -782,8 +643,7 @@ namespace Simula.Scripting.Json.Serialization
         {
             object? value;
 
-            if (HasNoDefinedType(contract))
-            {
+            if (HasNoDefinedType(contract)) {
                 return CreateJToken(reader, contract);
             }
 
@@ -792,72 +652,52 @@ namespace Simula.Scripting.Json.Serialization
 
             JsonArrayContract arrayContract = EnsureArrayContract(reader, objectType, contract);
 
-            if (existingValue == null)
-            {
+            if (existingValue == null) {
                 IList list = CreateNewList(reader, arrayContract, out bool createdFromNonDefaultCreator);
 
-                if (createdFromNonDefaultCreator)
-                {
-                    if (id != null)
-                    {
+                if (createdFromNonDefaultCreator) {
+                    if (id != null) {
                         throw JsonSerializationException.Create(reader, "Cannot preserve reference to array or readonly list, or list created from a non-default constructor: {0}.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType));
                     }
 
-                    if (contract.OnSerializingCallbacks.Count > 0)
-                    {
+                    if (contract.OnSerializingCallbacks.Count > 0) {
                         throw JsonSerializationException.Create(reader, "Cannot call OnSerializing on an array or readonly list, or list created from a non-default constructor: {0}.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType));
                     }
 
-                    if (contract.OnErrorCallbacks.Count > 0)
-                    {
+                    if (contract.OnErrorCallbacks.Count > 0) {
                         throw JsonSerializationException.Create(reader, "Cannot call OnError on an array or readonly list, or list created from a non-default constructor: {0}.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType));
                     }
 
-                    if (!arrayContract.HasParameterizedCreatorInternal && !arrayContract.IsArray)
-                    {
+                    if (!arrayContract.HasParameterizedCreatorInternal && !arrayContract.IsArray) {
                         throw JsonSerializationException.Create(reader, "Cannot deserialize readonly or fixed size list: {0}.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType));
                     }
                 }
 
-                if (!arrayContract.IsMultidimensionalArray)
-                {
+                if (!arrayContract.IsMultidimensionalArray) {
                     PopulateList(list, reader, arrayContract, member, id);
-                }
-                else
-                {
+                } else {
                     PopulateMultidimensionalArray(list, reader, arrayContract, member, id);
                 }
 
-                if (createdFromNonDefaultCreator)
-                {
-                    if (arrayContract.IsMultidimensionalArray)
-                    {
+                if (createdFromNonDefaultCreator) {
+                    if (arrayContract.IsMultidimensionalArray) {
                         list = CollectionUtils.ToMultidimensionalArray(list, arrayContract.CollectionItemType!, contract.CreatedType.GetArrayRank());
-                    }
-                    else if (arrayContract.IsArray)
-                    {
+                    } else if (arrayContract.IsArray) {
                         Array a = Array.CreateInstance(arrayContract.CollectionItemType, list.Count);
                         list.CopyTo(a, 0);
                         list = a;
-                    }
-                    else
-                    {
+                    } else {
                         ObjectConstructor<object> creator = (arrayContract.OverrideCreator ?? arrayContract.ParameterizedCreator)!;
 
                         return creator(list);
                     }
-                }
-                else if (list is IWrappedCollection wrappedCollection)
-                {
+                } else if (list is IWrappedCollection wrappedCollection) {
                     return wrappedCollection.UnderlyingCollection;
                 }
 
                 value = list;
-            }
-            else
-            {
-                if (!arrayContract.CanDeserialize)
-                {
+            } else {
+                if (!arrayContract.CanDeserialize) {
                     throw JsonSerializationException.Create(reader, "Cannot populate list type {0}.".FormatWith(CultureInfo.InvariantCulture, contract.CreatedType));
                 }
 
@@ -878,41 +718,30 @@ namespace Simula.Scripting.Json.Serialization
 
         private object? EnsureType(JsonReader reader, object? value, CultureInfo culture, JsonContract? contract, Type? targetType)
         {
-            if (targetType == null)
-            {
+            if (targetType == null) {
                 return value;
             }
 
             MiscellaneousUtils.Assert(contract != null);
             Type? valueType = ReflectionUtils.GetObjectType(value);
-            if (valueType != targetType)
-            {
-                if (value == null && contract.IsNullable)
-                {
+            if (valueType != targetType) {
+                if (value == null && contract.IsNullable) {
                     return null;
                 }
 
-                try
-                {
-                    if (contract.IsConvertable)
-                    {
+                try {
+                    if (contract.IsConvertable) {
                         JsonPrimitiveContract primitiveContract = (JsonPrimitiveContract)contract;
 
-                        if (contract.IsEnum)
-                        {
-                            if (value is string s)
-                            {
+                        if (contract.IsEnum) {
+                            if (value is string s) {
                                 return EnumUtils.ParseEnum(contract.NonNullableUnderlyingType, null, s, false);
                             }
-                            if (ConvertUtils.IsInteger(primitiveContract.TypeCode))
-                            {
+                            if (ConvertUtils.IsInteger(primitiveContract.TypeCode)) {
                                 return Enum.ToObject(contract.NonNullableUnderlyingType, value);
                             }
-                        }
-                        else if (contract.NonNullableUnderlyingType == typeof(DateTime))
-                        {
-                            if (value is string s && DateTimeUtils.TryParseDateTime(s, reader.DateTimeZoneHandling, reader.DateFormatString, reader.Culture, out DateTime dt))
-                            {
+                        } else if (contract.NonNullableUnderlyingType == typeof(DateTime)) {
+                            if (value is string s && DateTimeUtils.TryParseDateTime(s, reader.DateTimeZoneHandling, reader.DateFormatString, reader.Culture, out DateTime dt)) {
                                 return DateTimeUtils.EnsureDateTime(dt, reader.DateTimeZoneHandling);
                             }
                         }
@@ -927,9 +756,7 @@ namespace Simula.Scripting.Json.Serialization
                     }
 
                     return ConvertUtils.ConvertOrCast(value, culture, contract.NonNullableUnderlyingType);
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     throw JsonSerializationException.Create(reader, "Error converting value {0} to type '{1}'.".FormatWith(CultureInfo.InvariantCulture, MiscellaneousUtils.ToString(value), targetType), ex);
                 }
             }
@@ -952,10 +779,8 @@ namespace Simula.Scripting.Json.Serialization
                 out bool gottenCurrentValue,
                 out bool ignoredValue);
 
-            if (skipSettingProperty)
-            {
-                if (ignoredValue)
-                {
+            if (skipSettingProperty) {
+                if (ignoredValue) {
                     return true;
                 }
 
@@ -964,28 +789,21 @@ namespace Simula.Scripting.Json.Serialization
 
             object? value;
 
-            if (propertyConverter != null && propertyConverter.CanRead)
-            {
-                if (!gottenCurrentValue && property.Readable)
-                {
+            if (propertyConverter != null && propertyConverter.CanRead) {
+                if (!gottenCurrentValue && property.Readable) {
                     currentValue = property.ValueProvider!.GetValue(target);
                 }
 
                 value = DeserializeConvertable(propertyConverter, reader, property.PropertyType!, currentValue);
-            }
-            else
-            {
+            } else {
                 value = CreateValueInternal(reader, property.PropertyType, propertyContract, property, containerContract, containerProperty, (useExistingValue) ? currentValue : null);
             }
             if ((!useExistingValue || value != currentValue)
-                && ShouldSetPropertyValue(property, containerContract as JsonObjectContract, value))
-            {
+                && ShouldSetPropertyValue(property, containerContract as JsonObjectContract, value)) {
                 property.ValueProvider!.SetValue(target, value);
 
-                if (property.SetIsSpecified != null)
-                {
-                    if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
-                    {
+                if (property.SetIsSpecified != null) {
+                    if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose) {
                         TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(reader as IJsonLineInfo, reader.Path, "IsSpecified for property '{0}' on {1} set to true.".FormatWith(CultureInfo.InvariantCulture, property.PropertyName, property.DeclaringType)), null);
                     }
 
@@ -1016,15 +834,13 @@ namespace Simula.Scripting.Json.Serialization
             gottenCurrentValue = false;
             ignoredValue = false;
 
-            if (property.Ignored)
-            {
+            if (property.Ignored) {
                 return true;
             }
 
             JsonToken tokenType = reader.TokenType;
 
-            if (property.PropertyContract == null)
-            {
+            if (property.PropertyContract == null) {
                 property.PropertyContract = GetContractSafe(property.PropertyType);
             }
 
@@ -1033,52 +849,42 @@ namespace Simula.Scripting.Json.Serialization
 
             if ((objectCreationHandling != ObjectCreationHandling.Replace)
                 && (tokenType == JsonToken.StartArray || tokenType == JsonToken.StartObject || propertyConverter != null)
-                && property.Readable)
-            {
+                && property.Readable) {
                 currentValue = property.ValueProvider!.GetValue(target);
                 gottenCurrentValue = true;
 
-                if (currentValue != null)
-                {
+                if (currentValue != null) {
                     propertyContract = GetContract(currentValue.GetType());
 
                     useExistingValue = (!propertyContract.IsReadOnlyOrFixedSize && !propertyContract.UnderlyingType.IsValueType());
                 }
             }
 
-            if (!property.Writable && !useExistingValue)
-            {
-                if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info)
-                {
+            if (!property.Writable && !useExistingValue) {
+                if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info) {
                     TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(reader as IJsonLineInfo, reader.Path, "Unable to deserialize value to non-writable property '{0}' on {1}.".FormatWith(CultureInfo.InvariantCulture, property.PropertyName, property.DeclaringType)), null);
                 }
 
                 return true;
             }
-            if (tokenType == JsonToken.Null && ResolvedNullValueHandling(containerContract as JsonObjectContract, property) == NullValueHandling.Ignore)
-            {
+            if (tokenType == JsonToken.Null && ResolvedNullValueHandling(containerContract as JsonObjectContract, property) == NullValueHandling.Ignore) {
                 ignoredValue = true;
                 return true;
             }
             if (HasFlag(property.DefaultValueHandling.GetValueOrDefault(Serializer._defaultValueHandling), DefaultValueHandling.Ignore)
                 && !HasFlag(property.DefaultValueHandling.GetValueOrDefault(Serializer._defaultValueHandling), DefaultValueHandling.Populate)
                 && JsonTokenUtils.IsPrimitiveToken(tokenType)
-                && MiscellaneousUtils.ValueEquals(reader.Value, property.GetResolvedDefaultValue()))
-            {
+                && MiscellaneousUtils.ValueEquals(reader.Value, property.GetResolvedDefaultValue())) {
                 ignoredValue = true;
                 return true;
             }
 
-            if (currentValue == null)
-            {
+            if (currentValue == null) {
                 propertyContract = property.PropertyContract;
-            }
-            else
-            {
+            } else {
                 propertyContract = GetContract(currentValue.GetType());
 
-                if (propertyContract != property.PropertyContract)
-                {
+                if (propertyContract != property.PropertyContract) {
                     propertyConverter = GetConverter(propertyContract, property.Converter, containerContract, containerProperty);
                 }
             }
@@ -1088,17 +894,13 @@ namespace Simula.Scripting.Json.Serialization
 
         private void AddReference(JsonReader reader, string id, object value)
         {
-            try
-            {
-                if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
-                {
+            try {
+                if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose) {
                     TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(reader as IJsonLineInfo, reader.Path, "Read object reference Id '{0}' for {1}.".FormatWith(CultureInfo.InvariantCulture, id, value.GetType())), null);
                 }
 
                 Serializer.GetReferenceResolver().AddReference(this, id, value);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 throw JsonSerializationException.Create(reader, "Error reading object reference '{0}'.".FormatWith(CultureInfo.InvariantCulture, id), ex);
             }
         }
@@ -1110,20 +912,17 @@ namespace Simula.Scripting.Json.Serialization
 
         private bool ShouldSetPropertyValue(JsonProperty property, JsonObjectContract? contract, object? value)
         {
-            if (value == null && ResolvedNullValueHandling(contract, property) == NullValueHandling.Ignore)
-            {
+            if (value == null && ResolvedNullValueHandling(contract, property) == NullValueHandling.Ignore) {
                 return false;
             }
 
             if (HasFlag(property.DefaultValueHandling.GetValueOrDefault(Serializer._defaultValueHandling), DefaultValueHandling.Ignore)
                 && !HasFlag(property.DefaultValueHandling.GetValueOrDefault(Serializer._defaultValueHandling), DefaultValueHandling.Populate)
-                && MiscellaneousUtils.ValueEquals(value, property.GetResolvedDefaultValue()))
-            {
+                && MiscellaneousUtils.ValueEquals(value, property.GetResolvedDefaultValue())) {
                 return false;
             }
 
-            if (!property.Writable)
-            {
+            if (!property.Writable) {
                 return false;
             }
 
@@ -1132,64 +931,47 @@ namespace Simula.Scripting.Json.Serialization
 
         private IList CreateNewList(JsonReader reader, JsonArrayContract contract, out bool createdFromNonDefaultCreator)
         {
-            if (!contract.CanDeserialize)
-            {
+            if (!contract.CanDeserialize) {
                 throw JsonSerializationException.Create(reader, "Cannot create and populate list type {0}.".FormatWith(CultureInfo.InvariantCulture, contract.CreatedType));
             }
 
-            if (contract.OverrideCreator != null)
-            {
-                if (contract.HasParameterizedCreator)
-                {
+            if (contract.OverrideCreator != null) {
+                if (contract.HasParameterizedCreator) {
                     createdFromNonDefaultCreator = true;
                     return contract.CreateTemporaryCollection();
-                }
-                else
-                {
+                } else {
                     object list = contract.OverrideCreator();
 
-                    if (contract.ShouldCreateWrapper)
-                    {
+                    if (contract.ShouldCreateWrapper) {
                         list = contract.CreateWrapper(list);
                     }
 
                     createdFromNonDefaultCreator = false;
                     return (IList)list;
                 }
-            }
-            else if (contract.IsReadOnlyOrFixedSize)
-            {
+            } else if (contract.IsReadOnlyOrFixedSize) {
                 createdFromNonDefaultCreator = true;
                 IList list = contract.CreateTemporaryCollection();
 
-                if (contract.ShouldCreateWrapper)
-                {
+                if (contract.ShouldCreateWrapper) {
                     list = contract.CreateWrapper(list);
                 }
 
                 return list;
-            }
-            else if (contract.DefaultCreator != null && (!contract.DefaultCreatorNonPublic || Serializer._constructorHandling == ConstructorHandling.AllowNonPublicDefaultConstructor))
-            {
+            } else if (contract.DefaultCreator != null && (!contract.DefaultCreatorNonPublic || Serializer._constructorHandling == ConstructorHandling.AllowNonPublicDefaultConstructor)) {
                 object list = contract.DefaultCreator();
 
-                if (contract.ShouldCreateWrapper)
-                {
+                if (contract.ShouldCreateWrapper) {
                     list = contract.CreateWrapper(list);
                 }
 
                 createdFromNonDefaultCreator = false;
                 return (IList)list;
-            }
-            else if (contract.HasParameterizedCreatorInternal)
-            {
+            } else if (contract.HasParameterizedCreatorInternal) {
                 createdFromNonDefaultCreator = true;
                 return contract.CreateTemporaryCollection();
-            }
-            else
-            {
-                if (!contract.IsInstantiable)
-                {
+            } else {
+                if (!contract.IsInstantiable) {
                     throw JsonSerializationException.Create(reader, "Could not create an instance of type {0}. Type is an interface or abstract class and cannot be instantiated.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType));
                 }
 
@@ -1199,45 +981,31 @@ namespace Simula.Scripting.Json.Serialization
 
         private IDictionary CreateNewDictionary(JsonReader reader, JsonDictionaryContract contract, out bool createdFromNonDefaultCreator)
         {
-            if (contract.OverrideCreator != null)
-            {
-                if (contract.HasParameterizedCreator)
-                {
+            if (contract.OverrideCreator != null) {
+                if (contract.HasParameterizedCreator) {
                     createdFromNonDefaultCreator = true;
                     return contract.CreateTemporaryDictionary();
-                }
-                else
-                {
+                } else {
                     createdFromNonDefaultCreator = false;
                     return (IDictionary)contract.OverrideCreator();
                 }
-            }
-            else if (contract.IsReadOnlyOrFixedSize)
-            {
+            } else if (contract.IsReadOnlyOrFixedSize) {
                 createdFromNonDefaultCreator = true;
                 return contract.CreateTemporaryDictionary();
-            }
-            else if (contract.DefaultCreator != null && (!contract.DefaultCreatorNonPublic || Serializer._constructorHandling == ConstructorHandling.AllowNonPublicDefaultConstructor))
-            {
+            } else if (contract.DefaultCreator != null && (!contract.DefaultCreatorNonPublic || Serializer._constructorHandling == ConstructorHandling.AllowNonPublicDefaultConstructor)) {
                 object dictionary = contract.DefaultCreator();
 
-                if (contract.ShouldCreateWrapper)
-                {
+                if (contract.ShouldCreateWrapper) {
                     dictionary = contract.CreateWrapper(dictionary);
                 }
 
                 createdFromNonDefaultCreator = false;
                 return (IDictionary)dictionary;
-            }
-            else if (contract.HasParameterizedCreatorInternal)
-            {
+            } else if (contract.HasParameterizedCreatorInternal) {
                 createdFromNonDefaultCreator = true;
                 return contract.CreateTemporaryDictionary();
-            }
-            else
-            {
-                if (!contract.IsInstantiable)
-                {
+            } else {
+                if (!contract.IsInstantiable) {
                     throw JsonSerializationException.Create(reader, "Could not create an instance of type {0}. Type is an interface or abstract class and cannot be instantiated.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType));
                 }
 
@@ -1247,8 +1015,7 @@ namespace Simula.Scripting.Json.Serialization
 
         private void OnDeserializing(JsonReader reader, JsonContract contract, object value)
         {
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info)
-            {
+            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info) {
                 TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(reader as IJsonLineInfo, reader.Path, "Started deserializing {0}".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType)), null);
             }
 
@@ -1257,8 +1024,7 @@ namespace Simula.Scripting.Json.Serialization
 
         private void OnDeserialized(JsonReader reader, JsonContract contract, object value)
         {
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info)
-            {
+            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info) {
                 TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(reader as IJsonLineInfo, reader.Path, "Finished deserializing {0}".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType)), null);
             }
 
@@ -1269,8 +1035,7 @@ namespace Simula.Scripting.Json.Serialization
         {
             object underlyingDictionary = dictionary is IWrappedDictionary wrappedDictionary ? wrappedDictionary.UnderlyingDictionary : dictionary;
 
-            if (id != null)
-            {
+            if (id != null) {
                 AddReference(reader, id, underlyingDictionary);
             }
 
@@ -1278,13 +1043,11 @@ namespace Simula.Scripting.Json.Serialization
 
             int initialDepth = reader.Depth;
 
-            if (contract.KeyContract == null)
-            {
+            if (contract.KeyContract == null) {
                 contract.KeyContract = GetContractSafe(contract.DictionaryKeyType);
             }
 
-            if (contract.ItemContract == null)
-            {
+            if (contract.ItemContract == null) {
                 contract.ItemContract = GetContractSafe(contract.DictionaryValueType);
             }
 
@@ -1292,76 +1055,57 @@ namespace Simula.Scripting.Json.Serialization
             PrimitiveTypeCode keyTypeCode = (contract.KeyContract is JsonPrimitiveContract keyContract) ? keyContract.TypeCode : PrimitiveTypeCode.Empty;
 
             bool finished = false;
-            do
-            {
-                switch (reader.TokenType)
-                {
+            do {
+                switch (reader.TokenType) {
                     case JsonToken.PropertyName:
                         object keyValue = reader.Value!;
-                        if (CheckPropertyName(reader, keyValue.ToString()))
-                        {
+                        if (CheckPropertyName(reader, keyValue.ToString())) {
                             continue;
                         }
 
-                        try
-                        {
-                            try
-                            {
-                                switch (keyTypeCode)
-                                {
+                        try {
+                            try {
+                                switch (keyTypeCode) {
                                     case PrimitiveTypeCode.DateTime:
-                                    case PrimitiveTypeCode.DateTimeNullable:
-                                    {
-                                        keyValue = DateTimeUtils.TryParseDateTime(keyValue.ToString(), reader.DateTimeZoneHandling, reader.DateFormatString, reader.Culture, out DateTime dt)
-                                            ? dt
-                                            : EnsureType(reader, keyValue, CultureInfo.InvariantCulture, contract.KeyContract!, contract.DictionaryKeyType)!;
-                                        break;
-                                    }
+                                    case PrimitiveTypeCode.DateTimeNullable: {
+                                            keyValue = DateTimeUtils.TryParseDateTime(keyValue.ToString(), reader.DateTimeZoneHandling, reader.DateFormatString, reader.Culture, out DateTime dt)
+                                                ? dt
+                                                : EnsureType(reader, keyValue, CultureInfo.InvariantCulture, contract.KeyContract!, contract.DictionaryKeyType)!;
+                                            break;
+                                        }
 #if HAVE_DATE_TIME_OFFSET
                                     case PrimitiveTypeCode.DateTimeOffset:
-                                    case PrimitiveTypeCode.DateTimeOffsetNullable:
-                                    {
-                                        keyValue = DateTimeUtils.TryParseDateTimeOffset(keyValue.ToString(), reader.DateFormatString, reader.Culture, out DateTimeOffset dt)
-                                            ? dt
-                                            : EnsureType(reader, keyValue, CultureInfo.InvariantCulture, contract.KeyContract!, contract.DictionaryKeyType)!;
-                                        break;
-                                    }
+                                    case PrimitiveTypeCode.DateTimeOffsetNullable: {
+                                            keyValue = DateTimeUtils.TryParseDateTimeOffset(keyValue.ToString(), reader.DateFormatString, reader.Culture, out DateTimeOffset dt)
+                                                ? dt
+                                                : EnsureType(reader, keyValue, CultureInfo.InvariantCulture, contract.KeyContract!, contract.DictionaryKeyType)!;
+                                            break;
+                                        }
 #endif
                                     default:
                                         keyValue = EnsureType(reader, keyValue, CultureInfo.InvariantCulture, contract.KeyContract!, contract.DictionaryKeyType)!;
                                         break;
                                 }
-                            }
-                            catch (Exception ex)
-                            {
+                            } catch (Exception ex) {
                                 throw JsonSerializationException.Create(reader, "Could not convert string '{0}' to dictionary key type '{1}'. Create a TypeConverter to convert from the string to the key type object.".FormatWith(CultureInfo.InvariantCulture, reader.Value, contract.DictionaryKeyType), ex);
                             }
 
-                            if (!reader.ReadForType(contract.ItemContract, dictionaryValueConverter != null))
-                            {
+                            if (!reader.ReadForType(contract.ItemContract, dictionaryValueConverter != null)) {
                                 throw JsonSerializationException.Create(reader, "Unexpected end when deserializing object.");
                             }
 
                             object? itemValue;
-                            if (dictionaryValueConverter != null && dictionaryValueConverter.CanRead)
-                            {
+                            if (dictionaryValueConverter != null && dictionaryValueConverter.CanRead) {
                                 itemValue = DeserializeConvertable(dictionaryValueConverter, reader, contract.DictionaryValueType!, null);
-                            }
-                            else
-                            {
+                            } else {
                                 itemValue = CreateValueInternal(reader, contract.DictionaryValueType, contract.ItemContract, null, contract, containerProperty, null);
                             }
 
                             dictionary[keyValue] = itemValue;
-                        }
-                        catch (Exception ex)
-                        {
-                            if (IsErrorHandled(underlyingDictionary, contract, keyValue, reader as IJsonLineInfo, reader.Path, ex))
-                            {
+                        } catch (Exception ex) {
+                            if (IsErrorHandled(underlyingDictionary, contract, keyValue, reader as IJsonLineInfo, reader.Path, ex)) {
                                 HandleError(reader, true, initialDepth);
-                            }
-                            else
-                            {
+                            } else {
                                 throw;
                             }
                         }
@@ -1376,8 +1120,7 @@ namespace Simula.Scripting.Json.Serialization
                 }
             } while (!finished && reader.Read());
 
-            if (!finished)
-            {
+            if (!finished) {
                 ThrowUnexpectedEndException(reader, contract, underlyingDictionary, "Unexpected end when deserializing object.");
             }
 
@@ -1389,8 +1132,7 @@ namespace Simula.Scripting.Json.Serialization
         {
             int rank = contract.UnderlyingType.GetArrayRank();
 
-            if (id != null)
-            {
+            if (id != null) {
                 AddReference(reader, id, list);
             }
 
@@ -1405,18 +1147,13 @@ namespace Simula.Scripting.Json.Serialization
             IList currentList = list;
 
             bool finished = false;
-            do
-            {
+            do {
                 int initialDepth = reader.Depth;
 
-                if (listStack.Count == rank)
-                {
-                    try
-                    {
-                        if (reader.ReadForType(collectionItemContract, collectionItemConverter != null))
-                        {
-                            switch (reader.TokenType)
-                            {
+                if (listStack.Count == rank) {
+                    try {
+                        if (reader.ReadForType(collectionItemContract, collectionItemConverter != null)) {
+                            switch (reader.TokenType) {
                                 case JsonToken.EndArray:
                                     listStack.Pop();
                                     currentList = listStack.Peek();
@@ -1427,53 +1164,36 @@ namespace Simula.Scripting.Json.Serialization
                                 default:
                                     object? value;
 
-                                    if (collectionItemConverter != null && collectionItemConverter.CanRead)
-                                    {
+                                    if (collectionItemConverter != null && collectionItemConverter.CanRead) {
                                         value = DeserializeConvertable(collectionItemConverter, reader, contract.CollectionItemType!, null);
-                                    }
-                                    else
-                                    {
+                                    } else {
                                         value = CreateValueInternal(reader, contract.CollectionItemType, collectionItemContract, null, contract, containerProperty, null);
                                     }
 
                                     currentList.Add(value);
                                     break;
                             }
-                        }
-                        else
-                        {
+                        } else {
                             break;
                         }
-                    }
-                    catch (Exception ex)
-                    {
+                    } catch (Exception ex) {
                         JsonPosition errorPosition = reader.GetPosition(initialDepth);
 
-                        if (IsErrorHandled(list, contract, errorPosition.Position, reader as IJsonLineInfo, reader.Path, ex))
-                        {
+                        if (IsErrorHandled(list, contract, errorPosition.Position, reader as IJsonLineInfo, reader.Path, ex)) {
                             HandleError(reader, true, initialDepth + 1);
 
-                            if (previousErrorIndex != null && previousErrorIndex == errorPosition.Position)
-                            {
+                            if (previousErrorIndex != null && previousErrorIndex == errorPosition.Position) {
                                 throw JsonSerializationException.Create(reader, "Infinite loop detected from error handling.", ex);
-                            }
-                            else
-                            {
+                            } else {
                                 previousErrorIndex = errorPosition.Position;
                             }
-                        }
-                        else
-                        {
+                        } else {
                             throw;
                         }
                     }
-                }
-                else
-                {
-                    if (reader.Read())
-                    {
-                        switch (reader.TokenType)
-                        {
+                } else {
+                    if (reader.Read()) {
+                        switch (reader.TokenType) {
                             case JsonToken.StartArray:
                                 IList newList = new List<object>();
                                 currentList.Add(newList);
@@ -1483,12 +1203,9 @@ namespace Simula.Scripting.Json.Serialization
                             case JsonToken.EndArray:
                                 listStack.Pop();
 
-                                if (listStack.Count > 0)
-                                {
+                                if (listStack.Count > 0) {
                                     currentList = listStack.Peek();
-                                }
-                                else
-                                {
+                                } else {
                                     finished = true;
                                 }
                                 break;
@@ -1497,16 +1214,13 @@ namespace Simula.Scripting.Json.Serialization
                             default:
                                 throw JsonSerializationException.Create(reader, "Unexpected token when deserializing multidimensional array: " + reader.TokenType);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         break;
                     }
                 }
             } while (!finished);
 
-            if (!finished)
-            {
+            if (!finished) {
                 ThrowUnexpectedEndException(reader, contract, list, "Unexpected end when deserializing array.");
             }
 
@@ -1516,18 +1230,12 @@ namespace Simula.Scripting.Json.Serialization
 
         private void ThrowUnexpectedEndException(JsonReader reader, JsonContract contract, object? currentObject, string message)
         {
-            try
-            {
+            try {
                 throw JsonSerializationException.Create(reader, message);
-            }
-            catch (Exception ex)
-            {
-                if (IsErrorHandled(currentObject, contract, null, reader as IJsonLineInfo, reader.Path, ex))
-                {
+            } catch (Exception ex) {
+                if (IsErrorHandled(currentObject, contract, null, reader as IJsonLineInfo, reader.Path, ex)) {
                     HandleError(reader, false, 0);
-                }
-                else
-                {
+                } else {
                     throw;
                 }
             }
@@ -1538,12 +1246,10 @@ namespace Simula.Scripting.Json.Serialization
 #pragma warning disable CS8600, CS8602, CS8603, CS8604
             object underlyingList = list is IWrappedCollection wrappedCollection ? wrappedCollection.UnderlyingCollection : list;
 
-            if (id != null)
-            {
+            if (id != null) {
                 AddReference(reader, id, underlyingList);
             }
-            if (list.IsFixedSize)
-            {
+            if (list.IsFixedSize) {
                 reader.Skip();
                 return underlyingList;
             }
@@ -1552,8 +1258,7 @@ namespace Simula.Scripting.Json.Serialization
 
             int initialDepth = reader.Depth;
 
-            if (contract.ItemContract == null)
-            {
+            if (contract.ItemContract == null) {
                 contract.ItemContract = GetContractSafe(contract.CollectionItemType);
             }
 
@@ -1562,14 +1267,10 @@ namespace Simula.Scripting.Json.Serialization
             int? previousErrorIndex = null;
 
             bool finished = false;
-            do
-            {
-                try
-                {
-                    if (reader.ReadForType(contract.ItemContract, collectionItemConverter != null))
-                    {
-                        switch (reader.TokenType)
-                        {
+            do {
+                try {
+                    if (reader.ReadForType(contract.ItemContract, collectionItemConverter != null)) {
+                        switch (reader.TokenType) {
                             case JsonToken.EndArray:
                                 finished = true;
                                 break;
@@ -1578,50 +1279,36 @@ namespace Simula.Scripting.Json.Serialization
                             default:
                                 object? value;
 
-                                if (collectionItemConverter != null && collectionItemConverter.CanRead)
-                                {
+                                if (collectionItemConverter != null && collectionItemConverter.CanRead) {
                                     value = DeserializeConvertable(collectionItemConverter, reader, contract.CollectionItemType, null);
-                                }
-                                else
-                                {
+                                } else {
                                     value = CreateValueInternal(reader, contract.CollectionItemType, contract.ItemContract, null, contract, containerProperty, null);
                                 }
 
                                 list.Add(value);
                                 break;
                         }
-                    }
-                    else
-                    {
+                    } else {
                         break;
                     }
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     JsonPosition errorPosition = reader.GetPosition(initialDepth);
 
-                    if (IsErrorHandled(underlyingList, contract, errorPosition.Position, reader as IJsonLineInfo, reader.Path, ex))
-                    {
+                    if (IsErrorHandled(underlyingList, contract, errorPosition.Position, reader as IJsonLineInfo, reader.Path, ex)) {
                         HandleError(reader, true, initialDepth + 1);
 
-                        if (previousErrorIndex != null && previousErrorIndex == errorPosition.Position)
-                        {
+                        if (previousErrorIndex != null && previousErrorIndex == errorPosition.Position) {
                             throw JsonSerializationException.Create(reader, "Infinite loop detected from error handling.", ex);
-                        }
-                        else
-                        {
+                        } else {
                             previousErrorIndex = errorPosition.Position;
                         }
-                    }
-                    else
-                    {
+                    } else {
                         throw;
                     }
                 }
             } while (!finished);
 
-            if (!finished)
-            {
+            if (!finished) {
                 ThrowUnexpectedEndException(reader, contract, underlyingList, "Unexpected end when deserializing array.");
             }
 
@@ -1728,23 +1415,18 @@ namespace Simula.Scripting.Json.Serialization
         {
             IDynamicMetaObjectProvider newObject;
 
-            if (!contract.IsInstantiable)
-            {
+            if (!contract.IsInstantiable) {
                 throw JsonSerializationException.Create(reader, "Could not create an instance of type {0}. Type is an interface or abstract class and cannot be instantiated.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType));
             }
 
             if (contract.DefaultCreator != null &&
-                (!contract.DefaultCreatorNonPublic || Serializer._constructorHandling == ConstructorHandling.AllowNonPublicDefaultConstructor))
-            {
+                (!contract.DefaultCreatorNonPublic || Serializer._constructorHandling == ConstructorHandling.AllowNonPublicDefaultConstructor)) {
                 newObject = (IDynamicMetaObjectProvider)contract.DefaultCreator();
-            }
-            else
-            {
+            } else {
                 throw JsonSerializationException.Create(reader, "Unable to find a default constructor to use for type {0}.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType));
             }
 
-            if (id != null)
-            {
+            if (id != null) {
                 AddReference(reader, id, newObject);
             }
 
@@ -1753,63 +1435,46 @@ namespace Simula.Scripting.Json.Serialization
             int initialDepth = reader.Depth;
 
             bool finished = false;
-            do
-            {
-                switch (reader.TokenType)
-                {
+            do {
+                switch (reader.TokenType) {
                     case JsonToken.PropertyName:
                         string memberName = reader.Value!.ToString();
 
-                        try
-                        {
-                            if (!reader.Read())
-                            {
+                        try {
+                            if (!reader.Read()) {
                                 throw JsonSerializationException.Create(reader, "Unexpected end when setting {0}'s value.".FormatWith(CultureInfo.InvariantCulture, memberName));
                             }
                             JsonProperty? property = contract.Properties.GetClosestMatchProperty(memberName);
 
-                            if (property != null && property.Writable && !property.Ignored)
-                            {
-                                if (property.PropertyContract == null)
-                                {
+                            if (property != null && property.Writable && !property.Ignored) {
+                                if (property.PropertyContract == null) {
                                     property.PropertyContract = GetContractSafe(property.PropertyType);
                                 }
 
                                 JsonConverter? propertyConverter = GetConverter(property.PropertyContract, property.Converter, null, null);
 
-                                if (!SetPropertyValue(property, propertyConverter, null, member, reader, newObject))
-                                {
+                                if (!SetPropertyValue(property, propertyConverter, null, member, reader, newObject)) {
                                     reader.Skip();
                                 }
-                            }
-                            else
-                            {
+                            } else {
                                 Type t = (JsonTokenUtils.IsPrimitiveToken(reader.TokenType)) ? reader.ValueType! : typeof(IDynamicMetaObjectProvider);
 
                                 JsonContract? dynamicMemberContract = GetContractSafe(t);
                                 JsonConverter? dynamicMemberConverter = GetConverter(dynamicMemberContract, null, null, member);
 
                                 object? value;
-                                if (dynamicMemberConverter != null && dynamicMemberConverter.CanRead)
-                                {
+                                if (dynamicMemberConverter != null && dynamicMemberConverter.CanRead) {
                                     value = DeserializeConvertable(dynamicMemberConverter!, reader, t, null);
-                                }
-                                else
-                                {
+                                } else {
                                     value = CreateValueInternal(reader, t, dynamicMemberContract, null, null, member, null);
                                 }
 
                                 contract.TrySetMember(newObject, memberName, value);
                             }
-                        }
-                        catch (Exception ex)
-                        {
-                            if (IsErrorHandled(newObject, contract, memberName, reader as IJsonLineInfo, reader.Path, ex))
-                            {
+                        } catch (Exception ex) {
+                            if (IsErrorHandled(newObject, contract, memberName, reader as IJsonLineInfo, reader.Path, ex)) {
                                 HandleError(reader, true, initialDepth);
-                            }
-                            else
-                            {
+                            } else {
                                 throw;
                             }
                         }
@@ -1822,8 +1487,7 @@ namespace Simula.Scripting.Json.Serialization
                 }
             } while (!finished && reader.Read());
 
-            if (!finished)
-            {
+            if (!finished) {
                 ThrowUnexpectedEndException(reader, contract, newObject, "Unexpected end when deserializing object.");
             }
 
@@ -1855,8 +1519,7 @@ namespace Simula.Scripting.Json.Serialization
 
             Type objectType = contract.UnderlyingType;
 
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info)
-            {
+            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info) {
                 string parameters = string.Join(", ", contract.CreatorParameters.Select(p => p.PropertyName)
 #if !HAVE_STRING_JOIN_WITH_ENUMERABLE
                     .ToArray()
@@ -1866,14 +1529,10 @@ namespace Simula.Scripting.Json.Serialization
             }
 
             List<CreatorPropertyContext> propertyContexts = ResolvePropertyAndCreatorValues(contract, containerProperty, reader, objectType);
-            if (trackPresence)
-            {
-                foreach (JsonProperty property in contract.Properties)
-                {
-                    if (!property.Ignored)
-                    {
-                        if (propertyContexts.All(p => p.Property != property))
-                        {
+            if (trackPresence) {
+                foreach (JsonProperty property in contract.Properties) {
+                    if (!property.Ignored) {
+                        if (propertyContexts.All(p => p.Property != property)) {
                             propertyContexts.Add(new CreatorPropertyContext(property.PropertyName!)
                             {
                                 Property = property,
@@ -1886,26 +1545,18 @@ namespace Simula.Scripting.Json.Serialization
 
             object?[] creatorParameterValues = new object?[contract.CreatorParameters.Count];
 
-            foreach (CreatorPropertyContext context in propertyContexts)
-            {
-                if (trackPresence)
-                {
-                    if (context.Property != null && context.Presence == null)
-                    {
+            foreach (CreatorPropertyContext context in propertyContexts) {
+                if (trackPresence) {
+                    if (context.Property != null && context.Presence == null) {
                         object? v = context.Value;
                         PropertyPresence propertyPresence;
-                        if (v == null)
-                        {
+                        if (v == null) {
                             propertyPresence = PropertyPresence.Null;
-                        }
-                        else if (v is string s)
-                        {
+                        } else if (v is string s) {
                             propertyPresence = CoerceEmptyStringToNull(context.Property.PropertyType, context.Property.PropertyContract, s)
                                 ? PropertyPresence.Null
                                 : PropertyPresence.Value;
-                        }
-                        else
-                        {
+                        } else {
                             propertyPresence = PropertyPresence.Value;
                         }
 
@@ -1914,24 +1565,18 @@ namespace Simula.Scripting.Json.Serialization
                 }
 
                 JsonProperty? constructorProperty = context.ConstructorProperty;
-                if (constructorProperty == null && context.Property != null)
-                {
+                if (constructorProperty == null && context.Property != null) {
                     constructorProperty = contract.CreatorParameters.ForgivingCaseSensitiveFind(p => p.PropertyName!, context.Property.UnderlyingName!);
                 }
 
-                if (constructorProperty != null && !constructorProperty.Ignored)
-                {
-                    if (trackPresence)
-                    {
-                        if (context.Presence == PropertyPresence.None || context.Presence == PropertyPresence.Null)
-                        {
-                            if (constructorProperty.PropertyContract == null)
-                            {
+                if (constructorProperty != null && !constructorProperty.Ignored) {
+                    if (trackPresence) {
+                        if (context.Presence == PropertyPresence.None || context.Presence == PropertyPresence.Null) {
+                            if (constructorProperty.PropertyContract == null) {
                                 constructorProperty.PropertyContract = GetContractSafe(constructorProperty.PropertyType);
                             }
 
-                            if (HasFlag(constructorProperty.DefaultValueHandling.GetValueOrDefault(Serializer._defaultValueHandling), DefaultValueHandling.Populate))
-                            {
+                            if (HasFlag(constructorProperty.DefaultValueHandling.GetValueOrDefault(Serializer._defaultValueHandling), DefaultValueHandling.Populate)) {
                                 context.Value = EnsureType(
                                     reader,
                                     constructorProperty.GetResolvedDefaultValue(),
@@ -1951,80 +1596,61 @@ namespace Simula.Scripting.Json.Serialization
 
             object createdObject = creator(creatorParameterValues);
 
-            if (id != null)
-            {
+            if (id != null) {
                 AddReference(reader, id, createdObject);
             }
 
             OnDeserializing(reader, contract, createdObject);
-            foreach (CreatorPropertyContext context in propertyContexts)
-            {
+            foreach (CreatorPropertyContext context in propertyContexts) {
                 if (context.Used ||
                     context.Property == null ||
                     context.Property.Ignored ||
-                    context.Presence == PropertyPresence.None)
-                {
+                    context.Presence == PropertyPresence.None) {
                     continue;
                 }
 
                 JsonProperty property = context.Property;
                 object? value = context.Value;
 
-                if (ShouldSetPropertyValue(property, contract, value))
-                {
+                if (ShouldSetPropertyValue(property, contract, value)) {
                     property.ValueProvider!.SetValue(createdObject, value);
                     context.Used = true;
-                }
-                else if (!property.Writable && value != null)
-                {
+                } else if (!property.Writable && value != null) {
                     JsonContract propertyContract = Serializer._contractResolver.ResolveContract(property.PropertyType!);
 
-                    if (propertyContract.ContractType == JsonContractType.Array)
-                    {
+                    if (propertyContract.ContractType == JsonContractType.Array) {
                         JsonArrayContract propertyArrayContract = (JsonArrayContract)propertyContract;
 
-                        if (propertyArrayContract.CanDeserialize && !propertyArrayContract.IsReadOnlyOrFixedSize)
-                        {
+                        if (propertyArrayContract.CanDeserialize && !propertyArrayContract.IsReadOnlyOrFixedSize) {
                             object? createdObjectCollection = property.ValueProvider!.GetValue(createdObject);
-                            if (createdObjectCollection != null)
-                            {
+                            if (createdObjectCollection != null) {
                                 propertyArrayContract = (JsonArrayContract)GetContract(createdObjectCollection.GetType());
 
                                 IList createdObjectCollectionWrapper = (propertyArrayContract.ShouldCreateWrapper) ? propertyArrayContract.CreateWrapper(createdObjectCollection) : (IList)createdObjectCollection;
-                                if (!createdObjectCollectionWrapper.IsFixedSize)
-                                {
+                                if (!createdObjectCollectionWrapper.IsFixedSize) {
                                     IList newValues = (propertyArrayContract.ShouldCreateWrapper) ? propertyArrayContract.CreateWrapper(value) : (IList)value;
 
-                                    foreach (object newValue in newValues)
-                                    {
+                                    foreach (object newValue in newValues) {
                                         createdObjectCollectionWrapper.Add(newValue);
                                     }
                                 }
                             }
                         }
-                    }
-                    else if (propertyContract.ContractType == JsonContractType.Dictionary)
-                    {
+                    } else if (propertyContract.ContractType == JsonContractType.Dictionary) {
                         JsonDictionaryContract dictionaryContract = (JsonDictionaryContract)propertyContract;
 
-                        if (!dictionaryContract.IsReadOnlyOrFixedSize)
-                        {
+                        if (!dictionaryContract.IsReadOnlyOrFixedSize) {
                             object? createdObjectDictionary = property.ValueProvider!.GetValue(createdObject);
-                            if (createdObjectDictionary != null)
-                            {
+                            if (createdObjectDictionary != null) {
                                 IDictionary targetDictionary = (dictionaryContract.ShouldCreateWrapper) ? dictionaryContract.CreateWrapper(createdObjectDictionary) : (IDictionary)createdObjectDictionary;
                                 IDictionary newValues = (dictionaryContract.ShouldCreateWrapper) ? dictionaryContract.CreateWrapper(value) : (IDictionary)value;
                                 IDictionaryEnumerator e = newValues.GetEnumerator();
-                                try
-                                {
-                                    while (e.MoveNext())
-                                    {
+                                try {
+                                    while (e.MoveNext()) {
                                         DictionaryEntry entry = e.Entry;
                                         targetDictionary[entry.Key] = entry.Value;
                                     }
-                                }
-                                finally
-                                {
+                                } finally {
                                     (e as IDisposable)?.Dispose();
                                 }
                             }
@@ -2035,23 +1661,17 @@ namespace Simula.Scripting.Json.Serialization
                 }
             }
 
-            if (contract.ExtensionDataSetter != null)
-            {
-                foreach (CreatorPropertyContext propertyValue in propertyContexts)
-                {
-                    if (!propertyValue.Used && propertyValue.Presence != PropertyPresence.None)
-                    {
+            if (contract.ExtensionDataSetter != null) {
+                foreach (CreatorPropertyContext propertyValue in propertyContexts) {
+                    if (!propertyValue.Used && propertyValue.Presence != PropertyPresence.None) {
                         contract.ExtensionDataSetter(createdObject, propertyValue.Name, propertyValue.Value);
                     }
                 }
             }
 
-            if (trackPresence)
-            {
-                foreach (CreatorPropertyContext context in propertyContexts)
-                {
-                    if (context.Property == null)
-                    {
+            if (trackPresence) {
+                foreach (CreatorPropertyContext context in propertyContexts) {
+                    if (context.Property == null) {
                         continue;
                     }
 
@@ -2072,15 +1692,13 @@ namespace Simula.Scripting.Json.Serialization
 
         private object? DeserializeConvertable(JsonConverter converter, JsonReader reader, Type objectType, object? existingValue)
         {
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info)
-            {
+            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info) {
                 TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(reader as IJsonLineInfo, reader.Path, "Started deserializing {0} with converter {1}.".FormatWith(CultureInfo.InvariantCulture, objectType, converter.GetType())), null);
             }
 
             object? value = converter.ReadJson(reader, objectType, existingValue, GetInternalSerializer());
 
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info)
-            {
+            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info) {
                 TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(reader as IJsonLineInfo, reader.Path, "Finished deserializing {0} with converter {1}.".FormatWith(CultureInfo.InvariantCulture, objectType, converter.GetType())), null);
             }
 
@@ -2091,10 +1709,8 @@ namespace Simula.Scripting.Json.Serialization
         {
             List<CreatorPropertyContext> propertyValues = new List<CreatorPropertyContext>();
             bool exit = false;
-            do
-            {
-                switch (reader.TokenType)
-                {
+            do {
+                switch (reader.TokenType) {
                     case JsonToken.PropertyName:
                         string memberName = reader.Value!.ToString();
 
@@ -2106,58 +1722,43 @@ namespace Simula.Scripting.Json.Serialization
                         propertyValues.Add(creatorPropertyContext);
 
                         JsonProperty? property = creatorPropertyContext.ConstructorProperty ?? creatorPropertyContext.Property;
-                        if (property != null)
-                        {
-                            if (!property.Ignored)
-                            {
-                                if (property.PropertyContract == null)
-                                {
+                        if (property != null) {
+                            if (!property.Ignored) {
+                                if (property.PropertyContract == null) {
                                     property.PropertyContract = GetContractSafe(property.PropertyType);
                                 }
 
                                 JsonConverter? propertyConverter = GetConverter(property.PropertyContract, property.Converter, contract, containerProperty);
 
-                                if (!reader.ReadForType(property.PropertyContract, propertyConverter != null))
-                                {
+                                if (!reader.ReadForType(property.PropertyContract, propertyConverter != null)) {
                                     throw JsonSerializationException.Create(reader, "Unexpected end when setting {0}'s value.".FormatWith(CultureInfo.InvariantCulture, memberName));
                                 }
 
-                                if (propertyConverter != null && propertyConverter.CanRead)
-                                {
+                                if (propertyConverter != null && propertyConverter.CanRead) {
                                     creatorPropertyContext.Value = DeserializeConvertable(propertyConverter, reader, property.PropertyType!, null);
-                                }
-                                else
-                                {
+                                } else {
                                     creatorPropertyContext.Value = CreateValueInternal(reader, property.PropertyType, property.PropertyContract, property, contract, containerProperty, null);
                                 }
-                                
+
                                 continue;
                             }
-                        }
-                        else
-                        {
-                            if (!reader.Read())
-                            {
+                        } else {
+                            if (!reader.Read()) {
                                 throw JsonSerializationException.Create(reader, "Unexpected end when setting {0}'s value.".FormatWith(CultureInfo.InvariantCulture, memberName));
                             }
 
-                            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
-                            {
+                            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose) {
                                 TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(reader as IJsonLineInfo, reader.Path, "Could not find member '{0}' on {1}.".FormatWith(CultureInfo.InvariantCulture, memberName, contract.UnderlyingType)), null);
                             }
 
-                            if ((contract.MissingMemberHandling ?? Serializer._missingMemberHandling) == MissingMemberHandling.Error)
-                            {
+                            if ((contract.MissingMemberHandling ?? Serializer._missingMemberHandling) == MissingMemberHandling.Error) {
                                 throw JsonSerializationException.Create(reader, "Could not find member '{0}' on object of type '{1}'".FormatWith(CultureInfo.InvariantCulture, memberName, objectType.Name));
                             }
                         }
 
-                        if (contract.ExtensionDataSetter != null)
-                        {
+                        if (contract.ExtensionDataSetter != null) {
                             creatorPropertyContext.Value = ReadExtensionDataValue(contract, containerProperty, reader);
-                        }
-                        else
-                        {
+                        } else {
                             reader.Skip();
                         }
                         break;
@@ -2171,8 +1772,7 @@ namespace Simula.Scripting.Json.Serialization
                 }
             } while (!exit && reader.Read());
 
-            if (!exit)
-            {
+            if (!exit) {
                 ThrowUnexpectedEndException(reader, contract, null, "Unexpected end when deserializing object.");
             }
 
@@ -2183,31 +1783,23 @@ namespace Simula.Scripting.Json.Serialization
         {
             object? newObject = null;
 
-            if (objectContract.OverrideCreator != null)
-            {
-                if (objectContract.CreatorParameters.Count > 0)
-                {
+            if (objectContract.OverrideCreator != null) {
+                if (objectContract.CreatorParameters.Count > 0) {
                     createdFromNonDefaultCreator = true;
                     return CreateObjectUsingCreatorWithParameters(reader, objectContract, containerMember, objectContract.OverrideCreator, id);
                 }
 
                 newObject = objectContract.OverrideCreator(CollectionUtils.ArrayEmpty<object>());
-            }
-            else if (objectContract.DefaultCreator != null &&
-                     (!objectContract.DefaultCreatorNonPublic || Serializer._constructorHandling == ConstructorHandling.AllowNonPublicDefaultConstructor || objectContract.ParameterizedCreator == null))
-            {
+            } else if (objectContract.DefaultCreator != null &&
+                       (!objectContract.DefaultCreatorNonPublic || Serializer._constructorHandling == ConstructorHandling.AllowNonPublicDefaultConstructor || objectContract.ParameterizedCreator == null)) {
                 newObject = objectContract.DefaultCreator();
-            }
-            else if (objectContract.ParameterizedCreator != null)
-            {
+            } else if (objectContract.ParameterizedCreator != null) {
                 createdFromNonDefaultCreator = true;
                 return CreateObjectUsingCreatorWithParameters(reader, objectContract, containerMember, objectContract.ParameterizedCreator, id);
             }
 
-            if (newObject == null)
-            {
-                if (!objectContract.IsInstantiable)
-                {
+            if (newObject == null) {
+                if (!objectContract.IsInstantiable) {
                     throw JsonSerializationException.Create(reader, "Could not create an instance of type {0}. Type is an interface or abstract class and cannot be instantiated.".FormatWith(CultureInfo.InvariantCulture, objectContract.UnderlyingType));
                 }
 
@@ -2225,96 +1817,74 @@ namespace Simula.Scripting.Json.Serialization
                 ? contract.Properties.ToDictionary(m => m, m => PropertyPresence.None)
                 : null;
 
-            if (id != null)
-            {
+            if (id != null) {
                 AddReference(reader, id, newObject);
             }
 
             int initialDepth = reader.Depth;
 
             bool finished = false;
-            do
-            {
-                switch (reader.TokenType)
-                {
-                    case JsonToken.PropertyName:
-                    {
-                        string propertyName = reader.Value!.ToString();
+            do {
+                switch (reader.TokenType) {
+                    case JsonToken.PropertyName: {
+                            string propertyName = reader.Value!.ToString();
 
-                        if (CheckPropertyName(reader, propertyName))
-                        {
-                            continue;
-                        }
-
-                        try
-                        {
-                            JsonProperty? property = contract.Properties.GetClosestMatchProperty(propertyName);
-
-                            if (property == null)
-                            {
-                                if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
-                                {
-                                    TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(reader as IJsonLineInfo, reader.Path, "Could not find member '{0}' on {1}".FormatWith(CultureInfo.InvariantCulture, propertyName, contract.UnderlyingType)), null);
-                                }
-
-                                if ((contract.MissingMemberHandling ?? Serializer._missingMemberHandling) == MissingMemberHandling.Error)
-                                {
-                                    throw JsonSerializationException.Create(reader, "Could not find member '{0}' on object of type '{1}'".FormatWith(CultureInfo.InvariantCulture, propertyName, contract.UnderlyingType.Name));
-                                }
-
-                                if (!reader.Read())
-                                {
-                                    break;
-                                }
-
-                                SetExtensionData(contract, member, reader, propertyName, newObject);
+                            if (CheckPropertyName(reader, propertyName)) {
                                 continue;
                             }
 
-                            if (property.Ignored || !ShouldDeserialize(reader, property, newObject))
-                            {
-                                if (!reader.Read())
-                                {
-                                    break;
-                                }
+                            try {
+                                JsonProperty? property = contract.Properties.GetClosestMatchProperty(propertyName);
 
-                                SetPropertyPresence(reader, property, propertiesPresence);
-                                SetExtensionData(contract, member, reader, propertyName, newObject);
-                            }
-                            else
-                            {
-                                if (property.PropertyContract == null)
-                                {
-                                    property.PropertyContract = GetContractSafe(property.PropertyType);
-                                }
+                                if (property == null) {
+                                    if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose) {
+                                        TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(reader as IJsonLineInfo, reader.Path, "Could not find member '{0}' on {1}".FormatWith(CultureInfo.InvariantCulture, propertyName, contract.UnderlyingType)), null);
+                                    }
 
-                                JsonConverter? propertyConverter = GetConverter(property.PropertyContract, property.Converter, contract, member);
+                                    if ((contract.MissingMemberHandling ?? Serializer._missingMemberHandling) == MissingMemberHandling.Error) {
+                                        throw JsonSerializationException.Create(reader, "Could not find member '{0}' on object of type '{1}'".FormatWith(CultureInfo.InvariantCulture, propertyName, contract.UnderlyingType.Name));
+                                    }
 
-                                if (!reader.ReadForType(property.PropertyContract, propertyConverter != null))
-                                {
-                                    throw JsonSerializationException.Create(reader, "Unexpected end when setting {0}'s value.".FormatWith(CultureInfo.InvariantCulture, propertyName));
-                                }
+                                    if (!reader.Read()) {
+                                        break;
+                                    }
 
-                                SetPropertyPresence(reader, property, propertiesPresence);
-                                if (!SetPropertyValue(property, propertyConverter, contract, member, reader, newObject))
-                                {
                                     SetExtensionData(contract, member, reader, propertyName, newObject);
+                                    continue;
+                                }
+
+                                if (property.Ignored || !ShouldDeserialize(reader, property, newObject)) {
+                                    if (!reader.Read()) {
+                                        break;
+                                    }
+
+                                    SetPropertyPresence(reader, property, propertiesPresence);
+                                    SetExtensionData(contract, member, reader, propertyName, newObject);
+                                } else {
+                                    if (property.PropertyContract == null) {
+                                        property.PropertyContract = GetContractSafe(property.PropertyType);
+                                    }
+
+                                    JsonConverter? propertyConverter = GetConverter(property.PropertyContract, property.Converter, contract, member);
+
+                                    if (!reader.ReadForType(property.PropertyContract, propertyConverter != null)) {
+                                        throw JsonSerializationException.Create(reader, "Unexpected end when setting {0}'s value.".FormatWith(CultureInfo.InvariantCulture, propertyName));
+                                    }
+
+                                    SetPropertyPresence(reader, property, propertiesPresence);
+                                    if (!SetPropertyValue(property, propertyConverter, contract, member, reader, newObject)) {
+                                        SetExtensionData(contract, member, reader, propertyName, newObject);
+                                    }
+                                }
+                            } catch (Exception ex) {
+                                if (IsErrorHandled(newObject, contract, propertyName, reader as IJsonLineInfo, reader.Path, ex)) {
+                                    HandleError(reader, true, initialDepth);
+                                } else {
+                                    throw;
                                 }
                             }
+                            break;
                         }
-                        catch (Exception ex)
-                        {
-                            if (IsErrorHandled(newObject, contract, propertyName, reader as IJsonLineInfo, reader.Path, ex))
-                            {
-                                HandleError(reader, true, initialDepth);
-                            }
-                            else
-                            {
-                                throw;
-                            }
-                        }
-                        break;
-                    }
                     case JsonToken.EndObject:
                         finished = true;
                         break;
@@ -2325,15 +1895,12 @@ namespace Simula.Scripting.Json.Serialization
                 }
             } while (!finished && reader.Read());
 
-            if (!finished)
-            {
+            if (!finished) {
                 ThrowUnexpectedEndException(reader, contract, newObject, "Unexpected end when deserializing object.");
             }
 
-            if (propertiesPresence != null)
-            {
-                foreach (KeyValuePair<JsonProperty, PropertyPresence> propertyPresence in propertiesPresence)
-                {
+            if (propertiesPresence != null) {
+                foreach (KeyValuePair<JsonProperty, PropertyPresence> propertyPresence in propertiesPresence) {
                     JsonProperty property = propertyPresence.Key;
                     PropertyPresence presence = propertyPresence.Value;
 
@@ -2347,15 +1914,13 @@ namespace Simula.Scripting.Json.Serialization
 
         private bool ShouldDeserialize(JsonReader reader, JsonProperty property, object target)
         {
-            if (property.ShouldDeserialize == null)
-            {
+            if (property.ShouldDeserialize == null) {
                 return true;
             }
 
             bool shouldDeserialize = property.ShouldDeserialize(target);
 
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
-            {
+            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose) {
                 TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(null, reader.Path, "ShouldDeserialize result for property '{0}' on {1}: {2}".FormatWith(CultureInfo.InvariantCulture, property.PropertyName, property.DeclaringType, shouldDeserialize)), null);
             }
 
@@ -2364,10 +1929,8 @@ namespace Simula.Scripting.Json.Serialization
 
         private bool CheckPropertyName(JsonReader reader, string memberName)
         {
-            if (Serializer.MetadataPropertyHandling == MetadataPropertyHandling.ReadAhead)
-            {
-                switch (memberName)
-                {
+            if (Serializer.MetadataPropertyHandling == MetadataPropertyHandling.ReadAhead) {
+                switch (memberName) {
                     case JsonTypeReflector.IdPropertyName:
                     case JsonTypeReflector.RefPropertyName:
                     case JsonTypeReflector.TypePropertyName:
@@ -2381,21 +1944,15 @@ namespace Simula.Scripting.Json.Serialization
 
         private void SetExtensionData(JsonObjectContract contract, JsonProperty? member, JsonReader reader, string memberName, object o)
         {
-            if (contract.ExtensionDataSetter != null)
-            {
-                try
-                {
+            if (contract.ExtensionDataSetter != null) {
+                try {
                     object? value = ReadExtensionDataValue(contract, member, reader);
 
                     contract.ExtensionDataSetter(o, memberName, value);
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     throw JsonSerializationException.Create(reader, "Error setting value in extension data for type '{0}'.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType), ex);
                 }
-            }
-            else
-            {
+            } else {
                 reader.Skip();
             }
         }
@@ -2403,12 +1960,9 @@ namespace Simula.Scripting.Json.Serialization
         private object? ReadExtensionDataValue(JsonObjectContract contract, JsonProperty? member, JsonReader reader)
         {
             object? value;
-            if (contract.ExtensionDataIsJToken)
-            {
+            if (contract.ExtensionDataIsJToken) {
                 value = JToken.ReadFrom(reader);
-            }
-            else
-            {
+            } else {
                 value = CreateValueInternal(reader, null, null, null, contract, member, null);
             }
             return value;
@@ -2416,53 +1970,39 @@ namespace Simula.Scripting.Json.Serialization
 
         private void EndProcessProperty(object newObject, JsonReader reader, JsonObjectContract contract, int initialDepth, JsonProperty property, PropertyPresence presence, bool setDefaultValue)
         {
-            if (presence == PropertyPresence.None || presence == PropertyPresence.Null)
-            {
-                try
-                {
+            if (presence == PropertyPresence.None || presence == PropertyPresence.Null) {
+                try {
                     Required resolvedRequired = property.Ignored ? Required.Default : property._required ?? contract.ItemRequired ?? Required.Default;
 
-                    switch (presence)
-                    {
+                    switch (presence) {
                         case PropertyPresence.None:
-                            if (resolvedRequired == Required.AllowNull || resolvedRequired == Required.Always)
-                            {
+                            if (resolvedRequired == Required.AllowNull || resolvedRequired == Required.Always) {
                                 throw JsonSerializationException.Create(reader, "Required property '{0}' not found in JSON.".FormatWith(CultureInfo.InvariantCulture, property.PropertyName));
                             }
 
-                            if (setDefaultValue && !property.Ignored)
-                            {
-                                if (property.PropertyContract == null)
-                                {
+                            if (setDefaultValue && !property.Ignored) {
+                                if (property.PropertyContract == null) {
                                     property.PropertyContract = GetContractSafe(property.PropertyType);
                                 }
 
-                                if (HasFlag(property.DefaultValueHandling.GetValueOrDefault(Serializer._defaultValueHandling), DefaultValueHandling.Populate) && property.Writable)
-                                {
+                                if (HasFlag(property.DefaultValueHandling.GetValueOrDefault(Serializer._defaultValueHandling), DefaultValueHandling.Populate) && property.Writable) {
                                     property.ValueProvider!.SetValue(newObject, EnsureType(reader, property.GetResolvedDefaultValue(), CultureInfo.InvariantCulture, property.PropertyContract!, property.PropertyType));
                                 }
                             }
                             break;
                         case PropertyPresence.Null:
-                            if (resolvedRequired == Required.Always)
-                            {
+                            if (resolvedRequired == Required.Always) {
                                 throw JsonSerializationException.Create(reader, "Required property '{0}' expects a value but got null.".FormatWith(CultureInfo.InvariantCulture, property.PropertyName));
                             }
-                            if (resolvedRequired == Required.DisallowNull)
-                            {
+                            if (resolvedRequired == Required.DisallowNull) {
                                 throw JsonSerializationException.Create(reader, "Required property '{0}' expects a non-null value.".FormatWith(CultureInfo.InvariantCulture, property.PropertyName));
                             }
                             break;
                     }
-                }
-                catch (Exception ex)
-                {
-                    if (IsErrorHandled(newObject, contract, property.PropertyName, reader as IJsonLineInfo, reader.Path, ex))
-                    {
+                } catch (Exception ex) {
+                    if (IsErrorHandled(newObject, contract, property.PropertyName, reader as IJsonLineInfo, reader.Path, ex)) {
                         HandleError(reader, true, initialDepth);
-                    }
-                    else
-                    {
+                    } else {
                         throw;
                     }
                 }
@@ -2471,11 +2011,9 @@ namespace Simula.Scripting.Json.Serialization
 
         private void SetPropertyPresence(JsonReader reader, JsonProperty property, Dictionary<JsonProperty, PropertyPresence>? requiredProperties)
         {
-            if (property != null && requiredProperties != null)
-            {
+            if (property != null && requiredProperties != null) {
                 PropertyPresence propertyPresence;
-                switch (reader.TokenType)
-                {
+                switch (reader.TokenType) {
                     case JsonToken.String:
                         propertyPresence = (CoerceEmptyStringToNull(property.PropertyType, property.PropertyContract, (string)reader.Value!))
                             ? PropertyPresence.Null
@@ -2498,14 +2036,11 @@ namespace Simula.Scripting.Json.Serialization
         {
             ClearErrorContext();
 
-            if (readPastError)
-            {
+            if (readPastError) {
                 reader.Skip();
 
-                while (reader.Depth > initialDepth)
-                {
-                    if (!reader.Read())
-                    {
+                while (reader.Depth > initialDepth) {
+                    if (!reader.Read()) {
                         break;
                     }
                 }

@@ -1,7 +1,4 @@
-﻿
-using System;
-
-namespace Simula.Scripting.Json
+﻿namespace Simula.Scripting.Json
 {
     public enum FloatFormatHandling
     {

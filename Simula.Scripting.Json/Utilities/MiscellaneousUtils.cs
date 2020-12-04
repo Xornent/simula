@@ -1,14 +1,9 @@
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Reflection;
-using System.Text;
-using System.Globalization;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace Simula.Scripting.Json.Utilities
 {
@@ -24,26 +19,18 @@ namespace Simula.Scripting.Json.Utilities
 
         public static bool ValueEquals(object? objA, object? objB)
         {
-            if (objA == objB)
-            {
+            if (objA == objB) {
                 return true;
             }
-            if (objA == null || objB == null)
-            {
+            if (objA == null || objB == null) {
                 return false;
             }
-            if (objA.GetType() != objB.GetType())
-            {
-                if (ConvertUtils.IsInteger(objA) && ConvertUtils.IsInteger(objB))
-                {
+            if (objA.GetType() != objB.GetType()) {
+                if (ConvertUtils.IsInteger(objA) && ConvertUtils.IsInteger(objB)) {
                     return Convert.ToDecimal(objA, CultureInfo.CurrentCulture).Equals(Convert.ToDecimal(objB, CultureInfo.CurrentCulture));
-                }
-                else if ((objA is double || objA is float || objA is decimal) && (objB is double || objB is float || objB is decimal))
-                {
+                } else if ((objA is double || objA is float || objA is decimal) && (objB is double || objB is float || objB is decimal)) {
                     return MathUtils.ApproxEquals(Convert.ToDouble(objA, CultureInfo.CurrentCulture), Convert.ToDouble(objB, CultureInfo.CurrentCulture));
-                }
-                else
-                {
+                } else {
                     return false;
                 }
             }
@@ -60,8 +47,7 @@ namespace Simula.Scripting.Json.Utilities
 
         public static string ToString(object? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return "{null}";
             }
 
@@ -71,16 +57,13 @@ namespace Simula.Scripting.Json.Utilities
         public static int ByteArrayCompare(byte[] a1, byte[] a2)
         {
             int lengthCompare = a1.Length.CompareTo(a2.Length);
-            if (lengthCompare != 0)
-            {
+            if (lengthCompare != 0) {
                 return lengthCompare;
             }
 
-            for (int i = 0; i < a1.Length; i++)
-            {
+            for (int i = 0; i < a1.Length; i++) {
                 int valueCompare = a1[i].CompareTo(a2[i]);
-                if (valueCompare != 0)
-                {
+                if (valueCompare != 0) {
                     return valueCompare;
                 }
             }
@@ -106,13 +89,10 @@ namespace Simula.Scripting.Json.Utilities
         {
             int colonPosition = qualifiedName.IndexOf(':');
 
-            if ((colonPosition == -1 || colonPosition == 0) || (qualifiedName.Length - 1) == colonPosition)
-            {
+            if ((colonPosition == -1 || colonPosition == 0) || (qualifiedName.Length - 1) == colonPosition) {
                 prefix = null;
                 localName = qualifiedName;
-            }
-            else
-            {
+            } else {
                 prefix = qualifiedName.Substring(0, colonPosition);
                 localName = qualifiedName.Substring(colonPosition + 1);
             }
@@ -122,10 +102,8 @@ namespace Simula.Scripting.Json.Utilities
         {
             RegexOptions options = RegexOptions.None;
 
-            for (int i = 0; i < optionsText.Length; i++)
-            {
-                switch (optionsText[i])
-                {
+            for (int i = 0; i < optionsText.Length; i++) {
+                switch (optionsText[i]) {
                     case 'i':
                         options |= RegexOptions.IgnoreCase;
                         break;

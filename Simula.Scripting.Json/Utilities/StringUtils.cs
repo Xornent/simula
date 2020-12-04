@@ -10,7 +10,6 @@ using Simula.Scripting.Json.Utilities.LinqBridge;
 #else
 using System.Linq;
 #endif
-using Simula.Scripting.Json.Serialization;
 
 namespace Simula.Scripting.Json.Utilities
 {
@@ -55,20 +54,16 @@ namespace Simula.Scripting.Json.Utilities
         }
         public static bool IsWhiteSpace(string s)
         {
-            if (s == null)
-            {
+            if (s == null) {
                 throw new ArgumentNullException(nameof(s));
             }
 
-            if (s.Length == 0)
-            {
+            if (s.Length == 0) {
                 return false;
             }
 
-            for (int i = 0; i < s.Length; i++)
-            {
-                if (!char.IsWhiteSpace(s[i]))
-                {
+            for (int i = 0; i < s.Length; i++) {
+                if (!char.IsWhiteSpace(s[i])) {
                     return false;
                 }
             }
@@ -96,22 +91,17 @@ namespace Simula.Scripting.Json.Utilities
 
         public static TSource ForgivingCaseSensitiveFind<TSource>(this IEnumerable<TSource> source, Func<TSource, string> valueSelector, string testValue)
         {
-            if (source == null)
-            {
+            if (source == null) {
                 throw new ArgumentNullException(nameof(source));
             }
-            if (valueSelector == null)
-            {
+            if (valueSelector == null) {
                 throw new ArgumentNullException(nameof(valueSelector));
             }
 
             IEnumerable<TSource> caseInsensitiveResults = source.Where(s => string.Equals(valueSelector(s), testValue, StringComparison.OrdinalIgnoreCase));
-            if (caseInsensitiveResults.Count() <= 1)
-            {
+            if (caseInsensitiveResults.Count() <= 1) {
                 return caseInsensitiveResults.SingleOrDefault();
-            }
-            else
-            {
+            } else {
                 IEnumerable<TSource> caseSensitiveResults = source.Where(s => string.Equals(valueSelector(s), testValue, StringComparison.Ordinal));
                 return caseSensitiveResults.SingleOrDefault();
             }
@@ -119,25 +109,20 @@ namespace Simula.Scripting.Json.Utilities
 
         public static string ToCamelCase(string s)
         {
-            if (StringUtils.IsNullOrEmpty(s) || !char.IsUpper(s[0]))
-            {
+            if (StringUtils.IsNullOrEmpty(s) || !char.IsUpper(s[0])) {
                 return s;
             }
 
             char[] chars = s.ToCharArray();
 
-            for (int i = 0; i < chars.Length; i++)
-            {
-                if (i == 1 && !char.IsUpper(chars[i]))
-                {
+            for (int i = 0; i < chars.Length; i++) {
+                if (i == 1 && !char.IsUpper(chars[i])) {
                     break;
                 }
 
                 bool hasNext = (i + 1 < chars.Length);
-                if (i > 0 && hasNext && !char.IsUpper(chars[i + 1]))
-                {
-                    if (char.IsSeparator(chars[i + 1]))
-                    {
+                if (i > 0 && hasNext && !char.IsUpper(chars[i + 1])) {
+                    if (char.IsSeparator(chars[i + 1])) {
                         chars[i] = ToLower(chars[i]);
                     }
 
@@ -174,34 +159,25 @@ namespace Simula.Scripting.Json.Utilities
 
         private static string ToSeparatedCase(string s, char separator)
         {
-            if (StringUtils.IsNullOrEmpty(s))
-            {
+            if (StringUtils.IsNullOrEmpty(s)) {
                 return s;
             }
 
             StringBuilder sb = new StringBuilder();
             SeparatedCaseState state = SeparatedCaseState.Start;
 
-            for (int i = 0; i < s.Length; i++)
-            {
-                if (s[i] == ' ')
-                {
-                    if (state != SeparatedCaseState.Start)
-                    {
+            for (int i = 0; i < s.Length; i++) {
+                if (s[i] == ' ') {
+                    if (state != SeparatedCaseState.Start) {
                         state = SeparatedCaseState.NewWord;
                     }
-                }
-                else if (char.IsUpper(s[i]))
-                {
-                    switch (state)
-                    {
+                } else if (char.IsUpper(s[i])) {
+                    switch (state) {
                         case SeparatedCaseState.Upper:
                             bool hasNext = (i + 1 < s.Length);
-                            if (i > 0 && hasNext)
-                            {
+                            if (i > 0 && hasNext) {
                                 char nextChar = s[i + 1];
-                                if (!char.IsUpper(nextChar) && nextChar != separator)
-                                {
+                                if (!char.IsUpper(nextChar) && nextChar != separator) {
                                     sb.Append(separator);
                                 }
                             }
@@ -221,16 +197,11 @@ namespace Simula.Scripting.Json.Utilities
                     sb.Append(c);
 
                     state = SeparatedCaseState.Upper;
-                }
-                else if (s[i] == separator)
-                {
+                } else if (s[i] == separator) {
                     sb.Append(separator);
                     state = SeparatedCaseState.Start;
-                }
-                else
-                {
-                    if (state == SeparatedCaseState.NewWord)
-                    {
+                } else {
+                    if (state == SeparatedCaseState.NewWord) {
                         sb.Append(separator);
                     }
 
@@ -272,34 +243,26 @@ namespace Simula.Scripting.Json.Utilities
 
         public static string Trim(this string s, int start, int length)
         {
-            if (s == null)
-            {
+            if (s == null) {
                 throw new ArgumentNullException();
             }
-            if (start < 0)
-            {
+            if (start < 0) {
                 throw new ArgumentOutOfRangeException(nameof(start));
             }
-            if (length < 0)
-            {
+            if (length < 0) {
                 throw new ArgumentOutOfRangeException(nameof(length));
             }
             int end = start + length - 1;
-            if (end >= s.Length)
-            {
+            if (end >= s.Length) {
                 throw new ArgumentOutOfRangeException(nameof(length));
             }
-            for (; start < end; start++)
-            {
-                if (!char.IsWhiteSpace(s[start]))
-                {
+            for (; start < end; start++) {
+                if (!char.IsWhiteSpace(s[start])) {
                     break;
                 }
             }
-            for (; end >= start; end--)
-            {
-                if (!char.IsWhiteSpace(s[end]))
-                {
+            for (; end >= start; end--) {
+                if (!char.IsWhiteSpace(s[end])) {
                     break;
                 }
             }

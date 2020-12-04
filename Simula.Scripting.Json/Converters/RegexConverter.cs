@@ -1,11 +1,10 @@
 ﻿
-using System;
-using System.Text.RegularExpressions;
 using Simula.Scripting.Json.Bson;
-using System.Globalization;
-using System.Runtime.CompilerServices;
 using Simula.Scripting.Json.Serialization;
 using Simula.Scripting.Json.Utilities;
+using System;
+using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 
 namespace Simula.Scripting.Json.Converters
 {
@@ -15,8 +14,7 @@ namespace Simula.Scripting.Json.Converters
         private const string OptionsName = "Options";
         public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 writer.WriteNull();
                 return;
             }
@@ -24,13 +22,11 @@ namespace Simula.Scripting.Json.Converters
             Regex regex = (Regex)value;
 
 #pragma warning disable 618
-            if (writer is BsonWriter bsonWriter)
-            {
+            if (writer is BsonWriter bsonWriter) {
                 WriteBson(bsonWriter, regex);
             }
 #pragma warning restore 618
-            else
-            {
+            else {
                 WriteJson(writer, regex, serializer);
             }
         }
@@ -46,25 +42,21 @@ namespace Simula.Scripting.Json.Converters
 
             string? options = null;
 
-            if (HasFlag(regex.Options, RegexOptions.IgnoreCase))
-            {
+            if (HasFlag(regex.Options, RegexOptions.IgnoreCase)) {
                 options += "i";
             }
 
-            if (HasFlag(regex.Options, RegexOptions.Multiline))
-            {
+            if (HasFlag(regex.Options, RegexOptions.Multiline)) {
                 options += "m";
             }
 
-            if (HasFlag(regex.Options, RegexOptions.Singleline))
-            {
+            if (HasFlag(regex.Options, RegexOptions.Singleline)) {
                 options += "s";
             }
 
             options += "u";
 
-            if (HasFlag(regex.Options, RegexOptions.ExplicitCapture))
-            {
+            if (HasFlag(regex.Options, RegexOptions.ExplicitCapture)) {
                 options += "x";
             }
 
@@ -85,8 +77,7 @@ namespace Simula.Scripting.Json.Converters
         }
         public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
-            switch (reader.TokenType)
-            {
+            switch (reader.TokenType) {
                 case JsonToken.StartObject:
                     return ReadRegexObject(reader, serializer);
                 case JsonToken.String:
@@ -102,12 +93,10 @@ namespace Simula.Scripting.Json.Converters
         {
             string regexText = (string)reader.Value!;
 
-            if (regexText.Length > 0 && regexText[0] == '/')
-            {
+            if (regexText.Length > 0 && regexText[0] == '/') {
                 int patternOptionDelimiterIndex = regexText.LastIndexOf('/');
 
-                if (patternOptionDelimiterIndex > 0)
-                {
+                if (patternOptionDelimiterIndex > 0) {
                     string patternText = regexText.Substring(1, patternOptionDelimiterIndex - 1);
                     string optionsText = regexText.Substring(patternOptionDelimiterIndex + 1);
 
@@ -125,36 +114,27 @@ namespace Simula.Scripting.Json.Converters
             string? pattern = null;
             RegexOptions? options = null;
 
-            while (reader.Read())
-            {
-                switch (reader.TokenType)
-                {
+            while (reader.Read()) {
+                switch (reader.TokenType) {
                     case JsonToken.PropertyName:
                         string propertyName = reader.Value!.ToString();
 
-                        if (!reader.Read())
-                        {
+                        if (!reader.Read()) {
                             throw JsonSerializationException.Create(reader, "Unexpected end when reading Regex.");
                         }
 
-                        if (string.Equals(propertyName, PatternName, StringComparison.OrdinalIgnoreCase))
-                        {
+                        if (string.Equals(propertyName, PatternName, StringComparison.OrdinalIgnoreCase)) {
                             pattern = (string?)reader.Value;
-                        }
-                        else if (string.Equals(propertyName, OptionsName, StringComparison.OrdinalIgnoreCase))
-                        {
+                        } else if (string.Equals(propertyName, OptionsName, StringComparison.OrdinalIgnoreCase)) {
                             options = serializer.Deserialize<RegexOptions>(reader);
-                        }
-                        else
-                        {
+                        } else {
                             reader.Skip();
                         }
                         break;
                     case JsonToken.Comment:
                         break;
                     case JsonToken.EndObject:
-                        if (pattern == null)
-                        {
+                        if (pattern == null) {
                             throw JsonSerializationException.Create(reader, "Error deserializing Regex. No pattern found.");
                         }
 

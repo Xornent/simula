@@ -1,20 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Simula.Scripting.Contexts;
 using Simula.Scripting.Token;
+using System;
+using System.Collections.Generic;
 
-namespace Simula.Scripting.Syntax {
+namespace Simula.Scripting.Syntax
+{
 
-    public class EnumerableBlock : BlockStatement {
+    public class EnumerableBlock : BlockStatement
+    {
         public EvaluationStatement? Enumerator = null;
         public EvaluationStatement? Collection = null;
         public EvaluationStatement? Position = null;
 
-        public new void Parse(TokenCollection collection) {
+        public new void Parse(TokenCollection collection)
+        {
 
             // enum [readonly EvaluationStatement] in [EvaluationStatement] [at [writable EvaluationStatement]]
 
-            if(collection.Contains(new Token.Token("at"))) {
+            System.Dynamic.ExpandoObject expando = new System.Dynamic.ExpandoObject();
+            expando.TryAdd("_init", (Func<dynamic[], dynamic>)(delegate (dynamic[] a) {
+                return "s";
+            }));
+            if (collection.Contains(new Token.Token("at"))) {
                 List<TokenCollection> subitems = collection.Split(new Token.Token("at"));
                 if (subitems.Count > 2) {
                     collection[0].Error = new TokenizerException("SS0010");
@@ -26,7 +33,7 @@ namespace Simula.Scripting.Syntax {
 
                 if (subitems[0].Contains(new Token.Token("in"))) {
                     var l = subitems[0].Split(new Token.Token("in"));
-                    if(l.Count>2) {
+                    if (l.Count > 2) {
                         collection[0].Error = new TokenizerException("SS0010");
                         return;
                     }
@@ -39,7 +46,7 @@ namespace Simula.Scripting.Syntax {
                 } else collection[0].Error = new TokenizerException("SS0011");
             } else {
                 List<TokenCollection> subitems = collection.Split(new Token.Token("in"));
-                if(subitems.Count>2) {
+                if (subitems.Count > 2) {
                     collection[0].Error = new TokenizerException("SS0010");
                     return;
                 }
@@ -50,6 +57,11 @@ namespace Simula.Scripting.Syntax {
                 Collection = new EvaluationStatement();
                 Collection.Parse(subitems[1]);
             }
+        }
+
+        public override Execution Execute(DynamicRuntime ctx)
+        {
+            return new Execution();
         }
     }
 }

@@ -1,10 +1,10 @@
 ﻿
+using Simula.Scripting.Json.Utilities;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Simula.Scripting.Json.Utilities;
-using System.IO;
 using System.Globalization;
+using System.IO;
 
 namespace Simula.Scripting.Json.Linq
 {
@@ -44,18 +44,15 @@ namespace Simula.Scripting.Json.Linq
         }
         public new static JArray Load(JsonReader reader, JsonLoadSettings? settings)
         {
-            if (reader.TokenType == JsonToken.None)
-            {
-                if (!reader.Read())
-                {
+            if (reader.TokenType == JsonToken.None) {
+                if (!reader.Read()) {
                     throw JsonReaderException.Create(reader, "Error reading JArray from JsonReader.");
                 }
             }
 
             reader.MoveToContent();
 
-            if (reader.TokenType != JsonToken.StartArray)
-            {
+            if (reader.TokenType != JsonToken.StartArray) {
                 throw JsonReaderException.Create(reader, "Error reading JArray from JsonReader. Current JsonReader item is not an array: {0}".FormatWith(CultureInfo.InvariantCulture, reader.TokenType));
             }
 
@@ -72,12 +69,10 @@ namespace Simula.Scripting.Json.Linq
         }
         public new static JArray Parse(string json, JsonLoadSettings? settings)
         {
-            using (JsonReader reader = new JsonTextReader(new StringReader(json)))
-            {
+            using (JsonReader reader = new JsonTextReader(new StringReader(json))) {
                 JArray a = Load(reader, settings);
 
-                while (reader.Read())
-                {
+                while (reader.Read()) {
                 }
 
                 return a;
@@ -91,8 +86,7 @@ namespace Simula.Scripting.Json.Linq
         {
             JToken token = FromObjectInternal(o, jsonSerializer);
 
-            if (token.Type != JTokenType.Array)
-            {
+            if (token.Type != JTokenType.Array) {
                 throw new ArgumentException("Object serialized to {0}. JArray instance expected.".FormatWith(CultureInfo.InvariantCulture, token.Type));
             }
 
@@ -102,48 +96,40 @@ namespace Simula.Scripting.Json.Linq
         {
             writer.WriteStartArray();
 
-            for (int i = 0; i < _values.Count; i++)
-            {
+            for (int i = 0; i < _values.Count; i++) {
                 _values[i].WriteTo(writer, converters);
             }
 
             writer.WriteEndArray();
         }
-        public override JToken? this[object key]
-        {
-            get
-            {
+        public override JToken? this[object key] {
+            get {
                 ValidationUtils.ArgumentNotNull(key, nameof(key));
 
-                if (!(key is int))
-                {
+                if (!(key is int)) {
                     throw new ArgumentException("Accessed JArray values with invalid key value: {0}. Int32 array index expected.".FormatWith(CultureInfo.InvariantCulture, MiscellaneousUtils.ToString(key)));
                 }
 
                 return GetItem((int)key);
             }
-            set
-            {
+            set {
                 ValidationUtils.ArgumentNotNull(key, nameof(key));
 
-                if (!(key is int))
-                {
+                if (!(key is int)) {
                     throw new ArgumentException("Set JArray values with invalid key value: {0}. Int32 array index expected.".FormatWith(CultureInfo.InvariantCulture, MiscellaneousUtils.ToString(key)));
                 }
 
                 SetItem((int)key, value);
             }
         }
-        public JToken this[int index]
-        {
+        public JToken this[int index] {
             get => GetItem(index);
             set => SetItem(index, value);
         }
 
         internal override int IndexOfItem(JToken? item)
         {
-            if (item == null)
-            {
+            if (item == null) {
                 return -1;
             }
 
@@ -155,8 +141,7 @@ namespace Simula.Scripting.Json.Linq
             IEnumerable? a = (IsMultiContent(content) || content is JArray)
                 ? (IEnumerable)content
                 : null;
-            if (a == null)
-            {
+            if (a == null) {
                 return;
             }
 

@@ -1,6 +1,3 @@
-
-using System;
-
 namespace Simula.Scripting.Json
 {
     public enum WriteState

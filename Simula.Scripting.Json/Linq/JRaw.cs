@@ -17,8 +17,7 @@ namespace Simula.Scripting.Json.Linq
         public static JRaw Create(JsonReader reader)
         {
             using (StringWriter sw = new StringWriter(CultureInfo.InvariantCulture))
-            using (JsonTextWriter jsonWriter = new JsonTextWriter(sw))
-            {
+            using (JsonTextWriter jsonWriter = new JsonTextWriter(sw)) {
                 jsonWriter.WriteToken(reader);
 
                 return new JRaw(sw.ToString());

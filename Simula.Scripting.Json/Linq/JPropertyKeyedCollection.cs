@@ -1,10 +1,9 @@
 ﻿
+using Simula.Scripting.Json.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
-using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json.Linq
 {
@@ -26,21 +25,17 @@ namespace Simula.Scripting.Json.Linq
 
         protected void ChangeItemKey(JToken item, string newKey)
         {
-            if (!ContainsItem(item))
-            {
+            if (!ContainsItem(item)) {
                 throw new ArgumentException("The specified item does not exist in this KeyedCollection.");
             }
 
             string keyForItem = GetKeyForItem(item);
-            if (!Comparer.Equals(keyForItem, newKey))
-            {
-                if (newKey != null)
-                {
+            if (!Comparer.Equals(keyForItem, newKey)) {
+                if (newKey != null) {
                     AddKey(newKey, item);
                 }
 
-                if (keyForItem != null)
-                {
+                if (keyForItem != null) {
                     RemoveKey(keyForItem);
                 }
             }
@@ -55,13 +50,11 @@ namespace Simula.Scripting.Json.Linq
 
         public bool Contains(string key)
         {
-            if (key == null)
-            {
+            if (key == null) {
                 throw new ArgumentNullException(nameof(key));
             }
 
-            if (_dictionary != null)
-            {
+            if (_dictionary != null) {
                 return _dictionary.ContainsKey(key);
             }
 
@@ -70,8 +63,7 @@ namespace Simula.Scripting.Json.Linq
 
         private bool ContainsItem(JToken item)
         {
-            if (_dictionary == null)
-            {
+            if (_dictionary == null) {
                 return false;
             }
 
@@ -81,8 +73,7 @@ namespace Simula.Scripting.Json.Linq
 
         private void EnsureDictionary()
         {
-            if (_dictionary == null)
-            {
+            if (_dictionary == null) {
                 _dictionary = new Dictionary<string, JToken>(Comparer);
             }
         }
@@ -100,13 +91,11 @@ namespace Simula.Scripting.Json.Linq
 
         public bool Remove(string key)
         {
-            if (key == null)
-            {
+            if (key == null) {
                 throw new ArgumentNullException(nameof(key));
             }
 
-            if (_dictionary != null)
-            {
+            if (_dictionary != null) {
                 return _dictionary.TryGetValue(key, out JToken value) && Remove(value);
             }
 
@@ -130,36 +119,27 @@ namespace Simula.Scripting.Json.Linq
             string keyForItem = GetKeyForItem(item);
             string keyAtIndex = GetKeyForItem(Items[index]);
 
-            if (Comparer.Equals(keyAtIndex, keyForItem))
-            {
-                if (_dictionary != null)
-                {
+            if (Comparer.Equals(keyAtIndex, keyForItem)) {
+                if (_dictionary != null) {
                     _dictionary[keyForItem] = item;
                 }
-            }
-            else
-            {
+            } else {
                 AddKey(keyForItem, item);
 
-                if (keyAtIndex != null)
-                {
+                if (keyAtIndex != null) {
                     RemoveKey(keyAtIndex);
                 }
             }
             base.SetItem(index, item);
         }
 
-        public JToken this[string key]
-        {
-            get
-            {
-                if (key == null)
-                {
+        public JToken this[string key] {
+            get {
+                if (key == null) {
                     throw new ArgumentNullException(nameof(key));
                 }
 
-                if (_dictionary != null)
-                {
+                if (_dictionary != null) {
                     return _dictionary[key];
                 }
 
@@ -167,10 +147,9 @@ namespace Simula.Scripting.Json.Linq
             }
         }
 
-        public bool TryGetValue(string key, [NotNullWhen(true)]out JToken? value)
+        public bool TryGetValue(string key, [NotNullWhen(true)] out JToken? value)
         {
-            if (_dictionary == null)
-            {
+            if (_dictionary == null) {
                 value = null;
                 return false;
             }
@@ -178,19 +157,15 @@ namespace Simula.Scripting.Json.Linq
             return _dictionary.TryGetValue(key, out value);
         }
 
-        public ICollection<string> Keys
-        {
-            get
-            {
+        public ICollection<string> Keys {
+            get {
                 EnsureDictionary();
                 return _dictionary!.Keys;
             }
         }
 
-        public ICollection<JToken> Values
-        {
-            get
-            {
+        public ICollection<JToken> Values {
+            get {
                 EnsureDictionary();
                 return _dictionary!.Values;
             }
@@ -203,50 +178,41 @@ namespace Simula.Scripting.Json.Linq
 
         public bool Compare(JPropertyKeyedCollection other)
         {
-            if (this == other)
-            {
+            if (this == other) {
                 return true;
             }
             Dictionary<string, JToken>? d1 = _dictionary;
             Dictionary<string, JToken>? d2 = other._dictionary;
 
-            if (d1 == null && d2 == null)
-            {
+            if (d1 == null && d2 == null) {
                 return true;
             }
 
-            if (d1 == null)
-            {
+            if (d1 == null) {
                 return (d2!.Count == 0);
             }
 
-            if (d2 == null)
-            {
+            if (d2 == null) {
                 return (d1.Count == 0);
             }
 
-            if (d1.Count != d2.Count)
-            {
+            if (d1.Count != d2.Count) {
                 return false;
             }
 
-            foreach (KeyValuePair<string, JToken> keyAndProperty in d1)
-            {
-                if (!d2.TryGetValue(keyAndProperty.Key, out JToken secondValue))
-                {
+            foreach (KeyValuePair<string, JToken> keyAndProperty in d1) {
+                if (!d2.TryGetValue(keyAndProperty.Key, out JToken secondValue)) {
                     return false;
                 }
 
                 JProperty p1 = (JProperty)keyAndProperty.Value;
                 JProperty p2 = (JProperty)secondValue;
 
-                if (p1.Value == null)
-                {
+                if (p1.Value == null) {
                     return (p2.Value == null);
                 }
 
-                if (!p1.Value.DeepEquals(p2.Value))
-                {
+                if (!p1.Value.DeepEquals(p2.Value)) {
                     return false;
                 }
             }

@@ -1,10 +1,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Simula.Scripting.Json.Utilities;
 using System.Globalization;
-using System.Runtime.CompilerServices;
 using System.Diagnostics.CodeAnalysis;
 #if HAVE_DYNAMIC
 using System.Dynamic;
@@ -96,12 +94,10 @@ namespace Simula.Scripting.Json.Linq
 
         internal override bool DeepEquals(JToken node)
         {
-            if (!(node is JValue other))
-            {
+            if (!(node is JValue other)) {
                 return false;
             }
-            if (other == this)
-            {
+            if (other == this) {
                 return true;
             }
 
@@ -134,23 +130,18 @@ namespace Simula.Scripting.Json.Linq
 
         internal static int Compare(JTokenType valueType, object? objA, object? objB)
         {
-            if (objA == objB)
-            {
+            if (objA == objB) {
                 return 0;
             }
-            if (objB == null)
-            {
+            if (objB == null) {
                 return 1;
             }
-            if (objA == null)
-            {
+            if (objA == null) {
                 return -1;
             }
 
-            switch (valueType)
-            {
-                case JTokenType.Integer:
-                {
+            switch (valueType) {
+                case JTokenType.Integer: {
 #if HAVE_BIG_INTEGER
                     if (objA is BigInteger integerA)
                     {
@@ -161,21 +152,15 @@ namespace Simula.Scripting.Json.Linq
                             return -CompareBigInteger(integerB, objA);
                         }
 #endif
-                    if (objA is ulong || objB is ulong || objA is decimal || objB is decimal)
-                    {
-                        return Convert.ToDecimal(objA, CultureInfo.InvariantCulture).CompareTo(Convert.ToDecimal(objB, CultureInfo.InvariantCulture));
+                        if (objA is ulong || objB is ulong || objA is decimal || objB is decimal) {
+                            return Convert.ToDecimal(objA, CultureInfo.InvariantCulture).CompareTo(Convert.ToDecimal(objB, CultureInfo.InvariantCulture));
+                        } else if (objA is float || objB is float || objA is double || objB is double) {
+                            return CompareFloat(objA, objB);
+                        } else {
+                            return Convert.ToInt64(objA, CultureInfo.InvariantCulture).CompareTo(Convert.ToInt64(objB, CultureInfo.InvariantCulture));
+                        }
                     }
-                    else if (objA is float || objB is float || objA is double || objB is double)
-                    {
-                        return CompareFloat(objA, objB);
-                    }
-                    else
-                    {
-                        return Convert.ToInt64(objA, CultureInfo.InvariantCulture).CompareTo(Convert.ToInt64(objB, CultureInfo.InvariantCulture));
-                    }
-                }
-                case JTokenType.Float:
-                {
+                case JTokenType.Float: {
 #if HAVE_BIG_INTEGER
                     if (objA is BigInteger integerA)
                     {
@@ -186,11 +171,10 @@ namespace Simula.Scripting.Json.Linq
                         return -CompareBigInteger(integerB, objA);
                     }
 #endif
-                    if (objA is ulong || objB is ulong || objA is decimal || objB is decimal)
-                    {
-                        return Convert.ToDecimal(objA, CultureInfo.InvariantCulture).CompareTo(Convert.ToDecimal(objB, CultureInfo.InvariantCulture));
-                    }
-                    return CompareFloat(objA, objB);
+                        if (objA is ulong || objB is ulong || objA is decimal || objB is decimal) {
+                            return Convert.ToDecimal(objA, CultureInfo.InvariantCulture).CompareTo(Convert.ToDecimal(objB, CultureInfo.InvariantCulture));
+                        }
+                        return CompareFloat(objA, objB);
                     }
                 case JTokenType.Comment:
                 case JTokenType.String:
@@ -206,19 +190,16 @@ namespace Simula.Scripting.Json.Linq
                     return b1.CompareTo(b2);
                 case JTokenType.Date:
 #if HAVE_DATE_TIME_OFFSET
-                    if (objA is DateTime dateA)
-                    {
+                    if (objA is DateTime dateA) {
 #else
                         DateTime dateA = (DateTime)objA;
 #endif
                         DateTime dateB;
 
 #if HAVE_DATE_TIME_OFFSET
-                        if (objB is DateTimeOffset offsetB)
-                        {
+                        if (objB is DateTimeOffset offsetB) {
                             dateB = offsetB.DateTime;
-                        }
-                        else
+                        } else
 #endif
                         {
                             dateB = Convert.ToDateTime(objB, CultureInfo.InvariantCulture);
@@ -226,12 +207,9 @@ namespace Simula.Scripting.Json.Linq
 
                         return dateA.CompareTo(dateB);
 #if HAVE_DATE_TIME_OFFSET
-                    }
-                    else
-                    {
+                    } else {
                         DateTimeOffset offsetA = (DateTimeOffset)objA;
-                        if (!(objB is DateTimeOffset offsetB))
-                        {
+                        if (!(objB is DateTimeOffset offsetB)) {
                             offsetB = new DateTimeOffset(Convert.ToDateTime(objB, CultureInfo.InvariantCulture));
                         }
 
@@ -239,8 +217,7 @@ namespace Simula.Scripting.Json.Linq
                     }
 #endif
                 case JTokenType.Bytes:
-                    if (!(objB is byte[] bytesB))
-                    {
+                    if (!(objB is byte[] bytesB)) {
                         throw new ArgumentException("Object must be of type byte[].");
                     }
 
@@ -249,8 +226,7 @@ namespace Simula.Scripting.Json.Linq
 
                     return MiscellaneousUtils.ByteArrayCompare(bytesA!, bytesB);
                 case JTokenType.Guid:
-                    if (!(objB is Guid))
-                    {
+                    if (!(objB is Guid)) {
                         throw new ArgumentException("Object must be of type Guid.");
                     }
 
@@ -260,8 +236,7 @@ namespace Simula.Scripting.Json.Linq
                     return guid1.CompareTo(guid2);
                 case JTokenType.Uri:
                     Uri? uri2 = objB as Uri;
-                    if (uri2 == null)
-                    {
+                    if (uri2 == null) {
                         throw new ArgumentException("Object must be of type Uri.");
                     }
 
@@ -269,8 +244,7 @@ namespace Simula.Scripting.Json.Linq
 
                     return Comparer<string>.Default.Compare(uri1.ToString(), uri2.ToString());
                 case JTokenType.TimeSpan:
-                    if (!(objB is TimeSpan))
-                    {
+                    if (!(objB is TimeSpan)) {
                         throw new ArgumentException("Object must be of type TimeSpan.");
                     }
 
@@ -287,8 +261,7 @@ namespace Simula.Scripting.Json.Linq
         {
             double d1 = Convert.ToDouble(objA, CultureInfo.InvariantCulture);
             double d2 = Convert.ToDouble(objB, CultureInfo.InvariantCulture);
-            if (MathUtils.ApproxEquals(d1, d2))
-            {
+            if (MathUtils.ApproxEquals(d1, d2)) {
                 return 0;
             }
 
@@ -298,10 +271,8 @@ namespace Simula.Scripting.Json.Linq
 #if HAVE_EXPRESSIONS
         private static bool Operation(ExpressionType operation, object? objA, object? objB, out object? result)
         {
-            if (objA is string || objB is string)
-            {
-                if (operation == ExpressionType.Add || operation == ExpressionType.AddAssign)
-                {
+            if (objA is string || objB is string) {
+                if (operation == ExpressionType.Add || operation == ExpressionType.AddAssign) {
                     result = objA?.ToString() + objB?.ToString();
                     return true;
                 }
@@ -340,100 +311,89 @@ namespace Simula.Scripting.Json.Linq
             }
             else
 #endif
-                if (objA is ulong || objB is ulong || objA is decimal || objB is decimal)
-                {
-                    if (objA == null || objB == null)
-                    {
-                        result = null;
-                        return true;
-                    }
-
-                    decimal d1 = Convert.ToDecimal(objA, CultureInfo.InvariantCulture);
-                    decimal d2 = Convert.ToDecimal(objB, CultureInfo.InvariantCulture);
-
-                    switch (operation)
-                    {
-                        case ExpressionType.Add:
-                        case ExpressionType.AddAssign:
-                            result = d1 + d2;
-                            return true;
-                        case ExpressionType.Subtract:
-                        case ExpressionType.SubtractAssign:
-                            result = d1 - d2;
-                            return true;
-                        case ExpressionType.Multiply:
-                        case ExpressionType.MultiplyAssign:
-                            result = d1 * d2;
-                            return true;
-                        case ExpressionType.Divide:
-                        case ExpressionType.DivideAssign:
-                            result = d1 / d2;
-                            return true;
-                    }
+            if (objA is ulong || objB is ulong || objA is decimal || objB is decimal) {
+                if (objA == null || objB == null) {
+                    result = null;
+                    return true;
                 }
-                else if (objA is float || objB is float || objA is double || objB is double)
-                {
-                    if (objA == null || objB == null)
-                    {
-                        result = null;
+
+                decimal d1 = Convert.ToDecimal(objA, CultureInfo.InvariantCulture);
+                decimal d2 = Convert.ToDecimal(objB, CultureInfo.InvariantCulture);
+
+                switch (operation) {
+                    case ExpressionType.Add:
+                    case ExpressionType.AddAssign:
+                        result = d1 + d2;
                         return true;
-                    }
-
-                    double d1 = Convert.ToDouble(objA, CultureInfo.InvariantCulture);
-                    double d2 = Convert.ToDouble(objB, CultureInfo.InvariantCulture);
-
-                    switch (operation)
-                    {
-                        case ExpressionType.Add:
-                        case ExpressionType.AddAssign:
-                            result = d1 + d2;
-                            return true;
-                        case ExpressionType.Subtract:
-                        case ExpressionType.SubtractAssign:
-                            result = d1 - d2;
-                            return true;
-                        case ExpressionType.Multiply:
-                        case ExpressionType.MultiplyAssign:
-                            result = d1 * d2;
-                            return true;
-                        case ExpressionType.Divide:
-                        case ExpressionType.DivideAssign:
-                            result = d1 / d2;
-                            return true;
-                    }
-                }
-                else if (objA is int || objA is uint || objA is long || objA is short || objA is ushort || objA is sbyte || objA is byte ||
-                         objB is int || objB is uint || objB is long || objB is short || objB is ushort || objB is sbyte || objB is byte)
-                {
-                    if (objA == null || objB == null)
-                    {
-                        result = null;
+                    case ExpressionType.Subtract:
+                    case ExpressionType.SubtractAssign:
+                        result = d1 - d2;
                         return true;
-                    }
-
-                    long l1 = Convert.ToInt64(objA, CultureInfo.InvariantCulture);
-                    long l2 = Convert.ToInt64(objB, CultureInfo.InvariantCulture);
-
-                    switch (operation)
-                    {
-                        case ExpressionType.Add:
-                        case ExpressionType.AddAssign:
-                            result = l1 + l2;
-                            return true;
-                        case ExpressionType.Subtract:
-                        case ExpressionType.SubtractAssign:
-                            result = l1 - l2;
-                            return true;
-                        case ExpressionType.Multiply:
-                        case ExpressionType.MultiplyAssign:
-                            result = l1 * l2;
-                            return true;
-                        case ExpressionType.Divide:
-                        case ExpressionType.DivideAssign:
-                            result = l1 / l2;
-                            return true;
-                    }
+                    case ExpressionType.Multiply:
+                    case ExpressionType.MultiplyAssign:
+                        result = d1 * d2;
+                        return true;
+                    case ExpressionType.Divide:
+                    case ExpressionType.DivideAssign:
+                        result = d1 / d2;
+                        return true;
                 }
+            } else if (objA is float || objB is float || objA is double || objB is double) {
+                if (objA == null || objB == null) {
+                    result = null;
+                    return true;
+                }
+
+                double d1 = Convert.ToDouble(objA, CultureInfo.InvariantCulture);
+                double d2 = Convert.ToDouble(objB, CultureInfo.InvariantCulture);
+
+                switch (operation) {
+                    case ExpressionType.Add:
+                    case ExpressionType.AddAssign:
+                        result = d1 + d2;
+                        return true;
+                    case ExpressionType.Subtract:
+                    case ExpressionType.SubtractAssign:
+                        result = d1 - d2;
+                        return true;
+                    case ExpressionType.Multiply:
+                    case ExpressionType.MultiplyAssign:
+                        result = d1 * d2;
+                        return true;
+                    case ExpressionType.Divide:
+                    case ExpressionType.DivideAssign:
+                        result = d1 / d2;
+                        return true;
+                }
+            } else if (objA is int || objA is uint || objA is long || objA is short || objA is ushort || objA is sbyte || objA is byte ||
+                       objB is int || objB is uint || objB is long || objB is short || objB is ushort || objB is sbyte || objB is byte) {
+                if (objA == null || objB == null) {
+                    result = null;
+                    return true;
+                }
+
+                long l1 = Convert.ToInt64(objA, CultureInfo.InvariantCulture);
+                long l2 = Convert.ToInt64(objB, CultureInfo.InvariantCulture);
+
+                switch (operation) {
+                    case ExpressionType.Add:
+                    case ExpressionType.AddAssign:
+                        result = l1 + l2;
+                        return true;
+                    case ExpressionType.Subtract:
+                    case ExpressionType.SubtractAssign:
+                        result = l1 - l2;
+                        return true;
+                    case ExpressionType.Multiply:
+                    case ExpressionType.MultiplyAssign:
+                        result = l1 * l2;
+                        return true;
+                    case ExpressionType.Divide:
+                    case ExpressionType.DivideAssign:
+                        result = l1 / l2;
+                        return true;
+                }
+            }
 
             result = null;
             return false;
@@ -463,8 +423,7 @@ namespace Simula.Scripting.Json.Linq
 
         private static JTokenType GetValueType(JTokenType? current, object? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return JTokenType.Null;
             }
 #if HAVE_ADO_NET
@@ -473,17 +432,12 @@ namespace Simula.Scripting.Json.Linq
                 return JTokenType.Null;
             }
 #endif
-            else if (value is string)
-            {
+            else if (value is string) {
                 return GetStringValueType(current);
-            }
-            else if (value is long || value is int || value is short || value is sbyte
-                     || value is ulong || value is uint || value is ushort || value is byte)
-            {
+            } else if (value is long || value is int || value is short || value is sbyte
+                       || value is ulong || value is uint || value is ushort || value is byte) {
                 return JTokenType.Integer;
-            }
-            else if (value is Enum)
-            {
+            } else if (value is Enum) {
                 return JTokenType.Integer;
             }
 #if HAVE_BIG_INTEGER
@@ -492,38 +446,25 @@ namespace Simula.Scripting.Json.Linq
                 return JTokenType.Integer;
             }
 #endif
-            else if (value is double || value is float || value is decimal)
-            {
+            else if (value is double || value is float || value is decimal) {
                 return JTokenType.Float;
-            }
-            else if (value is DateTime)
-            {
+            } else if (value is DateTime) {
                 return JTokenType.Date;
             }
 #if HAVE_DATE_TIME_OFFSET
-            else if (value is DateTimeOffset)
-            {
+            else if (value is DateTimeOffset) {
                 return JTokenType.Date;
             }
 #endif
-            else if (value is byte[])
-            {
+            else if (value is byte[]) {
                 return JTokenType.Bytes;
-            }
-            else if (value is bool)
-            {
+            } else if (value is bool) {
                 return JTokenType.Boolean;
-            }
-            else if (value is Guid)
-            {
+            } else if (value is Guid) {
                 return JTokenType.Guid;
-            }
-            else if (value is Uri)
-            {
+            } else if (value is Uri) {
                 return JTokenType.Uri;
-            }
-            else if (value is TimeSpan)
-            {
+            } else if (value is TimeSpan) {
                 return JTokenType.TimeSpan;
             }
 
@@ -532,13 +473,11 @@ namespace Simula.Scripting.Json.Linq
 
         private static JTokenType GetStringValueType(JTokenType? current)
         {
-            if (current == null)
-            {
+            if (current == null) {
                 return JTokenType.String;
             }
 
-            switch (current.GetValueOrDefault())
-            {
+            switch (current.GetValueOrDefault()) {
                 case JTokenType.Comment:
                 case JTokenType.String:
                 case JTokenType.Raw:
@@ -548,16 +487,13 @@ namespace Simula.Scripting.Json.Linq
             }
         }
         public override JTokenType Type => _valueType;
-        public object? Value
-        {
+        public object? Value {
             get => _value;
-            set
-            {
+            set {
                 Type? currentType = _value?.GetType();
                 Type? newType = value?.GetType();
 
-                if (currentType != newType)
-                {
+                if (currentType != newType) {
                     _valueType = GetValueType(_valueType, value);
                 }
 
@@ -566,18 +502,15 @@ namespace Simula.Scripting.Json.Linq
         }
         public override void WriteTo(JsonWriter writer, params JsonConverter[] converters)
         {
-            if (converters != null && converters.Length > 0 && _value != null)
-            {
+            if (converters != null && converters.Length > 0 && _value != null) {
                 JsonConverter? matchingConverter = JsonSerializer.GetMatchingConverter(converters, _value.GetType());
-                if (matchingConverter != null && matchingConverter.CanWrite)
-                {
+                if (matchingConverter != null && matchingConverter.CanWrite) {
                     matchingConverter.WriteJson(writer, _value, JsonSerializer.CreateDefault());
                     return;
                 }
             }
 
-            switch (_valueType)
-            {
+            switch (_valueType) {
                 case JTokenType.Comment:
                     writer.WriteComment(_value?.ToString());
                     return;
@@ -591,16 +524,11 @@ namespace Simula.Scripting.Json.Linq
                     writer.WriteUndefined();
                     return;
                 case JTokenType.Integer:
-                    if (_value is int i)
-                    {
+                    if (_value is int i) {
                         writer.WriteValue(i);
-                    }
-                    else if (_value is long l)
-                    {
+                    } else if (_value is long l) {
                         writer.WriteValue(l);
-                    }
-                    else if (_value is ulong ul)
-                    {
+                    } else if (_value is ulong ul) {
                         writer.WriteValue(ul);
                     }
 #if HAVE_BIG_INTEGER
@@ -609,26 +537,18 @@ namespace Simula.Scripting.Json.Linq
                         writer.WriteValue(integer);
                     }
 #endif
-                    else
-                    {
+                    else {
                         writer.WriteValue(Convert.ToInt64(_value, CultureInfo.InvariantCulture));
                     }
                     return;
                 case JTokenType.Float:
-                    if (_value is decimal dec)
-                    {
+                    if (_value is decimal dec) {
                         writer.WriteValue(dec);
-                    }
-                    else if (_value is double d)
-                    {
+                    } else if (_value is double d) {
                         writer.WriteValue(d);
-                    }
-                    else if (_value is float f)
-                    {
+                    } else if (_value is float f) {
                         writer.WriteValue(f);
-                    }
-                    else
-                    {
+                    } else {
                         writer.WriteValue(Convert.ToDouble(_value, CultureInfo.InvariantCulture));
                     }
                     return;
@@ -640,11 +560,9 @@ namespace Simula.Scripting.Json.Linq
                     return;
                 case JTokenType.Date:
 #if HAVE_DATE_TIME_OFFSET
-                    if (_value is DateTimeOffset offset)
-                    {
+                    if (_value is DateTimeOffset offset) {
                         writer.WriteValue(offset);
-                    }
-                    else
+                    } else
 #endif
                     {
                         writer.WriteValue(Convert.ToDateTime(_value, CultureInfo.InvariantCulture));
@@ -679,8 +597,7 @@ namespace Simula.Scripting.Json.Linq
         }
         public bool Equals([AllowNull] JValue other)
         {
-            if (other == null)
-            {
+            if (other == null) {
                 return false;
             }
 
@@ -688,8 +605,7 @@ namespace Simula.Scripting.Json.Linq
         }
         public override bool Equals(object obj)
         {
-            if (obj is JValue v)
-            {
+            if (obj is JValue v) {
                 return Equals(v);
             }
 
@@ -697,8 +613,7 @@ namespace Simula.Scripting.Json.Linq
         }
         public override int GetHashCode()
         {
-            if (_value == null)
-            {
+            if (_value == null) {
                 return 0;
             }
 
@@ -706,8 +621,7 @@ namespace Simula.Scripting.Json.Linq
         }
         public override string ToString()
         {
-            if (_value == null)
-            {
+            if (_value == null) {
                 return string.Empty;
             }
 
@@ -723,17 +637,13 @@ namespace Simula.Scripting.Json.Linq
         }
         public string ToString(string? format, IFormatProvider formatProvider)
         {
-            if (_value == null)
-            {
+            if (_value == null) {
                 return string.Empty;
             }
 
-            if (_value is IFormattable formattable)
-            {
+            if (_value is IFormattable formattable) {
                 return formattable.ToString(format, formatProvider);
-            }
-            else
-            {
+            } else {
                 return _value.ToString();
             }
         }
@@ -746,18 +656,16 @@ namespace Simula.Scripting.Json.Linq
 
         private class JValueDynamicProxy : DynamicProxy<JValue>
         {
-            public override bool TryConvert(JValue instance, ConvertBinder binder, [NotNullWhen(true)]out object? result)
+            public override bool TryConvert(JValue instance, ConvertBinder binder, [NotNullWhen(true)] out object? result)
             {
-                if (binder.Type == typeof(JValue) || binder.Type == typeof(JToken))
-                {
+                if (binder.Type == typeof(JValue) || binder.Type == typeof(JToken)) {
                     result = instance;
                     return true;
                 }
 
                 object? value = instance.Value;
 
-                if (value == null)
-                {
+                if (value == null) {
                     result = null;
                     return ReflectionUtils.IsNullable(binder.Type);
                 }
@@ -766,12 +674,11 @@ namespace Simula.Scripting.Json.Linq
                 return true;
             }
 
-            public override bool TryBinaryOperation(JValue instance, BinaryOperationBinder binder, object arg, [NotNullWhen(true)]out object? result)
+            public override bool TryBinaryOperation(JValue instance, BinaryOperationBinder binder, object arg, [NotNullWhen(true)] out object? result)
             {
                 object? compareValue = arg is JValue value ? value.Value : arg;
 
-                switch (binder.Operation)
-                {
+                switch (binder.Operation) {
                     case ExpressionType.Equal:
                         result = (Compare(instance.Type, instance.Value, compareValue) == 0);
                         return true;
@@ -798,8 +705,7 @@ namespace Simula.Scripting.Json.Linq
                     case ExpressionType.MultiplyAssign:
                     case ExpressionType.Divide:
                     case ExpressionType.DivideAssign:
-                        if (Operation(binder.Operation, instance.Value, compareValue, out result))
-                        {
+                        if (Operation(binder.Operation, instance.Value, compareValue, out result)) {
                             result = new JValue(result);
                             return true;
                         }
@@ -814,22 +720,18 @@ namespace Simula.Scripting.Json.Linq
 
         int IComparable.CompareTo(object obj)
         {
-            if (obj == null)
-            {
+            if (obj == null) {
                 return 1;
             }
 
             JTokenType comparisonType;
             object? otherValue;
-            if (obj is JValue value)
-            {
+            if (obj is JValue value) {
                 otherValue = value.Value;
                 comparisonType = (_valueType == JTokenType.String && _valueType != value._valueType)
                     ? value._valueType
                     : _valueType;
-            }
-            else
-            {
+            } else {
                 otherValue = obj;
                 comparisonType = _valueType;
             }
@@ -838,8 +740,7 @@ namespace Simula.Scripting.Json.Linq
         }
         public int CompareTo(JValue obj)
         {
-            if (obj == null)
-            {
+            if (obj == null) {
                 return 1;
             }
 

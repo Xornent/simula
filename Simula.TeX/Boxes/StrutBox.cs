@@ -9,10 +9,10 @@ namespace Simula.TeX.Boxes
 
         public StrutBox(double width, double height, double depth, double shift)
         {
-            this.Width = width;
-            this.Height = height;
-            this.Depth = depth;
-            this.Shift = shift;
+            Width = width;
+            Height = height;
+            Depth = depth;
+            Shift = shift;
         }
 
         public override void RenderTo(IElementRenderer renderer, double x, double y)

@@ -1,27 +1,29 @@
-﻿using System;
+﻿using Simula.Scripting.Token;
 using System.Collections.Generic;
-using System.Text;
-using Simula.Scripting.Token;
 
-namespace Simula.Scripting.Syntax {
-
-    public enum DefinitionType {
+namespace Simula.Scripting.Syntax
+{
+    public enum DefinitionType
+    {
         Constant,
         Function,
         Class
     }
 
-    public enum Visibility {
+    public enum Visibility
+    {
         Expose,
         Hidden
     }
 
-    public class Parameter {
+    public class Parameter
+    {
         public EvaluationStatement? Type { get; set; }
         public Token.Token? Name { get; set; }
     }
 
-    public class DefinitionBlock : BlockStatement {
+    public class DefinitionBlock : BlockStatement
+    {
         public DefinitionType Type;
         public Visibility Visibility = Visibility.Hidden;
 
@@ -37,126 +39,127 @@ namespace Simula.Scripting.Syntax {
         public Token.Token? ConstantName;
         public EvaluationStatement? ConstantValue;
 
-        public new void Parse(TokenCollection collection) {
+        public new void Parse(TokenCollection collection)
+        {
             Token.Token[] store = new Token.Token[collection.Count];
             collection.CopyTo(store);
 
-                if (collection[0] == "expose") {
+            if (collection[0] == "expose") {
                 if (collection.Count == 1) {
                     collection[0].Error = new TokenizerException("SS0012");
                     return;
                 }
-                this.Visibility = Visibility.Expose;
-                    switch ((string)collection[1]) {
-                        case "def":
+                Visibility = Visibility.Expose;
+                switch (collection[1]) {
+                    case "def":
                         if (collection.Count == 2) {
                             collection[0].Error = new TokenizerException("SS0013");
                             return;
                         }
-                        switch ((string)collection[2]) {
-                                case "func":
-                                    this.Type = DefinitionType.Function;
-                                    collection.RemoveRange(0, 3);
-                                    break;
-                                case "class":
-                                    this.Type = DefinitionType.Class;
-                                    collection.RemoveRange(0, 3);
-                                    break;
-                                case "var":
-                                    this.Type = DefinitionType.Constant;
-                                    collection.RemoveRange(0, 3);
-                                    break;
-                                default:
-                                    collection[2].Error = new TokenizerException("SS0013");
-                                    return;
-                            }
-                            break;
-                        case "func":
-                            this.Type = DefinitionType.Function;
-                            collection.RemoveRange(0, 2);
-                            break;
-                        case "class":
-                            this.Type = DefinitionType.Class;
-                            collection.RemoveRange(0, 2);
-                            break;
-                        case "var":
-                            this.Type = DefinitionType.Constant;
-                            collection.RemoveRange(0, 2);
-                            break;
-                        default:
-                            collection[1].Error = new TokenizerException("SS0012");
-                            return;
-                    }
-                } else if (collection[0] == "hidden") {
-                    this.Visibility = Visibility.Hidden;
+                        switch (collection[2]) {
+                            case "func":
+                                Type = DefinitionType.Function;
+                                collection.RemoveRange(0, 3);
+                                break;
+                            case "class":
+                                Type = DefinitionType.Class;
+                                collection.RemoveRange(0, 3);
+                                break;
+                            case "var":
+                                Type = DefinitionType.Constant;
+                                collection.RemoveRange(0, 3);
+                                break;
+                            default:
+                                collection[2].Error = new TokenizerException("SS0013");
+                                return;
+                        }
+                        break;
+                    case "func":
+                        Type = DefinitionType.Function;
+                        collection.RemoveRange(0, 2);
+                        break;
+                    case "class":
+                        Type = DefinitionType.Class;
+                        collection.RemoveRange(0, 2);
+                        break;
+                    case "var":
+                        Type = DefinitionType.Constant;
+                        collection.RemoveRange(0, 2);
+                        break;
+                    default:
+                        collection[1].Error = new TokenizerException("SS0012");
+                        return;
+                }
+            } else if (collection[0] == "hidden") {
+                Visibility = Visibility.Hidden;
                 if (collection.Count == 1) {
                     collection[0].Error = new TokenizerException("SS0012");
                     return;
                 }
-                switch ((string)collection[1]) {
-                        case "def":
+                switch (collection[1]) {
+                    case "def":
                         if (collection.Count == 2) {
                             collection[0].Error = new TokenizerException("SS0013");
                             return;
                         }
-                        switch ((string)collection[2]) {
-                                case "func":
-                                    this.Type = DefinitionType.Function;
-                                    collection.RemoveRange(0, 3);
-                                    break;
-                                case "class":
-                                    this.Type = DefinitionType.Class;
-                                    collection.RemoveRange(0, 3);
-                                    break;
-                                case "var":
-                                    this.Type = DefinitionType.Constant;
-                                    collection.RemoveRange(0, 3);
-                                    break;
-                                default:
-                                    collection[2].Error = new TokenizerException("SS0013");
-                                    return;
-                            }
-                            break;
-                        case "func":
-                            this.Type = DefinitionType.Function;
-                            collection.RemoveRange(0, 2);
-                            break;
-                        case "class":
-                            this.Type = DefinitionType.Class;
-                            collection.RemoveRange(0, 2);
-                            break;
-                        case "var":
-                            this.Type = DefinitionType.Constant;
-                            collection.RemoveRange(0, 2);
-                            break;
-                        default:
-                            collection[1].Error = new TokenizerException("SS0012");
-                            return;
-                    }
-                } else if (collection[0] == "def") {
-                    this.Visibility = Visibility.Hidden;
+                        switch (collection[2]) {
+                            case "func":
+                                Type = DefinitionType.Function;
+                                collection.RemoveRange(0, 3);
+                                break;
+                            case "class":
+                                Type = DefinitionType.Class;
+                                collection.RemoveRange(0, 3);
+                                break;
+                            case "var":
+                                Type = DefinitionType.Constant;
+                                collection.RemoveRange(0, 3);
+                                break;
+                            default:
+                                collection[2].Error = new TokenizerException("SS0013");
+                                return;
+                        }
+                        break;
+                    case "func":
+                        Type = DefinitionType.Function;
+                        collection.RemoveRange(0, 2);
+                        break;
+                    case "class":
+                        Type = DefinitionType.Class;
+                        collection.RemoveRange(0, 2);
+                        break;
+                    case "var":
+                        Type = DefinitionType.Constant;
+                        collection.RemoveRange(0, 2);
+                        break;
+                    default:
+                        collection[1].Error = new TokenizerException("SS0012");
+                        return;
+                }
+            } else if (collection[0] == "def") {
+                Visibility = Visibility.Hidden;
                 if (collection.Count == 1) {
                     collection[0].Error = new TokenizerException("SS0013");
                     return;
                 }
-                    switch ((string)collection[1]) {
-                        case "func":
-                            this.Type = DefinitionType.Function;
-                            collection.RemoveRange(0, 2);
-                            break;
-                        case "class":
-                            this.Type = DefinitionType.Class;
-                            collection.RemoveRange(0, 2);
-                            break;
-                        case "var":
-                            this.Type = DefinitionType.Constant;
-                            collection.RemoveRange(0, 2);
-                            break;
-                        default:
-                            collection[1].Error = new TokenizerException("SS0013");
-                            return;
-                    }
+                switch (collection[1]) {
+                    case "func":
+                        Type = DefinitionType.Function;
+                        collection.RemoveRange(0, 2);
+                        break;
+                    case "class":
+                        Type = DefinitionType.Class;
+                        collection.RemoveRange(0, 2);
+                        break;
+                    case "var":
+                        Type = DefinitionType.Constant;
+                        collection.RemoveRange(0, 2);
+                        break;
+                    default:
+                        collection[1].Error = new TokenizerException("SS0013");
+                        return;
                 }
+            }
 
             if (collection.Count == 0) {
                 store[store.Length - 1].Error = new TokenizerException("ss0021");
@@ -169,70 +172,72 @@ namespace Simula.Scripting.Syntax {
             // func_name([function parameters]) [= defined(...)]
             // const_name = defined
 
-            switch (this.Type) {
-                    case DefinitionType.Constant:
-                        if (collection.Contains(new Token.Token("="))) {
-                            var l = collection.Split(new Token.Token("="));
-                            if (l.Count == 2) {
-                                ConstantName = l[0][0];
+            switch (Type) {
+                case DefinitionType.Constant:
+                    if (collection.Contains(new Token.Token("="))) {
+                        var l = collection.Split(new Token.Token("="));
+                        if (l.Count == 2) {
+                            ConstantName = l[0][0];
 
-                                EvaluationStatement eval = new EvaluationStatement();
-                                eval.Parse(l[1]);
-                                ConstantValue = eval;
-                            } else collection[0].Error = new TokenizerException("SS0002");
-                        } else collection[0].Error = new TokenizerException("SS0014");
-                        break;
-                    case DefinitionType.Function:
-                        if (collection.Contains(new Token.Token("="))) {
-                            var l = collection.Split(new Token.Token("="));
-                            if (l.Count == 2) {
-                                ParseAbsoluteFunctionDefinition(l[0]);
-                                EvaluationStatement eval = new EvaluationStatement();
-                                eval.Parse(l[1]);
-                                this.FunctionAlias = eval;
-                            } else collection[0].Error = new TokenizerException("SS0002");
-                        } else {
+                            EvaluationStatement eval = new EvaluationStatement();
+                            eval.Parse(l[1]);
+                            ConstantValue = eval;
+                        } else collection[0].Error = new TokenizerException("SS0002");
+                    } else collection[0].Error = new TokenizerException("SS0014");
+                    break;
+                case DefinitionType.Function:
+                    if (collection.Contains(new Token.Token("="))) {
+                        var l = collection.Split(new Token.Token("="));
+                        if (l.Count == 2) {
+                            ParseAbsoluteFunctionDefinition(l[0]);
+                            EvaluationStatement eval = new EvaluationStatement();
+                            eval.Parse(l[1]);
+                            FunctionAlias = eval;
+                        } else collection[0].Error = new TokenizerException("SS0002");
+                    } else {
                         ParseAbsoluteFunctionDefinition(collection);
-                        }
-                        break;
-                    case DefinitionType.Class:
-                        if (collection.Contains(new Token.Token("="))) {
-                            var l = collection.Split(new Token.Token("="));
-                            if (l.Count == 2) {
-                                ParseClassDefinition(l[0]);
-                                EvaluationStatement eval = new EvaluationStatement();
-                                eval.Parse(l[1]);
-                                this.ClassAlias = eval;
-                            } else collection[0].Error = new TokenizerException("SS0002");
-                        } else {
-                            ParseClassDefinition(collection);
-                        }
-                        break;
-                }
+                    }
+                    break;
+                case DefinitionType.Class:
+                    if (collection.Contains(new Token.Token("="))) {
+                        var l = collection.Split(new Token.Token("="));
+                        if (l.Count == 2) {
+                            ParseClassDefinition(l[0]);
+                            EvaluationStatement eval = new EvaluationStatement();
+                            eval.Parse(l[1]);
+                            ClassAlias = eval;
+                        } else collection[0].Error = new TokenizerException("SS0002");
+                    } else {
+                        ParseClassDefinition(collection);
+                    }
+                    break;
+            }
         }
 
-        private void ParseClassDefinition(TokenCollection collection) {
+        private void ParseClassDefinition(TokenCollection collection)
+        {
             if (collection.Contains(new Token.Token(":"))) {
                 var l = collection.Split(new Token.Token(":"));
                 if (l.Count == 2) {
                     ParseAbsoluteClassName(l[0]);
                     EvaluationStatement eval = new EvaluationStatement();
                     eval.Parse(l[1]);
-                    this.ClassInheritage = eval;
-                } 
-                else collection[0].Error = new TokenizerException("SS0015");
+                    ClassInheritage = eval;
+                } else collection[0].Error = new TokenizerException("SS0015");
             } else {
                 ParseAbsoluteClassName(collection);
             }
         }
 
-        private void ParseAbsoluteClassName(TokenCollection collection) {
-            this.ClassName = collection[0];
+        private void ParseAbsoluteClassName(TokenCollection collection)
+        {
+            ClassName = collection[0];
         }
 
-        private void ParseAbsoluteFunctionDefinition(TokenCollection collection) {
-            this.FunctionName = collection[0];
-            if (collection.Count <3) {
+        private void ParseAbsoluteFunctionDefinition(TokenCollection collection)
+        {
+            FunctionName = collection[0];
+            if (collection.Count < 3) {
                 collection[0].Error = new TokenizerException("ss0023");
                 return;
             }
@@ -246,7 +251,7 @@ namespace Simula.Scripting.Syntax {
                     }
 
                     var funcParam = tk.Split(new Token.Token(","));
-                    this.FunctionParameters.Clear();
+                    FunctionParameters.Clear();
                     foreach (var item in funcParam) {
                         Parameter par = new Parameter();
                         par.Name = item.Last();
@@ -254,7 +259,7 @@ namespace Simula.Scripting.Syntax {
                         EvaluationStatement e = new EvaluationStatement();
                         e.Parse(item);
                         par.Type = e;
-                        this.FunctionParameters.Add(par);
+                        FunctionParameters.Add(par);
                     }
                 }
             } catch {

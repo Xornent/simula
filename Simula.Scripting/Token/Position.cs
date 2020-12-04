@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Simula.Scripting.Token {
-
-    public struct Position {
-        public Position(int line, int column) {
-            this.Line = line;
-            this.Column = column;
+﻿namespace Simula.Scripting.Token
+{
+    public struct Position
+    {
+        public Position(int line, int column)
+        {
+            Line = line;
+            Column = column;
         }
 
         public int Line { get; set; }

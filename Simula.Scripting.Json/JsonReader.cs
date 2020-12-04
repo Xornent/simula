@@ -1,7 +1,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Globalization;
 #if HAVE_BIG_INTEGER
 using System.Numerics;
@@ -45,68 +44,54 @@ namespace Simula.Scripting.Json
         protected State CurrentState => _currentState;
         public bool CloseInput { get; set; }
         public bool SupportMultipleContent { get; set; }
-        public virtual char QuoteChar
-        {
+        public virtual char QuoteChar {
             get => _quoteChar;
             protected internal set => _quoteChar = value;
         }
-        public DateTimeZoneHandling DateTimeZoneHandling
-        {
+        public DateTimeZoneHandling DateTimeZoneHandling {
             get => _dateTimeZoneHandling;
-            set
-            {
-                if (value < DateTimeZoneHandling.Local || value > DateTimeZoneHandling.RoundtripKind)
-                {
+            set {
+                if (value < DateTimeZoneHandling.Local || value > DateTimeZoneHandling.RoundtripKind) {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
                 _dateTimeZoneHandling = value;
             }
         }
-        public DateParseHandling DateParseHandling
-        {
+        public DateParseHandling DateParseHandling {
             get => _dateParseHandling;
-            set
-            {
+            set {
                 if (value < DateParseHandling.None ||
 #if HAVE_DATE_TIME_OFFSET
                     value > DateParseHandling.DateTimeOffset
 #else
                     value > DateParseHandling.DateTime
 #endif
-                    )
-                {
+                    ) {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
                 _dateParseHandling = value;
             }
         }
-        public FloatParseHandling FloatParseHandling
-        {
+        public FloatParseHandling FloatParseHandling {
             get => _floatParseHandling;
-            set
-            {
-                if (value < FloatParseHandling.Double || value > FloatParseHandling.Decimal)
-                {
+            set {
+                if (value < FloatParseHandling.Double || value > FloatParseHandling.Decimal) {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
                 _floatParseHandling = value;
             }
         }
-        public string? DateFormatString
-        {
+        public string? DateFormatString {
             get => _dateFormatString;
             set => _dateFormatString = value;
         }
-        public int? MaxDepth
-        {
+        public int? MaxDepth {
             get => _maxDepth;
-            set
-            {
-                if (value <= 0)
-                {
+            set {
+                if (value <= 0) {
                     throw new ArgumentException("Value must be positive.", nameof(value));
                 }
 
@@ -116,27 +101,19 @@ namespace Simula.Scripting.Json
         public virtual JsonToken TokenType => _tokenType;
         public virtual object? Value => _value;
         public virtual Type? ValueType => _value?.GetType();
-        public virtual int Depth
-        {
-            get
-            {
+        public virtual int Depth {
+            get {
                 int depth = _stack?.Count ?? 0;
-                if (JsonTokenUtils.IsStartToken(TokenType) || _currentPosition.Type == JsonContainerType.None)
-                {
+                if (JsonTokenUtils.IsStartToken(TokenType) || _currentPosition.Type == JsonContainerType.None) {
                     return depth;
-                }
-                else
-                {
+                } else {
                     return depth + 1;
                 }
             }
         }
-        public virtual string Path
-        {
-            get
-            {
-                if (_currentPosition.Type == JsonContainerType.None)
-                {
+        public virtual string Path {
+            get {
+                if (_currentPosition.Type == JsonContainerType.None) {
                     return string.Empty;
                 }
 
@@ -149,16 +126,14 @@ namespace Simula.Scripting.Json
                 return JsonPosition.BuildPath(_stack!, current);
             }
         }
-        public CultureInfo Culture
-        {
+        public CultureInfo Culture {
             get => _culture ?? CultureInfo.InvariantCulture;
             set => _culture = value;
         }
 
         internal JsonPosition GetPosition(int depth)
         {
-            if (_stack != null && depth < _stack.Count)
-            {
+            if (_stack != null && depth < _stack.Count) {
                 return _stack[depth];
             }
 
@@ -178,21 +153,16 @@ namespace Simula.Scripting.Json
         {
             UpdateScopeWithFinishedValue();
 
-            if (_currentPosition.Type == JsonContainerType.None)
-            {
+            if (_currentPosition.Type == JsonContainerType.None) {
                 _currentPosition = new JsonPosition(value);
-            }
-            else
-            {
-                if (_stack == null)
-                {
+            } else {
+                if (_stack == null) {
                     _stack = new List<JsonPosition>();
                 }
 
                 _stack.Add(_currentPosition);
                 _currentPosition = new JsonPosition(value);
-                if (_maxDepth != null && Depth + 1 > _maxDepth && !_hasExceededMaxDepth)
-                {
+                if (_maxDepth != null && Depth + 1 > _maxDepth && !_hasExceededMaxDepth) {
                     _hasExceededMaxDepth = true;
                     throw JsonReaderException.Create(this, "The reader's MaxDepth of {0} has been exceeded.".FormatWith(CultureInfo.InvariantCulture, _maxDepth));
                 }
@@ -202,20 +172,16 @@ namespace Simula.Scripting.Json
         private JsonContainerType Pop()
         {
             JsonPosition oldPosition;
-            if (_stack != null && _stack.Count > 0)
-            {
+            if (_stack != null && _stack.Count > 0) {
                 oldPosition = _currentPosition;
                 _currentPosition = _stack[_stack.Count - 1];
                 _stack.RemoveAt(_stack.Count - 1);
-            }
-            else
-            {
+            } else {
                 oldPosition = _currentPosition;
                 _currentPosition = new JsonPosition();
             }
 
-            if (_maxDepth != null && Depth <= _maxDepth)
-            {
+            if (_maxDepth != null && Depth <= _maxDepth) {
                 _hasExceededMaxDepth = false;
             }
 
@@ -231,8 +197,7 @@ namespace Simula.Scripting.Json
         {
             JsonToken t = GetContentToken();
 
-            switch (t)
-            {
+            switch (t) {
                 case JsonToken.None:
                 case JsonToken.Null:
                 case JsonToken.EndArray:
@@ -240,8 +205,7 @@ namespace Simula.Scripting.Json
                 case JsonToken.Integer:
                 case JsonToken.Float:
                     object v = Value!;
-                    if (v is int i)
-                    {
+                    if (v is int i) {
                         return i;
                     }
 
@@ -253,12 +217,9 @@ namespace Simula.Scripting.Json
                     else
 #endif
                     {
-                        try
-                        {
+                        try {
                             i = Convert.ToInt32(v, CultureInfo.InvariantCulture);
-                        }
-                        catch (Exception ex)
-                        {
+                        } catch (Exception ex) {
                             throw JsonReaderException.Create(this, "Could not convert to integer: {0}.".FormatWith(CultureInfo.InvariantCulture, v), ex);
                         }
                     }
@@ -275,19 +236,15 @@ namespace Simula.Scripting.Json
 
         internal int? ReadInt32String(string? s)
         {
-            if (StringUtils.IsNullOrEmpty(s))
-            {
+            if (StringUtils.IsNullOrEmpty(s)) {
                 SetToken(JsonToken.Null, null, false);
                 return null;
             }
 
-            if (int.TryParse(s, NumberStyles.Integer, Culture, out int i))
-            {
+            if (int.TryParse(s, NumberStyles.Integer, Culture, out int i)) {
                 SetToken(JsonToken.Integer, i, false);
                 return i;
-            }
-            else
-            {
+            } else {
                 SetToken(JsonToken.String, s, false);
                 throw JsonReaderException.Create(this, "Could not convert string to integer: {0}.".FormatWith(CultureInfo.InvariantCulture, s));
             }
@@ -296,8 +253,7 @@ namespace Simula.Scripting.Json
         {
             JsonToken t = GetContentToken();
 
-            switch (t)
-            {
+            switch (t) {
                 case JsonToken.None:
                 case JsonToken.Null:
                 case JsonToken.EndArray:
@@ -306,18 +262,13 @@ namespace Simula.Scripting.Json
                     return (string?)Value;
             }
 
-            if (JsonTokenUtils.IsPrimitiveToken(t))
-            {
+            if (JsonTokenUtils.IsPrimitiveToken(t)) {
                 object? v = Value;
-                if (v != null)
-                {
+                if (v != null) {
                     string s;
-                    if (v is IFormattable formattable)
-                    {
+                    if (v is IFormattable formattable) {
                         s = formattable.ToString(null, Culture);
-                    }
-                    else
-                    {
+                    } else {
                         s = v is Uri uri ? uri.OriginalString : v.ToString();
                     }
 
@@ -332,52 +283,42 @@ namespace Simula.Scripting.Json
         {
             JsonToken t = GetContentToken();
 
-            switch (t)
-            {
-                case JsonToken.StartObject:
-                {
-                    ReadIntoWrappedTypeObject();
+            switch (t) {
+                case JsonToken.StartObject: {
+                        ReadIntoWrappedTypeObject();
 
-                    byte[]? data = ReadAsBytes();
-                    ReaderReadAndAssert();
+                        byte[]? data = ReadAsBytes();
+                        ReaderReadAndAssert();
 
-                    if (TokenType != JsonToken.EndObject)
-                    {
-                        throw JsonReaderException.Create(this, "Error reading bytes. Unexpected token: {0}.".FormatWith(CultureInfo.InvariantCulture, TokenType));
+                        if (TokenType != JsonToken.EndObject) {
+                            throw JsonReaderException.Create(this, "Error reading bytes. Unexpected token: {0}.".FormatWith(CultureInfo.InvariantCulture, TokenType));
+                        }
+
+                        SetToken(JsonToken.Bytes, data, false);
+                        return data;
                     }
+                case JsonToken.String: {
+                        string s = (string)Value!;
 
-                    SetToken(JsonToken.Bytes, data, false);
-                    return data;
-                }
-                case JsonToken.String:
-                {
-                    string s = (string)Value!;
+                        byte[] data;
 
-                    byte[] data;
+                        if (s.Length == 0) {
+                            data = CollectionUtils.ArrayEmpty<byte>();
+                        } else if (ConvertUtils.TryConvertGuid(s, out Guid g1)) {
+                            data = g1.ToByteArray();
+                        } else {
+                            data = Convert.FromBase64String(s);
+                        }
 
-                    if (s.Length == 0)
-                    {
-                        data = CollectionUtils.ArrayEmpty<byte>();
+                        SetToken(JsonToken.Bytes, data, false);
+                        return data;
                     }
-                    else if (ConvertUtils.TryConvertGuid(s, out Guid g1))
-                    {
-                        data = g1.ToByteArray();
-                    }
-                    else
-                    {
-                        data = Convert.FromBase64String(s);
-                    }
-
-                    SetToken(JsonToken.Bytes, data, false);
-                    return data;
-                }
                 case JsonToken.None:
                 case JsonToken.Null:
                 case JsonToken.EndArray:
                     return null;
                 case JsonToken.Bytes:
-                    if (Value is Guid g2)
-                    {
+                    if (Value is Guid g2) {
                         byte[] data = g2.ToByteArray();
                         SetToken(JsonToken.Bytes, data, false);
                         return data;
@@ -395,15 +336,12 @@ namespace Simula.Scripting.Json
         {
             List<byte> buffer = new List<byte>();
 
-            while (true)
-            {
-                if (!Read())
-                {
+            while (true) {
+                if (!Read()) {
                     SetToken(JsonToken.None);
                 }
 
-                if (ReadArrayElementIntoByteArrayReportDone(buffer))
-                {
+                if (ReadArrayElementIntoByteArrayReportDone(buffer)) {
                     byte[] d = buffer.ToArray();
                     SetToken(JsonToken.Bytes, d, false);
                     return d;
@@ -413,8 +351,7 @@ namespace Simula.Scripting.Json
 
         private bool ReadArrayElementIntoByteArrayReportDone(List<byte> buffer)
         {
-            switch (TokenType)
-            {
+            switch (TokenType) {
                 case JsonToken.None:
                     throw JsonReaderException.Create(this, "Unexpected end when reading bytes.");
                 case JsonToken.Integer:
@@ -432,8 +369,7 @@ namespace Simula.Scripting.Json
         {
             JsonToken t = GetContentToken();
 
-            switch (t)
-            {
+            switch (t) {
                 case JsonToken.None:
                 case JsonToken.Null:
                 case JsonToken.EndArray:
@@ -441,8 +377,7 @@ namespace Simula.Scripting.Json
                 case JsonToken.Integer:
                 case JsonToken.Float:
                     object v = Value!;
-                    if (v is double d)
-                    {
+                    if (v is double d) {
                         return d;
                     }
 
@@ -469,19 +404,15 @@ namespace Simula.Scripting.Json
 
         internal double? ReadDoubleString(string? s)
         {
-            if (StringUtils.IsNullOrEmpty(s))
-            {
+            if (StringUtils.IsNullOrEmpty(s)) {
                 SetToken(JsonToken.Null, null, false);
                 return null;
             }
 
-            if (double.TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, Culture, out double d))
-            {
+            if (double.TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, Culture, out double d)) {
                 SetToken(JsonToken.Float, d, false);
                 return d;
-            }
-            else
-            {
+            } else {
                 SetToken(JsonToken.String, s, false);
                 throw JsonReaderException.Create(this, "Could not convert string to double: {0}.".FormatWith(CultureInfo.InvariantCulture, s));
             }
@@ -490,8 +421,7 @@ namespace Simula.Scripting.Json
         {
             JsonToken t = GetContentToken();
 
-            switch (t)
-            {
+            switch (t) {
                 case JsonToken.None:
                 case JsonToken.Null:
                 case JsonToken.EndArray:
@@ -523,19 +453,15 @@ namespace Simula.Scripting.Json
 
         internal bool? ReadBooleanString(string? s)
         {
-            if (StringUtils.IsNullOrEmpty(s))
-            {
+            if (StringUtils.IsNullOrEmpty(s)) {
                 SetToken(JsonToken.Null, null, false);
                 return null;
             }
 
-            if (bool.TryParse(s, out bool b))
-            {
+            if (bool.TryParse(s, out bool b)) {
                 SetToken(JsonToken.Boolean, b, false);
                 return b;
-            }
-            else
-            {
+            } else {
                 SetToken(JsonToken.String, s, false);
                 throw JsonReaderException.Create(this, "Could not convert string to boolean: {0}.".FormatWith(CultureInfo.InvariantCulture, s));
             }
@@ -544,8 +470,7 @@ namespace Simula.Scripting.Json
         {
             JsonToken t = GetContentToken();
 
-            switch (t)
-            {
+            switch (t) {
                 case JsonToken.None:
                 case JsonToken.Null:
                 case JsonToken.EndArray:
@@ -553,9 +478,8 @@ namespace Simula.Scripting.Json
                 case JsonToken.Integer:
                 case JsonToken.Float:
                     object v = Value!;
-                    
-                    if (v is decimal d)
-                    {
+
+                    if (v is decimal d) {
                         return d;
                     }
 
@@ -567,12 +491,9 @@ namespace Simula.Scripting.Json
                     else
 #endif
                     {
-                        try
-                        {
+                        try {
                             d = Convert.ToDecimal(v, CultureInfo.InvariantCulture);
-                        }
-                        catch (Exception ex)
-                        {
+                        } catch (Exception ex) {
                             throw JsonReaderException.Create(this, "Could not convert to decimal: {0}.".FormatWith(CultureInfo.InvariantCulture, v), ex);
                         }
                     }
@@ -588,40 +509,32 @@ namespace Simula.Scripting.Json
 
         internal decimal? ReadDecimalString(string? s)
         {
-            if (StringUtils.IsNullOrEmpty(s))
-            {
+            if (StringUtils.IsNullOrEmpty(s)) {
                 SetToken(JsonToken.Null, null, false);
                 return null;
             }
 
-            if (decimal.TryParse(s, NumberStyles.Number, Culture, out decimal d))
-            {
+            if (decimal.TryParse(s, NumberStyles.Number, Culture, out decimal d)) {
                 SetToken(JsonToken.Float, d, false);
                 return d;
-            }
-            else if (ConvertUtils.DecimalTryParse(s.ToCharArray(), 0, s.Length, out d) == ParseResult.Success)
-            {
+            } else if (ConvertUtils.DecimalTryParse(s.ToCharArray(), 0, s.Length, out d) == ParseResult.Success) {
                 SetToken(JsonToken.Float, d, false);
                 return d;
-            }
-            else
-            {
+            } else {
                 SetToken(JsonToken.String, s, false);
                 throw JsonReaderException.Create(this, "Could not convert string to decimal: {0}.".FormatWith(CultureInfo.InvariantCulture, s));
             }
         }
         public virtual DateTime? ReadAsDateTime()
         {
-            switch (GetContentToken())
-            {
+            switch (GetContentToken()) {
                 case JsonToken.None:
                 case JsonToken.Null:
                 case JsonToken.EndArray:
                     return null;
                 case JsonToken.Date:
 #if HAVE_DATE_TIME_OFFSET
-                    if (Value is DateTimeOffset offset)
-                    {
+                    if (Value is DateTimeOffset offset) {
                         SetToken(JsonToken.Date, offset.DateTime, false);
                     }
 #endif
@@ -636,21 +549,18 @@ namespace Simula.Scripting.Json
 
         internal DateTime? ReadDateTimeString(string? s)
         {
-            if (StringUtils.IsNullOrEmpty(s))
-            {
+            if (StringUtils.IsNullOrEmpty(s)) {
                 SetToken(JsonToken.Null, null, false);
                 return null;
             }
 
-            if (DateTimeUtils.TryParseDateTime(s, DateTimeZoneHandling, _dateFormatString, Culture, out DateTime dt))
-            {
+            if (DateTimeUtils.TryParseDateTime(s, DateTimeZoneHandling, _dateFormatString, Culture, out DateTime dt)) {
                 dt = DateTimeUtils.EnsureDateTime(dt, DateTimeZoneHandling);
                 SetToken(JsonToken.Date, dt, false);
                 return dt;
             }
 
-            if (DateTime.TryParse(s, Culture, DateTimeStyles.RoundtripKind, out dt))
-            {
+            if (DateTime.TryParse(s, Culture, DateTimeStyles.RoundtripKind, out dt)) {
                 dt = DateTimeUtils.EnsureDateTime(dt, DateTimeZoneHandling);
                 SetToken(JsonToken.Date, dt, false);
                 return dt;
@@ -664,15 +574,13 @@ namespace Simula.Scripting.Json
         {
             JsonToken t = GetContentToken();
 
-            switch (t)
-            {
+            switch (t) {
                 case JsonToken.None:
                 case JsonToken.Null:
                 case JsonToken.EndArray:
                     return null;
                 case JsonToken.Date:
-                    if (Value is DateTime time)
-                    {
+                    if (Value is DateTime time) {
                         SetToken(JsonToken.Date, new DateTimeOffset(time), false);
                     }
 
@@ -687,20 +595,17 @@ namespace Simula.Scripting.Json
 
         internal DateTimeOffset? ReadDateTimeOffsetString(string? s)
         {
-            if (StringUtils.IsNullOrEmpty(s))
-            {
+            if (StringUtils.IsNullOrEmpty(s)) {
                 SetToken(JsonToken.Null, null, false);
                 return null;
             }
 
-            if (DateTimeUtils.TryParseDateTimeOffset(s, _dateFormatString, Culture, out DateTimeOffset dt))
-            {
+            if (DateTimeUtils.TryParseDateTimeOffset(s, _dateFormatString, Culture, out DateTimeOffset dt)) {
                 SetToken(JsonToken.Date, dt, false);
                 return dt;
             }
 
-            if (DateTimeOffset.TryParse(s, Culture, DateTimeStyles.RoundtripKind, out dt))
-            {
+            if (DateTimeOffset.TryParse(s, Culture, DateTimeStyles.RoundtripKind, out dt)) {
                 SetToken(JsonToken.Date, dt, false);
                 return dt;
             }
@@ -712,8 +617,7 @@ namespace Simula.Scripting.Json
 
         internal void ReaderReadAndAssert()
         {
-            if (!Read())
-            {
+            if (!Read()) {
                 throw CreateUnexpectedEndException();
             }
         }
@@ -726,14 +630,11 @@ namespace Simula.Scripting.Json
         internal void ReadIntoWrappedTypeObject()
         {
             ReaderReadAndAssert();
-            if (Value != null && Value.ToString() == JsonTypeReflector.TypePropertyName)
-            {
+            if (Value != null && Value.ToString() == JsonTypeReflector.TypePropertyName) {
                 ReaderReadAndAssert();
-                if (Value != null && Value.ToString().StartsWith("System.Byte[]", StringComparison.Ordinal))
-                {
+                if (Value != null && Value.ToString().StartsWith("System.Byte[]", StringComparison.Ordinal)) {
                     ReaderReadAndAssert();
-                    if (Value.ToString() == JsonTypeReflector.ValuePropertyName)
-                    {
+                    if (Value.ToString() == JsonTypeReflector.ValuePropertyName) {
                         return;
                     }
                 }
@@ -743,17 +644,14 @@ namespace Simula.Scripting.Json
         }
         public void Skip()
         {
-            if (TokenType == JsonToken.PropertyName)
-            {
+            if (TokenType == JsonToken.PropertyName) {
                 Read();
             }
 
-            if (JsonTokenUtils.IsStartToken(TokenType))
-            {
+            if (JsonTokenUtils.IsStartToken(TokenType)) {
                 int depth = Depth;
 
-                while (Read() && (depth < Depth))
-                {
+                while (Read() && (depth < Depth)) {
                 }
             }
         }
@@ -770,8 +668,7 @@ namespace Simula.Scripting.Json
             _tokenType = newToken;
             _value = value;
 
-            switch (newToken)
-            {
+            switch (newToken) {
                 case JsonToken.StartObject:
                     _currentState = State.ObjectStart;
                     Push(JsonContainerType.Object);
@@ -814,25 +711,20 @@ namespace Simula.Scripting.Json
 
         internal void SetPostValueState(bool updateIndex)
         {
-            if (Peek() != JsonContainerType.None || SupportMultipleContent)
-            {
+            if (Peek() != JsonContainerType.None || SupportMultipleContent) {
                 _currentState = State.PostValue;
-            }
-            else
-            {
+            } else {
                 SetFinished();
             }
 
-            if (updateIndex)
-            {
+            if (updateIndex) {
                 UpdateScopeWithFinishedValue();
             }
         }
 
         private void UpdateScopeWithFinishedValue()
         {
-            if (_currentPosition.HasIndex)
-            {
+            if (_currentPosition.HasIndex) {
                 _currentPosition.Position++;
             }
         }
@@ -841,17 +733,13 @@ namespace Simula.Scripting.Json
         {
             JsonContainerType currentObject = Pop();
 
-            if (GetTypeForCloseToken(endToken) != currentObject)
-            {
+            if (GetTypeForCloseToken(endToken) != currentObject) {
                 throw JsonReaderException.Create(this, "JsonToken {0} is not valid for closing JsonType {1}.".FormatWith(CultureInfo.InvariantCulture, endToken, currentObject));
             }
 
-            if (Peek() != JsonContainerType.None || SupportMultipleContent)
-            {
+            if (Peek() != JsonContainerType.None || SupportMultipleContent) {
                 _currentState = State.PostValue;
-            }
-            else
-            {
+            } else {
                 SetFinished();
             }
         }
@@ -859,8 +747,7 @@ namespace Simula.Scripting.Json
         {
             JsonContainerType currentObject = Peek();
 
-            switch (currentObject)
-            {
+            switch (currentObject) {
                 case JsonContainerType.Object:
                     _currentState = State.Object;
                     break;
@@ -885,8 +772,7 @@ namespace Simula.Scripting.Json
 
         private JsonContainerType GetTypeForCloseToken(JsonToken token)
         {
-            switch (token)
-            {
+            switch (token) {
                 case JsonToken.EndObject:
                     return JsonContainerType.Object;
                 case JsonToken.EndArray:
@@ -905,8 +791,7 @@ namespace Simula.Scripting.Json
         }
         protected virtual void Dispose(bool disposing)
         {
-            if (_currentState != State.Closed && disposing)
-            {
+            if (_currentState != State.Closed && disposing) {
                 Close();
             }
         }
@@ -919,31 +804,27 @@ namespace Simula.Scripting.Json
 
         internal void ReadAndAssert()
         {
-            if (!Read())
-            {
+            if (!Read()) {
                 throw JsonSerializationException.Create(this, "Unexpected end when reading JSON.");
             }
         }
 
         internal void ReadForTypeAndAssert(JsonContract? contract, bool hasConverter)
         {
-            if (!ReadForType(contract, hasConverter))
-            {
+            if (!ReadForType(contract, hasConverter)) {
                 throw JsonSerializationException.Create(this, "Unexpected end when reading JSON.");
             }
         }
 
         internal bool ReadForType(JsonContract? contract, bool hasConverter)
         {
-            if (hasConverter)
-            {
+            if (hasConverter) {
                 return Read();
             }
 
             ReadType t = contract?.InternalReadType ?? ReadType.Read;
 
-            switch (t)
-            {
+            switch (t) {
                 case ReadType.Read:
                     return ReadAndMoveToContent();
                 case ReadType.ReadAsInt32:
@@ -951,8 +832,7 @@ namespace Simula.Scripting.Json
                     break;
                 case ReadType.ReadAsInt64:
                     bool result = ReadAndMoveToContent();
-                    if (TokenType == JsonToken.Undefined)
-                    {
+                    if (TokenType == JsonToken.Undefined) {
                         throw JsonReaderException.Create(this, "An undefined token is not a valid {0}.".FormatWith(CultureInfo.InvariantCulture, contract?.UnderlyingType ?? typeof(long)));
                     }
                     return result;
@@ -994,10 +874,8 @@ namespace Simula.Scripting.Json
         internal bool MoveToContent()
         {
             JsonToken t = TokenType;
-            while (t == JsonToken.None || t == JsonToken.Comment)
-            {
-                if (!Read())
-                {
+            while (t == JsonToken.None || t == JsonToken.Comment) {
+                if (!Read()) {
                     return false;
                 }
 
@@ -1010,15 +888,11 @@ namespace Simula.Scripting.Json
         private JsonToken GetContentToken()
         {
             JsonToken t;
-            do
-            {
-                if (!Read())
-                {
+            do {
+                if (!Read()) {
                     SetToken(JsonToken.None);
                     return JsonToken.None;
-                }
-                else
-                {
+                } else {
                     t = TokenType;
                 }
             } while (t == JsonToken.Comment);

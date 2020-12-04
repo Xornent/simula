@@ -14,7 +14,6 @@ using Simula.Scripting.Json.Utilities;
 using System.Diagnostics;
 using System.Globalization;
 using System.Collections;
-using System.Runtime.CompilerServices;
 using System.Diagnostics.CodeAnalysis;
 #if !HAVE_LINQ
 using Simula.Scripting.Json.Utilities.LinqBridge;
@@ -51,36 +50,28 @@ namespace Simula.Scripting.Json.Linq
         private static readonly JTokenType[] CharTypes = new[] { JTokenType.Integer, JTokenType.Float, JTokenType.String, JTokenType.Comment, JTokenType.Raw };
         private static readonly JTokenType[] DateTimeTypes = new[] { JTokenType.Date, JTokenType.String, JTokenType.Comment, JTokenType.Raw };
         private static readonly JTokenType[] BytesTypes = new[] { JTokenType.Bytes, JTokenType.String, JTokenType.Comment, JTokenType.Raw, JTokenType.Integer };
-        public static JTokenEqualityComparer EqualityComparer
-        {
-            get
-            {
-                if (_equalityComparer == null)
-                {
+        public static JTokenEqualityComparer EqualityComparer {
+            get {
+                if (_equalityComparer == null) {
                     _equalityComparer = new JTokenEqualityComparer();
                 }
 
                 return _equalityComparer;
             }
         }
-        public JContainer? Parent
-        {
+        public JContainer? Parent {
             [DebuggerStepThrough]
             get { return _parent; }
             internal set { _parent = value; }
         }
-        public JToken Root
-        {
-            get
-            {
+        public JToken Root {
+            get {
                 JContainer? parent = Parent;
-                if (parent == null)
-                {
+                if (parent == null) {
                     return this;
                 }
 
-                while (parent.Parent != null)
-                {
+                while (parent.Parent != null) {
                     parent = parent.Parent;
                 }
 
@@ -96,39 +87,31 @@ namespace Simula.Scripting.Json.Linq
         {
             return (t1 == t2 || (t1 != null && t2 != null && t1.DeepEquals(t2)));
         }
-        public JToken? Next
-        {
+        public JToken? Next {
             get => _next;
             internal set => _next = value;
         }
-        public JToken? Previous
-        {
+        public JToken? Previous {
             get => _previous;
             internal set => _previous = value;
         }
-        public string Path
-        {
-            get
-            {
-                if (Parent == null)
-                {
+        public string Path {
+            get {
+                if (Parent == null) {
                     return string.Empty;
                 }
 
                 List<JsonPosition> positions = new List<JsonPosition>();
                 JToken? previous = null;
-                for (JToken? current = this; current != null; current = current.Parent)
-                {
-                    switch (current.Type)
-                    {
+                for (JToken? current = this; current != null; current = current.Parent) {
+                    switch (current.Type) {
                         case JTokenType.Property:
                             JProperty property = (JProperty)current;
                             positions.Add(new JsonPosition(JsonContainerType.Object) { PropertyName = property.Name });
                             break;
                         case JTokenType.Array:
                         case JTokenType.Constructor:
-                            if (previous != null)
-                            {
+                            if (previous != null) {
                                 int index = ((IList<JToken>)current).IndexOf(previous);
 
                                 positions.Add(new JsonPosition(JsonContainerType.Array) { Position = index });
@@ -154,8 +137,7 @@ namespace Simula.Scripting.Json.Linq
         }
         public void AddAfterSelf(object? content)
         {
-            if (_parent == null)
-            {
+            if (_parent == null) {
                 throw new InvalidOperationException("The parent is missing.");
             }
 
@@ -164,8 +146,7 @@ namespace Simula.Scripting.Json.Linq
         }
         public void AddBeforeSelf(object? content)
         {
-            if (_parent == null)
-            {
+            if (_parent == null) {
                 throw new InvalidOperationException("The parent is missing.");
             }
 
@@ -183,37 +164,31 @@ namespace Simula.Scripting.Json.Linq
 
         internal IEnumerable<JToken> GetAncestors(bool self)
         {
-            for (JToken? current = self ? this : Parent; current != null; current = current.Parent)
-            {
+            for (JToken? current = self ? this : Parent; current != null; current = current.Parent) {
                 yield return current;
             }
         }
         public IEnumerable<JToken> AfterSelf()
         {
-            if (Parent == null)
-            {
+            if (Parent == null) {
                 yield break;
             }
 
-            for (JToken? o = Next; o != null; o = o.Next)
-            {
+            for (JToken? o = Next; o != null; o = o.Next) {
                 yield return o;
             }
         }
         public IEnumerable<JToken> BeforeSelf()
         {
-            if (Parent == null)
-            {
+            if (Parent == null) {
                 yield break;
             }
 
-            for (JToken? o = Parent.First; o != this && o != null; o = o.Next)
-            {
+            for (JToken? o = Parent.First; o != this && o != null; o = o.Next) {
                 yield return o;
             }
         }
-        public virtual JToken? this[object key]
-        {
+        public virtual JToken? this[object key] {
             get => throw new InvalidOperationException("Cannot access child value on {0}.".FormatWith(CultureInfo.InvariantCulture, GetType()));
             set => throw new InvalidOperationException("Cannot set child value on {0}.".FormatWith(CultureInfo.InvariantCulture, GetType()));
         }
@@ -238,8 +213,7 @@ namespace Simula.Scripting.Json.Linq
         }
         public void Remove()
         {
-            if (_parent == null)
-            {
+            if (_parent == null) {
                 throw new InvalidOperationException("The parent is missing.");
             }
 
@@ -247,8 +221,7 @@ namespace Simula.Scripting.Json.Linq
         }
         public void Replace(JToken value)
         {
-            if (_parent == null)
-            {
+            if (_parent == null) {
                 throw new InvalidOperationException("The parent is missing.");
             }
 
@@ -261,8 +234,7 @@ namespace Simula.Scripting.Json.Linq
         }
         public string ToString(Formatting formatting, params JsonConverter[] converters)
         {
-            using (StringWriter sw = new StringWriter(CultureInfo.InvariantCulture))
-            {
+            using (StringWriter sw = new StringWriter(CultureInfo.InvariantCulture)) {
                 JsonTextWriter jw = new JsonTextWriter(sw);
                 jw.Formatting = formatting;
 
@@ -274,13 +246,11 @@ namespace Simula.Scripting.Json.Linq
 
         private static JValue? EnsureValue(JToken value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 throw new ArgumentNullException(nameof(value));
             }
 
-            if (value is JProperty property)
-            {
+            if (value is JProperty property) {
                 value = property.Value;
             }
 
@@ -293,8 +263,7 @@ namespace Simula.Scripting.Json.Linq
         {
             ValidationUtils.ArgumentNotNull(token, nameof(token));
 
-            if (token is JProperty p)
-            {
+            if (token is JProperty p) {
                 token = p.Value;
             }
 
@@ -306,12 +275,11 @@ namespace Simula.Scripting.Json.Linq
             return (Array.IndexOf(validTypes, o.Type) != -1) || (nullable && (o.Type == JTokenType.Null || o.Type == JTokenType.Undefined));
         }
 
-#region Cast from operators
+        #region Cast from operators
         public static explicit operator bool(JToken value)
         {
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, BooleanTypes, false))
-            {
+            if (v == null || !ValidateToken(v, BooleanTypes, false)) {
                 throw new ArgumentException("Can not convert {0} to Boolean.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -329,18 +297,15 @@ namespace Simula.Scripting.Json.Linq
         public static explicit operator DateTimeOffset(JToken value)
         {
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, DateTimeTypes, false))
-            {
+            if (v == null || !ValidateToken(v, DateTimeTypes, false)) {
                 throw new ArgumentException("Can not convert {0} to DateTimeOffset.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
-            if (v.Value is DateTimeOffset offset)
-            {
+            if (v.Value is DateTimeOffset offset) {
                 return offset;
             }
 
-            if (v.Value is string s)
-            {
+            if (v.Value is string s) {
                 return DateTimeOffset.Parse(s, CultureInfo.InvariantCulture);
             }
 
@@ -349,14 +314,12 @@ namespace Simula.Scripting.Json.Linq
 #endif
         public static explicit operator bool?(JToken? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, BooleanTypes, true))
-            {
+            if (v == null || !ValidateToken(v, BooleanTypes, true)) {
                 throw new ArgumentException("Can not convert {0} to Boolean.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -372,8 +335,7 @@ namespace Simula.Scripting.Json.Linq
         public static explicit operator long(JToken value)
         {
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, false))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, false)) {
                 throw new ArgumentException("Can not convert {0} to Int64.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -388,20 +350,17 @@ namespace Simula.Scripting.Json.Linq
         }
         public static explicit operator DateTime?(JToken? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, DateTimeTypes, true))
-            {
+            if (v == null || !ValidateToken(v, DateTimeTypes, true)) {
                 throw new ArgumentException("Can not convert {0} to DateTime.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
 #if HAVE_DATE_TIME_OFFSET
-            if (v.Value is DateTimeOffset offset)
-            {
+            if (v.Value is DateTimeOffset offset) {
                 return offset.DateTime;
             }
 #endif
@@ -412,28 +371,23 @@ namespace Simula.Scripting.Json.Linq
 #if HAVE_DATE_TIME_OFFSET
         public static explicit operator DateTimeOffset?(JToken? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, DateTimeTypes, true))
-            {
+            if (v == null || !ValidateToken(v, DateTimeTypes, true)) {
                 throw new ArgumentException("Can not convert {0} to DateTimeOffset.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
-            if (v.Value == null)
-            {
+            if (v.Value == null) {
                 return null;
             }
-            if (v.Value is DateTimeOffset offset)
-            {
+            if (v.Value is DateTimeOffset offset) {
                 return offset;
             }
 
-            if (v.Value is string s)
-            {
+            if (v.Value is string s) {
                 return DateTimeOffset.Parse(s, CultureInfo.InvariantCulture);
             }
 
@@ -442,14 +396,12 @@ namespace Simula.Scripting.Json.Linq
 #endif
         public static explicit operator decimal?(JToken? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, true))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, true)) {
                 throw new ArgumentException("Can not convert {0} to Decimal.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -464,14 +416,12 @@ namespace Simula.Scripting.Json.Linq
         }
         public static explicit operator double?(JToken? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, true))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, true)) {
                 throw new ArgumentException("Can not convert {0} to Double.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -486,14 +436,12 @@ namespace Simula.Scripting.Json.Linq
         }
         public static explicit operator char?(JToken? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, CharTypes, true))
-            {
+            if (v == null || !ValidateToken(v, CharTypes, true)) {
                 throw new ArgumentException("Can not convert {0} to Char.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -509,8 +457,7 @@ namespace Simula.Scripting.Json.Linq
         public static explicit operator int(JToken value)
         {
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, false))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, false)) {
                 throw new ArgumentException("Can not convert {0} to Int32.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -526,8 +473,7 @@ namespace Simula.Scripting.Json.Linq
         public static explicit operator short(JToken value)
         {
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, false))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, false)) {
                 throw new ArgumentException("Can not convert {0} to Int16.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -544,8 +490,7 @@ namespace Simula.Scripting.Json.Linq
         public static explicit operator ushort(JToken value)
         {
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, false))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, false)) {
                 throw new ArgumentException("Can not convert {0} to UInt16.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -562,8 +507,7 @@ namespace Simula.Scripting.Json.Linq
         public static explicit operator char(JToken value)
         {
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, CharTypes, false))
-            {
+            if (v == null || !ValidateToken(v, CharTypes, false)) {
                 throw new ArgumentException("Can not convert {0} to Char.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -579,8 +523,7 @@ namespace Simula.Scripting.Json.Linq
         public static explicit operator byte(JToken value)
         {
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, false))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, false)) {
                 throw new ArgumentException("Can not convert {0} to Byte.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -597,8 +540,7 @@ namespace Simula.Scripting.Json.Linq
         public static explicit operator sbyte(JToken value)
         {
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, false))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, false)) {
                 throw new ArgumentException("Can not convert {0} to SByte.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -613,14 +555,12 @@ namespace Simula.Scripting.Json.Linq
         }
         public static explicit operator int?(JToken? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, true))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, true)) {
                 throw new ArgumentException("Can not convert {0} to Int32.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -635,14 +575,12 @@ namespace Simula.Scripting.Json.Linq
         }
         public static explicit operator short?(JToken? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, true))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, true)) {
                 throw new ArgumentException("Can not convert {0} to Int16.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -658,14 +596,12 @@ namespace Simula.Scripting.Json.Linq
         [CLSCompliant(false)]
         public static explicit operator ushort?(JToken? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, true))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, true)) {
                 throw new ArgumentException("Can not convert {0} to UInt16.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -680,14 +616,12 @@ namespace Simula.Scripting.Json.Linq
         }
         public static explicit operator byte?(JToken? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, true))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, true)) {
                 throw new ArgumentException("Can not convert {0} to Byte.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -703,14 +637,12 @@ namespace Simula.Scripting.Json.Linq
         [CLSCompliant(false)]
         public static explicit operator sbyte?(JToken? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, true))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, true)) {
                 throw new ArgumentException("Can not convert {0} to SByte.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -726,14 +658,12 @@ namespace Simula.Scripting.Json.Linq
         public static explicit operator DateTime(JToken value)
         {
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, DateTimeTypes, false))
-            {
+            if (v == null || !ValidateToken(v, DateTimeTypes, false)) {
                 throw new ArgumentException("Can not convert {0} to DateTime.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
 #if HAVE_DATE_TIME_OFFSET
-            if (v.Value is DateTimeOffset offset)
-            {
+            if (v.Value is DateTimeOffset offset) {
                 return offset.DateTime;
             }
 #endif
@@ -742,14 +672,12 @@ namespace Simula.Scripting.Json.Linq
         }
         public static explicit operator long?(JToken? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, true))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, true)) {
                 throw new ArgumentException("Can not convert {0} to Int64.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -764,14 +692,12 @@ namespace Simula.Scripting.Json.Linq
         }
         public static explicit operator float?(JToken? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, true))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, true)) {
                 throw new ArgumentException("Can not convert {0} to Single.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -787,8 +713,7 @@ namespace Simula.Scripting.Json.Linq
         public static explicit operator decimal(JToken value)
         {
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, false))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, false)) {
                 throw new ArgumentException("Can not convert {0} to Decimal.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -804,14 +729,12 @@ namespace Simula.Scripting.Json.Linq
         [CLSCompliant(false)]
         public static explicit operator uint?(JToken? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, true))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, true)) {
                 throw new ArgumentException("Can not convert {0} to UInt32.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -827,14 +750,12 @@ namespace Simula.Scripting.Json.Linq
         [CLSCompliant(false)]
         public static explicit operator ulong?(JToken? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, true))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, true)) {
                 throw new ArgumentException("Can not convert {0} to UInt64.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -850,8 +771,7 @@ namespace Simula.Scripting.Json.Linq
         public static explicit operator double(JToken value)
         {
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, false))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, false)) {
                 throw new ArgumentException("Can not convert {0} to Double.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -867,8 +787,7 @@ namespace Simula.Scripting.Json.Linq
         public static explicit operator float(JToken value)
         {
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, false))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, false)) {
                 throw new ArgumentException("Can not convert {0} to Single.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -883,24 +802,20 @@ namespace Simula.Scripting.Json.Linq
         }
         public static explicit operator string?(JToken? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, StringTypes, true))
-            {
+            if (v == null || !ValidateToken(v, StringTypes, true)) {
                 throw new ArgumentException("Can not convert {0} to String.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
-            if (v.Value == null)
-            {
+            if (v.Value == null) {
                 return null;
             }
 
-            if (v.Value is byte[] bytes)
-            {
+            if (v.Value is byte[] bytes) {
                 return Convert.ToBase64String(bytes);
             }
 
@@ -917,8 +832,7 @@ namespace Simula.Scripting.Json.Linq
         public static explicit operator uint(JToken value)
         {
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, false))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, false)) {
                 throw new ArgumentException("Can not convert {0} to UInt32.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -935,8 +849,7 @@ namespace Simula.Scripting.Json.Linq
         public static explicit operator ulong(JToken value)
         {
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, NumberTypes, false))
-            {
+            if (v == null || !ValidateToken(v, NumberTypes, false)) {
                 throw new ArgumentException("Can not convert {0} to UInt64.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -951,19 +864,16 @@ namespace Simula.Scripting.Json.Linq
         }
         public static explicit operator byte[]?(JToken? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, BytesTypes, false))
-            {
+            if (v == null || !ValidateToken(v, BytesTypes, false)) {
                 throw new ArgumentException("Can not convert {0} to byte array.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
-            if (v.Value is string)
-            {
+            if (v.Value is string) {
                 return Convert.FromBase64String(Convert.ToString(v.Value, CultureInfo.InvariantCulture));
             }
 #if HAVE_BIG_INTEGER
@@ -973,8 +883,7 @@ namespace Simula.Scripting.Json.Linq
             }
 #endif
 
-            if (v.Value is byte[] bytes)
-            {
+            if (v.Value is byte[] bytes) {
                 return bytes;
             }
 
@@ -983,13 +892,11 @@ namespace Simula.Scripting.Json.Linq
         public static explicit operator Guid(JToken value)
         {
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, GuidTypes, false))
-            {
+            if (v == null || !ValidateToken(v, GuidTypes, false)) {
                 throw new ArgumentException("Can not convert {0} to Guid.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
-            if (v.Value is byte[] bytes)
-            {
+            if (v.Value is byte[] bytes) {
                 return new Guid(bytes);
             }
 
@@ -997,24 +904,20 @@ namespace Simula.Scripting.Json.Linq
         }
         public static explicit operator Guid?(JToken? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, GuidTypes, true))
-            {
+            if (v == null || !ValidateToken(v, GuidTypes, true)) {
                 throw new ArgumentException("Can not convert {0} to Guid.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
-            if (v.Value == null)
-            {
+            if (v.Value == null) {
                 return null;
             }
 
-            if (v.Value is byte[] bytes)
-            {
+            if (v.Value is byte[] bytes) {
                 return new Guid(bytes);
             }
 
@@ -1023,8 +926,7 @@ namespace Simula.Scripting.Json.Linq
         public static explicit operator TimeSpan(JToken value)
         {
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, TimeSpanTypes, false))
-            {
+            if (v == null || !ValidateToken(v, TimeSpanTypes, false)) {
                 throw new ArgumentException("Can not convert {0} to TimeSpan.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
@@ -1032,19 +934,16 @@ namespace Simula.Scripting.Json.Linq
         }
         public static explicit operator TimeSpan?(JToken? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, TimeSpanTypes, true))
-            {
+            if (v == null || !ValidateToken(v, TimeSpanTypes, true)) {
                 throw new ArgumentException("Can not convert {0} to TimeSpan.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
-            if (v.Value == null)
-            {
+            if (v.Value == null) {
                 return null;
             }
 
@@ -1052,19 +951,16 @@ namespace Simula.Scripting.Json.Linq
         }
         public static explicit operator Uri?(JToken? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
             JValue? v = EnsureValue(value);
-            if (v == null || !ValidateToken(v, UriTypes, true))
-            {
+            if (v == null || !ValidateToken(v, UriTypes, true)) {
                 throw new ArgumentException("Can not convert {0} to Uri.".FormatWith(CultureInfo.InvariantCulture, GetType(value)));
             }
 
-            if (v.Value == null)
-            {
+            if (v.Value == null) {
                 return null;
             }
 
@@ -1099,9 +995,9 @@ namespace Simula.Scripting.Json.Linq
             return ConvertUtils.ToBigInteger(v.Value);
         }
 #endif
-#endregion
+        #endregion
 
-#region Cast to operators
+        #region Cast to operators
         public static implicit operator JToken(bool value)
         {
             return new JValue(value);
@@ -1258,7 +1154,7 @@ namespace Simula.Scripting.Json.Linq
         {
             return new JValue(value);
         }
-#endregion
+        #endregion
 
         IEnumerator IEnumerable.GetEnumerator()
         {
@@ -1284,8 +1180,7 @@ namespace Simula.Scripting.Json.Linq
             ValidationUtils.ArgumentNotNull(jsonSerializer, nameof(jsonSerializer));
 
             JToken token;
-            using (JTokenWriter jsonWriter = new JTokenWriter())
-            {
+            using (JTokenWriter jsonWriter = new JTokenWriter()) {
                 jsonSerializer.Serialize(jsonWriter, o);
                 token = jsonWriter.Token!;
             }
@@ -1309,34 +1204,26 @@ namespace Simula.Scripting.Json.Linq
         }
         public object? ToObject(Type objectType)
         {
-            if (JsonConvert.DefaultSettings == null)
-            {
+            if (JsonConvert.DefaultSettings == null) {
                 PrimitiveTypeCode typeCode = ConvertUtils.GetTypeCode(objectType, out bool isEnum);
 
-                if (isEnum)
-                {
-                    if (Type == JTokenType.String)
-                    {
-                        try
-                        {
+                if (isEnum) {
+                    if (Type == JTokenType.String) {
+                        try {
                             return ToObject(objectType, JsonSerializer.CreateDefault());
-                        }
-                        catch (Exception ex)
-                        {
+                        } catch (Exception ex) {
                             Type enumType = objectType.IsEnum() ? objectType : Nullable.GetUnderlyingType(objectType);
                             throw new ArgumentException("Could not convert '{0}' to {1}.".FormatWith(CultureInfo.InvariantCulture, (string?)this, enumType.Name), ex);
                         }
                     }
 
-                    if (Type == JTokenType.Integer)
-                    {
+                    if (Type == JTokenType.Integer) {
                         Type enumType = objectType.IsEnum() ? objectType : Nullable.GetUnderlyingType(objectType);
                         return Enum.ToObject(enumType, ((JValue)this).Value);
                     }
                 }
 
-                switch (typeCode)
-                {
+                switch (typeCode) {
                     case PrimitiveTypeCode.BooleanNullable:
                         return (bool?)this;
                     case PrimitiveTypeCode.Boolean:
@@ -1433,8 +1320,7 @@ namespace Simula.Scripting.Json.Linq
         {
             ValidationUtils.ArgumentNotNull(jsonSerializer, nameof(jsonSerializer));
 
-            using (JTokenReader jsonReader = new JTokenReader(this))
-            {
+            using (JTokenReader jsonReader = new JTokenReader(this)) {
                 return jsonSerializer.Deserialize(jsonReader, objectType);
             }
         }
@@ -1447,30 +1333,23 @@ namespace Simula.Scripting.Json.Linq
             ValidationUtils.ArgumentNotNull(reader, nameof(reader));
 
             bool hasContent;
-            if (reader.TokenType == JsonToken.None)
-            {
+            if (reader.TokenType == JsonToken.None) {
                 hasContent = (settings != null && settings.CommentHandling == CommentHandling.Ignore)
                     ? reader.ReadAndMoveToContent()
                     : reader.Read();
-            }
-            else if (reader.TokenType == JsonToken.Comment && settings?.CommentHandling == CommentHandling.Ignore)
-            {
+            } else if (reader.TokenType == JsonToken.Comment && settings?.CommentHandling == CommentHandling.Ignore) {
                 hasContent = reader.ReadAndMoveToContent();
-            }
-            else
-            {
+            } else {
                 hasContent = true;
             }
 
-            if (!hasContent)
-            {
+            if (!hasContent) {
                 throw JsonReaderException.Create(reader, "Error reading JToken from JsonReader.");
             }
 
             IJsonLineInfo? lineInfo = reader as IJsonLineInfo;
 
-            switch (reader.TokenType)
-            {
+            switch (reader.TokenType) {
                 case JsonToken.StartObject:
                     return JObject.Load(reader, settings);
                 case JsonToken.StartArray:
@@ -1510,12 +1389,10 @@ namespace Simula.Scripting.Json.Linq
         }
         public static JToken Parse(string json, JsonLoadSettings? settings)
         {
-            using (JsonReader reader = new JsonTextReader(new StringReader(json)))
-            {
+            using (JsonReader reader = new JsonTextReader(new StringReader(json))) {
                 JToken t = Load(reader, settings);
 
-                while (reader.Read())
-                {
+                while (reader.Read()) {
                 }
 
                 return t;
@@ -1532,13 +1409,11 @@ namespace Simula.Scripting.Json.Linq
 
         internal void SetLineInfo(IJsonLineInfo? lineInfo, JsonLoadSettings? settings)
         {
-            if (settings != null && settings.LineInfoHandling != LineInfoHandling.Load)
-            {
+            if (settings != null && settings.LineInfoHandling != LineInfoHandling.Load) {
                 return;
             }
 
-            if (lineInfo == null || !lineInfo.HasLineInfo())
-            {
+            if (lineInfo == null || !lineInfo.HasLineInfo()) {
                 return;
             }
 
@@ -1567,13 +1442,10 @@ namespace Simula.Scripting.Json.Linq
             return (Annotation<LineInfoAnnotation>() != null);
         }
 
-        int IJsonLineInfo.LineNumber
-        {
-            get
-            {
+        int IJsonLineInfo.LineNumber {
+            get {
                 LineInfoAnnotation? annotation = Annotation<LineInfoAnnotation>();
-                if (annotation != null)
-                {
+                if (annotation != null) {
                     return annotation.LineNumber;
                 }
 
@@ -1581,13 +1453,10 @@ namespace Simula.Scripting.Json.Linq
             }
         }
 
-        int IJsonLineInfo.LinePosition
-        {
-            get
-            {
+        int IJsonLineInfo.LinePosition {
+            get {
                 LineInfoAnnotation? annotation = Annotation<LineInfoAnnotation>();
-                if (annotation != null)
-                {
+                if (annotation != null) {
                     return annotation.LinePosition;
                 }
 
@@ -1603,10 +1472,8 @@ namespace Simula.Scripting.Json.Linq
             JPath p = new JPath(path);
 
             JToken? token = null;
-            foreach (JToken t in p.Evaluate(this, this, errorWhenNoMatch))
-            {
-                if (token != null)
-                {
+            foreach (JToken t in p.Evaluate(this, this, errorWhenNoMatch)) {
+                if (token != null) {
                     throw new JsonException("Path returned multiple tokens.");
                 }
 
@@ -1648,30 +1515,21 @@ namespace Simula.Scripting.Json.Linq
         }
         public void AddAnnotation(object annotation)
         {
-            if (annotation == null)
-            {
+            if (annotation == null) {
                 throw new ArgumentNullException(nameof(annotation));
             }
 
-            if (_annotations == null)
-            {
+            if (_annotations == null) {
                 _annotations = (annotation is object[]) ? new[] { annotation } : annotation;
-            }
-            else
-            {
-                if (!(_annotations is object[] annotations))
-                {
+            } else {
+                if (!(_annotations is object[] annotations)) {
                     _annotations = new[] { _annotations, annotation };
-                }
-                else
-                {
+                } else {
                     int index = 0;
-                    while (index < annotations.Length && annotations[index] != null)
-                    {
+                    while (index < annotations.Length && annotations[index] != null) {
                         index++;
                     }
-                    if (index == annotations.Length)
-                    {
+                    if (index == annotations.Length) {
                         Array.Resize(ref annotations, index * 2);
                         _annotations = annotations;
                     }
@@ -1681,22 +1539,17 @@ namespace Simula.Scripting.Json.Linq
         }
         public T? Annotation<T>() where T : class
         {
-            if (_annotations != null)
-            {
-                if (!(_annotations is object[] annotations))
-                {
+            if (_annotations != null) {
+                if (!(_annotations is object[] annotations)) {
                     return (_annotations as T);
                 }
-                for (int i = 0; i < annotations.Length; i++)
-                {
+                for (int i = 0; i < annotations.Length; i++) {
                     object annotation = annotations[i];
-                    if (annotation == null)
-                    {
+                    if (annotation == null) {
                         break;
                     }
 
-                    if (annotation is T local)
-                    {
+                    if (annotation is T local) {
                         return local;
                     }
                 }
@@ -1706,32 +1559,23 @@ namespace Simula.Scripting.Json.Linq
         }
         public object? Annotation(Type type)
         {
-            if (type == null)
-            {
+            if (type == null) {
                 throw new ArgumentNullException(nameof(type));
             }
 
-            if (_annotations != null)
-            {
-                if (!(_annotations is object[] annotations))
-                {
-                    if (type.IsInstanceOfType(_annotations))
-                    {
+            if (_annotations != null) {
+                if (!(_annotations is object[] annotations)) {
+                    if (type.IsInstanceOfType(_annotations)) {
                         return _annotations;
                     }
-                }
-                else
-                {
-                    for (int i = 0; i < annotations.Length; i++)
-                    {
+                } else {
+                    for (int i = 0; i < annotations.Length; i++) {
                         object o = annotations[i];
-                        if (o == null)
-                        {
+                        if (o == null) {
                             break;
                         }
 
-                        if (type.IsInstanceOfType(o))
-                        {
+                        if (type.IsInstanceOfType(o)) {
                             return o;
                         }
                     }
@@ -1742,31 +1586,25 @@ namespace Simula.Scripting.Json.Linq
         }
         public IEnumerable<T> Annotations<T>() where T : class
         {
-            if (_annotations == null)
-            {
+            if (_annotations == null) {
                 yield break;
             }
 
-            if (_annotations is object[] annotations)
-            {
-                for (int i = 0; i < annotations.Length; i++)
-                {
+            if (_annotations is object[] annotations) {
+                for (int i = 0; i < annotations.Length; i++) {
                     object o = annotations[i];
-                    if (o == null)
-                    {
+                    if (o == null) {
                         break;
                     }
 
-                    if (o is T casted)
-                    {
+                    if (o is T casted) {
                         yield return casted;
                     }
                 }
                 yield break;
             }
 
-            if (!(_annotations is T annotation))
-            {
+            if (!(_annotations is T annotation)) {
                 yield break;
             }
 
@@ -1774,36 +1612,29 @@ namespace Simula.Scripting.Json.Linq
         }
         public IEnumerable<object> Annotations(Type type)
         {
-            if (type == null)
-            {
+            if (type == null) {
                 throw new ArgumentNullException(nameof(type));
             }
 
-            if (_annotations == null)
-            {
+            if (_annotations == null) {
                 yield break;
             }
 
-            if (_annotations is object[] annotations)
-            {
-                for (int i = 0; i < annotations.Length; i++)
-                {
+            if (_annotations is object[] annotations) {
+                for (int i = 0; i < annotations.Length; i++) {
                     object o = annotations[i];
-                    if (o == null)
-                    {
+                    if (o == null) {
                         break;
                     }
 
-                    if (type.IsInstanceOfType(o))
-                    {
+                    if (type.IsInstanceOfType(o)) {
                         yield return o;
                     }
                 }
                 yield break;
             }
 
-            if (!type.IsInstanceOfType(_annotations))
-            {
+            if (!type.IsInstanceOfType(_annotations)) {
                 yield break;
             }
 
@@ -1811,44 +1642,32 @@ namespace Simula.Scripting.Json.Linq
         }
         public void RemoveAnnotations<T>() where T : class
         {
-            if (_annotations != null)
-            {
-                if (!(_annotations is object?[] annotations))
-                {
-                    if (_annotations is T)
-                    {
+            if (_annotations != null) {
+                if (!(_annotations is object?[] annotations)) {
+                    if (_annotations is T) {
                         _annotations = null;
                     }
-                }
-                else
-                {
+                } else {
                     int index = 0;
                     int keepCount = 0;
-                    while (index < annotations.Length)
-                    {
+                    while (index < annotations.Length) {
                         object? obj2 = annotations[index];
-                        if (obj2 == null)
-                        {
+                        if (obj2 == null) {
                             break;
                         }
 
-                        if (!(obj2 is T))
-                        {
+                        if (!(obj2 is T)) {
                             annotations[keepCount++] = obj2;
                         }
 
                         index++;
                     }
 
-                    if (keepCount != 0)
-                    {
-                        while (keepCount < index)
-                        {
+                    if (keepCount != 0) {
+                        while (keepCount < index) {
                             annotations[keepCount++] = null;
                         }
-                    }
-                    else
-                    {
+                    } else {
                         _annotations = null;
                     }
                 }
@@ -1856,49 +1675,36 @@ namespace Simula.Scripting.Json.Linq
         }
         public void RemoveAnnotations(Type type)
         {
-            if (type == null)
-            {
+            if (type == null) {
                 throw new ArgumentNullException(nameof(type));
             }
 
-            if (_annotations != null)
-            {
-                if (!(_annotations is object?[] annotations))
-                {
-                    if (type.IsInstanceOfType(_annotations))
-                    {
+            if (_annotations != null) {
+                if (!(_annotations is object?[] annotations)) {
+                    if (type.IsInstanceOfType(_annotations)) {
                         _annotations = null;
                     }
-                }
-                else
-                {
+                } else {
                     int index = 0;
                     int keepCount = 0;
-                    while (index < annotations.Length)
-                    {
+                    while (index < annotations.Length) {
                         object? o = annotations[index];
-                        if (o == null)
-                        {
+                        if (o == null) {
                             break;
                         }
 
-                        if (!type.IsInstanceOfType(o))
-                        {
+                        if (!type.IsInstanceOfType(o)) {
                             annotations[keepCount++] = o;
                         }
 
                         index++;
                     }
 
-                    if (keepCount != 0)
-                    {
-                        while (keepCount < index)
-                        {
+                    if (keepCount != 0) {
+                        while (keepCount < index) {
                             annotations[keepCount++] = null;
                         }
-                    }
-                    else
-                    {
+                    } else {
                         _annotations = null;
                     }
                 }

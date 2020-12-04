@@ -7,8 +7,6 @@ using Simula.Scripting.Json.Utilities.LinqBridge;
 #if HAVE_CONCURRENT_DICTIONARY
 using System.Collections.Concurrent;
 #endif
-using System.Threading;
-using Simula.Scripting.Json.Serialization;
 
 namespace Simula.Scripting.Json.Utilities
 {
@@ -39,8 +37,7 @@ namespace Simula.Scripting.Json.Utilities
 #if HAVE_CONCURRENT_DICTIONARY
             return _concurrentStore.GetOrAdd(key, _creator);
 #else
-            if (!_store.TryGetValue(key, out TValue value))
-            {
+            if (!_store.TryGetValue(key, out TValue value)) {
                 return AddValue(key);
             }
 
@@ -53,17 +50,12 @@ namespace Simula.Scripting.Json.Utilities
         {
             TValue value = _creator(key);
 
-            lock (_lock)
-            {
-                if (_store == null)
-                {
+            lock (_lock) {
+                if (_store == null) {
                     _store = new Dictionary<TKey, TValue>();
                     _store[key] = value;
-                }
-                else
-                {
-                    if (_store.TryGetValue(key, out TValue checkValue))
-                    {
+                } else {
+                    if (_store.TryGetValue(key, out TValue checkValue)) {
                         return checkValue;
                     }
 

@@ -21,8 +21,7 @@ namespace Simula.Scripting.Json.Utilities
 
         public override bool Equals(object obj)
         {
-            if (!(obj is StructMultiKey<T1, T2> key))
-            {
+            if (!(obj is StructMultiKey<T1, T2> key)) {
                 return false;
             }
 

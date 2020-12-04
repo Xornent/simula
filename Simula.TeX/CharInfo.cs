@@ -7,39 +7,34 @@ namespace Simula.TeX
     {
         public CharInfo(char character, GlyphTypeface font, double size, int fontId, TexFontMetrics metrics)
         {
-            this.Character = character;
-            this.Font = font;
-            this.Size = size;
+            Character = character;
+            Font = font;
+            Size = size;
             FontId = fontId;
-            this.Metrics = metrics;
+            Metrics = metrics;
         }
 
-        public char Character
-        {
+        public char Character {
             get;
             set;
         }
 
-        public GlyphTypeface Font
-        {
+        public GlyphTypeface Font {
             get;
             set;
         }
 
-        public double Size
-        {
+        public double Size {
             get;
             set;
         }
 
-        public TexFontMetrics Metrics
-        {
+        public TexFontMetrics Metrics {
             get;
             set;
         }
 
-        public int FontId
-        {
+        public int FontId {
             get;
         }
 

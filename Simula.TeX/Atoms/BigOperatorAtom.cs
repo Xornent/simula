@@ -1,5 +1,5 @@
-using System;
 using Simula.TeX.Boxes;
+using System;
 
 namespace Simula.TeX.Atoms
 {
@@ -23,16 +23,16 @@ namespace Simula.TeX.Atoms
             bool? useVerticalLimits = null)
             : this(source, baseAtom, lowerLimitAtom, upperLimitAtom)
         {
-            this.UseVerticalLimits = useVerticalLimits;
+            UseVerticalLimits = useVerticalLimits;
         }
 
         public BigOperatorAtom(SourceSpan? source, Atom? baseAtom, Atom? lowerLimitAtom, Atom? upperLimitAtom)
             : base(source, TexAtomType.BigOperator)
         {
-            this.BaseAtom = baseAtom;
-            this.LowerLimitAtom = lowerLimitAtom;
-            this.UpperLimitAtom = upperLimitAtom;
-            this.UseVerticalLimits = null;
+            BaseAtom = baseAtom;
+            LowerLimitAtom = lowerLimitAtom;
+            UpperLimitAtom = upperLimitAtom;
+            UseVerticalLimits = null;
         }
 
         // Atom representing big operator.
@@ -51,23 +51,22 @@ namespace Simula.TeX.Atoms
             var texFont = environment.MathFont;
             var style = environment.Style;
 
-            if ((this.UseVerticalLimits.HasValue && !this.UseVerticalLimits.Value) ||
-                (!this.UseVerticalLimits.HasValue && style >= TexStyle.Text))
+            if ((UseVerticalLimits.HasValue && !UseVerticalLimits.Value) ||
+                (!UseVerticalLimits.HasValue && style >= TexStyle.Text))
                 // Attach atoms for limits as scripts.
-                return new ScriptsAtom(this.Source, this.BaseAtom, this.LowerLimitAtom, this.UpperLimitAtom)
+                return new ScriptsAtom(Source, BaseAtom, LowerLimitAtom, UpperLimitAtom)
                     .CreateBox(environment);
 
             // Create box for base atom.
             Box baseBox;
             double delta;
 
-            if (this.BaseAtom is SymbolAtom && this.BaseAtom.Type == TexAtomType.BigOperator)
-            {
+            if (BaseAtom is SymbolAtom && BaseAtom.Type == TexAtomType.BigOperator) {
                 // Find character of best scale for operator symbol.
-                var opChar = texFont.GetCharInfo(((SymbolAtom)this.BaseAtom).Name, style).Value;
+                var opChar = texFont.GetCharInfo(((SymbolAtom)BaseAtom).Name, style).Value;
                 if (style < TexStyle.Text && texFont.HasNextLarger(opChar))
                     opChar = texFont.GetNextLargerCharInfo(opChar, style);
-                var charBox = new CharBox(environment, opChar) { Source = this.BaseAtom.Source };
+                var charBox = new CharBox(environment, opChar) { Source = BaseAtom.Source };
                 charBox.Shift = -(charBox.Height + charBox.Depth) / 2 -
                     environment.MathFont.GetAxisHeight(environment.Style);
                 baseBox = new HorizontalBox(charBox);
@@ -75,17 +74,15 @@ namespace Simula.TeX.Atoms
                 delta = opChar.Metrics.Italic;
                 if (delta > TexUtilities.FloatPrecision)
                     baseBox.Add(new StrutBox(delta, 0, 0, 0));
-            }
-            else
-            {
-                baseBox = new HorizontalBox(this.BaseAtom == null ? StrutBox.Empty : this.BaseAtom.CreateBox(environment));
+            } else {
+                baseBox = new HorizontalBox(BaseAtom == null ? StrutBox.Empty : BaseAtom.CreateBox(environment));
                 delta = 0;
             }
 
             // Create boxes for upper and lower limits.
-            Box? upperLimitBox = this.UpperLimitAtom == null ? null : this.UpperLimitAtom.CreateBox(
+            Box? upperLimitBox = UpperLimitAtom == null ? null : UpperLimitAtom.CreateBox(
                 environment.GetSuperscriptStyle());
-            Box? lowerLimitBox = this.LowerLimitAtom == null ? null : this.LowerLimitAtom.CreateBox(
+            Box? lowerLimitBox = LowerLimitAtom == null ? null : LowerLimitAtom.CreateBox(
                 environment.GetSubscriptStyle());
 
             // Make all component boxes equally wide.
@@ -102,8 +99,7 @@ namespace Simula.TeX.Atoms
             var kern = 0d;
 
             // Create and add box for upper limit.
-            if (this.UpperLimitAtom != null)
-            {
+            if (UpperLimitAtom != null) {
                 resultBox.Add(new StrutBox(0, opSpacing5, 0, 0));
                 upperLimitBox!.Shift = delta / 2;
                 resultBox.Add(upperLimitBox);
@@ -116,8 +112,7 @@ namespace Simula.TeX.Atoms
             resultBox.Add(baseBox);
 
             // Create and add box for lower limit.
-            if (this.LowerLimitAtom != null)
-            {
+            if (LowerLimitAtom != null) {
                 resultBox.Add(new StrutBox(0, Math.Max(texFont.GetBigOpSpacing2(style), texFont.GetBigOpSpacing4(style) -
                     lowerLimitBox!.Height), 0, 0));
                 lowerLimitBox.Shift = -delta / 2;

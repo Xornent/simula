@@ -1,10 +1,9 @@
 ﻿
-using System;
-using System.Runtime.Serialization;
-using System.Reflection;
-using System.Globalization;
 using Simula.Scripting.Json.Utilities;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Reflection;
 
 namespace Simula.Scripting.Json.Serialization
 {
@@ -27,8 +26,7 @@ namespace Simula.Scripting.Json.Serialization
             string? assemblyName = typeNameKey.Value1;
             string typeName = typeNameKey.Value2;
 
-            if (assemblyName != null)
-            {
+            if (assemblyName != null) {
                 Assembly assembly;
 
 #if !(DOTNET || PORTABLE40 || PORTABLE)
@@ -56,36 +54,27 @@ namespace Simula.Scripting.Json.Serialization
                 }
 #endif
 
-                if (assembly == null)
-                {
+                if (assembly == null) {
                     throw new JsonSerializationException("Could not load assembly '{0}'.".FormatWith(CultureInfo.InvariantCulture, assemblyName));
                 }
 
                 Type? type = assembly.GetType(typeName);
-                if (type == null)
-                {
-                    if (typeName.IndexOf('`') >= 0)
-                    {
-                        try
-                        {
+                if (type == null) {
+                    if (typeName.IndexOf('`') >= 0) {
+                        try {
                             type = GetGenericTypeFromTypeName(typeName, assembly);
-                        }
-                        catch (Exception ex)
-                        {
+                        } catch (Exception ex) {
                             throw new JsonSerializationException("Could not find type '{0}' in assembly '{1}'.".FormatWith(CultureInfo.InvariantCulture, typeName, assembly.FullName), ex);
                         }
                     }
 
-                    if (type == null)
-                    {
+                    if (type == null) {
                         throw new JsonSerializationException("Could not find type '{0}' in assembly '{1}'.".FormatWith(CultureInfo.InvariantCulture, typeName, assembly.FullName));
                     }
                 }
 
                 return type;
-            }
-            else
-            {
+            } else {
                 return Type.GetType(typeName);
             }
         }
@@ -94,32 +83,26 @@ namespace Simula.Scripting.Json.Serialization
         {
             Type? type = null;
             int openBracketIndex = typeName.IndexOf('[');
-            if (openBracketIndex >= 0)
-            {
+            if (openBracketIndex >= 0) {
                 string genericTypeDefName = typeName.Substring(0, openBracketIndex);
                 Type genericTypeDef = assembly.GetType(genericTypeDefName);
-                if (genericTypeDef != null)
-                {
+                if (genericTypeDef != null) {
                     List<Type> genericTypeArguments = new List<Type>();
                     int scope = 0;
                     int typeArgStartIndex = 0;
                     int endIndex = typeName.Length - 1;
-                    for (int i = openBracketIndex + 1; i < endIndex; ++i)
-                    {
+                    for (int i = openBracketIndex + 1; i < endIndex; ++i) {
                         char current = typeName[i];
-                        switch (current)
-                        {
+                        switch (current) {
                             case '[':
-                                if (scope == 0)
-                                {
+                                if (scope == 0) {
                                     typeArgStartIndex = i + 1;
                                 }
                                 ++scope;
                                 break;
                             case ']':
                                 --scope;
-                                if (scope == 0)
-                                {
+                                if (scope == 0) {
                                     string typeArgAssemblyQualifiedName = typeName.Substring(typeArgStartIndex, i - typeArgStartIndex);
 
                                     StructMultiKey<string?, string> typeNameKey = ReflectionUtils.SplitFullyQualifiedTypeName(typeArgAssemblyQualifiedName);

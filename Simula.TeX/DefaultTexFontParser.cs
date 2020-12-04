@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
-using System.Text;
-using System.Windows;
 using System.Windows.Media;
 using System.Xml.Linq;
 
@@ -44,16 +42,16 @@ namespace Simula.TeX
             charChildParsers.Add("Extension", new ExtensionParser());
         }
 
-        private IDictionary<string, CharFont[]> parsedTextStyles;
+        private readonly IDictionary<string, CharFont[]> parsedTextStyles;
 
-        private XElement rootElement;
+        private readonly XElement rootElement;
 
         public DefaultTexFontParser()
         {
             var doc = XDocument.Load(new System.IO.StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName)!));
-            this.rootElement = doc.Root;
+            rootElement = doc.Root;
 
-            this.parsedTextStyles = new Dictionary<string, CharFont[]>();
+            parsedTextStyles = new Dictionary<string, CharFont[]>();
 
             ParseTextStyleMappings();
         }
@@ -63,10 +61,8 @@ namespace Simula.TeX
             var result = new TexFontInfo[fontIdCount];
 
             var fontDescriptions = rootElement.Element("FontDescriptions");
-            if (fontDescriptions != null)
-            {
-                foreach (var fontElement in fontDescriptions.Elements("Font"))
-                {
+            if (fontDescriptions != null) {
+                foreach (var fontElement in fontDescriptions.Elements("Font")) {
                     var fontName = fontElement.AttributeValue("name");
                     var fontId = fontElement.AttributeInt32Value("id");
                     var space = fontElement.AttributeDoubleValue("space");
@@ -102,8 +98,7 @@ namespace Simula.TeX
             metrics[TexFontUtilities.MetricsItalic] = charElement.AttributeDoubleValue("italic", 0d);
             fontInfo.SetMetrics(character, metrics);
 
-            foreach (var childElement in charElement.Elements())
-            {
+            foreach (var childElement in charElement.Elements()) {
                 var parser = charChildParsers[childElement.Name.ToString()];
                 if (parser == null)
                     throw new InvalidOperationException("Unknown element type.");
@@ -119,8 +114,7 @@ namespace Simula.TeX
             if (symbolMappingsElement == null)
                 throw new InvalidOperationException("Cannot find SymbolMappings element.");
 
-            foreach (var mappingElement in symbolMappingsElement.Elements("SymbolMapping"))
-            {
+            foreach (var mappingElement in symbolMappingsElement.Elements("SymbolMapping")) {
                 var symbolName = mappingElement.AttributeValue("name");
                 var character = mappingElement.AttributeInt32Value("ch");
                 var fontId = mappingElement.AttributeInt32Value("fontId");
@@ -142,8 +136,7 @@ namespace Simula.TeX
             if (defaultTextStyleMappings == null)
                 throw new InvalidOperationException("Cannot find DefaultTextStyleMapping element.");
 
-            foreach (var mappingElement in defaultTextStyleMappings.Elements("MapStyle"))
-            {
+            foreach (var mappingElement in defaultTextStyleMappings.Elements("MapStyle")) {
                 var code = mappingElement.AttributeValue("code");
                 var codeMapping = rangeTypeMappings[code];
 
@@ -167,8 +160,7 @@ namespace Simula.TeX
             if (parameters == null)
                 throw new InvalidOperationException("Cannot find Parameters element.");
 
-            foreach (var attribute in parameters.Attributes())
-            {
+            foreach (var attribute in parameters.Attributes()) {
                 result.Add(attribute.Name.ToString(), parameters.AttributeDoubleValue(attribute.Name.ToString()));
             }
 
@@ -202,20 +194,18 @@ namespace Simula.TeX
             if (textStyleMappings == null)
                 throw new InvalidOperationException("Cannot find TextStyleMappings element.");
 
-            foreach (var mappingElement in textStyleMappings.Elements("TextStyleMapping"))
-            {
+            foreach (var mappingElement in textStyleMappings.Elements("TextStyleMapping")) {
                 var textStyleName = mappingElement.AttributeValue("name");
                 var charFonts = new CharFont[3];
-                foreach (var mapRangeElement in mappingElement.Elements("MapRange"))
-                {
+                foreach (var mapRangeElement in mappingElement.Elements("MapRange")) {
                     var fontId = mapRangeElement.AttributeInt32Value("fontId");
                     var character = mapRangeElement.AttributeInt32Value("start");
                     var code = mapRangeElement.AttributeValue("code");
                     var codeMapping = rangeTypeMappings[code];
 
-                    charFonts[(int)codeMapping] = new CharFont((char)character, fontId);
+                    charFonts[codeMapping] = new CharFont((char)character, fontId);
                 }
-                this.parsedTextStyles.Add(textStyleName, charFonts);
+                parsedTextStyles.Add(textStyleName, charFonts);
             }
         }
 

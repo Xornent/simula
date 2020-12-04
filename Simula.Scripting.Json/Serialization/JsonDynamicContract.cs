@@ -1,9 +1,9 @@
 
 #if HAVE_DYNAMIC
+using Simula.Scripting.Json.Utilities;
 using System;
 using System.Dynamic;
 using System.Runtime.CompilerServices;
-using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json.Serialization
 {
@@ -47,13 +47,10 @@ namespace Simula.Scripting.Json.Serialization
 
             object result = callSite.Target(callSite, dynamicProvider);
 
-            if (!ReferenceEquals(result, NoThrowExpressionVisitor.ErrorResult))
-            {
+            if (!ReferenceEquals(result, NoThrowExpressionVisitor.ErrorResult)) {
                 value = result;
                 return true;
-            }
-            else
-            {
+            } else {
                 value = null;
                 return false;
             }

@@ -3,7 +3,7 @@ namespace Simula.TeX.Rendering.Transformations
     /// <summary>Geometrical transformation.</summary>
     public abstract class Transformation
     {
-        private Transformation() {}
+        private Transformation() { }
 
         /// <summary>Kind of a transformation.</summary>
         public abstract TransformationKind Kind { get; }

@@ -8,9 +8,9 @@ namespace Simula.TeX.Atoms
         public TypedAtom(SourceSpan? source, Atom? atom, TexAtomType leftType, TexAtomType rightType)
             : base(source)
         {
-            this.Atom = atom;
-            this.LeftType = leftType;
-            this.RightType = rightType;
+            Atom = atom;
+            LeftType = leftType;
+            RightType = rightType;
         }
 
         public Atom? Atom { get; }
@@ -20,16 +20,16 @@ namespace Simula.TeX.Atoms
         public TexAtomType RightType { get; }
 
         protected override Box CreateBoxCore(TexEnvironment environment) =>
-            this.Atom!.CreateBox(environment); // Nullable TODO: This probably needs null checking
+            Atom!.CreateBox(environment); // Nullable TODO: This probably needs null checking
 
         public override TexAtomType GetLeftType()
         {
-            return this.LeftType;
+            return LeftType;
         }
 
         public override TexAtomType GetRightType()
         {
-            return this.RightType;
+            return RightType;
         }
     }
 }

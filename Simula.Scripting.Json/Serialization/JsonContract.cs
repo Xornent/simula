@@ -1,11 +1,9 @@
 ﻿
+using Simula.Scripting.Json.Utilities;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.Serialization;
-using Simula.Scripting.Json.Linq;
-using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json.Serialization
 {
@@ -44,11 +42,9 @@ namespace Simula.Scripting.Json.Serialization
         private List<SerializationErrorCallback>? _onErrorCallbacks;
         private Type _createdType;
         public Type UnderlyingType { get; }
-        public Type CreatedType
-        {
+        public Type CreatedType {
             get => _createdType;
-            set
-            {
+            set {
                 ValidationUtils.ArgumentNotNull(value, nameof(value));
                 _createdType = value;
 
@@ -59,60 +55,45 @@ namespace Simula.Scripting.Json.Serialization
         public bool? IsReference { get; set; }
         public JsonConverter? Converter { get; set; }
         public JsonConverter? InternalConverter { get; internal set; }
-        public IList<SerializationCallback> OnDeserializedCallbacks
-        {
-            get
-            {
-                if (_onDeserializedCallbacks == null)
-                {
+        public IList<SerializationCallback> OnDeserializedCallbacks {
+            get {
+                if (_onDeserializedCallbacks == null) {
                     _onDeserializedCallbacks = new List<SerializationCallback>();
                 }
 
                 return _onDeserializedCallbacks;
             }
         }
-        public IList<SerializationCallback> OnDeserializingCallbacks
-        {
-            get
-            {
-                if (_onDeserializingCallbacks == null)
-                {
+        public IList<SerializationCallback> OnDeserializingCallbacks {
+            get {
+                if (_onDeserializingCallbacks == null) {
                     _onDeserializingCallbacks = new List<SerializationCallback>();
                 }
 
                 return _onDeserializingCallbacks;
             }
         }
-        public IList<SerializationCallback> OnSerializedCallbacks
-        {
-            get
-            {
-                if (_onSerializedCallbacks == null)
-                {
+        public IList<SerializationCallback> OnSerializedCallbacks {
+            get {
+                if (_onSerializedCallbacks == null) {
                     _onSerializedCallbacks = new List<SerializationCallback>();
                 }
 
                 return _onSerializedCallbacks;
             }
         }
-        public IList<SerializationCallback> OnSerializingCallbacks
-        {
-            get
-            {
-                if (_onSerializingCallbacks == null)
-                {
+        public IList<SerializationCallback> OnSerializingCallbacks {
+            get {
+                if (_onSerializingCallbacks == null) {
                     _onSerializingCallbacks = new List<SerializationCallback>();
                 }
 
                 return _onSerializingCallbacks;
             }
         }
-        public IList<SerializationErrorCallback> OnErrorCallbacks
-        {
-            get
-            {
-                if (_onErrorCallbacks == null)
-                {
+        public IList<SerializationErrorCallback> OnErrorCallbacks {
+            get {
+                if (_onErrorCallbacks == null) {
                     _onErrorCallbacks = new List<SerializationErrorCallback>();
                 }
 
@@ -130,7 +111,7 @@ namespace Simula.Scripting.Json.Serialization
             underlyingType = ReflectionUtils.EnsureNotByRefType(underlyingType);
 
             IsNullable = ReflectionUtils.IsNullable(underlyingType);
-             
+
             NonNullableUnderlyingType = (IsNullable && ReflectionUtils.IsNullableType(underlyingType)) ? Nullable.GetUnderlyingType(underlyingType) : underlyingType;
 
             _createdType = CreatedType = NonNullableUnderlyingType;
@@ -143,10 +124,8 @@ namespace Simula.Scripting.Json.Serialization
 
         internal void InvokeOnSerializing(object o, StreamingContext context)
         {
-            if (_onSerializingCallbacks != null)
-            {
-                foreach (SerializationCallback callback in _onSerializingCallbacks)
-                {
+            if (_onSerializingCallbacks != null) {
+                foreach (SerializationCallback callback in _onSerializingCallbacks) {
                     callback(o, context);
                 }
             }
@@ -154,10 +133,8 @@ namespace Simula.Scripting.Json.Serialization
 
         internal void InvokeOnSerialized(object o, StreamingContext context)
         {
-            if (_onSerializedCallbacks != null)
-            {
-                foreach (SerializationCallback callback in _onSerializedCallbacks)
-                {
+            if (_onSerializedCallbacks != null) {
+                foreach (SerializationCallback callback in _onSerializedCallbacks) {
                     callback(o, context);
                 }
             }
@@ -165,10 +142,8 @@ namespace Simula.Scripting.Json.Serialization
 
         internal void InvokeOnDeserializing(object o, StreamingContext context)
         {
-            if (_onDeserializingCallbacks != null)
-            {
-                foreach (SerializationCallback callback in _onDeserializingCallbacks)
-                {
+            if (_onDeserializingCallbacks != null) {
+                foreach (SerializationCallback callback in _onDeserializingCallbacks) {
                     callback(o, context);
                 }
             }
@@ -176,10 +151,8 @@ namespace Simula.Scripting.Json.Serialization
 
         internal void InvokeOnDeserialized(object o, StreamingContext context)
         {
-            if (_onDeserializedCallbacks != null)
-            {
-                foreach (SerializationCallback callback in _onDeserializedCallbacks)
-                {
+            if (_onDeserializedCallbacks != null) {
+                foreach (SerializationCallback callback in _onDeserializedCallbacks) {
                     callback(o, context);
                 }
             }
@@ -187,10 +160,8 @@ namespace Simula.Scripting.Json.Serialization
 
         internal void InvokeOnError(object o, StreamingContext context, ErrorContext errorContext)
         {
-            if (_onErrorCallbacks != null)
-            {
-                foreach (SerializationErrorCallback callback in _onErrorCallbacks)
-                {
+            if (_onErrorCallbacks != null) {
+                foreach (SerializationErrorCallback callback in _onErrorCallbacks) {
                     callback(o, context, errorContext);
                 }
             }

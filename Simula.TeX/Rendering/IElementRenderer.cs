@@ -1,8 +1,8 @@
+using Simula.TeX.Boxes;
+using Simula.TeX.Rendering.Transformations;
 using System;
 using System.Windows;
 using System.Windows.Media;
-using Simula.TeX.Boxes;
-using Simula.TeX.Rendering.Transformations;
 
 namespace Simula.TeX.Rendering
 {

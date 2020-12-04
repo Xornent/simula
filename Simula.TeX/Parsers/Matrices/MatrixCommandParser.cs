@@ -1,7 +1,7 @@
-using System.Collections.Generic;
-using System.Linq;
 using Simula.TeX.Atoms;
 using Simula.TeX.Exceptions;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Simula.TeX.Parsers.Matrices
 {
@@ -48,7 +48,7 @@ namespace Simula.TeX.Parsers.Matrices
             SymbolAtom? rightDelimiter = GetDelimiter(_rightDelimiterSymbolName);
 
             var atom = leftDelimiter == null && rightDelimiter == null
-                ? (Atom) matrix
+                ? (Atom)matrix
                 : new FencedAtom(
                     matrixSource,
                     matrix,
@@ -69,8 +69,7 @@ namespace Simula.TeX.Parsers.Matrices
             // be extracted here.
             var environment = new MatrixInternalEnvironment(parentEnvironment, rows);
             var lastCellAtom = parser.Parse(source, formula.TextStyle, environment).RootAtom;
-            if (lastCellAtom != null)
-            {
+            if (lastCellAtom != null) {
                 var lastRow = rows.LastOrDefault();
                 if (lastRow == null)
                     rows.Add(lastRow = new List<Atom>());
@@ -86,8 +85,7 @@ namespace Simula.TeX.Parsers.Matrices
         private void MakeRectangular(List<List<Atom>> rowAtoms)
         {
             var maxRowLength = rowAtoms.Max(r => r.Count);
-            foreach (var row in rowAtoms.Where(r => r.Count < maxRowLength))
-            {
+            foreach (var row in rowAtoms.Where(r => r.Count < maxRowLength)) {
                 while (row.Count < maxRowLength)
                     row.Add(new NullAtom());
             }

@@ -1,7 +1,7 @@
 
+using Simula.Scripting.Json.Utilities;
 using System;
 using System.Collections.Generic;
-using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json.Serialization
 {
@@ -16,8 +16,7 @@ namespace Simula.Scripting.Json.Serialization
             TypeCode = ConvertUtils.GetTypeCode(underlyingType);
             IsReadOnlyOrFixedSize = true;
 
-            if (ReadTypeMap.TryGetValue(NonNullableUnderlyingType, out ReadType readType))
-            {
+            if (ReadTypeMap.TryGetValue(NonNullableUnderlyingType, out ReadType readType)) {
                 InternalReadType = readType;
             }
         }

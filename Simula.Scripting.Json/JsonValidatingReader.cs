@@ -49,8 +49,7 @@ namespace Simula.Scripting.Json
 
                 _requiredProperties = schemas.SelectMany<JsonSchemaModel, string>(GetRequiredProperties).Distinct().ToDictionary(p => p, p => false);
 
-                if (tokenType == JTokenType.Array && schemas.Any(s => s.UniqueItems))
-                {
+                if (tokenType == JTokenType.Array && schemas.Any(s => s.UniqueItems)) {
                     IsUniqueArray = true;
                     UniqueArrayItems = new List<JToken>();
                 }
@@ -58,8 +57,7 @@ namespace Simula.Scripting.Json
 
             private IEnumerable<string> GetRequiredProperties(JsonSchemaModel schema)
             {
-                if (schema?.Properties == null)
-                {
+                if (schema?.Properties == null) {
                     return Enumerable.Empty<string>();
                 }
 
@@ -76,8 +74,7 @@ namespace Simula.Scripting.Json
         public override object Value => _reader.Value;
         public override int Depth => _reader.Depth;
         public override string Path => _reader.Path;
-        public override char QuoteChar
-        {
+        public override char QuoteChar {
             get { return _reader.QuoteChar; }
             protected internal set { }
         }
@@ -104,83 +101,61 @@ namespace Simula.Scripting.Json
 
         private static readonly IList<JsonSchemaModel> EmptySchemaList = new List<JsonSchemaModel>();
 
-        private IList<JsonSchemaModel> CurrentMemberSchemas
-        {
-            get
-            {
-                if (_currentScope == null)
-                {
+        private IList<JsonSchemaModel> CurrentMemberSchemas {
+            get {
+                if (_currentScope == null) {
                     return new List<JsonSchemaModel>(new[] { _model });
                 }
 
-                if (_currentScope.Schemas == null || _currentScope.Schemas.Count == 0)
-                {
+                if (_currentScope.Schemas == null || _currentScope.Schemas.Count == 0) {
                     return EmptySchemaList;
                 }
 
-                switch (_currentScope.TokenType)
-                {
+                switch (_currentScope.TokenType) {
                     case JTokenType.None:
                         return _currentScope.Schemas;
-                    case JTokenType.Object:
-                        {
-                            if (_currentScope.CurrentPropertyName == null)
-                            {
+                    case JTokenType.Object: {
+                            if (_currentScope.CurrentPropertyName == null) {
                                 throw new JsonReaderException("CurrentPropertyName has not been set on scope.");
                             }
 
                             IList<JsonSchemaModel> schemas = new List<JsonSchemaModel>();
 
-                            foreach (JsonSchemaModel schema in CurrentSchemas)
-                            {
-                                if (schema.Properties != null && schema.Properties.TryGetValue(_currentScope.CurrentPropertyName, out JsonSchemaModel propertySchema))
-                                {
+                            foreach (JsonSchemaModel schema in CurrentSchemas) {
+                                if (schema.Properties != null && schema.Properties.TryGetValue(_currentScope.CurrentPropertyName, out JsonSchemaModel propertySchema)) {
                                     schemas.Add(propertySchema);
                                 }
-                                if (schema.PatternProperties != null)
-                                {
-                                    foreach (KeyValuePair<string, JsonSchemaModel> patternProperty in schema.PatternProperties)
-                                    {
-                                        if (Regex.IsMatch(_currentScope.CurrentPropertyName, patternProperty.Key))
-                                        {
+                                if (schema.PatternProperties != null) {
+                                    foreach (KeyValuePair<string, JsonSchemaModel> patternProperty in schema.PatternProperties) {
+                                        if (Regex.IsMatch(_currentScope.CurrentPropertyName, patternProperty.Key)) {
                                             schemas.Add(patternProperty.Value);
                                         }
                                     }
                                 }
 
-                                if (schemas.Count == 0 && schema.AllowAdditionalProperties && schema.AdditionalProperties != null)
-                                {
+                                if (schemas.Count == 0 && schema.AllowAdditionalProperties && schema.AdditionalProperties != null) {
                                     schemas.Add(schema.AdditionalProperties);
                                 }
                             }
 
                             return schemas;
                         }
-                    case JTokenType.Array:
-                        {
+                    case JTokenType.Array: {
                             IList<JsonSchemaModel> schemas = new List<JsonSchemaModel>();
 
-                            foreach (JsonSchemaModel schema in CurrentSchemas)
-                            {
-                                if (!schema.PositionalItemsValidation)
-                                {
-                                    if (schema.Items != null && schema.Items.Count > 0)
-                                    {
+                            foreach (JsonSchemaModel schema in CurrentSchemas) {
+                                if (!schema.PositionalItemsValidation) {
+                                    if (schema.Items != null && schema.Items.Count > 0) {
                                         schemas.Add(schema.Items[0]);
                                     }
-                                }
-                                else
-                                {
-                                    if (schema.Items != null && schema.Items.Count > 0)
-                                    {
-                                        if (schema.Items.Count > (_currentScope.ArrayItemCount - 1))
-                                        {
+                                } else {
+                                    if (schema.Items != null && schema.Items.Count > 0) {
+                                        if (schema.Items.Count > (_currentScope.ArrayItemCount - 1)) {
                                             schemas.Add(schema.Items[_currentScope.ArrayItemCount - 1]);
                                         }
                                     }
 
-                                    if (schema.AllowAdditionalItems && schema.AdditionalItems != null)
-                                    {
+                                    if (schema.AllowAdditionalItems && schema.AdditionalItems != null) {
                                         schemas.Add(schema.AdditionalItems);
                                     }
                                 }
@@ -210,12 +185,9 @@ namespace Simula.Scripting.Json
         private void OnValidationEvent(JsonSchemaException exception)
         {
             ValidationEventHandler handler = ValidationEventHandler;
-            if (handler != null)
-            {
+            if (handler != null) {
                 handler(this, new ValidationEventArgs(exception));
-            }
-            else
-            {
+            } else {
                 throw exception;
             }
         }
@@ -225,13 +197,10 @@ namespace Simula.Scripting.Json
             _reader = reader;
             _stack = new Stack<SchemaScope>();
         }
-        public JsonSchema Schema
-        {
+        public JsonSchema Schema {
             get => _schema;
-            set
-            {
-                if (TokenType != JsonToken.None)
-                {
+            set {
+                if (TokenType != JsonToken.None) {
                     throw new InvalidOperationException("Cannot change schema while validating JSON.");
                 }
 
@@ -243,24 +212,20 @@ namespace Simula.Scripting.Json
         public override void Close()
         {
             base.Close();
-            if (CloseInput)
-            {
+            if (CloseInput) {
                 _reader?.Close();
             }
         }
 
         private void ValidateNotDisallowed(JsonSchemaModel schema)
         {
-            if (schema == null)
-            {
+            if (schema == null) {
                 return;
             }
 
             JsonSchemaType? currentNodeType = GetCurrentNodeSchemaType();
-            if (currentNodeType != null)
-            {
-                if (JsonSchemaGenerator.HasFlag(schema.Disallow, currentNodeType.GetValueOrDefault()))
-                {
+            if (currentNodeType != null) {
+                if (JsonSchemaGenerator.HasFlag(schema.Disallow, currentNodeType.GetValueOrDefault())) {
                     RaiseError("Type {0} is disallowed.".FormatWith(CultureInfo.InvariantCulture, currentNodeType), schema);
                 }
             }
@@ -268,8 +233,7 @@ namespace Simula.Scripting.Json
 
         private JsonSchemaType? GetCurrentNodeSchemaType()
         {
-            switch (_reader.TokenType)
-            {
+            switch (_reader.TokenType) {
                 case JsonToken.StartObject:
                     return JsonSchemaType.Object;
                 case JsonToken.StartArray:
@@ -349,13 +313,11 @@ namespace Simula.Scripting.Json
 #endif
         public override bool Read()
         {
-            if (!_reader.Read())
-            {
+            if (!_reader.Read()) {
                 return false;
             }
 
-            if (_reader.TokenType == JsonToken.Comment)
-            {
+            if (_reader.TokenType == JsonToken.Comment) {
                 return true;
             }
 
@@ -365,19 +327,16 @@ namespace Simula.Scripting.Json
 
         private void ValidateCurrentToken()
         {
-            if (_model == null)
-            {
+            if (_model == null) {
                 JsonSchemaModelBuilder builder = new JsonSchemaModelBuilder();
                 _model = builder.Build(_schema);
 
-                if (!JsonTokenUtils.IsStartToken(_reader.TokenType))
-                {
+                if (!JsonTokenUtils.IsStartToken(_reader.TokenType)) {
                     Push(new SchemaScope(JTokenType.None, CurrentMemberSchemas));
                 }
             }
 
-            switch (_reader.TokenType)
-            {
+            switch (_reader.TokenType) {
                 case JsonToken.StartObject:
                     ProcessValue();
                     IList<JsonSchemaModel> objectSchemas = CurrentMemberSchemas.Where(ValidateObject).ToList();
@@ -397,8 +356,7 @@ namespace Simula.Scripting.Json
                     break;
                 case JsonToken.PropertyName:
                     WriteToken(CurrentSchemas);
-                    foreach (JsonSchemaModel schema in CurrentSchemas)
-                    {
+                    foreach (JsonSchemaModel schema in CurrentSchemas) {
                         ValidatePropertyName(schema);
                     }
                     break;
@@ -408,55 +366,48 @@ namespace Simula.Scripting.Json
                 case JsonToken.Integer:
                     ProcessValue();
                     WriteToken(CurrentMemberSchemas);
-                    foreach (JsonSchemaModel schema in CurrentMemberSchemas)
-                    {
+                    foreach (JsonSchemaModel schema in CurrentMemberSchemas) {
                         ValidateInteger(schema);
                     }
                     break;
                 case JsonToken.Float:
                     ProcessValue();
                     WriteToken(CurrentMemberSchemas);
-                    foreach (JsonSchemaModel schema in CurrentMemberSchemas)
-                    {
+                    foreach (JsonSchemaModel schema in CurrentMemberSchemas) {
                         ValidateFloat(schema);
                     }
                     break;
                 case JsonToken.String:
                     ProcessValue();
                     WriteToken(CurrentMemberSchemas);
-                    foreach (JsonSchemaModel schema in CurrentMemberSchemas)
-                    {
+                    foreach (JsonSchemaModel schema in CurrentMemberSchemas) {
                         ValidateString(schema);
                     }
                     break;
                 case JsonToken.Boolean:
                     ProcessValue();
                     WriteToken(CurrentMemberSchemas);
-                    foreach (JsonSchemaModel schema in CurrentMemberSchemas)
-                    {
+                    foreach (JsonSchemaModel schema in CurrentMemberSchemas) {
                         ValidateBoolean(schema);
                     }
                     break;
                 case JsonToken.Null:
                     ProcessValue();
                     WriteToken(CurrentMemberSchemas);
-                    foreach (JsonSchemaModel schema in CurrentMemberSchemas)
-                    {
+                    foreach (JsonSchemaModel schema in CurrentMemberSchemas) {
                         ValidateNull(schema);
                     }
                     break;
                 case JsonToken.EndObject:
                     WriteToken(CurrentSchemas);
-                    foreach (JsonSchemaModel schema in CurrentSchemas)
-                    {
+                    foreach (JsonSchemaModel schema in CurrentSchemas) {
                         ValidateEndObject(schema);
                     }
                     Pop();
                     break;
                 case JsonToken.EndArray:
                     WriteToken(CurrentSchemas);
-                    foreach (JsonSchemaModel schema in CurrentSchemas)
-                    {
+                    foreach (JsonSchemaModel schema in CurrentSchemas) {
                         ValidateEndArray(schema);
                     }
                     Pop();
@@ -479,16 +430,12 @@ namespace Simula.Scripting.Json
 
         private void WriteToken(IList<JsonSchemaModel> schemas)
         {
-            foreach (SchemaScope schemaScope in _stack)
-            {
+            foreach (SchemaScope schemaScope in _stack) {
                 bool isInUniqueArray = (schemaScope.TokenType == JTokenType.Array && schemaScope.IsUniqueArray && schemaScope.ArrayItemCount > 0);
 
-                if (isInUniqueArray || schemas.Any(s => s.Enum != null))
-                {
-                    if (schemaScope.CurrentItemWriter == null)
-                    {
-                        if (JsonTokenUtils.IsEndToken(_reader.TokenType))
-                        {
+                if (isInUniqueArray || schemas.Any(s => s.Enum != null)) {
+                    if (schemaScope.CurrentItemWriter == null) {
+                        if (JsonTokenUtils.IsEndToken(_reader.TokenType)) {
                             continue;
                         }
 
@@ -496,28 +443,20 @@ namespace Simula.Scripting.Json
                     }
 
                     schemaScope.CurrentItemWriter.WriteToken(_reader, false);
-                    if (schemaScope.CurrentItemWriter.Top == 0 && _reader.TokenType != JsonToken.PropertyName)
-                    {
+                    if (schemaScope.CurrentItemWriter.Top == 0 && _reader.TokenType != JsonToken.PropertyName) {
                         JToken finishedItem = schemaScope.CurrentItemWriter.Token;
                         schemaScope.CurrentItemWriter = null;
 
-                        if (isInUniqueArray)
-                        {
-                            if (schemaScope.UniqueArrayItems.Contains(finishedItem, JToken.EqualityComparer))
-                            {
+                        if (isInUniqueArray) {
+                            if (schemaScope.UniqueArrayItems.Contains(finishedItem, JToken.EqualityComparer)) {
                                 RaiseError("Non-unique array item at index {0}.".FormatWith(CultureInfo.InvariantCulture, schemaScope.ArrayItemCount - 1), schemaScope.Schemas.First(s => s.UniqueItems));
                             }
 
                             schemaScope.UniqueArrayItems.Add(finishedItem);
-                        }
-                        else if (schemas.Any(s => s.Enum != null))
-                        {
-                            foreach (JsonSchemaModel schema in schemas)
-                            {
-                                if (schema.Enum != null)
-                                {
-                                    if (!schema.Enum.ContainsValue(finishedItem, JToken.EqualityComparer))
-                                    {
+                        } else if (schemas.Any(s => s.Enum != null)) {
+                            foreach (JsonSchemaModel schema in schemas) {
+                                if (schema.Enum != null) {
+                                    if (!schema.Enum.ContainsValue(finishedItem, JToken.EqualityComparer)) {
                                         StringWriter sw = new StringWriter(CultureInfo.InvariantCulture);
                                         finishedItem.WriteTo(new JsonTextWriter(sw));
 
@@ -533,15 +472,13 @@ namespace Simula.Scripting.Json
 
         private void ValidateEndObject(JsonSchemaModel schema)
         {
-            if (schema == null)
-            {
+            if (schema == null) {
                 return;
             }
 
             Dictionary<string, bool> requiredProperties = _currentScope.RequiredProperties;
 
-            if (requiredProperties != null && requiredProperties.Values.Any(v => !v))
-            {
+            if (requiredProperties != null && requiredProperties.Values.Any(v => !v)) {
                 IEnumerable<string> unmatchedRequiredProperties = requiredProperties.Where(kv => !kv.Value).Select(kv => kv.Key);
                 RaiseError("Required properties are missing from object: {0}.".FormatWith(CultureInfo.InvariantCulture, string.Join(", ", unmatchedRequiredProperties
 #if !HAVE_STRING_JOIN_WITH_ENUMERABLE
@@ -553,33 +490,28 @@ namespace Simula.Scripting.Json
 
         private void ValidateEndArray(JsonSchemaModel schema)
         {
-            if (schema == null)
-            {
+            if (schema == null) {
                 return;
             }
 
             int arrayItemCount = _currentScope.ArrayItemCount;
 
-            if (schema.MaximumItems != null && arrayItemCount > schema.MaximumItems)
-            {
+            if (schema.MaximumItems != null && arrayItemCount > schema.MaximumItems) {
                 RaiseError("Array item count {0} exceeds maximum count of {1}.".FormatWith(CultureInfo.InvariantCulture, arrayItemCount, schema.MaximumItems), schema);
             }
 
-            if (schema.MinimumItems != null && arrayItemCount < schema.MinimumItems)
-            {
+            if (schema.MinimumItems != null && arrayItemCount < schema.MinimumItems) {
                 RaiseError("Array item count {0} is less than minimum count of {1}.".FormatWith(CultureInfo.InvariantCulture, arrayItemCount, schema.MinimumItems), schema);
             }
         }
 
         private void ValidateNull(JsonSchemaModel schema)
         {
-            if (schema == null)
-            {
+            if (schema == null) {
                 return;
             }
 
-            if (!TestType(schema, JsonSchemaType.Null))
-            {
+            if (!TestType(schema, JsonSchemaType.Null)) {
                 return;
             }
 
@@ -588,13 +520,11 @@ namespace Simula.Scripting.Json
 
         private void ValidateBoolean(JsonSchemaModel schema)
         {
-            if (schema == null)
-            {
+            if (schema == null) {
                 return;
             }
 
-            if (!TestType(schema, JsonSchemaType.Boolean))
-            {
+            if (!TestType(schema, JsonSchemaType.Boolean)) {
                 return;
             }
 
@@ -603,13 +533,11 @@ namespace Simula.Scripting.Json
 
         private void ValidateString(JsonSchemaModel schema)
         {
-            if (schema == null)
-            {
+            if (schema == null) {
                 return;
             }
 
-            if (!TestType(schema, JsonSchemaType.String))
-            {
+            if (!TestType(schema, JsonSchemaType.String)) {
                 return;
             }
 
@@ -617,22 +545,17 @@ namespace Simula.Scripting.Json
 
             string value = _reader.Value.ToString();
 
-            if (schema.MaximumLength != null && value.Length > schema.MaximumLength)
-            {
+            if (schema.MaximumLength != null && value.Length > schema.MaximumLength) {
                 RaiseError("String '{0}' exceeds maximum length of {1}.".FormatWith(CultureInfo.InvariantCulture, value, schema.MaximumLength), schema);
             }
 
-            if (schema.MinimumLength != null && value.Length < schema.MinimumLength)
-            {
+            if (schema.MinimumLength != null && value.Length < schema.MinimumLength) {
                 RaiseError("String '{0}' is less than minimum length of {1}.".FormatWith(CultureInfo.InvariantCulture, value, schema.MinimumLength), schema);
             }
 
-            if (schema.Patterns != null)
-            {
-                foreach (string pattern in schema.Patterns)
-                {
-                    if (!Regex.IsMatch(value, pattern))
-                    {
+            if (schema.Patterns != null) {
+                foreach (string pattern in schema.Patterns) {
+                    if (!Regex.IsMatch(value, pattern)) {
                         RaiseError("String '{0}' does not match regex pattern '{1}'.".FormatWith(CultureInfo.InvariantCulture, value, pattern), schema);
                     }
                 }
@@ -641,13 +564,11 @@ namespace Simula.Scripting.Json
 
         private void ValidateInteger(JsonSchemaModel schema)
         {
-            if (schema == null)
-            {
+            if (schema == null) {
                 return;
             }
 
-            if (!TestType(schema, JsonSchemaType.Integer))
-            {
+            if (!TestType(schema, JsonSchemaType.Integer)) {
                 return;
             }
 
@@ -655,32 +576,25 @@ namespace Simula.Scripting.Json
 
             object value = _reader.Value;
 
-            if (schema.Maximum != null)
-            {
-                if (JValue.Compare(JTokenType.Integer, value, schema.Maximum) > 0)
-                {
+            if (schema.Maximum != null) {
+                if (JValue.Compare(JTokenType.Integer, value, schema.Maximum) > 0) {
                     RaiseError("Integer {0} exceeds maximum value of {1}.".FormatWith(CultureInfo.InvariantCulture, value, schema.Maximum), schema);
                 }
-                if (schema.ExclusiveMaximum && JValue.Compare(JTokenType.Integer, value, schema.Maximum) == 0)
-                {
+                if (schema.ExclusiveMaximum && JValue.Compare(JTokenType.Integer, value, schema.Maximum) == 0) {
                     RaiseError("Integer {0} equals maximum value of {1} and exclusive maximum is true.".FormatWith(CultureInfo.InvariantCulture, value, schema.Maximum), schema);
                 }
             }
 
-            if (schema.Minimum != null)
-            {
-                if (JValue.Compare(JTokenType.Integer, value, schema.Minimum) < 0)
-                {
+            if (schema.Minimum != null) {
+                if (JValue.Compare(JTokenType.Integer, value, schema.Minimum) < 0) {
                     RaiseError("Integer {0} is less than minimum value of {1}.".FormatWith(CultureInfo.InvariantCulture, value, schema.Minimum), schema);
                 }
-                if (schema.ExclusiveMinimum && JValue.Compare(JTokenType.Integer, value, schema.Minimum) == 0)
-                {
+                if (schema.ExclusiveMinimum && JValue.Compare(JTokenType.Integer, value, schema.Minimum) == 0) {
                     RaiseError("Integer {0} equals minimum value of {1} and exclusive minimum is true.".FormatWith(CultureInfo.InvariantCulture, value, schema.Minimum), schema);
                 }
             }
 
-            if (schema.DivisibleBy != null)
-            {
+            if (schema.DivisibleBy != null) {
                 bool notDivisible;
 #if HAVE_BIG_INTEGER
                 if (value is BigInteger i)
@@ -701,8 +615,7 @@ namespace Simula.Scripting.Json
                     notDivisible = !IsZero(Convert.ToInt64(value, CultureInfo.InvariantCulture) % schema.DivisibleBy.GetValueOrDefault());
                 }
 
-                if (notDivisible)
-                {
+                if (notDivisible) {
                     RaiseError("Integer {0} is not evenly divisible by {1}.".FormatWith(CultureInfo.InvariantCulture, JsonConvert.ToString(value), schema.DivisibleBy), schema);
                 }
             }
@@ -710,17 +623,14 @@ namespace Simula.Scripting.Json
 
         private void ProcessValue()
         {
-            if (_currentScope != null && _currentScope.TokenType == JTokenType.Array)
-            {
+            if (_currentScope != null && _currentScope.TokenType == JTokenType.Array) {
                 _currentScope.ArrayItemCount++;
 
-                foreach (JsonSchemaModel currentSchema in CurrentSchemas)
-                {
+                foreach (JsonSchemaModel currentSchema in CurrentSchemas) {
                     if (currentSchema != null
                         && currentSchema.PositionalItemsValidation
                         && !currentSchema.AllowAdditionalItems
-                        && (currentSchema.Items == null || _currentScope.ArrayItemCount - 1 >= currentSchema.Items.Count))
-                    {
+                        && (currentSchema.Items == null || _currentScope.ArrayItemCount - 1 >= currentSchema.Items.Count)) {
                         RaiseError("Index {0} has not been defined and the schema does not allow additional items.".FormatWith(CultureInfo.InvariantCulture, _currentScope.ArrayItemCount), currentSchema);
                     }
                 }
@@ -729,13 +639,11 @@ namespace Simula.Scripting.Json
 
         private void ValidateFloat(JsonSchemaModel schema)
         {
-            if (schema == null)
-            {
+            if (schema == null) {
                 return;
             }
 
-            if (!TestType(schema, JsonSchemaType.Float))
-            {
+            if (!TestType(schema, JsonSchemaType.Float)) {
                 return;
             }
 
@@ -743,36 +651,28 @@ namespace Simula.Scripting.Json
 
             double value = Convert.ToDouble(_reader.Value, CultureInfo.InvariantCulture);
 
-            if (schema.Maximum != null)
-            {
-                if (value > schema.Maximum)
-                {
+            if (schema.Maximum != null) {
+                if (value > schema.Maximum) {
                     RaiseError("Float {0} exceeds maximum value of {1}.".FormatWith(CultureInfo.InvariantCulture, JsonConvert.ToString(value), schema.Maximum), schema);
                 }
-                if (schema.ExclusiveMaximum && value == schema.Maximum)
-                {
+                if (schema.ExclusiveMaximum && value == schema.Maximum) {
                     RaiseError("Float {0} equals maximum value of {1} and exclusive maximum is true.".FormatWith(CultureInfo.InvariantCulture, JsonConvert.ToString(value), schema.Maximum), schema);
                 }
             }
 
-            if (schema.Minimum != null)
-            {
-                if (value < schema.Minimum)
-                {
+            if (schema.Minimum != null) {
+                if (value < schema.Minimum) {
                     RaiseError("Float {0} is less than minimum value of {1}.".FormatWith(CultureInfo.InvariantCulture, JsonConvert.ToString(value), schema.Minimum), schema);
                 }
-                if (schema.ExclusiveMinimum && value == schema.Minimum)
-                {
+                if (schema.ExclusiveMinimum && value == schema.Minimum) {
                     RaiseError("Float {0} equals minimum value of {1} and exclusive minimum is true.".FormatWith(CultureInfo.InvariantCulture, JsonConvert.ToString(value), schema.Minimum), schema);
                 }
             }
 
-            if (schema.DivisibleBy != null)
-            {
+            if (schema.DivisibleBy != null) {
                 double remainder = FloatingPointRemainder(value, schema.DivisibleBy.GetValueOrDefault());
 
-                if (!IsZero(remainder))
-                {
+                if (!IsZero(remainder)) {
                     RaiseError("Float {0} is not evenly divisible by {1}.".FormatWith(CultureInfo.InvariantCulture, JsonConvert.ToString(value), schema.DivisibleBy), schema);
                 }
             }
@@ -792,24 +692,20 @@ namespace Simula.Scripting.Json
 
         private void ValidatePropertyName(JsonSchemaModel schema)
         {
-            if (schema == null)
-            {
+            if (schema == null) {
                 return;
             }
 
             string propertyName = Convert.ToString(_reader.Value, CultureInfo.InvariantCulture);
 
-            if (_currentScope.RequiredProperties.ContainsKey(propertyName))
-            {
+            if (_currentScope.RequiredProperties.ContainsKey(propertyName)) {
                 _currentScope.RequiredProperties[propertyName] = true;
             }
 
-            if (!schema.AllowAdditionalProperties)
-            {
+            if (!schema.AllowAdditionalProperties) {
                 bool propertyDefinied = IsPropertyDefinied(schema, propertyName);
 
-                if (!propertyDefinied)
-                {
+                if (!propertyDefinied) {
                     RaiseError("Property '{0}' has not been defined and the schema does not allow additional properties.".FormatWith(CultureInfo.InvariantCulture, propertyName), schema);
                 }
             }
@@ -819,17 +715,13 @@ namespace Simula.Scripting.Json
 
         private bool IsPropertyDefinied(JsonSchemaModel schema, string propertyName)
         {
-            if (schema.Properties != null && schema.Properties.ContainsKey(propertyName))
-            {
+            if (schema.Properties != null && schema.Properties.ContainsKey(propertyName)) {
                 return true;
             }
 
-            if (schema.PatternProperties != null)
-            {
-                foreach (string pattern in schema.PatternProperties.Keys)
-                {
-                    if (Regex.IsMatch(propertyName, pattern))
-                    {
+            if (schema.PatternProperties != null) {
+                foreach (string pattern in schema.PatternProperties.Keys) {
+                    if (Regex.IsMatch(propertyName, pattern)) {
                         return true;
                     }
                 }
@@ -840,8 +732,7 @@ namespace Simula.Scripting.Json
 
         private bool ValidateArray(JsonSchemaModel schema)
         {
-            if (schema == null)
-            {
+            if (schema == null) {
                 return true;
             }
 
@@ -850,8 +741,7 @@ namespace Simula.Scripting.Json
 
         private bool ValidateObject(JsonSchemaModel schema)
         {
-            if (schema == null)
-            {
+            if (schema == null) {
                 return true;
             }
 
@@ -860,8 +750,7 @@ namespace Simula.Scripting.Json
 
         private bool TestType(JsonSchemaModel currentSchema, JsonSchemaType currentType)
         {
-            if (!JsonSchemaGenerator.HasFlag(currentSchema.Type, currentType))
-            {
+            if (!JsonSchemaGenerator.HasFlag(currentSchema.Type, currentType)) {
                 RaiseError("Invalid type. Expected {0} but got {1}.".FormatWith(CultureInfo.InvariantCulture, currentSchema.Type, currentType), currentSchema);
                 return false;
             }

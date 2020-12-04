@@ -3,25 +3,26 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Security.Cryptography.X509Certificates;
-using System.Windows;
-using System.Windows.Controls;
 
-namespace Simula.Scripting.Packaging.Spkg {
+namespace Simula.Scripting.Packaging.Spkg
+{
 
-    public class PackageSearchResult {
+    public class PackageSearchResult
+    {
         public List<Package> Packages = new List<Package>();
         public int MaximumPage { get; set; }
         public int CurrentPage { get; set; }
     }
-    
-    public class Package {
+
+    public class Package
+    {
 
         public static string SearchAutoCompleteService = "";
         public static string Registrations = "";
         public static string RegistrationsGZip360 = "";
 
-        public static void Initialize() {
+        public static void Initialize()
+        {
             HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create("https://api.nuget.org/v3/index.json");
             using (var response = request.GetResponse()) {
                 JsonSerializerSettings settings = new JsonSerializerSettings();
@@ -40,7 +41,8 @@ namespace Simula.Scripting.Packaging.Spkg {
             }
         }
 
-        public static PackageSearchResult Search(string exactId, int page = 0, bool prereleased = false) {
+        public static PackageSearchResult Search(string exactId, int page = 0, bool prereleased = false)
+        {
             var result = SearchResult.Create(exactId, SearchAutoCompleteService, page, prereleased);
             PackageSearchResult search = new PackageSearchResult();
             search.MaximumPage = result.MaximumPage;
@@ -121,7 +123,8 @@ namespace Simula.Scripting.Packaging.Spkg {
             return search;
         }
 
-        public Package GetPackage(string name) {
+        public Package GetPackage(string name)
+        {
             HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(Registrations + name.ToLower() + "/index.json"); ;
             request.Method = "GET";
 
@@ -183,7 +186,8 @@ namespace Simula.Scripting.Packaging.Spkg {
         public List<Module> Modules { get; set; } = new List<Module>();
     }
 
-    public class Module  {
+    public class Module
+    {
         public string Author { get; set; }
         public string IconUrl { get; set; }
         public string LicenseUrl { get; set; }
@@ -203,7 +207,8 @@ namespace Simula.Scripting.Packaging.Spkg {
         public string Download { get; set; }
     }
 
-    public class DependencySink {
+    public class DependencySink
+    {
         public Version Minimal { get; set; } = new Version();
         public Version Maximum { get; set; } = new Version();
         public string Id { get; set; }

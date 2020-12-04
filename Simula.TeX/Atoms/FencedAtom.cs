@@ -1,5 +1,5 @@
-using System;
 using Simula.TeX.Boxes;
+using System;
 
 namespace Simula.TeX.Atoms
 {
@@ -18,9 +18,9 @@ namespace Simula.TeX.Atoms
         public FencedAtom(SourceSpan? source, Atom? baseAtom, SymbolAtom? leftDelimeter, SymbolAtom? rightDelimeter)
             : base(source)
         {
-            this.BaseAtom = baseAtom ?? new RowAtom(null);
-            this.LeftDelimeter = leftDelimeter;
-            this.RightDelimeter = rightDelimeter;
+            BaseAtom = baseAtom ?? new RowAtom(null);
+            LeftDelimeter = leftDelimeter;
+            RightDelimeter = rightDelimeter;
         }
 
         public Atom BaseAtom { get; }
@@ -35,7 +35,7 @@ namespace Simula.TeX.Atoms
             var style = environment.Style;
 
             // Create box for base atom.
-            var baseBox = this.BaseAtom.CreateBox(environment);
+            var baseBox = BaseAtom.CreateBox(environment);
 
             // Create result box.
             var resultBox = new HorizontalBox();
@@ -44,30 +44,28 @@ namespace Simula.TeX.Atoms
             var minHeight = Math.Max((delta / 500) * delimeterFactor, 2 * delta - delimeterShortfall);
 
             // Create and add box for left delimeter.
-            if (this.LeftDelimeter != null && this.LeftDelimeter.Name != SymbolAtom.EmptyDelimiterName)
-            {
-                var leftDelimeterBox = DelimiterFactory.CreateBox(this.LeftDelimeter.Name, minHeight, environment);
-                leftDelimeterBox.Source = this.LeftDelimeter.Source;
+            if (LeftDelimeter != null && LeftDelimeter.Name != SymbolAtom.EmptyDelimiterName) {
+                var leftDelimeterBox = DelimiterFactory.CreateBox(LeftDelimeter.Name, minHeight, environment);
+                leftDelimeterBox.Source = LeftDelimeter.Source;
                 CentreBox(leftDelimeterBox, axis);
                 resultBox.Add(leftDelimeterBox);
             }
 
             // add glueElement between left delimeter and base Atom, unless base Atom is whitespace.
-            if (!(this.BaseAtom is SpaceAtom))
-                resultBox.Add(Glue.CreateBox(TexAtomType.Opening, this.BaseAtom.GetLeftType(), environment));
+            if (!(BaseAtom is SpaceAtom))
+                resultBox.Add(Glue.CreateBox(TexAtomType.Opening, BaseAtom.GetLeftType(), environment));
 
             // add box for base Atom.
             resultBox.Add(baseBox);
 
             // add glueElement between right delimeter and base Atom, unless base Atom is whitespace.
-            if (!(this.BaseAtom is SpaceAtom))
-                resultBox.Add(Glue.CreateBox(this.BaseAtom.GetRightType(), TexAtomType.Closing, environment));
+            if (!(BaseAtom is SpaceAtom))
+                resultBox.Add(Glue.CreateBox(BaseAtom.GetRightType(), TexAtomType.Closing, environment));
 
             // Create and add box for right delimeter.
-            if (this.RightDelimeter != null && this.RightDelimeter.Name != SymbolAtom.EmptyDelimiterName)
-            {
-                var rightDelimeterBox = DelimiterFactory.CreateBox(this.RightDelimeter.Name, minHeight, environment);
-                rightDelimeterBox.Source = this.RightDelimeter.Source;
+            if (RightDelimeter != null && RightDelimeter.Name != SymbolAtom.EmptyDelimiterName) {
+                var rightDelimeterBox = DelimiterFactory.CreateBox(RightDelimeter.Name, minHeight, environment);
+                rightDelimeterBox.Source = RightDelimeter.Source;
                 CentreBox(rightDelimeterBox, axis);
                 resultBox.Add(rightDelimeterBox);
             }

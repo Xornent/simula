@@ -28,12 +28,9 @@ namespace Simula.Scripting.Json.Utilities
         {
             ValidationUtils.ArgumentNotNull(list, nameof(list));
 
-            if (list is ICollection<T> collection)
-            {
+            if (list is ICollection<T> collection) {
                 _genericCollection = collection;
-            }
-            else
-            {
+            } else {
                 _list = list;
             }
         }
@@ -47,77 +44,55 @@ namespace Simula.Scripting.Json.Utilities
 
         public virtual void Add(T item)
         {
-            if (_genericCollection != null)
-            {
+            if (_genericCollection != null) {
                 _genericCollection.Add(item);
-            }
-            else
-            {
+            } else {
                 _list!.Add(item);
             }
         }
 
         public virtual void Clear()
         {
-            if (_genericCollection != null)
-            {
+            if (_genericCollection != null) {
                 _genericCollection.Clear();
-            }
-            else
-            {
+            } else {
                 _list!.Clear();
             }
         }
 
         public virtual bool Contains(T item)
         {
-            if (_genericCollection != null)
-            {
+            if (_genericCollection != null) {
                 return _genericCollection.Contains(item);
-            }
-            else
-            {
+            } else {
                 return _list!.Contains(item);
             }
         }
 
         public virtual void CopyTo(T[] array, int arrayIndex)
         {
-            if (_genericCollection != null)
-            {
+            if (_genericCollection != null) {
                 _genericCollection.CopyTo(array, arrayIndex);
-            }
-            else
-            {
+            } else {
                 _list!.CopyTo(array, arrayIndex);
             }
         }
 
-        public virtual int Count
-        {
-            get
-            {
-                if (_genericCollection != null)
-                {
+        public virtual int Count {
+            get {
+                if (_genericCollection != null) {
                     return _genericCollection.Count;
-                }
-                else
-                {
+                } else {
                     return _list!.Count;
                 }
             }
         }
 
-        public virtual bool IsReadOnly
-        {
-            get
-            {
-                if (_genericCollection != null)
-                {
+        public virtual bool IsReadOnly {
+            get {
+                if (_genericCollection != null) {
                     return _genericCollection.IsReadOnly;
-                }
-                else
-                {
+                } else {
                     return _list!.IsReadOnly;
                 }
             }
@@ -125,16 +100,12 @@ namespace Simula.Scripting.Json.Utilities
 
         public virtual bool Remove(T item)
         {
-            if (_genericCollection != null)
-            {
+            if (_genericCollection != null) {
                 return _genericCollection.Remove(item);
-            }
-            else
-            {
+            } else {
                 bool contains = _list!.Contains(item);
 
-                if (contains)
-                {
+                if (contains) {
                     _list!.Remove(item);
                 }
 
@@ -162,8 +133,7 @@ namespace Simula.Scripting.Json.Utilities
 
         bool IList.Contains(object value)
         {
-            if (IsCompatibleObject(value))
-            {
+            if (IsCompatibleObject(value)) {
                 return Contains((T)value);
             }
 
@@ -172,13 +142,11 @@ namespace Simula.Scripting.Json.Utilities
 
         int IList.IndexOf(object value)
         {
-            if (_genericCollection != null)
-            {
+            if (_genericCollection != null) {
                 throw new InvalidOperationException("Wrapped ICollection<T> does not support IndexOf.");
             }
 
-            if (IsCompatibleObject(value))
-            {
+            if (IsCompatibleObject(value)) {
                 return _list!.IndexOf((T)value);
             }
 
@@ -187,8 +155,7 @@ namespace Simula.Scripting.Json.Utilities
 
         void IList.RemoveAt(int index)
         {
-            if (_genericCollection != null)
-            {
+            if (_genericCollection != null) {
                 throw new InvalidOperationException("Wrapped ICollection<T> does not support RemoveAt.");
             }
 
@@ -197,8 +164,7 @@ namespace Simula.Scripting.Json.Utilities
 
         void IList.Insert(int index, object value)
         {
-            if (_genericCollection != null)
-            {
+            if (_genericCollection != null) {
                 throw new InvalidOperationException("Wrapped ICollection<T> does not support Insert.");
             }
 
@@ -206,16 +172,11 @@ namespace Simula.Scripting.Json.Utilities
             _list!.Insert(index, (T)value);
         }
 
-        bool IList.IsFixedSize
-        {
-            get
-            {
-                if (_genericCollection != null)
-                {
+        bool IList.IsFixedSize {
+            get {
+                if (_genericCollection != null) {
                     return _genericCollection.IsReadOnly;
-                }
-                else
-                {
+                } else {
                     return _list!.IsFixedSize;
                 }
             }
@@ -223,27 +184,21 @@ namespace Simula.Scripting.Json.Utilities
 
         void IList.Remove(object value)
         {
-            if (IsCompatibleObject(value))
-            {
+            if (IsCompatibleObject(value)) {
                 Remove((T)value);
             }
         }
 
-        object IList.this[int index]
-        {
-            get
-            {
-                if (_genericCollection != null)
-                {
+        object IList.this[int index] {
+            get {
+                if (_genericCollection != null) {
                     throw new InvalidOperationException("Wrapped ICollection<T> does not support indexer.");
                 }
 
                 return _list![index];
             }
-            set
-            {
-                if (_genericCollection != null)
-                {
+            set {
+                if (_genericCollection != null) {
                     throw new InvalidOperationException("Wrapped ICollection<T> does not support indexer.");
                 }
 
@@ -259,12 +214,9 @@ namespace Simula.Scripting.Json.Utilities
 
         bool ICollection.IsSynchronized => false;
 
-        object ICollection.SyncRoot
-        {
-            get
-            {
-                if (_syncRoot == null)
-                {
+        object ICollection.SyncRoot {
+            get {
+                if (_syncRoot == null) {
                     Interlocked.CompareExchange(ref _syncRoot, new object(), null);
                 }
 
@@ -274,16 +226,14 @@ namespace Simula.Scripting.Json.Utilities
 
         private static void VerifyValueType(object value)
         {
-            if (!IsCompatibleObject(value))
-            {
+            if (!IsCompatibleObject(value)) {
                 throw new ArgumentException("The value '{0}' is not of type '{1}' and cannot be used in this generic collection.".FormatWith(CultureInfo.InvariantCulture, value, typeof(T)), nameof(value));
             }
         }
 
         private static bool IsCompatibleObject(object value)
         {
-            if (!(value is T) && (value != null || (typeof(T).IsValueType() && !ReflectionUtils.IsNullableType(typeof(T)))))
-            {
+            if (!(value is T) && (value != null || (typeof(T).IsValueType() && !ReflectionUtils.IsNullableType(typeof(T))))) {
                 return false;
             }
 

@@ -1,10 +1,10 @@
 ﻿
 #if HAVE_ASYNC
 
+using Simula.Scripting.Json.Utilities;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
-using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json.Linq
 {
@@ -14,8 +14,7 @@ namespace Simula.Scripting.Json.Linq
         {
             await writer.WriteStartArrayAsync(cancellationToken).ConfigureAwait(false);
 
-            for (int i = 0; i < _values.Count; i++)
-            {
+            for (int i = 0; i < _values.Count; i++) {
                 await _values[i].WriteToAsync(writer, cancellationToken, converters).ConfigureAwait(false);
             }
 
@@ -27,18 +26,15 @@ namespace Simula.Scripting.Json.Linq
         }
         public new static async Task<JArray> LoadAsync(JsonReader reader, JsonLoadSettings? settings, CancellationToken cancellationToken = default)
         {
-            if (reader.TokenType == JsonToken.None)
-            {
-                if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-                {
+            if (reader.TokenType == JsonToken.None) {
+                if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) {
                     throw JsonReaderException.Create(reader, "Error reading JArray from JsonReader.");
                 }
             }
 
             await reader.MoveToContentAsync(cancellationToken).ConfigureAwait(false);
 
-            if (reader.TokenType != JsonToken.StartArray)
-            {
+            if (reader.TokenType != JsonToken.StartArray) {
                 throw JsonReaderException.Create(reader, "Error reading JArray from JsonReader. Current JsonReader item is not an array: {0}".FormatWith(CultureInfo.InvariantCulture, reader.TokenType));
             }
 

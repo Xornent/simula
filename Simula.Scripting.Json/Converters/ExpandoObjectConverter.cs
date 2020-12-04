@@ -1,13 +1,11 @@
 ﻿
 #if HAVE_DYNAMIC
 
+using Simula.Scripting.Json.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json.Converters
 {
@@ -23,20 +21,17 @@ namespace Simula.Scripting.Json.Converters
 
         private object? ReadValue(JsonReader reader)
         {
-            if (!reader.MoveToContent())
-            {
+            if (!reader.MoveToContent()) {
                 throw JsonSerializationException.Create(reader, "Unexpected end when reading ExpandoObject.");
             }
 
-            switch (reader.TokenType)
-            {
+            switch (reader.TokenType) {
                 case JsonToken.StartObject:
                     return ReadObject(reader);
                 case JsonToken.StartArray:
                     return ReadList(reader);
                 default:
-                    if (JsonTokenUtils.IsPrimitiveToken(reader.TokenType))
-                    {
+                    if (JsonTokenUtils.IsPrimitiveToken(reader.TokenType)) {
                         return reader.Value;
                     }
 
@@ -48,10 +43,8 @@ namespace Simula.Scripting.Json.Converters
         {
             IList<object?> list = new List<object?>();
 
-            while (reader.Read())
-            {
-                switch (reader.TokenType)
-                {
+            while (reader.Read()) {
+                switch (reader.TokenType) {
                     case JsonToken.Comment:
                         break;
                     default:
@@ -71,15 +64,12 @@ namespace Simula.Scripting.Json.Converters
         {
             IDictionary<string, object?> expandoObject = new ExpandoObject();
 
-            while (reader.Read())
-            {
-                switch (reader.TokenType)
-                {
+            while (reader.Read()) {
+                switch (reader.TokenType) {
                     case JsonToken.PropertyName:
                         string propertyName = reader.Value!.ToString();
 
-                        if (!reader.Read())
-                        {
+                        if (!reader.Read()) {
                             throw JsonSerializationException.Create(reader, "Unexpected end when reading ExpandoObject.");
                         }
 

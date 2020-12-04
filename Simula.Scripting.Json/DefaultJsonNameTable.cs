@@ -21,16 +21,14 @@ namespace Simula.Scripting.Json
         }
         public override string? Get(char[] key, int start, int length)
         {
-            if (length == 0)
-            {
+            if (length == 0) {
                 return string.Empty;
             }
 
             int hashCode = length + HashCodeRandomizer;
             hashCode += (hashCode << 7) ^ key[start];
             int end = start + length;
-            for (int i = start + 1; i < end; i++)
-            {
+            for (int i = start + 1; i < end; i++) {
                 hashCode += (hashCode << 7) ^ key[i];
             }
             hashCode -= hashCode >> 17;
@@ -39,10 +37,8 @@ namespace Simula.Scripting.Json
             var index = hashCode & _mask;
             var entries = _entries;
 
-            for (Entry entry = entries[index]; entry != null; entry = entry.Next)
-            {
-                if (entry.HashCode == hashCode && TextEquals(entry.Value, key, start, length))
-                {
+            for (Entry entry = entries[index]; entry != null; entry = entry.Next) {
+                if (entry.HashCode == hashCode && TextEquals(entry.Value, key, start, length)) {
                     return entry.Value;
                 }
             }
@@ -51,29 +47,24 @@ namespace Simula.Scripting.Json
         }
         public string Add(string key)
         {
-            if (key == null)
-            {
+            if (key == null) {
                 throw new ArgumentNullException(nameof(key));
             }
 
             int length = key.Length;
-            if (length == 0)
-            {
+            if (length == 0) {
                 return string.Empty;
             }
 
             int hashCode = length + HashCodeRandomizer;
-            for (int i = 0; i < key.Length; i++)
-            {
+            for (int i = 0; i < key.Length; i++) {
                 hashCode += (hashCode << 7) ^ key[i];
             }
             hashCode -= hashCode >> 17;
             hashCode -= hashCode >> 11;
             hashCode -= hashCode >> 5;
-            for (Entry entry = _entries[hashCode & _mask]; entry != null; entry = entry.Next)
-            {
-                if (entry.HashCode == hashCode && entry.Value.Equals(key, StringComparison.Ordinal))
-                {
+            for (Entry entry = _entries[hashCode & _mask]; entry != null; entry = entry.Next) {
+                if (entry.HashCode == hashCode && entry.Value.Equals(key, StringComparison.Ordinal)) {
                     return entry.Value;
                 }
             }
@@ -86,8 +77,7 @@ namespace Simula.Scripting.Json
             int index = hashCode & _mask;
             Entry entry = new Entry(str, hashCode, _entries[index]);
             _entries[index] = entry;
-            if (_count++ == _mask)
-            {
+            if (_count++ == _mask) {
                 Grow();
             }
             return entry.Value;
@@ -99,11 +89,9 @@ namespace Simula.Scripting.Json
             int newMask = (_mask * 2) + 1;
             Entry[] newEntries = new Entry[newMask + 1];
 
-            for (int i = 0; i < entries.Length; i++)
-            {
+            for (int i = 0; i < entries.Length; i++) {
                 Entry next;
-                for (Entry entry = entries[i]; entry != null; entry = next)
-                {
+                for (Entry entry = entries[i]; entry != null; entry = next) {
                     int index = entry.HashCode & newMask;
                     next = entry.Next;
                     entry.Next = newEntries[index];
@@ -116,15 +104,12 @@ namespace Simula.Scripting.Json
 
         private static bool TextEquals(string str1, char[] str2, int str2Start, int str2Length)
         {
-            if (str1.Length != str2Length)
-            {
+            if (str1.Length != str2Length) {
                 return false;
             }
 
-            for (int i = 0; i < str1.Length; i++)
-            {
-                if (str1[i] != str2[str2Start + i])
-                {
+            for (int i = 0; i < str1.Length; i++) {
+                if (str1[i] != str2[str2Start + i]) {
                     return false;
                 }
             }

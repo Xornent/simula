@@ -1,6 +1,6 @@
+using Simula.TeX.Rendering;
 using System.Windows;
 using System.Windows.Media;
-using Simula.TeX.Rendering;
 
 namespace Simula.TeX.Boxes
 {
@@ -9,17 +9,17 @@ namespace Simula.TeX.Boxes
     {
         public HorizontalRule(TexEnvironment environment, double thickness, double width, double shift)
         {
-            this.Width = width;
-            this.Height = thickness;
-            this.Shift = shift;
-            this.Foreground = environment.Foreground;
-            this.Background = environment.Background;	//Not strictly necessary
+            Width = width;
+            Height = thickness;
+            Shift = shift;
+            Foreground = environment.Foreground;
+            Background = environment.Background;	//Not strictly necessary
         }
 
         public override void RenderTo(IElementRenderer renderer, double x, double y)
         {
-            var color = this.Foreground ?? Brushes.Black;
-            var rectangle = new Rect(x, y - this.Height, this.Width, this.Height);
+            var color = Foreground ?? Brushes.Black;
+            var rectangle = new Rect(x, y - Height, Width, Height);
             renderer.RenderRectangle(rectangle, color);
         }
 

@@ -1,9 +1,9 @@
+using Simula.TeX.Boxes;
+using Simula.TeX.Rendering.Transformations;
 using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
-using Simula.TeX.Boxes;
-using Simula.TeX.Rendering.Transformations;
 
 namespace Simula.TeX.Rendering
 {
@@ -57,15 +57,13 @@ namespace Simula.TeX.Rendering
         public void RenderTransformed(Box box, Transformation[] transforms, double x, double y)
         {
             var scaledTransformations = transforms.Select(t => t.Scale(_scale)).ToList();
-            foreach (var transformation in scaledTransformations)
-            {
+            foreach (var transformation in scaledTransformations) {
                 _foregroundContext.PushTransform(ToTransform(transformation));
             }
 
             RenderElement(box, x, y);
 
-            for (var i = 0; i < scaledTransformations.Count; ++i)
-            {
+            for (var i = 0; i < scaledTransformations.Count; ++i) {
                 _foregroundContext.Pop();
             }
         }
@@ -78,8 +76,7 @@ namespace Simula.TeX.Rendering
 
         private void RenderBackground(Box box, double x, double y)
         {
-            if (box.Background != null)
-            {
+            if (box.Background != null) {
                 _targetContext.DrawRectangle(
                     box.Background,
                     null,
@@ -91,13 +88,12 @@ namespace Simula.TeX.Rendering
 
         private static Transform ToTransform(Transformation transformation)
         {
-            switch (transformation.Kind)
-            {
+            switch (transformation.Kind) {
                 case TransformationKind.Translate:
-                    var tt = (Transformation.Translate) transformation;
+                    var tt = (Transformation.Translate)transformation;
                     return new TranslateTransform(tt.X, tt.Y);
                 case TransformationKind.Rotate:
-                    var rt = (Transformation.Rotate) transformation;
+                    var rt = (Transformation.Rotate)transformation;
                     return new RotateTransform(rt.RotationDegrees);
                 default:
                     throw new NotSupportedException($"Unknown {nameof(Transformation)} kind: {transformation.Kind}");
@@ -109,8 +105,8 @@ namespace Simula.TeX.Rendering
         /// </summary>
         private GuidelineSet GenerateGuidelines(Box box, double x, double y) => new GuidelineSet
         {
-            GuidelinesX = {_scale * x, _scale * (x + box.TotalWidth)},
-            GuidelinesY = {_scale * y, _scale * (y + box.TotalHeight)}
+            GuidelinesX = { _scale * x, _scale * (x + box.TotalWidth) },
+            GuidelinesY = { _scale * y, _scale * (y + box.TotalHeight) }
         };
     }
 }

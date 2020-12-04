@@ -9,7 +9,7 @@ namespace Simula.TeX.Atoms
         protected CharSymbol(SourceSpan? source, TexAtomType type = TexAtomType.Ordinary)
             : base(source, type)
         {
-            this.IsTextSymbol = false;
+            IsTextSymbol = false;
         }
 
         public bool IsTextSymbol { get; }
@@ -22,14 +22,14 @@ namespace Simula.TeX.Atoms
 
         protected sealed override Box CreateBoxCore(TexEnvironment environment)
         {
-            var font = this.GetStyledFont(environment);
-            var charInfo = this.GetCharInfo(font, environment.Style);
+            var font = GetStyledFont(environment);
+            var charInfo = GetCharInfo(font, environment.Style);
             return new CharBox(environment, charInfo.Value);
         }
 
         /// <summary>Checks if the symbol can be rendered by font.</summary>
         public bool IsSupportedByFont(ITeXFont font, TexStyle style) =>
-            this.GetCharInfo(font, style).IsSuccess;
+            GetCharInfo(font, style).IsSuccess;
 
         /// <summary>Returns the symbol rendered by font.</summary>
         public abstract Result<CharFont> GetCharFont(ITeXFont texFont);

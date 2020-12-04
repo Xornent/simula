@@ -1,9 +1,8 @@
+using Simula.TeX.Boxes;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Simula.TeX.Boxes;
-using Simula.TeX.Utils;
 
 namespace Simula.TeX.Atoms
 {
@@ -58,10 +57,8 @@ namespace Simula.TeX.Atoms
         {
             var rowHeights = new double[matrix.Count];
             var columnWidths = new double[columnCount];
-            for (var i = 0; i < matrix.Count; ++i)
-            {
-                for (var j = 0; j < columnCount; ++j)
-                {
+            for (var i = 0; i < matrix.Count; ++i) {
+                for (var j = 0; j < columnCount; ++j) {
                     var cell = matrix[i][j];
                     rowHeights[i] = Math.Max(rowHeights[i], cell.TotalHeight);
                     columnWidths[j] = Math.Max(columnWidths[j], cell.TotalWidth);
@@ -78,16 +75,14 @@ namespace Simula.TeX.Atoms
             double[] columnWidths)
         {
             var matrixCellGaps = new List<List<CellGaps>>();
-            for (var i = 0; i < matrix.Count; ++i)
-            {
+            for (var i = 0; i < matrix.Count; ++i) {
                 var rowGaps = new List<CellGaps>();
-                for (var j = 0; j < columnCount; ++j)
-                {
+                for (var j = 0; j < columnCount; ++j) {
                     var cell = matrix[i][j];
                     double cellVShift = rowHeights[i] - cell.TotalHeight;
                     double cellHShift = columnWidths[j] - cell.TotalWidth;
 
-                    rowGaps.Add(new CellGaps {Horizontal = cellHShift / 2, Vertical = cellVShift / 2});
+                    rowGaps.Add(new CellGaps { Horizontal = cellHShift / 2, Vertical = cellVShift / 2 });
                 }
 
                 matrixCellGaps.Add(rowGaps);
@@ -103,11 +98,9 @@ namespace Simula.TeX.Atoms
             IList<List<CellGaps>> matrixCellGaps)
         {
             var rowsContainer = new VerticalBox();
-            for (var i = 0; i < matrix.Count; ++i)
-            {
+            for (var i = 0; i < matrix.Count; ++i) {
                 var rowContainer = new HorizontalBox();
-                for (var j = 0; j < columnCount; ++j)
-                {
+                for (var j = 0; j < columnCount; ++j) {
                     var cell = matrix[i][j];
 
                     var cellContainer = new VerticalBox();

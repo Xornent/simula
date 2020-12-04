@@ -1,10 +1,10 @@
 ﻿
-using System;
-using System.Collections.Generic;
-using System.IO;
 using Simula.Scripting.Json.Linq;
 using Simula.Scripting.Json.Utilities;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 
 #nullable disable
 
@@ -81,8 +81,7 @@ namespace Simula.Scripting.Json.Schema
         {
             ValidationUtils.ArgumentNotNull(json, nameof(json));
 
-            using (JsonReader reader = new JsonTextReader(new StringReader(json)))
-            {
+            using (JsonReader reader = new JsonTextReader(new StringReader(json))) {
                 return Read(reader, resolver);
             }
         }

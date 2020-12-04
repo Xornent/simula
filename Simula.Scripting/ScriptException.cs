@@ -1,18 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
-namespace Simula.Scripting {
-
-    public class ScriptException {
-        public ScriptException(string id) {
-            this.Id = id;
+namespace Simula.Scripting
+{
+    public class ScriptException
+    {
+        public ScriptException(string id)
+        {
+            Id = id;
         }
 
         public string Message {
             get {
                 (string, string) value;
-                bool success = Helper.TryGetValue(this.Id.ToLower(), out value);
+                bool success = Helper.TryGetValue(Id.ToLower(), out value);
                 if (string.IsNullOrEmpty(value.Item1)) return "";
                 else return value.Item1;
             }
@@ -21,7 +21,7 @@ namespace Simula.Scripting {
         public string Help {
             get {
                 (string, string) value;
-                bool success = Helper.TryGetValue(this.Id.ToLower(), out value);
+                bool success = Helper.TryGetValue(Id.ToLower(), out value);
                 if (string.IsNullOrEmpty(value.Item2)) return "";
                 else return value.Item2;
             }

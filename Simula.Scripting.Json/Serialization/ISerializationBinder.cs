@@ -1,7 +1,5 @@
 ﻿
 using System;
-using System.Reflection;
-using System.Runtime.Serialization;
 
 namespace Simula.Scripting.Json.Serialization
 {

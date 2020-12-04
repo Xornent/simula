@@ -8,15 +8,15 @@ namespace Simula.TeX.Atoms
         public FixedCharAtom(SourceSpan? source, CharFont charFont)
             : base(source)
         {
-            this.CharFont = charFont;
+            CharFont = charFont;
         }
 
         public CharFont CharFont { get; }
 
         protected override Result<CharInfo> GetCharInfo(ITeXFont font, TexStyle style) =>
-            font.GetCharInfo(this.CharFont, style);
+            font.GetCharInfo(CharFont, style);
 
         public override Result<CharFont> GetCharFont(ITeXFont texFont) =>
-            Result.Ok(this.CharFont);
+            Result.Ok(CharFont);
     }
 }

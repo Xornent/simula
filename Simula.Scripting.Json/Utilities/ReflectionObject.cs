@@ -58,14 +58,10 @@ namespace Simula.Scripting.Json.Utilities
             ReflectionDelegateFactory delegateFactory = JsonTypeReflector.ReflectionDelegateFactory;
 
             ObjectConstructor<object>? creatorConstructor = null;
-            if (creator != null)
-            {
+            if (creator != null) {
                 creatorConstructor = delegateFactory.CreateParameterizedConstructor(creator);
-            }
-            else
-            {
-                if (ReflectionUtils.HasDefaultConstructor(t, false))
-                {
+            } else {
+                if (ReflectionUtils.HasDefaultConstructor(t, false)) {
                     Func<object> ctor = delegateFactory.CreateDefaultConstructor<object>(t);
 
                     creatorConstructor = args => ctor();
@@ -74,11 +70,9 @@ namespace Simula.Scripting.Json.Utilities
 
             ReflectionObject d = new ReflectionObject(creatorConstructor);
 
-            foreach (string memberName in memberNames)
-            {
+            foreach (string memberName in memberNames) {
                 MemberInfo[] members = t.GetMember(memberName, BindingFlags.Instance | BindingFlags.Public);
-                if (members.Length != 1)
-                {
+                if (members.Length != 1) {
                     throw new ArgumentException("Expected a single member with the name '{0}'.".FormatWith(CultureInfo.InvariantCulture, memberName));
                 }
 
@@ -86,32 +80,25 @@ namespace Simula.Scripting.Json.Utilities
 
                 ReflectionMember reflectionMember = new ReflectionMember();
 
-                switch (member.MemberType())
-                {
+                switch (member.MemberType()) {
                     case MemberTypes.Field:
                     case MemberTypes.Property:
-                        if (ReflectionUtils.CanReadMemberValue(member, false))
-                        {
+                        if (ReflectionUtils.CanReadMemberValue(member, false)) {
                             reflectionMember.Getter = delegateFactory.CreateGet<object>(member);
                         }
 
-                        if (ReflectionUtils.CanSetMemberValue(member, false, false))
-                        {
+                        if (ReflectionUtils.CanSetMemberValue(member, false, false)) {
                             reflectionMember.Setter = delegateFactory.CreateSet<object>(member);
                         }
                         break;
                     case MemberTypes.Method:
                         MethodInfo method = (MethodInfo)member;
-                        if (method.IsPublic)
-                        {
+                        if (method.IsPublic) {
                             ParameterInfo[] parameters = method.GetParameters();
-                            if (parameters.Length == 0 && method.ReturnType != typeof(void))
-                            {
+                            if (parameters.Length == 0 && method.ReturnType != typeof(void)) {
                                 MethodCall<object, object?> call = delegateFactory.CreateMethodCall<object>(method);
                                 reflectionMember.Getter = target => call(target);
-                            }
-                            else if (parameters.Length == 1 && method.ReturnType == typeof(void))
-                            {
+                            } else if (parameters.Length == 1 && method.ReturnType == typeof(void)) {
                                 MethodCall<object, object?> call = delegateFactory.CreateMethodCall<object>(method);
                                 reflectionMember.Setter = (target, arg) => call(target, arg);
                             }

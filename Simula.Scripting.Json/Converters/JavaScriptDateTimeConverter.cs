@@ -1,7 +1,7 @@
 ﻿
+using Simula.Scripting.Json.Utilities;
 using System;
 using System.Globalization;
-using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json.Converters
 {
@@ -11,20 +11,17 @@ namespace Simula.Scripting.Json.Converters
         {
             long ticks;
 
-            if (value is DateTime dateTime)
-            {
+            if (value is DateTime dateTime) {
                 DateTime utcDateTime = dateTime.ToUniversalTime();
                 ticks = DateTimeUtils.ConvertDateTimeToJavaScriptTicks(utcDateTime);
             }
 #if HAVE_DATE_TIME_OFFSET
-            else if (value is DateTimeOffset dateTimeOffset)
-            {
+            else if (value is DateTimeOffset dateTimeOffset) {
                 DateTimeOffset utcDateTimeOffset = dateTimeOffset.ToUniversalTime();
                 ticks = DateTimeUtils.ConvertDateTimeToJavaScriptTicks(utcDateTimeOffset.UtcDateTime);
             }
 #endif
-            else
-            {
+            else {
                 throw new JsonSerializationException("Expected date object value.");
             }
 
@@ -34,23 +31,19 @@ namespace Simula.Scripting.Json.Converters
         }
         public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
-            if (reader.TokenType == JsonToken.Null)
-            {
-                if (!ReflectionUtils.IsNullable(objectType))
-                {
+            if (reader.TokenType == JsonToken.Null) {
+                if (!ReflectionUtils.IsNullable(objectType)) {
                     throw JsonSerializationException.Create(reader, "Cannot convert null value to {0}.".FormatWith(CultureInfo.InvariantCulture, objectType));
                 }
 
                 return null;
             }
 
-            if (reader.TokenType != JsonToken.StartConstructor || !string.Equals(reader.Value?.ToString(), "Date", StringComparison.Ordinal))
-            {
+            if (reader.TokenType != JsonToken.StartConstructor || !string.Equals(reader.Value?.ToString(), "Date", StringComparison.Ordinal)) {
                 throw JsonSerializationException.Create(reader, "Unexpected token or value when parsing date. Token: {0}, Value: {1}".FormatWith(CultureInfo.InvariantCulture, reader.TokenType, reader.Value));
             }
 
-            if (!JavaScriptUtils.TryGetDateFromConstructorJson(reader, out DateTime d, out string? errorMessage))
-            {
+            if (!JavaScriptUtils.TryGetDateFromConstructorJson(reader, out DateTime d, out string? errorMessage)) {
                 throw JsonSerializationException.Create(reader, errorMessage);
             }
 
@@ -58,8 +51,7 @@ namespace Simula.Scripting.Json.Converters
             Type t = (ReflectionUtils.IsNullableType(objectType))
                 ? Nullable.GetUnderlyingType(objectType)
                 : objectType;
-            if (t == typeof(DateTimeOffset))
-            {
+            if (t == typeof(DateTimeOffset)) {
                 return new DateTimeOffset(d);
             }
 #endif

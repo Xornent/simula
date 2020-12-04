@@ -8,19 +8,15 @@ using System.Threading;
 using Simula.Scripting.Json.Utilities;
 using System.Collections;
 using System.Globalization;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Diagnostics.CodeAnalysis;
 #if !HAVE_LINQ
 using Simula.Scripting.Json.Utilities.LinqBridge;
 #else
-using System.Linq;
 #endif
 
 namespace Simula.Scripting.Json.Linq
 {
-    public abstract partial class JContainer : JToken, IList<JToken>
+    public abstract partial class JContainer : JToken, IList<JToken>
 #if HAVE_COMPONENT_MODEL
         , ITypedList, IBindingList
 #endif
@@ -45,8 +41,7 @@ namespace Simula.Scripting.Json.Linq
 #endif
 #if HAVE_INOTIFY_COLLECTION_CHANGED
         internal NotifyCollectionChangedEventHandler? _collectionChanged;
-        public event NotifyCollectionChangedEventHandler CollectionChanged
-        {
+        public event NotifyCollectionChangedEventHandler CollectionChanged {
             add { _collectionChanged += value; }
             remove { _collectionChanged -= value; }
         }
@@ -68,8 +63,7 @@ namespace Simula.Scripting.Json.Linq
             ValidationUtils.ArgumentNotNull(other, nameof(other));
 
             int i = 0;
-            foreach (JToken child in other)
-            {
+            foreach (JToken child in other) {
                 AddInternal(i, child, false);
                 i++;
             }
@@ -78,8 +72,7 @@ namespace Simula.Scripting.Json.Linq
         internal void CheckReentrancy()
         {
 #if (HAVE_COMPONENT_MODEL || HAVE_INOTIFY_COLLECTION_CHANGED)
-            if (_busy)
-            {
+            if (_busy) {
                 throw new InvalidOperationException("Cannot change {0} during a collection change event.".FormatWith(CultureInfo.InvariantCulture, GetType()));
             }
 #endif
@@ -118,15 +111,11 @@ namespace Simula.Scripting.Json.Linq
         {
             NotifyCollectionChangedEventHandler? handler = _collectionChanged;
 
-            if (handler != null)
-            {
+            if (handler != null) {
                 _busy = true;
-                try
-                {
+                try {
                     handler(this, e);
-                }
-                finally
-                {
+                } finally {
                     _busy = false;
                 }
             }
@@ -136,41 +125,33 @@ namespace Simula.Scripting.Json.Linq
 
         internal bool ContentsEqual(JContainer container)
         {
-            if (container == this)
-            {
+            if (container == this) {
                 return true;
             }
 
             IList<JToken> t1 = ChildrenTokens;
             IList<JToken> t2 = container.ChildrenTokens;
 
-            if (t1.Count != t2.Count)
-            {
+            if (t1.Count != t2.Count) {
                 return false;
             }
 
-            for (int i = 0; i < t1.Count; i++)
-            {
-                if (!t1[i].DeepEquals(t2[i]))
-                {
+            for (int i = 0; i < t1.Count; i++) {
+                if (!t1[i].DeepEquals(t2[i])) {
                     return false;
                 }
             }
 
             return true;
         }
-        public override JToken? First
-        {
-            get
-            {
+        public override JToken? First {
+            get {
                 IList<JToken> children = ChildrenTokens;
                 return (children.Count > 0) ? children[0] : null;
             }
         }
-        public override JToken? Last
-        {
-            get
-            {
+        public override JToken? Last {
+            get {
                 IList<JToken> children = ChildrenTokens;
                 int count = children.Count;
                 return (count > 0) ? children[count - 1] : null;
@@ -195,42 +176,35 @@ namespace Simula.Scripting.Json.Linq
 
         internal IEnumerable<JToken> GetDescendants(bool self)
         {
-            if (self)
-            {
+            if (self) {
                 yield return this;
             }
 
-            foreach (JToken o in ChildrenTokens)
-            {
+            foreach (JToken o in ChildrenTokens) {
                 yield return o;
-                if (o is JContainer c)
-                {
-                    foreach (JToken d in c.Descendants())
-                    {
+                if (o is JContainer c) {
+                    foreach (JToken d in c.Descendants()) {
                         yield return d;
                     }
                 }
             }
         }
 
-        internal bool IsMultiContent([NotNull]object? content)
+        internal bool IsMultiContent([NotNull] object? content)
         {
             return (content is IEnumerable && !(content is string) && !(content is JToken) && !(content is byte[]));
         }
 
         internal JToken EnsureParentToken(JToken? item, bool skipParentCheck)
         {
-            if (item == null)
-            {
+            if (item == null) {
                 return JValue.CreateNull();
             }
 
-            if (skipParentCheck)
-            {
+            if (skipParentCheck) {
                 return item;
             }
-            if (item.Parent != null || item == this || (item.HasValues && Root == item))
-            {
+            if (item.Parent != null || item == this || (item.HasValues && Root == item)) {
                 item = item.CloneToken();
             }
 
@@ -243,8 +217,7 @@ namespace Simula.Scripting.Json.Linq
         {
             IList<JToken> children = ChildrenTokens;
 
-            if (index > children.Count)
-            {
+            if (index > children.Count) {
                 throw new ArgumentOutOfRangeException(nameof(index), "Index must be within the bounds of the List.");
             }
 
@@ -260,14 +233,12 @@ namespace Simula.Scripting.Json.Linq
             item.Parent = this;
 
             item.Previous = previous;
-            if (previous != null)
-            {
+            if (previous != null) {
                 previous.Next = item;
             }
 
             item.Next = next;
-            if (next != null)
-            {
+            if (next != null) {
                 next.Previous = item;
             }
 
@@ -280,8 +251,7 @@ namespace Simula.Scripting.Json.Linq
             }
 #endif
 #if HAVE_INOTIFY_COLLECTION_CHANGED
-            if (_collectionChanged != null)
-            {
+            if (_collectionChanged != null) {
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, index));
             }
 #endif
@@ -291,12 +261,10 @@ namespace Simula.Scripting.Json.Linq
         {
             IList<JToken> children = ChildrenTokens;
 
-            if (index < 0)
-            {
+            if (index < 0) {
                 throw new ArgumentOutOfRangeException(nameof(index), "Index is less than 0.");
             }
-            if (index >= children.Count)
-            {
+            if (index >= children.Count) {
                 throw new ArgumentOutOfRangeException(nameof(index), "Index is equal to or greater than Count.");
             }
 
@@ -306,12 +274,10 @@ namespace Simula.Scripting.Json.Linq
             JToken? previous = (index == 0) ? null : children[index - 1];
             JToken? next = (index == children.Count - 1) ? null : children[index + 1];
 
-            if (previous != null)
-            {
+            if (previous != null) {
                 previous.Next = next;
             }
-            if (next != null)
-            {
+            if (next != null) {
                 next.Previous = previous;
             }
 
@@ -328,8 +294,7 @@ namespace Simula.Scripting.Json.Linq
             }
 #endif
 #if HAVE_INOTIFY_COLLECTION_CHANGED
-            if (_collectionChanged != null)
-            {
+            if (_collectionChanged != null) {
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item, index));
             }
 #endif
@@ -337,11 +302,9 @@ namespace Simula.Scripting.Json.Linq
 
         internal virtual bool RemoveItem(JToken? item)
         {
-            if (item != null)
-            {
+            if (item != null) {
                 int index = IndexOfItem(item);
-                if (index >= 0)
-                {
+                if (index >= 0) {
                     RemoveItemAt(index);
                     return true;
                 }
@@ -359,19 +322,16 @@ namespace Simula.Scripting.Json.Linq
         {
             IList<JToken> children = ChildrenTokens;
 
-            if (index < 0)
-            {
+            if (index < 0) {
                 throw new ArgumentOutOfRangeException(nameof(index), "Index is less than 0.");
             }
-            if (index >= children.Count)
-            {
+            if (index >= children.Count) {
                 throw new ArgumentOutOfRangeException(nameof(index), "Index is equal to or greater than Count.");
             }
 
             JToken existing = children[index];
 
-            if (IsTokenUnchanged(existing, item))
-            {
+            if (IsTokenUnchanged(existing, item)) {
                 return;
             }
 
@@ -387,14 +347,12 @@ namespace Simula.Scripting.Json.Linq
             item.Parent = this;
 
             item.Previous = previous;
-            if (previous != null)
-            {
+            if (previous != null) {
                 previous.Next = item;
             }
 
             item.Next = next;
-            if (next != null)
-            {
+            if (next != null) {
                 next.Previous = item;
             }
 
@@ -411,8 +369,7 @@ namespace Simula.Scripting.Json.Linq
             }
 #endif
 #if HAVE_INOTIFY_COLLECTION_CHANGED
-            if (_collectionChanged != null)
-            {
+            if (_collectionChanged != null) {
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, item, existing, index));
             }
 #endif
@@ -424,8 +381,7 @@ namespace Simula.Scripting.Json.Linq
 
             IList<JToken> children = ChildrenTokens;
 
-            foreach (JToken item in children)
-            {
+            foreach (JToken item in children) {
                 item.Parent = null;
                 item.Previous = null;
                 item.Next = null;
@@ -440,8 +396,7 @@ namespace Simula.Scripting.Json.Linq
             }
 #endif
 #if HAVE_INOTIFY_COLLECTION_CHANGED
-            if (_collectionChanged != null)
-            {
+            if (_collectionChanged != null) {
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
             }
 #endif
@@ -449,8 +404,7 @@ namespace Simula.Scripting.Json.Linq
 
         internal virtual void ReplaceItem(JToken existing, JToken replacement)
         {
-            if (existing == null || existing.Parent != this)
-            {
+            if (existing == null || existing.Parent != this) {
                 return;
             }
 
@@ -465,26 +419,21 @@ namespace Simula.Scripting.Json.Linq
 
         internal virtual void CopyItemsTo(Array array, int arrayIndex)
         {
-            if (array == null)
-            {
+            if (array == null) {
                 throw new ArgumentNullException(nameof(array));
             }
-            if (arrayIndex < 0)
-            {
+            if (arrayIndex < 0) {
                 throw new ArgumentOutOfRangeException(nameof(arrayIndex), "arrayIndex is less than 0.");
             }
-            if (arrayIndex >= array.Length && arrayIndex != 0)
-            {
+            if (arrayIndex >= array.Length && arrayIndex != 0) {
                 throw new ArgumentException("arrayIndex is equal to or greater than the length of array.");
             }
-            if (Count > array.Length - arrayIndex)
-            {
+            if (Count > array.Length - arrayIndex) {
                 throw new ArgumentException("The number of elements in the source JObject is greater than the available space from arrayIndex to the end of the destination array.");
             }
 
             int index = 0;
-            foreach (JToken token in ChildrenTokens)
-            {
+            foreach (JToken token in ChildrenTokens) {
                 array.SetValue(token, arrayIndex + index);
                 index++;
             }
@@ -492,10 +441,8 @@ namespace Simula.Scripting.Json.Linq
 
         internal static bool IsTokenUnchanged(JToken currentValue, JToken? newValue)
         {
-            if (currentValue is JValue v1)
-            {
-                if (newValue == null)
-                {
+            if (currentValue is JValue v1) {
+                if (newValue == null) {
                     return v1.Type == JTokenType.Null;
                 }
 
@@ -509,8 +456,7 @@ namespace Simula.Scripting.Json.Linq
         {
             ValidationUtils.ArgumentNotNull(o, nameof(o));
 
-            if (o.Type == JTokenType.Property)
-            {
+            if (o.Type == JTokenType.Property) {
                 throw new ArgumentException("Can not add {0} to {1}.".FormatWith(CultureInfo.InvariantCulture, o.GetType(), GetType()));
             }
         }
@@ -530,19 +476,15 @@ namespace Simula.Scripting.Json.Linq
 
         internal void AddInternal(int index, object? content, bool skipParentCheck)
         {
-            if (IsMultiContent(content))
-            {
+            if (IsMultiContent(content)) {
                 IEnumerable enumerable = (IEnumerable)content;
 
                 int multiIndex = index;
-                foreach (object c in enumerable)
-                {
+                foreach (object c in enumerable) {
                     AddInternal(multiIndex, c, skipParentCheck);
                     multiIndex++;
                 }
-            }
-            else
-            {
+            } else {
                 JToken item = CreateFromContent(content);
 
                 InsertItem(index, item, skipParentCheck);
@@ -551,8 +493,7 @@ namespace Simula.Scripting.Json.Linq
 
         internal static JToken CreateFromContent(object? content)
         {
-            if (content is JToken token)
-            {
+            if (content is JToken token) {
                 return token;
             }
 
@@ -586,8 +527,7 @@ namespace Simula.Scripting.Json.Linq
         {
             int startDepth = reader.Depth;
 
-            if (!reader.Read())
-            {
+            if (!reader.Read()) {
                 throw JsonReaderException.Create(reader, "Error reading {0} from JsonReader.".FormatWith(CultureInfo.InvariantCulture, GetType().Name));
             }
 
@@ -595,8 +535,7 @@ namespace Simula.Scripting.Json.Linq
 
             int endDepth = reader.Depth;
 
-            if (endDepth > startDepth)
-            {
+            if (endDepth > startDepth) {
                 throw JsonReaderException.Create(reader, "Unexpected end of content while loading {0}.".FormatWith(CultureInfo.InvariantCulture, GetType().Name));
             }
         }
@@ -608,12 +547,9 @@ namespace Simula.Scripting.Json.Linq
 
             JContainer? parent = this;
 
-            do
-            {
-                if (parent is JProperty p && p.Value != null)
-                {
-                    if (parent == this)
-                    {
+            do {
+                if (parent is JProperty p && p.Value != null) {
+                    if (parent == this) {
                         return;
                     }
 
@@ -622,8 +558,7 @@ namespace Simula.Scripting.Json.Linq
 
                 MiscellaneousUtils.Assert(parent != null);
 
-                switch (r.TokenType)
-                {
+                switch (r.TokenType) {
                     case JsonToken.None:
                         break;
                     case JsonToken.StartArray:
@@ -634,8 +569,7 @@ namespace Simula.Scripting.Json.Linq
                         break;
 
                     case JsonToken.EndArray:
-                        if (parent == this)
-                        {
+                        if (parent == this) {
                             return;
                         }
 
@@ -648,8 +582,7 @@ namespace Simula.Scripting.Json.Linq
                         parent = o;
                         break;
                     case JsonToken.EndObject:
-                        if (parent == this)
-                        {
+                        if (parent == this) {
                             return;
                         }
 
@@ -662,8 +595,7 @@ namespace Simula.Scripting.Json.Linq
                         parent = constructor;
                         break;
                     case JsonToken.EndConstructor:
-                        if (parent == this)
-                        {
+                        if (parent == this) {
                             return;
                         }
 
@@ -680,8 +612,7 @@ namespace Simula.Scripting.Json.Linq
                         parent.Add(v);
                         break;
                     case JsonToken.Comment:
-                        if (settings != null && settings.CommentHandling == CommentHandling.Load)
-                        {
+                        if (settings != null && settings.CommentHandling == CommentHandling.Load) {
                             v = JValue.CreateComment(r.Value!.ToString());
                             v.SetLineInfo(lineInfo, settings);
                             parent.Add(v);
@@ -699,12 +630,9 @@ namespace Simula.Scripting.Json.Linq
                         break;
                     case JsonToken.PropertyName:
                         JProperty? property = ReadProperty(r, settings, lineInfo, parent);
-                        if (property != null)
-                        {
+                        if (property != null) {
                             parent = property;
-                        }
-                        else
-                        {
+                        } else {
                             r.Skip();
                         }
                         break;
@@ -721,26 +649,19 @@ namespace Simula.Scripting.Json.Linq
             JObject parentObject = (JObject)parent;
             string propertyName = r.Value!.ToString();
             JProperty? existingPropertyWithName = parentObject.Property(propertyName, StringComparison.Ordinal);
-            if (existingPropertyWithName != null)
-            {
-                if (duplicatePropertyNameHandling == DuplicatePropertyNameHandling.Ignore)
-                {
+            if (existingPropertyWithName != null) {
+                if (duplicatePropertyNameHandling == DuplicatePropertyNameHandling.Ignore) {
                     return null;
-                }
-                else if (duplicatePropertyNameHandling == DuplicatePropertyNameHandling.Error)
-                {
+                } else if (duplicatePropertyNameHandling == DuplicatePropertyNameHandling.Error) {
                     throw JsonReaderException.Create(r, "Property with the name '{0}' already exists in the current JSON object.".FormatWith(CultureInfo.InvariantCulture, propertyName));
                 }
             }
 
             JProperty property = new JProperty(propertyName);
             property.SetLineInfo(lineInfo, settings);
-            if (existingPropertyWithName == null)
-            {
+            if (existingPropertyWithName == null) {
                 parent.Add(property);
-            }
-            else
-            {
+            } else {
                 existingPropertyWithName.Replace(property);
             }
 
@@ -750,8 +671,7 @@ namespace Simula.Scripting.Json.Linq
         internal int ContentsHashCode()
         {
             int hashCode = 0;
-            foreach (JToken item in ChildrenTokens)
-            {
+            foreach (JToken item in ChildrenTokens) {
                 hashCode ^= item.GetDeepHashCode();
             }
             return hashCode;
@@ -786,8 +706,7 @@ namespace Simula.Scripting.Json.Linq
             RemoveItemAt(index);
         }
 
-        JToken IList<JToken>.this[int index]
-        {
+        JToken IList<JToken>.this[int index] {
             get => GetItem(index);
             set => SetItem(index, value);
         }
@@ -824,13 +743,11 @@ namespace Simula.Scripting.Json.Linq
 
         private JToken? EnsureValue(object value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return null;
             }
 
-            if (value is JToken token)
-            {
+            if (value is JToken token) {
                 return token;
             }
 
@@ -878,8 +795,7 @@ namespace Simula.Scripting.Json.Linq
             RemoveItemAt(index);
         }
 
-        object IList.this[int index]
-        {
+        object IList.this[int index] {
             get => GetItem(index);
             set => SetItem(index, EnsureValue(value));
         }
@@ -894,12 +810,9 @@ namespace Simula.Scripting.Json.Linq
 
         bool ICollection.IsSynchronized => false;
 
-        object ICollection.SyncRoot
-        {
-            get
-            {
-                if (_syncRoot == null)
-                {
+        object ICollection.SyncRoot {
+            get {
+                if (_syncRoot == null) {
                     Interlocked.CompareExchange(ref _syncRoot, new object(), null);
                 }
 
@@ -975,11 +888,9 @@ namespace Simula.Scripting.Json.Linq
 
         internal static void MergeEnumerableContent(JContainer target, IEnumerable content, JsonMergeSettings? settings)
         {
-            switch (settings?.MergeArrayHandling ?? MergeArrayHandling.Concat)
-            {
+            switch (settings?.MergeArrayHandling ?? MergeArrayHandling.Concat) {
                 case MergeArrayHandling.Concat:
-                    foreach (JToken item in content)
-                    {
+                    foreach (JToken item in content) {
                         target.Add(item);
                     }
                     break;
@@ -987,10 +898,8 @@ namespace Simula.Scripting.Json.Linq
 #if HAVE_HASH_SET
                     HashSet<JToken> items = new HashSet<JToken>(target, EqualityComparer);
 
-                    foreach (JToken item in content)
-                    {
-                        if (items.Add(item))
-                        {
+                    foreach (JToken item in content) {
+                        if (items.Add(item)) {
                             target.Add(item);
                         }
                     }
@@ -1012,42 +921,31 @@ namespace Simula.Scripting.Json.Linq
 #endif
                     break;
                 case MergeArrayHandling.Replace:
-                    if (target == content)
-                    {
+                    if (target == content) {
                         break;
                     }
                     target.ClearItems();
-                    foreach (JToken item in content)
-                    {
+                    foreach (JToken item in content) {
                         target.Add(item);
                     }
                     break;
                 case MergeArrayHandling.Merge:
                     int i = 0;
-                    foreach (object targetItem in content)
-                    {
-                        if (i < target.Count)
-                        {
+                    foreach (object targetItem in content) {
+                        if (i < target.Count) {
                             JToken? sourceItem = target[i];
 
-                            if (sourceItem is JContainer existingContainer)
-                            {
+                            if (sourceItem is JContainer existingContainer) {
                                 existingContainer.Merge(targetItem, settings);
-                            }
-                            else
-                            {
-                                if (targetItem != null)
-                                {
+                            } else {
+                                if (targetItem != null) {
                                     JToken contentValue = CreateFromContent(targetItem);
-                                    if (contentValue.Type != JTokenType.Null)
-                                    {
+                                    if (contentValue.Type != JTokenType.Null) {
                                         target[i] = contentValue;
                                     }
                                 }
                             }
-                        }
-                        else
-                        {
+                        } else {
                             target.Add(targetItem);
                         }
 

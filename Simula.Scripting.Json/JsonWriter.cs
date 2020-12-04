@@ -1,7 +1,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 #if HAVE_BIG_INTEGER
 using System.Numerics;
 #endif
@@ -53,13 +52,10 @@ namespace Simula.Scripting.Json
 
             EnumInfo enumValuesAndNames = EnumUtils.GetEnumValuesAndNames(typeof(JsonToken));
 
-            foreach (ulong valueToken in enumValuesAndNames.Values)
-            {
-                if (allStates.Count <= (int)valueToken)
-                {
+            foreach (ulong valueToken in enumValuesAndNames.Values) {
+                if (allStates.Count <= (int)valueToken) {
                     JsonToken token = (JsonToken)valueToken;
-                    switch (token)
-                    {
+                    switch (token) {
                         case JsonToken.Integer:
                         case JsonToken.Float:
                         case JsonToken.String:
@@ -91,25 +87,19 @@ namespace Simula.Scripting.Json
         private Formatting _formatting;
         public bool CloseOutput { get; set; }
         public bool AutoCompleteOnClose { get; set; }
-        protected internal int Top
-        {
-            get
-            {
+        protected internal int Top {
+            get {
                 int depth = _stack?.Count ?? 0;
-                if (Peek() != JsonContainerType.None)
-                {
+                if (Peek() != JsonContainerType.None) {
                     depth++;
                 }
 
                 return depth;
             }
         }
-        public WriteState WriteState
-        {
-            get
-            {
-                switch (_currentState)
-                {
+        public WriteState WriteState {
+            get {
+                switch (_currentState) {
                     case State.Error:
                         return WriteState.Error;
                     case State.Closed:
@@ -133,24 +123,18 @@ namespace Simula.Scripting.Json
             }
         }
 
-        internal string ContainerPath
-        {
-            get
-            {
-                if (_currentPosition.Type == JsonContainerType.None || _stack == null)
-                {
+        internal string ContainerPath {
+            get {
+                if (_currentPosition.Type == JsonContainerType.None || _stack == null) {
                     return string.Empty;
                 }
 
                 return JsonPosition.BuildPath(_stack, null);
             }
         }
-        public string Path
-        {
-            get
-            {
-                if (_currentPosition.Type == JsonContainerType.None)
-                {
+        public string Path {
+            get {
+                if (_currentPosition.Type == JsonContainerType.None) {
                     return string.Empty;
                 }
 
@@ -170,52 +154,40 @@ namespace Simula.Scripting.Json
         private FloatFormatHandling _floatFormatHandling;
         private string? _dateFormatString;
         private CultureInfo? _culture;
-        public Formatting Formatting
-        {
+        public Formatting Formatting {
             get => _formatting;
-            set
-            {
-                if (value < Formatting.None || value > Formatting.Indented)
-                {
+            set {
+                if (value < Formatting.None || value > Formatting.Indented) {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
                 _formatting = value;
             }
         }
-        public DateFormatHandling DateFormatHandling
-        {
+        public DateFormatHandling DateFormatHandling {
             get => _dateFormatHandling;
-            set
-            {
-                if (value < DateFormatHandling.IsoDateFormat || value > DateFormatHandling.MicrosoftDateFormat)
-                {
+            set {
+                if (value < DateFormatHandling.IsoDateFormat || value > DateFormatHandling.MicrosoftDateFormat) {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
                 _dateFormatHandling = value;
             }
         }
-        public DateTimeZoneHandling DateTimeZoneHandling
-        {
+        public DateTimeZoneHandling DateTimeZoneHandling {
             get => _dateTimeZoneHandling;
-            set
-            {
-                if (value < DateTimeZoneHandling.Local || value > DateTimeZoneHandling.RoundtripKind)
-                {
+            set {
+                if (value < DateTimeZoneHandling.Local || value > DateTimeZoneHandling.RoundtripKind) {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
                 _dateTimeZoneHandling = value;
             }
         }
-        public StringEscapeHandling StringEscapeHandling
-        {
+        public StringEscapeHandling StringEscapeHandling {
             get => _stringEscapeHandling;
-            set
-            {
-                if (value < StringEscapeHandling.Default || value > StringEscapeHandling.EscapeHtml)
-                {
+            set {
+                if (value < StringEscapeHandling.Default || value > StringEscapeHandling.EscapeHtml) {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
@@ -227,26 +199,21 @@ namespace Simula.Scripting.Json
         internal virtual void OnStringEscapeHandlingChanged()
         {
         }
-        public FloatFormatHandling FloatFormatHandling
-        {
+        public FloatFormatHandling FloatFormatHandling {
             get => _floatFormatHandling;
-            set
-            {
-                if (value < FloatFormatHandling.String || value > FloatFormatHandling.DefaultValue)
-                {
+            set {
+                if (value < FloatFormatHandling.String || value > FloatFormatHandling.DefaultValue) {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
                 _floatFormatHandling = value;
             }
         }
-        public string? DateFormatString
-        {
+        public string? DateFormatString {
             get => _dateFormatString;
             set => _dateFormatString = value;
         }
-        public CultureInfo Culture
-        {
+        public CultureInfo Culture {
             get => _culture ?? CultureInfo.InvariantCulture;
             set => _culture = value;
         }
@@ -262,18 +229,15 @@ namespace Simula.Scripting.Json
 
         internal void UpdateScopeWithFinishedValue()
         {
-            if (_currentPosition.HasIndex)
-            {
+            if (_currentPosition.HasIndex) {
                 _currentPosition.Position++;
             }
         }
 
         private void Push(JsonContainerType value)
         {
-            if (_currentPosition.Type != JsonContainerType.None)
-            {
-                if (_stack == null)
-                {
+            if (_currentPosition.Type != JsonContainerType.None) {
+                if (_stack == null) {
                     _stack = new List<JsonPosition>();
                 }
 
@@ -287,13 +251,10 @@ namespace Simula.Scripting.Json
         {
             JsonPosition oldPosition = _currentPosition;
 
-            if (_stack != null && _stack.Count > 0)
-            {
+            if (_stack != null && _stack.Count > 0) {
                 _currentPosition = _stack[_stack.Count - 1];
                 _stack.RemoveAt(_stack.Count - 1);
-            }
-            else
-            {
+            } else {
                 _currentPosition = new JsonPosition();
             }
 
@@ -307,8 +268,7 @@ namespace Simula.Scripting.Json
         public abstract void Flush();
         public virtual void Close()
         {
-            if (AutoCompleteOnClose)
-            {
+            if (AutoCompleteOnClose) {
                 AutoCompleteAll();
             }
         }
@@ -360,8 +320,7 @@ namespace Simula.Scripting.Json
         }
         public void WriteToken(JsonToken token, object? value)
         {
-            switch (token)
-            {
+            switch (token) {
                 case JsonToken.None:
                     break;
                 case JsonToken.StartObject:
@@ -396,20 +355,13 @@ namespace Simula.Scripting.Json
                     break;
                 case JsonToken.Float:
                     ValidationUtils.ArgumentNotNull(value, nameof(value));
-                    if (value is decimal decimalValue)
-                    {
+                    if (value is decimal decimalValue) {
                         WriteValue(decimalValue);
-                    }
-                    else if (value is double doubleValue)
-                    {
+                    } else if (value is double doubleValue) {
                         WriteValue(doubleValue);
-                    }
-                    else if (value is float floatValue)
-                    {
+                    } else if (value is float floatValue) {
                         WriteValue(floatValue);
-                    }
-                    else
-                    {
+                    } else {
                         WriteValue(Convert.ToDouble(value, CultureInfo.InvariantCulture));
                     }
                     break;
@@ -439,11 +391,9 @@ namespace Simula.Scripting.Json
                 case JsonToken.Date:
                     ValidationUtils.ArgumentNotNull(value, nameof(value));
 #if HAVE_DATE_TIME_OFFSET
-                    if (value is DateTimeOffset dt)
-                    {
+                    if (value is DateTimeOffset dt) {
                         WriteValue(dt);
-                    }
-                    else
+                    } else
 #endif
                     {
                         WriteValue(Convert.ToDateTime(value, CultureInfo.InvariantCulture));
@@ -454,12 +404,9 @@ namespace Simula.Scripting.Json
                     break;
                 case JsonToken.Bytes:
                     ValidationUtils.ArgumentNotNull(value, nameof(value));
-                    if (value is Guid guid)
-                    {
+                    if (value is Guid guid) {
                         WriteValue(guid);
-                    }
-                    else
-                    {
+                    } else {
                         WriteValue((byte[])value!);
                     }
                     break;
@@ -476,16 +423,11 @@ namespace Simula.Scripting.Json
         {
             int initialDepth = CalculateWriteTokenInitialDepth(reader);
 
-            do
-            {
-                if (writeDateConstructorAsDate && reader.TokenType == JsonToken.StartConstructor && string.Equals(reader.Value?.ToString(), "Date", StringComparison.Ordinal))
-                {
+            do {
+                if (writeDateConstructorAsDate && reader.TokenType == JsonToken.StartConstructor && string.Equals(reader.Value?.ToString(), "Date", StringComparison.Ordinal)) {
                     WriteConstructorDate(reader);
-                }
-                else
-                {
-                    if (writeComments || reader.TokenType != JsonToken.Comment)
-                    {
+                } else {
+                    if (writeComments || reader.TokenType != JsonToken.Comment) {
                         WriteToken(reader.TokenType, reader.Value);
                     }
                 }
@@ -494,8 +436,7 @@ namespace Simula.Scripting.Json
                 && writeChildren
                 && reader.Read());
 
-            if (IsWriteTokenIncomplete(reader, writeChildren, initialDepth))
-            {
+            if (IsWriteTokenIncomplete(reader, writeChildren, initialDepth)) {
                 throw JsonWriterException.Create(this, "Unexpected end when reading token.", null);
             }
         }
@@ -510,8 +451,7 @@ namespace Simula.Scripting.Json
         private int CalculateWriteTokenInitialDepth(JsonReader reader)
         {
             JsonToken type = reader.TokenType;
-            if (type == JsonToken.None)
-            {
+            if (type == JsonToken.None) {
                 return -1;
             }
 
@@ -521,8 +461,7 @@ namespace Simula.Scripting.Json
         private int CalculateWriteTokenFinalDepth(JsonReader reader)
         {
             JsonToken type = reader.TokenType;
-            if (type == JsonToken.None)
-            {
+            if (type == JsonToken.None) {
                 return -1;
             }
 
@@ -531,8 +470,7 @@ namespace Simula.Scripting.Json
 
         private void WriteConstructorDate(JsonReader reader)
         {
-            if (!JavaScriptUtils.TryGetDateFromConstructorJson(reader, out DateTime dateTime, out string? errorMessage))
-            {
+            if (!JavaScriptUtils.TryGetDateFromConstructorJson(reader, out DateTime dateTime, out string? errorMessage)) {
                 throw JsonWriterException.Create(this, errorMessage, null);
             }
 
@@ -541,8 +479,7 @@ namespace Simula.Scripting.Json
 
         private void WriteEnd(JsonContainerType type)
         {
-            switch (type)
-            {
+            switch (type) {
                 case JsonContainerType.Object:
                     WriteEndObject();
                     break;
@@ -559,16 +496,14 @@ namespace Simula.Scripting.Json
 
         private void AutoCompleteAll()
         {
-            while (Top > 0)
-            {
+            while (Top > 0) {
                 WriteEnd();
             }
         }
 
         private JsonToken GetCloseTokenForType(JsonContainerType type)
         {
-            switch (type)
-            {
+            switch (type) {
                 case JsonContainerType.Object:
                     return JsonToken.EndObject;
                 case JsonContainerType.Array:
@@ -584,19 +519,15 @@ namespace Simula.Scripting.Json
         {
             int levelsToComplete = CalculateLevelsToComplete(type);
 
-            for (int i = 0; i < levelsToComplete; i++)
-            {
+            for (int i = 0; i < levelsToComplete; i++) {
                 JsonToken token = GetCloseTokenForType(Pop());
 
-                if (_currentState == State.Property)
-                {
+                if (_currentState == State.Property) {
                     WriteNull();
                 }
 
-                if (_formatting == Formatting.Indented)
-                {
-                    if (_currentState != State.ObjectStart && _currentState != State.ArrayStart)
-                    {
+                if (_formatting == Formatting.Indented) {
+                    if (_currentState != State.ObjectStart && _currentState != State.ArrayStart) {
                         WriteIndent();
                     }
                 }
@@ -611,27 +542,21 @@ namespace Simula.Scripting.Json
         {
             int levelsToComplete = 0;
 
-            if (_currentPosition.Type == type)
-            {
+            if (_currentPosition.Type == type) {
                 levelsToComplete = 1;
-            }
-            else
-            {
+            } else {
                 int top = Top - 2;
-                for (int i = top; i >= 0; i--)
-                {
+                for (int i = top; i >= 0; i--) {
                     int currentLevel = top - i;
 
-                    if (_stack![currentLevel].Type == type)
-                    {
+                    if (_stack![currentLevel].Type == type) {
                         levelsToComplete = i + 2;
                         break;
                     }
                 }
             }
 
-            if (levelsToComplete == 0)
-            {
+            if (levelsToComplete == 0) {
                 throw JsonWriterException.Create(this, "No token to close.", null);
             }
 
@@ -642,8 +567,7 @@ namespace Simula.Scripting.Json
         {
             JsonContainerType currentLevelType = Peek();
 
-            switch (currentLevelType)
-            {
+            switch (currentLevelType) {
                 case JsonContainerType.Object:
                     _currentState = State.Object;
                     break;
@@ -677,25 +601,20 @@ namespace Simula.Scripting.Json
         {
             State newState = StateArray[(int)tokenBeingWritten][(int)_currentState];
 
-            if (newState == State.Error)
-            {
+            if (newState == State.Error) {
                 throw JsonWriterException.Create(this, "Token {0} in state {1} would result in an invalid JSON object.".FormatWith(CultureInfo.InvariantCulture, tokenBeingWritten.ToString(), _currentState.ToString()), null);
             }
 
-            if ((_currentState == State.Object || _currentState == State.Array || _currentState == State.Constructor) && tokenBeingWritten != JsonToken.Comment)
-            {
+            if ((_currentState == State.Object || _currentState == State.Array || _currentState == State.Constructor) && tokenBeingWritten != JsonToken.Comment) {
                 WriteValueDelimiter();
             }
 
-            if (_formatting == Formatting.Indented)
-            {
-                if (_currentState == State.Property)
-                {
+            if (_formatting == Formatting.Indented) {
+                if (_currentState == State.Property) {
                     WriteIndentSpace();
                 }
                 if ((_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.Constructor || _currentState == State.ConstructorStart)
-                    || (tokenBeingWritten == JsonToken.PropertyName && _currentState != State.Start))
-                {
+                    || (tokenBeingWritten == JsonToken.PropertyName && _currentState != State.Start)) {
                     WriteIndent();
                 }
             }
@@ -803,159 +722,117 @@ namespace Simula.Scripting.Json
         }
         public virtual void WriteValue(int? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 WriteValue(value.GetValueOrDefault());
             }
         }
         [CLSCompliant(false)]
         public virtual void WriteValue(uint? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 WriteValue(value.GetValueOrDefault());
             }
         }
         public virtual void WriteValue(long? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 WriteValue(value.GetValueOrDefault());
             }
         }
         [CLSCompliant(false)]
         public virtual void WriteValue(ulong? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 WriteValue(value.GetValueOrDefault());
             }
         }
         public virtual void WriteValue(float? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 WriteValue(value.GetValueOrDefault());
             }
         }
         public virtual void WriteValue(double? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 WriteValue(value.GetValueOrDefault());
             }
         }
         public virtual void WriteValue(bool? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 WriteValue(value.GetValueOrDefault());
             }
         }
         public virtual void WriteValue(short? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 WriteValue(value.GetValueOrDefault());
             }
         }
         [CLSCompliant(false)]
         public virtual void WriteValue(ushort? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 WriteValue(value.GetValueOrDefault());
             }
         }
         public virtual void WriteValue(char? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 WriteValue(value.GetValueOrDefault());
             }
         }
         public virtual void WriteValue(byte? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 WriteValue(value.GetValueOrDefault());
             }
         }
         [CLSCompliant(false)]
         public virtual void WriteValue(sbyte? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 WriteValue(value.GetValueOrDefault());
             }
         }
         public virtual void WriteValue(decimal? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 WriteValue(value.GetValueOrDefault());
             }
         }
         public virtual void WriteValue(DateTime? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 WriteValue(value.GetValueOrDefault());
             }
         }
@@ -963,68 +840,50 @@ namespace Simula.Scripting.Json
 #if HAVE_DATE_TIME_OFFSET
         public virtual void WriteValue(DateTimeOffset? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 WriteValue(value.GetValueOrDefault());
             }
         }
 #endif
         public virtual void WriteValue(Guid? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 WriteValue(value.GetValueOrDefault());
             }
         }
         public virtual void WriteValue(TimeSpan? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 WriteValue(value.GetValueOrDefault());
             }
         }
         public virtual void WriteValue(byte[]? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 InternalWriteValue(JsonToken.Bytes);
             }
         }
         public virtual void WriteValue(Uri? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
                 InternalWriteValue(JsonToken.String);
             }
         }
         public virtual void WriteValue(object? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
-            }
-            else
-            {
+            } else {
 #if HAVE_BIG_INTEGER
                 if (value is BigInteger)
                 {
@@ -1052,18 +911,15 @@ namespace Simula.Scripting.Json
         }
         protected virtual void Dispose(bool disposing)
         {
-            if (_currentState != State.Closed && disposing)
-            {
+            if (_currentState != State.Closed && disposing) {
                 Close();
             }
         }
 
         internal static void WriteValue(JsonWriter writer, PrimitiveTypeCode typeCode, object value)
         {
-            while (true)
-            {
-                switch (typeCode)
-                {
+            while (true) {
+                switch (typeCode) {
                     case PrimitiveTypeCode.Char:
                         writer.WriteValue((char)value);
                         return;
@@ -1235,8 +1091,7 @@ namespace Simula.Scripting.Json
                             continue;
                         }
 #endif
-                        if (value == null)
-                        {
+                        if (value == null) {
                             writer.WriteNull();
                             return;
                         }
@@ -1262,8 +1117,7 @@ namespace Simula.Scripting.Json
         }
         protected void SetWriteState(JsonToken token, object value)
         {
-            switch (token)
-            {
+            switch (token) {
                 case JsonToken.StartObject:
                     InternalWriteStart(token, JsonContainerType.Object);
                     break;
@@ -1274,8 +1128,7 @@ namespace Simula.Scripting.Json
                     InternalWriteStart(token, JsonContainerType.Constructor);
                     break;
                 case JsonToken.PropertyName:
-                    if (!(value is string s))
-                    {
+                    if (!(value is string s)) {
                         throw new ArgumentException("A name is required when setting property name state.", nameof(value));
                     }
 
@@ -1341,10 +1194,8 @@ namespace Simula.Scripting.Json
 
         internal void InternalWriteWhitespace(string ws)
         {
-            if (ws != null)
-            {
-                if (!StringUtils.IsWhiteSpace(ws))
-                {
+            if (ws != null) {
+                if (!StringUtils.IsWhiteSpace(ws)) {
                     throw JsonWriterException.Create(this, "Only white space characters should be used.", null);
                 }
             }

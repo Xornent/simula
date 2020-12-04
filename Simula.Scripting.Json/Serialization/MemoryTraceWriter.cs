@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 
@@ -28,10 +27,8 @@ namespace Simula.Scripting.Json.Serialization
 
             string s = sb.ToString();
 
-            lock (_lock)
-            {
-                if (_traceMessages.Count >= 1000)
-                {
+            lock (_lock) {
+                if (_traceMessages.Count >= 1000) {
                     _traceMessages.Dequeue();
                 }
 
@@ -44,13 +41,10 @@ namespace Simula.Scripting.Json.Serialization
         }
         public override string ToString()
         {
-            lock (_lock)
-            {
+            lock (_lock) {
                 StringBuilder sb = new StringBuilder();
-                foreach (string traceMessage in _traceMessages)
-                {
-                    if (sb.Length > 0)
-                    {
+                foreach (string traceMessage in _traceMessages) {
+                    if (sb.Length > 0) {
                         sb.AppendLine();
                     }
 

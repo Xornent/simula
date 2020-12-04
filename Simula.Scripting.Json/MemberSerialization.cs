@@ -1,9 +1,4 @@
-﻿
-using System;
-using System.Runtime.Serialization;
-using Simula.Scripting.Json.Serialization;
-
-namespace Simula.Scripting.Json
+﻿namespace Simula.Scripting.Json
 {
     public enum MemberSerialization
     {

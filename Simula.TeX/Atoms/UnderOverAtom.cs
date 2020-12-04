@@ -1,6 +1,6 @@
+using Simula.TeX.Boxes;
 using System;
 using System.Diagnostics.CodeAnalysis;
-using Simula.TeX.Boxes;
 
 namespace Simula.TeX.Atoms
 {
@@ -30,29 +30,26 @@ namespace Simula.TeX.Atoms
         {
             SpaceAtom.CheckUnit(underOverUnit);
 
-            this.BaseAtom = baseAtom;
+            BaseAtom = baseAtom;
 
-            if (over)
-            {
-                this.UnderAtom = null;
-                this.UnderSpace = 0;
-                this.UnderSpaceUnit = 0;
-                this.UnderScriptSmaller = false;
-                this.OverAtom = underOver;
-                this.OverSpaceUnit = underOverUnit;
-                this.OverSpace = underOverSpace;
-                this.OverScriptSmaller = underOverScriptSize;
-            }
-            else
-            {
-                this.UnderAtom = underOver;
-                this.UnderSpaceUnit = underOverUnit;
-                this.UnderSpace = underOverSpace;
-                this.UnderScriptSmaller = underOverScriptSize;
-                this.OverSpace = 0;
-                this.OverAtom = null;
-                this.OverSpaceUnit = 0;
-                this.OverScriptSmaller = false;
+            if (over) {
+                UnderAtom = null;
+                UnderSpace = 0;
+                UnderSpaceUnit = 0;
+                UnderScriptSmaller = false;
+                OverAtom = underOver;
+                OverSpaceUnit = underOverUnit;
+                OverSpace = underOverSpace;
+                OverScriptSmaller = underOverScriptSize;
+            } else {
+                UnderAtom = underOver;
+                UnderSpaceUnit = underOverUnit;
+                UnderSpace = underOverSpace;
+                UnderScriptSmaller = underOverScriptSize;
+                OverSpace = 0;
+                OverAtom = null;
+                OverSpaceUnit = 0;
+                OverScriptSmaller = false;
             }
         }
 
@@ -72,15 +69,15 @@ namespace Simula.TeX.Atoms
             SpaceAtom.CheckUnit(underUnit);
             SpaceAtom.CheckUnit(overUnit);
 
-            this.BaseAtom = baseAtom;
-            this.UnderAtom = under;
-            this.UnderSpaceUnit = underUnit;
-            this.UnderSpace = underSpace;
-            this.UnderScriptSmaller = underScriptSize;
-            this.OverAtom = over;
-            this.OverSpaceUnit = overUnit;
-            this.OverSpace = overSpace;
-            this.OverScriptSmaller = overScriptSize;
+            BaseAtom = baseAtom;
+            UnderAtom = under;
+            UnderSpaceUnit = underUnit;
+            UnderSpace = underSpace;
+            UnderScriptSmaller = underScriptSize;
+            OverAtom = over;
+            OverSpaceUnit = overUnit;
+            OverSpace = overSpace;
+            OverScriptSmaller = overScriptSize;
         }
 
         public Atom? BaseAtom { get; }
@@ -106,21 +103,19 @@ namespace Simula.TeX.Atoms
         protected override Box CreateBoxCore(TexEnvironment environment)
         {
             // Create box for base atom.
-            var baseBox = this.BaseAtom == null ? StrutBox.Empty : this.BaseAtom.CreateBox(environment);
+            var baseBox = BaseAtom == null ? StrutBox.Empty : BaseAtom.CreateBox(environment);
 
             // Create boxes for over and under atoms.
             Box? overBox = null, underBox = null;
             var maxWidth = baseBox.Width;
 
-            if (this.OverAtom != null)
-            {
-                overBox = this.OverAtom.CreateBox(this.OverScriptSmaller ? environment.GetSubscriptStyle() : environment);
+            if (OverAtom != null) {
+                overBox = OverAtom.CreateBox(OverScriptSmaller ? environment.GetSubscriptStyle() : environment);
                 maxWidth = Math.Max(maxWidth, overBox.Width);
             }
 
-            if (this.UnderAtom != null)
-            {
-                underBox = this.UnderAtom.CreateBox(this.UnderScriptSmaller ? environment.GetSubscriptStyle() : environment);
+            if (UnderAtom != null) {
+                underBox = UnderAtom.CreateBox(UnderScriptSmaller ? environment.GetSubscriptStyle() : environment);
                 maxWidth = Math.Max(maxWidth, underBox.Width);
             }
 
@@ -130,10 +125,9 @@ namespace Simula.TeX.Atoms
             environment.LastFontId = baseBox.GetLastFontId();
 
             // Create and add box for over atom.
-            if (this.OverAtom != null)
-            {
+            if (OverAtom != null) {
                 resultBox.Add(ChangeWidth(overBox!, maxWidth));
-                resultBox.Add(new SpaceAtom(null, this.OverSpaceUnit, 0, this.OverSpace, 0).CreateBox(environment));
+                resultBox.Add(new SpaceAtom(null, OverSpaceUnit, 0, OverSpace, 0).CreateBox(environment));
             }
 
             // Add box for base atom.
@@ -142,9 +136,8 @@ namespace Simula.TeX.Atoms
             double totalHeight = resultBox.Height + resultBox.Depth - baseBox.Depth;
 
             // Create and add box for under atom.
-            if (this.UnderAtom != null)
-            {
-                resultBox.Add(new SpaceAtom(null, this.OverSpaceUnit, 0, this.UnderSpace, 0).CreateBox(environment));
+            if (UnderAtom != null) {
+                resultBox.Add(new SpaceAtom(null, OverSpaceUnit, 0, UnderSpace, 0).CreateBox(environment));
                 resultBox.Add(ChangeWidth(underBox!, maxWidth));
             }
 

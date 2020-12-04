@@ -1,14 +1,10 @@
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 #if HAVE_BIG_INTEGER
 using System.Numerics;
 #endif
-using System.Text;
 using Simula.Scripting.Json.Utilities;
-using Simula.Scripting.Json.Linq;
 using System.Globalization;
 
 #nullable disable
@@ -23,8 +19,7 @@ namespace Simula.Scripting.Json.Bson
         private BsonToken _root;
         private BsonToken _parent;
         private string _propertyName;
-        public DateTimeKind DateTimeKindHandling
-        {
+        public DateTimeKind DateTimeKindHandling {
             get => _writer.DateTimeKindHandling;
             set => _writer.DateTimeKindHandling = value;
         }
@@ -47,8 +42,7 @@ namespace Simula.Scripting.Json.Bson
             base.WriteEnd(token);
             RemoveParent();
 
-            if (Top == 0)
-            {
+            if (Top == 0) {
                 _writer.WriteToken(_root);
             }
         }
@@ -90,8 +84,7 @@ namespace Simula.Scripting.Json.Bson
         {
             base.Close();
 
-            if (CloseOutput)
-            {
+            if (CloseOutput) {
                 _writer?.Close();
             }
         }
@@ -114,22 +107,15 @@ namespace Simula.Scripting.Json.Bson
 
         internal void AddToken(BsonToken token)
         {
-            if (_parent != null)
-            {
-                if (_parent is BsonObject bo)
-                {
+            if (_parent != null) {
+                if (_parent is BsonObject bo) {
                     bo.Add(_propertyName, token);
                     _propertyName = null;
-                }
-                else
-                {
+                } else {
                     ((BsonArray)_parent).Add(token);
                 }
-            }
-            else
-            {
-                if (token.Type != BsonType.Object && token.Type != BsonType.Array)
-                {
+            } else {
+                if (token.Type != BsonType.Object && token.Type != BsonType.Array) {
                     throw JsonWriterException.Create(this, "Error writing {0} value. BSON must start with an Object or Array.".FormatWith(CultureInfo.InvariantCulture, token.Type), null);
                 }
 
@@ -176,8 +162,7 @@ namespace Simula.Scripting.Json.Bson
         [CLSCompliant(false)]
         public override void WriteValue(uint value)
         {
-            if (value > int.MaxValue)
-            {
+            if (value > int.MaxValue) {
                 throw JsonWriterException.Create(this, "Value is too large to fit in a signed 32 bit integer. BSON does not support unsigned values.", null);
             }
 
@@ -192,8 +177,7 @@ namespace Simula.Scripting.Json.Bson
         [CLSCompliant(false)]
         public override void WriteValue(ulong value)
         {
-            if (value > long.MaxValue)
-            {
+            if (value > long.MaxValue) {
                 throw JsonWriterException.Create(this, "Value is too large to fit in a signed 64 bit integer. BSON does not support unsigned values.", null);
             }
 
@@ -269,8 +253,7 @@ namespace Simula.Scripting.Json.Bson
 #endif
         public override void WriteValue(byte[] value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
                 return;
             }
@@ -290,8 +273,7 @@ namespace Simula.Scripting.Json.Bson
         }
         public override void WriteValue(Uri value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 WriteNull();
                 return;
             }
@@ -304,8 +286,7 @@ namespace Simula.Scripting.Json.Bson
         {
             ValidationUtils.ArgumentNotNull(value, nameof(value));
 
-            if (value.Length != 12)
-            {
+            if (value.Length != 12) {
                 throw JsonWriterException.Create(this, "An object id must be 12 bytes", null);
             }
             SetWriteState(JsonToken.Undefined, null);

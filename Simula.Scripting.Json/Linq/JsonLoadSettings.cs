@@ -13,39 +13,30 @@ namespace Simula.Scripting.Json.Linq
             _commentHandling = CommentHandling.Ignore;
             _duplicatePropertyNameHandling = DuplicatePropertyNameHandling.Replace;
         }
-        public CommentHandling CommentHandling
-        {
+        public CommentHandling CommentHandling {
             get => _commentHandling;
-            set
-            {
-                if (value < CommentHandling.Ignore || value > CommentHandling.Load)
-                {
+            set {
+                if (value < CommentHandling.Ignore || value > CommentHandling.Load) {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
                 _commentHandling = value;
             }
         }
-        public LineInfoHandling LineInfoHandling
-        {
+        public LineInfoHandling LineInfoHandling {
             get => _lineInfoHandling;
-            set
-            {
-                if (value < LineInfoHandling.Ignore || value > LineInfoHandling.Load)
-                {
+            set {
+                if (value < LineInfoHandling.Ignore || value > LineInfoHandling.Load) {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
                 _lineInfoHandling = value;
             }
         }
-        public DuplicatePropertyNameHandling DuplicatePropertyNameHandling
-        {
+        public DuplicatePropertyNameHandling DuplicatePropertyNameHandling {
             get => _duplicatePropertyNameHandling;
-            set
-            {
-                if (value < DuplicatePropertyNameHandling.Replace || value > DuplicatePropertyNameHandling.Error)
-                {
+            set {
+                if (value < DuplicatePropertyNameHandling.Replace || value > DuplicatePropertyNameHandling.Error) {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 

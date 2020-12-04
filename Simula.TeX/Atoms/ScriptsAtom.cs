@@ -1,5 +1,5 @@
-using System;
 using Simula.TeX.Boxes;
+using System;
 
 namespace Simula.TeX.Atoms
 {
@@ -11,9 +11,9 @@ namespace Simula.TeX.Atoms
         public ScriptsAtom(SourceSpan? source, Atom? baseAtom, Atom? subscriptAtom, Atom? superscriptAtom)
             : base(source)
         {
-            this.BaseAtom = baseAtom;
-            this.SubscriptAtom = subscriptAtom;
-            this.SuperscriptAtom = superscriptAtom;
+            BaseAtom = baseAtom;
+            SubscriptAtom = subscriptAtom;
+            SuperscriptAtom = superscriptAtom;
         }
 
         public Atom? BaseAtom { get; }
@@ -28,11 +28,9 @@ namespace Simula.TeX.Atoms
             var style = environment.Style;
 
             // Create box for base atom.
-            var baseBox = this.BaseAtom == null ? StrutBox.Empty : this.BaseAtom.CreateBox(environment);
-            if (this.SubscriptAtom == null && this.SuperscriptAtom == null)
-            {
-                if (baseBox is CharBox)
-                {
+            var baseBox = BaseAtom == null ? StrutBox.Empty : BaseAtom.CreateBox(environment);
+            if (SubscriptAtom == null && SuperscriptAtom == null) {
+                if (baseBox is CharBox) {
                     // This situation should only happen when CreateBox called on a temporary ScriptsAtom created from
                     // BigOperatorAtom.CreateBox. The CharBox's Shift should then be fixed up.
                     baseBox.Shift = -(baseBox.Height + baseBox.Depth) / 2
@@ -57,15 +55,12 @@ namespace Simula.TeX.Atoms
             var delta = 0d;
             double shiftUp, shiftDown;
 
-            if (this.BaseAtom is AccentedAtom accentedAtom && accentedAtom.BaseAtom != null)
-            {
+            if (BaseAtom is AccentedAtom accentedAtom && accentedAtom.BaseAtom != null) {
                 var accentedBox = accentedAtom.BaseAtom.CreateBox(environment.GetCrampedStyle());
                 shiftUp = accentedBox.Height - texFont.GetSupDrop(superscriptStyle.Style);
                 shiftDown = accentedBox.Depth + texFont.GetSubDrop(subscriptStyle.Style);
-            }
-            else if (this.BaseAtom is SymbolAtom && this.BaseAtom.Type == TexAtomType.BigOperator)
-            {
-                var charInfo = texFont.GetCharInfo(((SymbolAtom)this.BaseAtom).Name, style).Value;
+            } else if (BaseAtom is SymbolAtom && BaseAtom.Type == TexAtomType.BigOperator) {
+                var charInfo = texFont.GetCharInfo(((SymbolAtom)BaseAtom).Name, style).Value;
                 if (style < TexStyle.Text && texFont.HasNextLarger(charInfo))
                     charInfo = texFont.GetNextLargerCharInfo(charInfo, style);
                 var charBox = new CharBox(environment, charInfo);
@@ -75,29 +70,24 @@ namespace Simula.TeX.Atoms
                 resultBox = new HorizontalBox(charBox);
 
                 delta = charInfo.Metrics.Italic;
-                if (delta > TexUtilities.FloatPrecision && this.SubscriptAtom == null)
+                if (delta > TexUtilities.FloatPrecision && SubscriptAtom == null)
                     resultBox.Add(new StrutBox(delta, 0, 0, 0));
 
                 shiftUp = resultBox.Height - texFont.GetSupDrop(superscriptStyle.Style);
                 shiftDown = resultBox.Depth + texFont.GetSubDrop(subscriptStyle.Style);
-            }
-            else if (this.BaseAtom is CharSymbol charSymbol
-                     && charSymbol.IsSupportedByFont(texFont, style))
-            {
+            } else if (BaseAtom is CharSymbol charSymbol
+                       && charSymbol.IsSupportedByFont(texFont, style)) {
                 var charFont = charSymbol.GetCharFont(texFont).Value;
                 if (!charSymbol.IsTextSymbol || !texFont.HasSpace(charFont.FontId))
                     delta = texFont.GetCharInfo(charFont, style).Value.Metrics.Italic;
-                if (delta > TexUtilities.FloatPrecision && this.SubscriptAtom == null)
-                {
+                if (delta > TexUtilities.FloatPrecision && SubscriptAtom == null) {
                     resultBox.Add(new StrutBox(delta, 0, 0, 0));
                     delta = 0;
                 }
 
                 shiftUp = 0;
                 shiftDown = 0;
-            }
-            else
-            {
+            } else {
                 shiftUp = baseBox.Height - texFont.GetSupDrop(superscriptStyle.Style);
                 shiftDown = baseBox.Depth + texFont.GetSubDrop(subscriptStyle.Style);
             }
@@ -107,10 +97,9 @@ namespace Simula.TeX.Atoms
             Box? subscriptBox = null;
             Box? subscriptContainerBox = null;
 
-            if (this.SuperscriptAtom != null)
-            {
+            if (SuperscriptAtom != null) {
                 // Create box for superscript atom.
-                superscriptBox = this.SuperscriptAtom.CreateBox(superscriptStyle);
+                superscriptBox = SuperscriptAtom.CreateBox(superscriptStyle);
                 superscriptContainerBox = new HorizontalBox(superscriptBox);
 
                 // Add box for script space.
@@ -128,10 +117,9 @@ namespace Simula.TeX.Atoms
                     style, lastFontId)) / 4);
             }
 
-            if (this.SubscriptAtom != null)
-            {
+            if (SubscriptAtom != null) {
                 // Create box for subscript atom.
-                subscriptBox = this.SubscriptAtom.CreateBox(subscriptStyle);
+                subscriptBox = SubscriptAtom.CreateBox(subscriptStyle);
                 subscriptContainerBox = new HorizontalBox(subscriptBox);
 
                 // Add box for script space.
@@ -139,8 +127,7 @@ namespace Simula.TeX.Atoms
             }
 
             // Check if only superscript is set.
-            if (subscriptBox == null)
-            {
+            if (subscriptBox == null) {
                 if (superscriptContainerBox == null)
                     throw new Exception("ScriptsAtom with neither subscript nor superscript defined");
 
@@ -150,8 +137,7 @@ namespace Simula.TeX.Atoms
             }
 
             // Check if only subscript is set.
-            if (superscriptBox == null)
-            {
+            if (superscriptBox == null) {
                 if (subscriptContainerBox == null)
                     throw new Exception("ScriptsAtom with neither subscript nor superscript defined");
 
@@ -168,14 +154,12 @@ namespace Simula.TeX.Atoms
             double defaultLineThickness = texFont.GetDefaultLineThickness(style);
             // Space between subscript and superscript.
             double scriptsInterSpace = shiftUp - superscriptBox.Depth + shiftDown - subscriptBox.Height;
-            if (scriptsInterSpace < 4 * defaultLineThickness)
-            {
+            if (scriptsInterSpace < 4 * defaultLineThickness) {
                 shiftUp += 4 * defaultLineThickness - scriptsInterSpace;
 
                 // Position bottom of superscript at least 4/5 of X-height above baseline.
                 double psi = 0.8 * Math.Abs(texFont.GetXHeight(style, lastFontId)) - (shiftUp - superscriptBox.Depth);
-                if (psi > 0)
-                {
+                if (psi > 0) {
                     shiftUp += psi;
                     shiftDown -= psi;
                 }
@@ -200,12 +184,12 @@ namespace Simula.TeX.Atoms
 
         public override TexAtomType GetLeftType()
         {
-            return this.BaseAtom!.GetLeftType(); // Nullable TODO: This probably needs null checking
+            return BaseAtom!.GetLeftType(); // Nullable TODO: This probably needs null checking
         }
 
         public override TexAtomType GetRightType()
         {
-            return this.BaseAtom!.GetRightType(); // Nullable TODO: This probably needs null checking
+            return BaseAtom!.GetRightType(); // Nullable TODO: This probably needs null checking
         }
     }
 }

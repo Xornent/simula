@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Diagnostics.CodeAnalysis;
 #if !HAVE_LINQ
 using Simula.Scripting.Json.Utilities.LinqBridge;
@@ -26,8 +25,7 @@ namespace Simula.Scripting.Json.Utilities
         public static MethodInfo? GetGetMethod(this PropertyInfo propertyInfo, bool nonPublic)
         {
             MethodInfo getMethod = propertyInfo.GetMethod;
-            if (getMethod != null && (getMethod.IsPublic || nonPublic))
-            {
+            if (getMethod != null && (getMethod.IsPublic || nonPublic)) {
                 return getMethod;
             }
 
@@ -42,8 +40,7 @@ namespace Simula.Scripting.Json.Utilities
         public static MethodInfo? GetSetMethod(this PropertyInfo propertyInfo, bool nonPublic)
         {
             MethodInfo setMethod = propertyInfo.SetMethod;
-            if (setMethod != null && (setMethod.IsPublic || nonPublic))
-            {
+            if (setMethod != null && (setMethod.IsPublic || nonPublic)) {
                 return setMethod;
             }
 
@@ -65,8 +62,7 @@ namespace Simula.Scripting.Json.Utilities
 
         public static bool IsInstanceOfType(this Type type, object? o)
         {
-            if (o == null)
-            {
+            if (o == null) {
                 return false;
             }
 
@@ -88,24 +84,15 @@ namespace Simula.Scripting.Json.Utilities
 #if !(DOTNET || PORTABLE || PORTABLE40)
             return memberInfo.MemberType;
 #else
-            if (memberInfo is PropertyInfo)
-            {
+            if (memberInfo is PropertyInfo) {
                 return MemberTypes.Property;
-            }
-            else if (memberInfo is FieldInfo)
-            {
+            } else if (memberInfo is FieldInfo) {
                 return MemberTypes.Field;
-            }
-            else if (memberInfo is EventInfo)
-            {
+            } else if (memberInfo is EventInfo) {
                 return MemberTypes.Event;
-            }
-            else if (memberInfo is MethodInfo)
-            {
+            } else if (memberInfo is MethodInfo) {
                 return MemberTypes.Method;
-            }
-            else
-            {
+            } else {
                 return default;
             }
 #endif
@@ -197,20 +184,15 @@ namespace Simula.Scripting.Json.Utilities
         {
             IEnumerable<PropertyInfo> propertyInfos = type.GetProperties(bindingFlags);
 
-            return propertyInfos.Where(p =>
-            {
-                if (name != null && name != p.Name)
-                {
+            return propertyInfos.Where(p => {
+                if (name != null && name != p.Name) {
                     return false;
                 }
-                if (propertyType != null && propertyType != p.PropertyType)
-                {
+                if (propertyType != null && propertyType != p.PropertyType) {
                     return false;
                 }
-                if (indexParameters != null)
-                {
-                    if (!p.GetIndexParameters().Select(ip => ip.ParameterType).SequenceEqual(indexParameters))
-                    {
+                if (indexParameters != null) {
+                    if (!p.GetIndexParameters().Select(ip => ip.ParameterType).SequenceEqual(indexParameters)) {
                         return false;
                     }
                 }
@@ -251,7 +233,7 @@ namespace Simula.Scripting.Json.Utilities
         }
 
 #if !DOTNET
-        
+
         public static MethodInfo GetMethod(this Type type, string name)
         {
             return type.GetMethod(name, DefaultFlags);
@@ -286,7 +268,7 @@ namespace Simula.Scripting.Json.Utilities
         {
             return type.GetTypeInfo().DeclaredConstructors.Where(c => TestAccessibility(c, bindingFlags));
         }
-        
+
         public static ConstructorInfo GetConstructor(this Type type, IList<Type> parameterTypes)
         {
             return type.GetConstructor(DefaultFlags, null, parameterTypes, null);
@@ -296,7 +278,7 @@ namespace Simula.Scripting.Json.Utilities
         {
             return MethodBinder.SelectMethod(type.GetConstructors(bindingFlags), parameterTypes);
         }
-        
+
         public static MemberInfo[] GetMember(this Type type, string member)
         {
             return type.GetMemberInternal(member, null, DefaultFlags);
@@ -323,11 +305,10 @@ namespace Simula.Scripting.Json.Utilities
         public static FieldInfo? GetField(this Type type, string member, BindingFlags bindingFlags)
         {
             FieldInfo field = type.GetTypeInfo().GetDeclaredField(member);
-            if (field == null || !TestAccessibility(field, bindingFlags))
-            {
+            if (field == null || !TestAccessibility(field, bindingFlags)) {
                 return null;
             }
-            
+
             return field;
         }
 
@@ -342,10 +323,8 @@ namespace Simula.Scripting.Json.Utilities
 
         private static bool ContainsMemberName(IEnumerable<MemberInfo> members, string name)
         {
-            foreach (MemberInfo memberInfo in members)
-            {
-                if (memberInfo.Name == name)
-                {
+            foreach (MemberInfo memberInfo in members) {
+                if (memberInfo.Name == name) {
                     return true;
                 }
             }
@@ -357,12 +336,9 @@ namespace Simula.Scripting.Json.Utilities
         {
             TypeInfo? t = type;
             List<MemberInfo> members = new List<MemberInfo>();
-            while (t != null)
-            {
-                foreach (MemberInfo member in t.DeclaredMembers)
-                {
-                    if (!ContainsMemberName(members, member.Name))
-                    {
+            while (t != null) {
+                foreach (MemberInfo member in t.DeclaredMembers) {
+                    if (!ContainsMemberName(members, member.Name)) {
                         members.Add(member);
                     }
                 }
@@ -376,12 +352,9 @@ namespace Simula.Scripting.Json.Utilities
         {
             TypeInfo? t = type;
             List<PropertyInfo> properties = new List<PropertyInfo>();
-            while (t != null)
-            {
-                foreach (PropertyInfo member in t.DeclaredProperties)
-                {
-                    if (!ContainsMemberName(properties, member.Name))
-                    {
+            while (t != null) {
+                foreach (PropertyInfo member in t.DeclaredProperties) {
+                    if (!ContainsMemberName(properties, member.Name)) {
                         properties.Add(member);
                     }
                 }
@@ -395,12 +368,9 @@ namespace Simula.Scripting.Json.Utilities
         {
             TypeInfo? t = type;
             List<FieldInfo> fields = new List<FieldInfo>();
-            while (t != null)
-            {
-                foreach (FieldInfo member in t.DeclaredFields)
-                {
-                    if (!ContainsMemberName(fields, member.Name))
-                    {
+            while (t != null) {
+                foreach (FieldInfo member in t.DeclaredFields) {
+                    if (!ContainsMemberName(fields, member.Name)) {
                         fields.Add(member);
                     }
                 }
@@ -423,11 +393,10 @@ namespace Simula.Scripting.Json.Utilities
         public static PropertyInfo? GetProperty(this Type type, string name, BindingFlags bindingFlags)
         {
             PropertyInfo property = type.GetTypeInfo().GetDeclaredProperty(name);
-            if (property == null || !TestAccessibility(property, bindingFlags))
-            {
+            if (property == null || !TestAccessibility(property, bindingFlags)) {
                 return null;
             }
-            
+
             return property;
         }
 
@@ -447,13 +416,11 @@ namespace Simula.Scripting.Json.Utilities
 
         private static bool TestAccessibility(PropertyInfo member, BindingFlags bindingFlags)
         {
-            if (member.GetMethod != null && TestAccessibility(member.GetMethod, bindingFlags))
-            {
+            if (member.GetMethod != null && TestAccessibility(member.GetMethod, bindingFlags)) {
                 return true;
             }
 
-            if (member.SetMethod != null && TestAccessibility(member.SetMethod, bindingFlags))
-            {
+            if (member.SetMethod != null && TestAccessibility(member.SetMethod, bindingFlags)) {
                 return true;
             }
 
@@ -462,16 +429,11 @@ namespace Simula.Scripting.Json.Utilities
 
         private static bool TestAccessibility(MemberInfo member, BindingFlags bindingFlags)
         {
-            if (member is FieldInfo f)
-            {
+            if (member is FieldInfo f) {
                 return TestAccessibility(f, bindingFlags);
-            }
-            else if (member is MethodBase m)
-            {
+            } else if (member is MethodBase m) {
                 return TestAccessibility(m, bindingFlags);
-            }
-            else if (member is PropertyInfo p)
-            {
+            } else if (member is PropertyInfo p) {
                 return TestAccessibility(p, bindingFlags);
             }
 
@@ -543,7 +505,7 @@ namespace Simula.Scripting.Json.Utilities
             return type.GetTypeInfo().IsValueType;
 #endif
         }
-        
+
         public static bool IsPrimitive(this Type type)
         {
 #if HAVE_FULL_REFLECTION
@@ -553,14 +515,12 @@ namespace Simula.Scripting.Json.Utilities
 #endif
         }
 
-        public static bool AssignableToTypeName(this Type type, string fullTypeName, bool searchInterfaces, [NotNullWhen(true)]out Type? match)
+        public static bool AssignableToTypeName(this Type type, string fullTypeName, bool searchInterfaces, [NotNullWhen(true)] out Type? match)
         {
             Type current = type;
 
-            while (current != null)
-            {
-                if (string.Equals(current.FullName, fullTypeName, StringComparison.Ordinal))
-                {
+            while (current != null) {
+                if (string.Equals(current.FullName, fullTypeName, StringComparison.Ordinal)) {
                     match = current;
                     return true;
                 }
@@ -568,12 +528,9 @@ namespace Simula.Scripting.Json.Utilities
                 current = current.BaseType();
             }
 
-            if (searchInterfaces)
-            {
-                foreach (Type i in type.GetInterfaces())
-                {
-                    if (string.Equals(i.Name, fullTypeName, StringComparison.Ordinal))
-                    {
+            if (searchInterfaces) {
+                foreach (Type i in type.GetInterfaces()) {
+                    if (string.Equals(i.Name, fullTypeName, StringComparison.Ordinal)) {
                         match = type;
                         return true;
                     }
@@ -591,13 +548,10 @@ namespace Simula.Scripting.Json.Utilities
 
         public static bool ImplementInterface(this Type type, Type interfaceType)
         {
-            for (Type currentType = type; currentType != null; currentType = currentType.BaseType())
-            {
+            for (Type currentType = type; currentType != null; currentType = currentType.BaseType()) {
                 IEnumerable<Type> interfaces = currentType.GetInterfaces();
-                foreach (Type i in interfaces)
-                {
-                    if (i == interfaceType || (i != null && i.ImplementInterface(interfaceType)))
-                    {
+                foreach (Type i in interfaces) {
+                    if (i == interfaceType || (i != null && i.ImplementInterface(interfaceType))) {
                         return true;
                     }
                 }

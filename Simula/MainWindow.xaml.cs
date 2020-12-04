@@ -1,25 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
-namespace Simula {
-
-    public partial class MainWindow : Window {
+namespace Simula
+{
+    public partial class MainWindow : Window
+    {
 
         /*                    Consructors and Window Features
         * -------------------------------------------------------------------------
@@ -27,7 +22,8 @@ namespace Simula {
         * minimize, maximize, move and resize). this should remain stable.
         */
 
-        public MainWindow() {
+        public MainWindow()
+        {
             InitializeComponent();
             StateChanged += Window_StateChanged;
             SizeChanged += MainWindow_SizeChanged;
@@ -39,31 +35,33 @@ namespace Simula {
             // naturally occur many layout problems
 
             var isleft = SystemParameters.MenuDropAlignment;
-            if(isleft) {
+            if (isleft) {
                 var sys = typeof(SystemParameters);
                 var alignment = sys.GetField("_menuDropAlignment", BindingFlags.NonPublic | BindingFlags.Static);
                 alignment.SetValue(null, false);
             }
-
-            Scripting.Compilation.RuntimeContext.StandardOutput += ConsoleOutput;
         }
 
-        private void Window_StateChanged(object sender, EventArgs e) {
+        private void Window_StateChanged(object sender, EventArgs e)
+        {
             if (WindowState == WindowState.Maximized)
                 Margin = new Thickness(8, 7, 8, 8);
             else
                 Margin = new Thickness(0);
         }
 
-        private void Application_Close(object sender, MouseButtonEventArgs e) {
+        private void Application_Close(object sender, MouseButtonEventArgs e)
+        {
             Application.Current.Shutdown();
         }
 
-        private void Application_Minimize(object sender, MouseButtonEventArgs e) {
+        private void Application_Minimize(object sender, MouseButtonEventArgs e)
+        {
             WindowState = WindowState.Minimized;
         }
 
-        private void Application_Maximize(object sender, MouseButtonEventArgs e) {
+        private void Application_Maximize(object sender, MouseButtonEventArgs e)
+        {
             if (WindowState == WindowState.Maximized) {
                 WindowState = WindowState.Normal;
                 MainGrid.Margin = new Thickness(0, 0, 0, 0);
@@ -75,8 +73,9 @@ namespace Simula {
             }
         }
 
-        private void Window_Drag(object sender, MouseButtonEventArgs e) {
-            if(e.LeftButton == MouseButtonState.Pressed) DragMove();
+        private void Window_Drag(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed) DragMove();
         }
 
         /*                               Tab Pages
@@ -85,13 +84,15 @@ namespace Simula {
          * content and pages of tabs and so on.
          */
 
-        public static double GetStringWidth(TextBlock label) {
+        public static double GetStringWidth(TextBlock label)
+        {
             return GetStringWidth(label.Text.ToString(), label.FontFamily,
                 label.FontStyle, label.FontWeight, label.FontStretch, label.FontSize);
         }
 
-        #pragma warning disable CS0618
-        public static double GetStringWidth(string str, FontFamily fontFamily, FontStyle fontStyle, FontWeight fontWeight, FontStretch fontStretch, double FontSize) {
+#pragma warning disable CS0618
+        public static double GetStringWidth(string str, FontFamily fontFamily, FontStyle fontStyle, FontWeight fontWeight, FontStretch fontStretch, double FontSize)
+        {
             var formattedText = new FormattedText(
                       str,
                       CultureInfo.CurrentUICulture,
@@ -104,15 +105,16 @@ namespace Simula {
             return size.Width;
         }
 
-        List<Grid> TabWindows = new List<Grid>();
-        List<UserControl> TabPages = new List<UserControl>();
-        List<Image> TabImages = new List<Image>();
-        List<TextBlock> TabSymbolImages = new List<TextBlock>();
-        List<TextBlock> TabTexts = new List<TextBlock>();
-        List<string> TabIndices = new List<string>();
-        DispatcherTimer SizeChangeEnquiry = new DispatcherTimer();
-        int _selectedTabIndex = 0;
-        int SelectedTabIndex {
+        private readonly List<Grid> TabWindows = new List<Grid>();
+        private readonly List<UserControl> TabPages = new List<UserControl>();
+        private readonly List<Image> TabImages = new List<Image>();
+        private readonly List<TextBlock> TabSymbolImages = new List<TextBlock>();
+        private readonly List<TextBlock> TabTexts = new List<TextBlock>();
+        private readonly List<string> TabIndices = new List<string>();
+        private readonly DispatcherTimer SizeChangeEnquiry = new DispatcherTimer();
+        private int _selectedTabIndex = 0;
+
+        private int SelectedTabIndex {
             get => _selectedTabIndex;
             set {
                 _selectedTabIndex = value;
@@ -128,7 +130,8 @@ namespace Simula {
             }
         }
 
-        public Grid CreateTabWindow(int width, string id, ImageSource src = null, string text = "") {
+        public Grid CreateTabWindow(int width, string id, ImageSource src = null, string text = "")
+        {
             Grid container = new Grid();
             Border border = new Border();
             border.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 168, 168, 168));
@@ -193,7 +196,8 @@ namespace Simula {
             return container;
         }
 
-        private void Tab_Close(object sender, MouseButtonEventArgs e) {
+        private void Tab_Close(object sender, MouseButtonEventArgs e)
+        {
             int removeId = TabIndices.FindIndex((guid) => { if ((sender as Rectangle).Name == "N" + guid) return true; else return false; });
             TabContainer.Children.Remove(TabWindows[removeId]);
             UnregisterName("window_" + TabIndices[removeId]);
@@ -237,15 +241,16 @@ namespace Simula {
                 GC.Collect();
             } else {
                 if (removeId < SelectedTabIndex) {
-                    SelectedTabIndex--; 
+                    SelectedTabIndex--;
                 } else if (removeId > SelectedTabIndex) {
-                } else { 
+                } else {
                     SelectedTabIndex = Math.Max(0, SelectedTabIndex - 1);
                 }
             }
         }
 
-        private void Tab_Click(object sender, MouseButtonEventArgs e) {
+        private void Tab_Click(object sender, MouseButtonEventArgs e)
+        {
             try {
                 SelectedTabIndex = TabIndices.FindIndex((guid) => { if ((sender as Rectangle).Name == "N" + guid) return true; else return false; });
                 Host.Children.Clear();
@@ -262,12 +267,13 @@ namespace Simula {
             } catch { SelectedTabIndex = 0; }
         }
 
-        private void NewTab_Click(object sender, MouseButtonEventArgs e) {
+        private void NewTab_Click(object sender, MouseButtonEventArgs e)
+        {
             UserControl pg = new Pages.SourceEditor();
             TabPages.Add(pg);
             var id = Guid.NewGuid();
             TabIndices.Add(id.ToString().Replace("-", "_"));
-            var newtab = CreateTabWindow(0, id.ToString().Replace("-", "_"), null," Simula Workspace   ");
+            var newtab = CreateTabWindow(0, id.ToString().Replace("-", "_"), null, " Simula Workspace   ");
             TabContainer.Children.Add(newtab);
             TabWindows.Add(newtab);
 
@@ -300,12 +306,14 @@ namespace Simula {
             Host.Children.Add(TabPages[SelectedTabIndex]);
         }
 
-        bool requireSizeChange = false;
-        private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e) {
+        private bool requireSizeChange = false;
+        private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
             requireSizeChange = true;
         }
 
-        private void SizeChangeEnquiry_Tick(object sender, EventArgs e) {
+        private void SizeChangeEnquiry_Tick(object sender, EventArgs e)
+        {
             if (requireSizeChange) {
                 double totalWidths = ((ActualWidth - Margin.Left - Margin.Right - 60) / TabWindows.Count) - 2;
                 for (int c = 0; c < TabWindows.Count; c++) {
@@ -335,7 +343,8 @@ namespace Simula {
             }
         }
 
-        private void DisplayPopup(UserControl control, int width, int height, bool stayOpen = false) {
+        private void DisplayPopup(UserControl control, int width, int height, bool stayOpen = false)
+        {
             if (!stayOpen) {
                 popDialogGrid.Width = width + 40;
                 popDialogGrid.Height = height + 20;
@@ -372,26 +381,26 @@ namespace Simula {
             }
         }
 
-        private void Menu_About(object sender, EventArgs e) {
+        private void Menu_About(object sender, EventArgs e)
+        {
             new Pages.About().ShowDialog();
         }
 
-        private void Menu_ManageExtensions(object sender, EventArgs e) {
+        private void Menu_ManageExtensions(object sender, EventArgs e)
+        {
             new Scripting.Packaging.PackageExplorer().ShowDialog();
         }
 
-        private void Menu_CheckUpdate(object sender, EventArgs e) {
-            this.MainGrid.Visibility = Visibility.Hidden;
-            this.InstallMainGrid.Visibility = Visibility.Visible;
+        private void Menu_CheckUpdate(object sender, EventArgs e)
+        {
+            MainGrid.Visibility = Visibility.Hidden;
+            InstallMainGrid.Visibility = Visibility.Visible;
         }
 
-        private void Installer_Cancel(object sender, EventArgs e) {
-            this.InstallMainGrid.Visibility = Visibility.Hidden;
-            this.MainGrid.Visibility = Visibility.Visible;
-        }
-
-        private void ConsoleOutput(object sender, Scripting.Compilation.RuntimeContext.StandardOutputEventArgs args) {
-            this.editor_console.Text += (args.Text + "\n");
+        private void Installer_Cancel(object sender, EventArgs e)
+        {
+            InstallMainGrid.Visibility = Visibility.Hidden;
+            MainGrid.Visibility = Visibility.Visible;
         }
     }
 }

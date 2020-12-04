@@ -35,8 +35,7 @@ namespace Simula.Scripting.Json.Utilities
         public static int IndexOf(this StringReference s, char c, int startIndex, int length)
         {
             int index = Array.IndexOf(s.Chars, c, s.StartIndex + startIndex, length);
-            if (index == -1)
-            {
+            if (index == -1) {
                 return -1;
             }
 
@@ -45,17 +44,14 @@ namespace Simula.Scripting.Json.Utilities
 
         public static bool StartsWith(this StringReference s, string text)
         {
-            if (text.Length > s.Length)
-            {
+            if (text.Length > s.Length) {
                 return false;
             }
 
             char[] chars = s.Chars;
 
-            for (int i = 0; i < text.Length; i++)
-            {
-                if (text[i] != chars[i + s.StartIndex])
-                {
+            for (int i = 0; i < text.Length; i++) {
+                if (text[i] != chars[i + s.StartIndex]) {
                     return false;
                 }
             }
@@ -65,18 +61,15 @@ namespace Simula.Scripting.Json.Utilities
 
         public static bool EndsWith(this StringReference s, string text)
         {
-            if (text.Length > s.Length)
-            {
+            if (text.Length > s.Length) {
                 return false;
             }
 
             char[] chars = s.Chars;
 
             int start = s.StartIndex + s.Length - text.Length;
-            for (int i = 0; i < text.Length; i++)
-            {
-                if (text[i] != chars[i + start])
-                {
+            for (int i = 0; i < text.Length; i++) {
+                if (text[i] != chars[i + start]) {
                     return false;
                 }
             }

@@ -1,29 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Simula.Scripting.Packaging.Spkg;
+using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using Simula.Scripting.Packaging.Spkg;
 
-namespace Simula.Scripting.Packaging {
+namespace Simula.Scripting.Packaging
+{
 
-    public partial class PackageExplorer : Window {
+    public partial class PackageExplorer : Window
+    {
 
         public PackageSearchResult SearchResult { get; set; } = new PackageSearchResult();
         public Package SelectedPackage { get; set; } = new Package();
         public Module SelectedModule { get; set; } = new Module();
-        static string Searcher = "Simula.Scripting";
-        static int Page = 1;
-        System.ComponentModel.BackgroundWorker Worker = new System.ComponentModel.BackgroundWorker();
 
-        public PackageExplorer() {
+        private static string Searcher = "Simula.Scripting";
+        private static int Page = 1;
+        private readonly System.ComponentModel.BackgroundWorker Worker = new System.ComponentModel.BackgroundWorker();
+
+        public PackageExplorer()
+        {
             InitializeComponent();
             Package.Initialize();
             DataContext = this;
@@ -31,18 +28,21 @@ namespace Simula.Scripting.Packaging {
             Worker.RunWorkerCompleted += HandleRunFinished;
         }
 
-        private void HandleRunFinished(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e) {
+        private void HandleRunFinished(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
+        {
             load.Visibility = Visibility.Hidden;
             content.Visibility = Visibility.Visible;
 
             packages.ItemsSource = SearchResult.Packages;
         }
 
-        private void HandleDownloadInformation(object sender, System.ComponentModel.DoWorkEventArgs e) {
+        private void HandleDownloadInformation(object sender, System.ComponentModel.DoWorkEventArgs e)
+        {
             SearchResult = Package.Search(Searcher, Page - 1, true);
         }
 
-        private void HandleMouseDown(object sender, EventArgs e) {
+        private void HandleMouseDown(object sender, EventArgs e)
+        {
             content.Visibility = Visibility.Hidden;
             load.Visibility = Visibility.Visible;
             Searcher = searchBox.Text;
@@ -50,11 +50,12 @@ namespace Simula.Scripting.Packaging {
             Worker.RunWorkerAsync();
         }
 
-        private void HandlePackageSelection(object sender, MouseButtonEventArgs e) {
+        private void HandlePackageSelection(object sender, MouseButtonEventArgs e)
+        {
             string name = (sender as TreeViewItem).Header.ToString();
             int i = 0; int selected = -1;
             foreach (var item in SearchResult.Packages) {
-                if(item.Name.ToLower().Trim() == name.ToLower().Trim()) {
+                if (item.Name.ToLower().Trim() == name.ToLower().Trim()) {
                     selected = i;
                     break;
                 }
@@ -65,7 +66,8 @@ namespace Simula.Scripting.Packaging {
             modules.ItemsSource = SelectedPackage.Modules;
         }
 
-        private void packages_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+        private void packages_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
             string name = "";
             if (e.AddedItems != null)
                 if (e.AddedItems.Count >= 1)
@@ -84,7 +86,8 @@ namespace Simula.Scripting.Packaging {
             modules.ItemsSource = SelectedPackage.Modules;
         }
 
-        private void modules_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+        private void modules_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
             if (e.AddedItems != null)
                 if (e.AddedItems.Count >= 1)
                     if (e.AddedItems[0] != null) {
@@ -104,8 +107,7 @@ namespace Simula.Scripting.Packaging {
                             deps += ("包 " + item.Id + " 版本 ");
                             if (item.Minimal.Major == 0 &&
                                 item.Minimal.Minor == 0 &&
-                                item.Minimal.Build == 0) { } 
-                            else {
+                                item.Minimal.Build == 0) { } else {
                                 if (item.Maximum.Major == 0 &&
                                 item.Maximum.Minor == 0 &&
                                 item.Maximum.Build == 0) {

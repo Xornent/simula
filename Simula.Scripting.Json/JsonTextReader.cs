@@ -1,9 +1,7 @@
 
 using System;
-using System.Runtime.CompilerServices;
 using System.IO;
 using System.Globalization;
-using System.Diagnostics;
 #if HAVE_BIG_INTEGER
 using System.Numerics;
 #endif
@@ -50,8 +48,7 @@ namespace Simula.Scripting.Json
         private IArrayPool<char>? _arrayPool;
         public JsonTextReader(TextReader reader)
         {
-            if (reader == null)
-            {
+            if (reader == null) {
                 throw new ArgumentNullException(nameof(reader));
             }
 
@@ -64,8 +61,7 @@ namespace Simula.Scripting.Json
         }
 
 #if DEBUG
-        internal char[]? CharBuffer
-        {
+        internal char[]? CharBuffer {
             get => _chars;
             set => _chars = value;
         }
@@ -73,13 +69,10 @@ namespace Simula.Scripting.Json
         internal int CharPos => _charPos;
 #endif
         public JsonNameTable? PropertyNameTable { get; set; }
-        public IArrayPool<char>? ArrayPool
-        {
+        public IArrayPool<char>? ArrayPool {
             get => _arrayPool;
-            set
-            {
-                if (value == null)
-                {
+            set {
+                if (value == null) {
                     throw new ArgumentNullException(nameof(value));
                 }
 
@@ -89,8 +82,7 @@ namespace Simula.Scripting.Json
 
         private void EnsureBufferNotEmpty()
         {
-            if (_stringBuffer.IsEmpty)
-            {
+            if (_stringBuffer.IsEmpty) {
                 _stringBuffer = new StringBuffer(_arrayPool, 1024);
             }
         }
@@ -99,8 +91,7 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            if (hasNextChar && _chars[_charPos] == StringUtils.LineFeed)
-            {
+            if (hasNextChar && _chars[_charPos] == StringUtils.LineFeed) {
                 _charPos++;
             }
 
@@ -123,24 +114,18 @@ namespace Simula.Scripting.Json
         }
 
         private void ParseReadString(char quote, ReadType readType)
-        { 
+        {
             SetPostValueState(true);
 
-            switch (readType)
-            {
+            switch (readType) {
                 case ReadType.ReadAsBytes:
                     Guid g;
                     byte[] data;
-                    if (_stringReference.Length == 0)
-                    {
+                    if (_stringReference.Length == 0) {
                         data = CollectionUtils.ArrayEmpty<byte>();
-                    }
-                    else if (_stringReference.Length == 36 && ConvertUtils.TryConvertGuid(_stringReference.ToString(), out g))
-                    {
+                    } else if (_stringReference.Length == 36 && ConvertUtils.TryConvertGuid(_stringReference.ToString(), out g)) {
                         data = g.ToByteArray();
-                    }
-                    else
-                    {
+                    } else {
                         data = Convert.FromBase64CharArray(_stringReference.Chars, _stringReference.StartIndex, _stringReference.Length);
                     }
 
@@ -157,37 +142,29 @@ namespace Simula.Scripting.Json
                 case ReadType.ReadAsBoolean:
                     break;
                 default:
-                    if (_dateParseHandling != DateParseHandling.None)
-                    {
+                    if (_dateParseHandling != DateParseHandling.None) {
                         DateParseHandling dateParseHandling;
-                        if (readType == ReadType.ReadAsDateTime)
-                        {
+                        if (readType == ReadType.ReadAsDateTime) {
                             dateParseHandling = DateParseHandling.DateTime;
                         }
 #if HAVE_DATE_TIME_OFFSET
-                        else if (readType == ReadType.ReadAsDateTimeOffset)
-                        {
+                        else if (readType == ReadType.ReadAsDateTimeOffset) {
                             dateParseHandling = DateParseHandling.DateTimeOffset;
                         }
 #endif
-                        else
-                        {
+                        else {
                             dateParseHandling = _dateParseHandling;
                         }
 
-                        if (dateParseHandling == DateParseHandling.DateTime)
-                        {
-                            if (DateTimeUtils.TryParseDateTime(_stringReference, DateTimeZoneHandling, DateFormatString, Culture, out DateTime dt))
-                            {
+                        if (dateParseHandling == DateParseHandling.DateTime) {
+                            if (DateTimeUtils.TryParseDateTime(_stringReference, DateTimeZoneHandling, DateFormatString, Culture, out DateTime dt)) {
                                 SetToken(JsonToken.Date, dt, false);
                                 return;
                             }
                         }
 #if HAVE_DATE_TIME_OFFSET
-                        else
-                        {
-                            if (DateTimeUtils.TryParseDateTimeOffset(_stringReference, DateFormatString, Culture, out DateTimeOffset dt))
-                            {
+                        else {
+                            if (DateTimeUtils.TryParseDateTimeOffset(_stringReference, DateFormatString, Culture, out DateTimeOffset dt)) {
                                 SetToken(JsonToken.Date, dt, false);
                                 return;
                             }
@@ -212,11 +189,9 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
             int length = _chars.Length;
-            if (length - _charPos <= length * 0.1 || length >= LargeBufferLength)
-            {
+            if (length - _charPos <= length * 0.1 || length >= LargeBufferLength) {
                 int count = _charsUsed - _charPos;
-                if (count > 0)
-                {
+                if (count > 0) {
                     BlockCopyChars(_chars, _charPos, _chars, 0, count);
                 }
 
@@ -235,10 +210,8 @@ namespace Simula.Scripting.Json
         private void PrepareBufferForReadData(bool append, int charsRequired)
         {
             MiscellaneousUtils.Assert(_chars != null);
-            if (_charsUsed + charsRequired >= _chars.Length - 1)
-            {
-                if (append)
-                {
+            if (_charsUsed + charsRequired >= _chars.Length - 1) {
+                if (append) {
                     int doubledArrayLength = _chars.Length * 2;
                     int newArrayLength = Math.Max(
                         doubledArrayLength < 0 ? int.MaxValue : doubledArrayLength, // handle overflow
@@ -250,28 +223,21 @@ namespace Simula.Scripting.Json
                     BufferUtils.ReturnBuffer(_arrayPool, _chars);
 
                     _chars = dst;
-                }
-                else
-                {
+                } else {
                     int remainingCharCount = _charsUsed - _charPos;
 
-                    if (remainingCharCount + charsRequired + 1 >= _chars.Length)
-                    {
+                    if (remainingCharCount + charsRequired + 1 >= _chars.Length) {
                         char[] dst = BufferUtils.RentBuffer(_arrayPool, remainingCharCount + charsRequired + 1);
 
-                        if (remainingCharCount > 0)
-                        {
+                        if (remainingCharCount > 0) {
                             BlockCopyChars(_chars, _charPos, dst, 0, remainingCharCount);
                         }
 
                         BufferUtils.ReturnBuffer(_arrayPool, _chars);
 
                         _chars = dst;
-                    }
-                    else
-                    {
-                        if (remainingCharCount > 0)
-                        {
+                    } else {
+                        if (remainingCharCount > 0) {
                             BlockCopyChars(_chars, _charPos, _chars, 0, remainingCharCount);
                         }
                     }
@@ -285,8 +251,7 @@ namespace Simula.Scripting.Json
 
         private int ReadData(bool append, int charsRequired)
         {
-            if (_isEndOfFile)
-            {
+            if (_isEndOfFile) {
                 return 0;
             }
 
@@ -299,8 +264,7 @@ namespace Simula.Scripting.Json
 
             _charsUsed += charsRead;
 
-            if (charsRead == 0)
-            {
+            if (charsRead == 0) {
                 _isEndOfFile = true;
             }
 
@@ -310,8 +274,7 @@ namespace Simula.Scripting.Json
 
         private bool EnsureChars(int relativePosition, bool append)
         {
-            if (_charPos + relativePosition >= _charsUsed)
-            {
+            if (_charPos + relativePosition >= _charsUsed) {
                 return ReadChars(relativePosition, append);
             }
 
@@ -320,27 +283,23 @@ namespace Simula.Scripting.Json
 
         private bool ReadChars(int relativePosition, bool append)
         {
-            if (_isEndOfFile)
-            {
+            if (_isEndOfFile) {
                 return false;
             }
 
             int charsRequired = _charPos + relativePosition - _charsUsed + 1;
 
             int totalCharsRead = 0;
-            do
-            {
+            do {
                 int charsRead = ReadData(append, charsRequired - totalCharsRead);
-                if (charsRead == 0)
-                {
+                if (charsRead == 0) {
                     break;
                 }
 
                 totalCharsRead += charsRead;
             } while (totalCharsRead < charsRequired);
 
-            if (totalCharsRead < charsRequired)
-            {
+            if (totalCharsRead < charsRequired) {
                 return false;
             }
             return true;
@@ -350,10 +309,8 @@ namespace Simula.Scripting.Json
             EnsureBuffer();
             MiscellaneousUtils.Assert(_chars != null);
 
-            while (true)
-            {
-                switch (_currentState)
-                {
+            while (true) {
+                switch (_currentState) {
                     case State.Start:
                     case State.Property:
                     case State.Array:
@@ -365,22 +322,18 @@ namespace Simula.Scripting.Json
                     case State.ObjectStart:
                         return ParseObject();
                     case State.PostValue:
-                        if (ParsePostValue(false))
-                        {
+                        if (ParsePostValue(false)) {
                             return true;
                         }
                         break;
                     case State.Finished:
-                        if (EnsureChars(0, false))
-                        {
+                        if (EnsureChars(0, false)) {
                             EatWhitespace();
-                            if (_isEndOfFile)
-                            {
+                            if (_isEndOfFile) {
                                 SetToken(JsonToken.None);
                                 return false;
                             }
-                            if (_chars[_charPos] == '/')
-                            {
+                            if (_chars[_charPos] == '/') {
                                 ParseComment(true);
                                 return true;
                             }
@@ -413,11 +366,9 @@ namespace Simula.Scripting.Json
 
             bool isWrapped = false;
 
-            switch (_currentState)
-            {
+            switch (_currentState) {
                 case State.PostValue:
-                    if (ParsePostValue(true))
-                    {
+                    if (ParsePostValue(true)) {
                         return null;
                     }
                     goto case State.Start;
@@ -427,15 +378,12 @@ namespace Simula.Scripting.Json
                 case State.ArrayStart:
                 case State.Constructor:
                 case State.ConstructorStart:
-                    while (true)
-                    {
+                    while (true) {
                         char currentChar = _chars[_charPos];
 
-                        switch (currentChar)
-                        {
+                        switch (currentChar) {
                             case '\0':
-                                if (ReadNullChar())
-                                {
+                                if (ReadNullChar()) {
                                     SetToken(JsonToken.None, null, false);
                                     return null;
                                 }
@@ -444,11 +392,9 @@ namespace Simula.Scripting.Json
                             case '\'':
                                 ParseString(currentChar, ReadType.ReadAsBytes);
                                 byte[]? data = (byte[]?)Value;
-                                if (isWrapped)
-                                {
+                                if (isWrapped) {
                                     ReaderReadAndAssert();
-                                    if (TokenType != JsonToken.EndObject)
-                                    {
+                                    if (TokenType != JsonToken.EndObject) {
                                         throw JsonReaderException.Create(this, "Error reading bytes. Unexpected token: {0}.".FormatWith(CultureInfo.InvariantCulture, TokenType));
                                     }
                                     SetToken(JsonToken.Bytes, data, false);
@@ -475,8 +421,7 @@ namespace Simula.Scripting.Json
                                 break;
                             case ']':
                                 _charPos++;
-                                if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue)
-                                {
+                                if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue) {
                                     SetToken(JsonToken.EndArray);
                                     return null;
                                 }
@@ -494,8 +439,7 @@ namespace Simula.Scripting.Json
                             default:
                                 _charPos++;
 
-                                if (!char.IsWhiteSpace(currentChar))
-                                {
+                                if (!char.IsWhiteSpace(currentChar)) {
                                     throw CreateUnexpectedCharacterException(currentChar);
                                 }
                                 break;
@@ -514,11 +458,9 @@ namespace Simula.Scripting.Json
             EnsureBuffer();
             MiscellaneousUtils.Assert(_chars != null);
 
-            switch (_currentState)
-            {
+            switch (_currentState) {
                 case State.PostValue:
-                    if (ParsePostValue(true))
-                    {
+                    if (ParsePostValue(true)) {
                         return null;
                     }
                     goto case State.Start;
@@ -528,15 +470,12 @@ namespace Simula.Scripting.Json
                 case State.ArrayStart:
                 case State.Constructor:
                 case State.ConstructorStart:
-                    while (true)
-                    {
+                    while (true) {
                         char currentChar = _chars[_charPos];
 
-                        switch (currentChar)
-                        {
+                        switch (currentChar) {
                             case '\0':
-                                if (ReadNullChar())
-                                {
+                                if (ReadNullChar()) {
                                     SetToken(JsonToken.None, null, false);
                                     return null;
                                 }
@@ -546,12 +485,9 @@ namespace Simula.Scripting.Json
                                 ParseString(currentChar, readType);
                                 return FinishReadQuotedStringValue(readType);
                             case '-':
-                                if (EnsureChars(1, true) && _chars[_charPos + 1] == 'I')
-                                {
+                                if (EnsureChars(1, true) && _chars[_charPos + 1] == 'I') {
                                     return ParseNumberNegativeInfinity(readType);
-                                }
-                                else
-                                {
+                                } else {
                                     ParseNumber(readType);
                                     return Value;
                                 }
@@ -566,8 +502,7 @@ namespace Simula.Scripting.Json
                             case '7':
                             case '8':
                             case '9':
-                                if (readType != ReadType.ReadAsString)
-                                {
+                                if (readType != ReadType.ReadAsString) {
                                     _charPos++;
                                     throw CreateUnexpectedCharacterException(currentChar);
                                 }
@@ -575,14 +510,12 @@ namespace Simula.Scripting.Json
                                 return Value;
                             case 't':
                             case 'f':
-                                if (readType != ReadType.ReadAsString)
-                                {
+                                if (readType != ReadType.ReadAsString) {
                                     _charPos++;
                                     throw CreateUnexpectedCharacterException(currentChar);
                                 }
                                 string expected = currentChar == 't' ? JsonConvert.True : JsonConvert.False;
-                                if (!MatchValueWithTrailingSeparator(expected))
-                                {
+                                if (!MatchValueWithTrailingSeparator(expected)) {
                                     throw CreateUnexpectedCharacterException(_chars[_charPos]);
                                 }
                                 SetToken(JsonToken.String, expected);
@@ -602,8 +535,7 @@ namespace Simula.Scripting.Json
                                 break;
                             case ']':
                                 _charPos++;
-                                if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue)
-                                {
+                                if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue) {
                                     SetToken(JsonToken.EndArray);
                                     return null;
                                 }
@@ -621,8 +553,7 @@ namespace Simula.Scripting.Json
                             default:
                                 _charPos++;
 
-                                if (!char.IsWhiteSpace(currentChar))
-                                {
+                                if (!char.IsWhiteSpace(currentChar)) {
                                     throw CreateUnexpectedCharacterException(currentChar);
                                 }
                                 break;
@@ -638,22 +569,19 @@ namespace Simula.Scripting.Json
 
         private object? FinishReadQuotedStringValue(ReadType readType)
         {
-            switch (readType)
-            {
+            switch (readType) {
                 case ReadType.ReadAsBytes:
                 case ReadType.ReadAsString:
                     return Value;
                 case ReadType.ReadAsDateTime:
-                    if (Value is DateTime time)
-                    {
+                    if (Value is DateTime time) {
                         return time;
                     }
 
                     return ReadDateTimeString((string?)Value);
 #if HAVE_DATE_TIME_OFFSET
                 case ReadType.ReadAsDateTimeOffset:
-                    if (Value is DateTimeOffset offset)
-                    {
+                    if (Value is DateTimeOffset offset) {
                         return offset;
                     }
 
@@ -673,11 +601,9 @@ namespace Simula.Scripting.Json
             EnsureBuffer();
             MiscellaneousUtils.Assert(_chars != null);
 
-            switch (_currentState)
-            {
+            switch (_currentState) {
                 case State.PostValue:
-                    if (ParsePostValue(true))
-                    {
+                    if (ParsePostValue(true)) {
                         return null;
                     }
                     goto case State.Start;
@@ -687,15 +613,12 @@ namespace Simula.Scripting.Json
                 case State.ArrayStart:
                 case State.Constructor:
                 case State.ConstructorStart:
-                    while (true)
-                    {
+                    while (true) {
                         char currentChar = _chars[_charPos];
 
-                        switch (currentChar)
-                        {
+                        switch (currentChar) {
                             case '\0':
-                                if (ReadNullChar())
-                                {
+                                if (ReadNullChar()) {
                                     SetToken(JsonToken.None, null, false);
                                     return null;
                                 }
@@ -738,8 +661,7 @@ namespace Simula.Scripting.Json
                                 bool isTrue = currentChar == 't';
                                 string expected = isTrue ? JsonConvert.True : JsonConvert.False;
 
-                                if (!MatchValueWithTrailingSeparator(expected))
-                                {
+                                if (!MatchValueWithTrailingSeparator(expected)) {
                                     throw CreateUnexpectedCharacterException(_chars[_charPos]);
                                 }
                                 SetToken(JsonToken.Boolean, isTrue);
@@ -752,8 +674,7 @@ namespace Simula.Scripting.Json
                                 break;
                             case ']':
                                 _charPos++;
-                                if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue)
-                                {
+                                if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue) {
                                     SetToken(JsonToken.EndArray);
                                     return null;
                                 }
@@ -771,8 +692,7 @@ namespace Simula.Scripting.Json
                             default:
                                 _charPos++;
 
-                                if (!char.IsWhiteSpace(currentChar))
-                                {
+                                if (!char.IsWhiteSpace(currentChar)) {
                                     throw CreateUnexpectedCharacterException(currentChar);
                                 }
                                 break;
@@ -790,8 +710,7 @@ namespace Simula.Scripting.Json
         {
             _charPos++;
 
-            if (_currentState != State.PostValue)
-            {
+            if (_currentState != State.PostValue) {
                 SetToken(JsonToken.Undefined);
                 JsonReaderException ex = CreateUnexpectedCharacterException(',');
                 _charPos--;
@@ -807,11 +726,9 @@ namespace Simula.Scripting.Json
             EnsureBuffer();
             MiscellaneousUtils.Assert(_chars != null);
 
-            switch (_currentState)
-            {
+            switch (_currentState) {
                 case State.PostValue:
-                    if (ParsePostValue(true))
-                    {
+                    if (ParsePostValue(true)) {
                         return null;
                     }
                     goto case State.Start;
@@ -821,15 +738,12 @@ namespace Simula.Scripting.Json
                 case State.ArrayStart:
                 case State.Constructor:
                 case State.ConstructorStart:
-                    while (true)
-                    {
+                    while (true) {
                         char currentChar = _chars[_charPos];
 
-                        switch (currentChar)
-                        {
+                        switch (currentChar) {
                             case '\0':
-                                if (ReadNullChar())
-                                {
+                                if (ReadNullChar()) {
                                     SetToken(JsonToken.None, null, false);
                                     return null;
                                 }
@@ -846,12 +760,9 @@ namespace Simula.Scripting.Json
                             case 'I':
                                 return ParseNumberPositiveInfinity(readType);
                             case '-':
-                                if (EnsureChars(1, true) && _chars[_charPos + 1] == 'I')
-                                {
+                                if (EnsureChars(1, true) && _chars[_charPos + 1] == 'I') {
                                     return ParseNumberNegativeInfinity(readType);
-                                }
-                                else
-                                {
+                                } else {
                                     ParseNumber(readType);
                                     return Value;
                                 }
@@ -876,8 +787,7 @@ namespace Simula.Scripting.Json
                                 break;
                             case ']':
                                 _charPos++;
-                                if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue)
-                                {
+                                if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue) {
                                     SetToken(JsonToken.EndArray);
                                     return null;
                                 }
@@ -895,8 +805,7 @@ namespace Simula.Scripting.Json
                             default:
                                 _charPos++;
 
-                                if (!char.IsWhiteSpace(currentChar))
-                                {
+                                if (!char.IsWhiteSpace(currentChar)) {
                                     throw CreateUnexpectedCharacterException(currentChar);
                                 }
                                 break;
@@ -912,8 +821,7 @@ namespace Simula.Scripting.Json
 
         private object? FinishReadQuotedNumber(ReadType readType)
         {
-            switch (readType)
-            {
+            switch (readType) {
                 case ReadType.ReadAsInt32:
                     return ReadInt32String(_stringReference.ToString());
                 case ReadType.ReadAsDecimal:
@@ -944,12 +852,10 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            if (EnsureChars(1, true))
-            {
+            if (EnsureChars(1, true)) {
                 char next = _chars[_charPos + 1];
 
-                if (next == 'u')
-                {
+                if (next == 'u') {
                     ParseNull();
                     return;
                 }
@@ -966,19 +872,14 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            if (EnsureChars(0, false))
-            {
+            if (EnsureChars(0, false)) {
                 EatWhitespace();
-                if (_isEndOfFile)
-                {
+                if (_isEndOfFile) {
                     return;
                 }
-                if (_chars[_charPos] == '/')
-                {
+                if (_chars[_charPos] == '/') {
                     ParseComment(false);
-                }
-                else
-                {
+                } else {
                     throw JsonReaderException.Create(this, "Additional text encountered after finished reading JSON content: {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
                 }
             }
@@ -988,16 +889,12 @@ namespace Simula.Scripting.Json
 
         private bool ReadNullChar()
         {
-            if (_charsUsed == _charPos)
-            {
-                if (ReadData(false) == 0)
-                {
+            if (_charsUsed == _charPos) {
+                if (ReadData(false) == 0) {
                     _isEndOfFile = true;
                     return true;
                 }
-            }
-            else
-            {
+            } else {
                 _charPos++;
             }
 
@@ -1006,8 +903,7 @@ namespace Simula.Scripting.Json
 
         private void EnsureBuffer()
         {
-            if (_chars == null)
-            {
+            if (_chars == null) {
                 _chars = BufferUtils.RentBuffer(_arrayPool, 1024);
                 _chars[0] = '\0';
             }
@@ -1022,17 +918,13 @@ namespace Simula.Scripting.Json
             int lastWritePosition = _charPos;
             _stringBuffer.Position = 0;
 
-            while (true)
-            {
-                switch (_chars[charPos++])
-                {
+            while (true) {
+                switch (_chars[charPos++]) {
                     case '\0':
-                        if (_charsUsed == charPos - 1)
-                        {
+                        if (_charsUsed == charPos - 1) {
                             charPos--;
 
-                            if (ReadData(true) == 0)
-                            {
+                            if (ReadData(true) == 0) {
                                 _charPos = charPos;
                                 throw JsonReaderException.Create(this, "Unterminated string. Expected delimiter: {0}.".FormatWith(CultureInfo.InvariantCulture, quote));
                             }
@@ -1040,8 +932,7 @@ namespace Simula.Scripting.Json
                         break;
                     case '\\':
                         _charPos = charPos;
-                        if (!EnsureChars(0, true))
-                        {
+                        if (!EnsureChars(0, true)) {
                             throw JsonReaderException.Create(this, "Unterminated string. Expected delimiter: {0}.".FormatWith(CultureInfo.InvariantCulture, quote));
                         }
                         int escapeStartPos = charPos - 1;
@@ -1051,8 +942,7 @@ namespace Simula.Scripting.Json
 
                         char writeChar;
 
-                        switch (currentChar)
-                        {
+                        switch (currentChar) {
                             case 'b':
                                 writeChar = '\b';
                                 break;
@@ -1080,33 +970,23 @@ namespace Simula.Scripting.Json
                                 _charPos = charPos;
                                 writeChar = ParseUnicode();
 
-                                if (StringUtils.IsLowSurrogate(writeChar))
-                                {
+                                if (StringUtils.IsLowSurrogate(writeChar)) {
                                     writeChar = UnicodeReplacementChar;
-                                }
-                                else if (StringUtils.IsHighSurrogate(writeChar))
-                                {
+                                } else if (StringUtils.IsHighSurrogate(writeChar)) {
                                     bool anotherHighSurrogate;
-                                    do
-                                    {
+                                    do {
                                         anotherHighSurrogate = false;
-                                        if (EnsureChars(2, true) && _chars[_charPos] == '\\' && _chars[_charPos + 1] == 'u')
-                                        {
+                                        if (EnsureChars(2, true) && _chars[_charPos] == '\\' && _chars[_charPos + 1] == 'u') {
                                             char highSurrogate = writeChar;
 
                                             _charPos += 2;
                                             writeChar = ParseUnicode();
 
-                                            if (StringUtils.IsLowSurrogate(writeChar))
-                                            {
-                                            }
-                                            else if (StringUtils.IsHighSurrogate(writeChar))
-                                            {
+                                            if (StringUtils.IsLowSurrogate(writeChar)) {
+                                            } else if (StringUtils.IsHighSurrogate(writeChar)) {
                                                 highSurrogate = UnicodeReplacementChar;
                                                 anotherHighSurrogate = true;
-                                            }
-                                            else
-                                            {
+                                            } else {
                                                 highSurrogate = UnicodeReplacementChar;
                                             }
 
@@ -1114,9 +994,7 @@ namespace Simula.Scripting.Json
 
                                             WriteCharToBuffer(highSurrogate, lastWritePosition, escapeStartPos);
                                             lastWritePosition = _charPos;
-                                        }
-                                        else
-                                        {
+                                        } else {
                                             writeChar = UnicodeReplacementChar;
                                         }
                                     } while (anotherHighSurrogate);
@@ -1146,8 +1024,7 @@ namespace Simula.Scripting.Json
                         break;
                     case '"':
                     case '\'':
-                        if (_chars[charPos - 1] == quote)
-                        {
+                        if (_chars[charPos - 1] == quote) {
                             FinishReadStringIntoBuffer(charPos - 1, initialPosition, lastWritePosition);
                             return;
                         }
@@ -1160,16 +1037,12 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            if (initialPosition == lastWritePosition)
-            {
+            if (initialPosition == lastWritePosition) {
                 _stringReference = new StringReference(_chars, initialPosition, charPos - initialPosition);
-            }
-            else
-            {
+            } else {
                 EnsureBufferNotEmpty();
 
-                if (charPos > lastWritePosition)
-                {
+                if (charPos > lastWritePosition) {
                     _stringBuffer.Append(_arrayPool, _chars, lastWritePosition, charPos - lastWritePosition);
                 }
 
@@ -1183,8 +1056,7 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            if (writeToPosition > lastWritePosition)
-            {
+            if (writeToPosition > lastWritePosition) {
                 _stringBuffer.Append(_arrayPool, _chars, lastWritePosition, writeToPosition - lastWritePosition);
             }
 
@@ -1195,21 +1067,15 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            if (enoughChars)
-            {
-                if (ConvertUtils.TryHexTextToInt(_chars, _charPos, _charPos + 4, out int value))
-                {
+            if (enoughChars) {
+                if (ConvertUtils.TryHexTextToInt(_chars, _charPos, _charPos + 4, out int value)) {
                     char hexChar = Convert.ToChar(value);
                     _charPos += 4;
                     return hexChar;
-                }
-                else
-                {
+                } else {
                     throw JsonReaderException.Create(this, @"Invalid Unicode escape sequence: \u{0}.".FormatWith(CultureInfo.InvariantCulture, new string(_chars, _charPos, 4)));
                 }
-            }
-            else
-            {
+            } else {
                 throw JsonReaderException.Create(this, "Unexpected end while parsing Unicode escape sequence.");
             }
         }
@@ -1225,31 +1091,21 @@ namespace Simula.Scripting.Json
 
             int charPos = _charPos;
 
-            while (true)
-            {
+            while (true) {
                 char currentChar = _chars[charPos];
-                if (currentChar == '\0')
-                {
+                if (currentChar == '\0') {
                     _charPos = charPos;
 
-                    if (_charsUsed == charPos)
-                    {
-                        if (ReadData(true) == 0)
-                        {
+                    if (_charsUsed == charPos) {
+                        if (ReadData(true) == 0) {
                             return;
                         }
-                    }
-                    else
-                    {
+                    } else {
                         return;
                     }
-                }
-                else if (ReadNumberCharIntoBuffer(currentChar, charPos))
-                {
+                } else if (ReadNumberCharIntoBuffer(currentChar, charPos)) {
                     return;
-                }
-                else
-                {
+                } else {
                     charPos++;
                 }
             }
@@ -1257,8 +1113,7 @@ namespace Simula.Scripting.Json
 
         private bool ReadNumberCharIntoBuffer(char currentChar, int charPos)
         {
-            switch (currentChar)
-            {
+            switch (currentChar) {
                 case '-':
                 case '+':
                 case 'a':
@@ -1290,8 +1145,7 @@ namespace Simula.Scripting.Json
                 default:
                     _charPos = charPos;
 
-                    if (char.IsWhiteSpace(currentChar) || currentChar == ',' || currentChar == '}' || currentChar == ']' || currentChar == ')' || currentChar == '/')
-                    {
+                    if (char.IsWhiteSpace(currentChar) || currentChar == ',' || currentChar == '}' || currentChar == ']' || currentChar == ')' || currentChar == '/') {
                         return true;
                     }
 
@@ -1309,23 +1163,17 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            while (true)
-            {
+            while (true) {
                 char currentChar = _chars[_charPos];
 
-                switch (currentChar)
-                {
+                switch (currentChar) {
                     case '\0':
-                        if (_charsUsed == _charPos)
-                        {
-                            if (ReadData(false) == 0)
-                            {
+                        if (_charsUsed == _charPos) {
+                            if (ReadData(false) == 0) {
                                 _currentState = State.Finished;
                                 return false;
                             }
-                        }
-                        else
-                        {
+                        } else {
                             _charPos++;
                         }
                         break;
@@ -1343,8 +1191,7 @@ namespace Simula.Scripting.Json
                         return true;
                     case '/':
                         ParseComment(!ignoreComments);
-                        if (!ignoreComments)
-                        {
+                        if (!ignoreComments) {
                             return true;
                         }
                         break;
@@ -1363,14 +1210,10 @@ namespace Simula.Scripting.Json
                         ProcessLineFeed();
                         break;
                     default:
-                        if (char.IsWhiteSpace(currentChar))
-                        {
+                        if (char.IsWhiteSpace(currentChar)) {
                             _charPos++;
-                        }
-                        else
-                        {
-                            if (SupportMultipleContent && Depth == 0)
-                            {
+                        } else {
+                            if (SupportMultipleContent && Depth == 0) {
                                 SetStateBasedOnCurrent();
                                 return false;
                             }
@@ -1386,22 +1229,16 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            while (true)
-            {
+            while (true) {
                 char currentChar = _chars[_charPos];
 
-                switch (currentChar)
-                {
+                switch (currentChar) {
                     case '\0':
-                        if (_charsUsed == _charPos)
-                        {
-                            if (ReadData(false) == 0)
-                            {
+                        if (_charsUsed == _charPos) {
+                            if (ReadData(false) == 0) {
                                 return false;
                             }
-                        }
-                        else
-                        {
+                        } else {
                             _charPos++;
                         }
                         break;
@@ -1423,12 +1260,9 @@ namespace Simula.Scripting.Json
                         _charPos++;
                         break;
                     default:
-                        if (char.IsWhiteSpace(currentChar))
-                        {
+                        if (char.IsWhiteSpace(currentChar)) {
                             _charPos++;
-                        }
-                        else
-                        {
+                        } else {
                             return ParseProperty();
                         }
                         break;
@@ -1443,43 +1277,33 @@ namespace Simula.Scripting.Json
             char firstChar = _chars[_charPos];
             char quoteChar;
 
-            if (firstChar == '"' || firstChar == '\'')
-            {
+            if (firstChar == '"' || firstChar == '\'') {
                 _charPos++;
                 quoteChar = firstChar;
                 ShiftBufferIfNeeded();
                 ReadStringIntoBuffer(quoteChar);
-            }
-            else if (ValidIdentifierChar(firstChar))
-            {
+            } else if (ValidIdentifierChar(firstChar)) {
                 quoteChar = '\0';
                 ShiftBufferIfNeeded();
                 ParseUnquotedProperty();
-            }
-            else
-            {
+            } else {
                 throw JsonReaderException.Create(this, "Invalid property identifier character: {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
             }
 
             string? propertyName;
 
-            if (PropertyNameTable != null)
-            {
+            if (PropertyNameTable != null) {
                 propertyName = PropertyNameTable.Get(_stringReference.Chars, _stringReference.StartIndex, _stringReference.Length);
-                if (propertyName == null)
-                {
+                if (propertyName == null) {
                     propertyName = _stringReference.ToString();
                 }
-            }
-            else
-            {
+            } else {
                 propertyName = _stringReference.ToString();
             }
 
             EatWhitespace();
 
-            if (_chars[_charPos] != ':')
-            {
+            if (_chars[_charPos] != ':') {
                 throw JsonReaderException.Create(this, "Invalid character after parsing property name. Expected ':' but got: {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
             }
 
@@ -1502,15 +1326,11 @@ namespace Simula.Scripting.Json
             MiscellaneousUtils.Assert(_chars != null);
 
             int initialPosition = _charPos;
-            while (true)
-            {
+            while (true) {
                 char currentChar = _chars[_charPos];
-                if (currentChar == '\0')
-                {
-                    if (_charsUsed == _charPos)
-                    {
-                        if (ReadData(true) == 0)
-                        {
+                if (currentChar == '\0') {
+                    if (_charsUsed == _charPos) {
+                        if (ReadData(true) == 0) {
                             throw JsonReaderException.Create(this, "Unexpected end while parsing unquoted property name.");
                         }
 
@@ -1521,8 +1341,7 @@ namespace Simula.Scripting.Json
                     return;
                 }
 
-                if (ReadUnquotedPropertyReportIfDone(currentChar, initialPosition))
-                {
+                if (ReadUnquotedPropertyReportIfDone(currentChar, initialPosition)) {
                     return;
                 }
             }
@@ -1532,14 +1351,12 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            if (ValidIdentifierChar(currentChar))
-            {
+            if (ValidIdentifierChar(currentChar)) {
                 _charPos++;
                 return false;
             }
 
-            if (char.IsWhiteSpace(currentChar) || currentChar == ':')
-            {
+            if (char.IsWhiteSpace(currentChar) || currentChar == ':') {
                 _stringReference = new StringReference(_chars, initialPosition, _charPos - initialPosition);
                 return true;
             }
@@ -1551,22 +1368,16 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            while (true)
-            {
+            while (true) {
                 char currentChar = _chars[_charPos];
 
-                switch (currentChar)
-                {
+                switch (currentChar) {
                     case '\0':
-                        if (_charsUsed == _charPos)
-                        {
-                            if (ReadData(false) == 0)
-                            {
+                        if (_charsUsed == _charPos) {
+                            if (ReadData(false) == 0) {
                                 return false;
                             }
-                        }
-                        else
-                        {
+                        } else {
                             _charPos++;
                         }
                         break;
@@ -1581,25 +1392,17 @@ namespace Simula.Scripting.Json
                         ParseFalse();
                         return true;
                     case 'n':
-                        if (EnsureChars(1, true))
-                        {
+                        if (EnsureChars(1, true)) {
                             char next = _chars[_charPos + 1];
 
-                            if (next == 'u')
-                            {
+                            if (next == 'u') {
                                 ParseNull();
-                            }
-                            else if (next == 'e')
-                            {
+                            } else if (next == 'e') {
                                 ParseConstructor();
-                            }
-                            else
-                            {
+                            } else {
                                 throw CreateUnexpectedCharacterException(_chars[_charPos]);
                             }
-                        }
-                        else
-                        {
+                        } else {
                             _charPos++;
                             throw CreateUnexpectedEndException();
                         }
@@ -1611,12 +1414,9 @@ namespace Simula.Scripting.Json
                         ParseNumberPositiveInfinity(ReadType.Read);
                         return true;
                     case '-':
-                        if (EnsureChars(1, true) && _chars[_charPos + 1] == 'I')
-                        {
+                        if (EnsureChars(1, true) && _chars[_charPos + 1] == 'I') {
                             ParseNumberNegativeInfinity(ReadType.Read);
-                        }
-                        else
-                        {
+                        } else {
                             ParseNumber(ReadType.Read);
                         }
                         return true;
@@ -1656,13 +1456,11 @@ namespace Simula.Scripting.Json
                         _charPos++;
                         break;
                     default:
-                        if (char.IsWhiteSpace(currentChar))
-                        {
+                        if (char.IsWhiteSpace(currentChar)) {
                             _charPos++;
                             break;
                         }
-                        if (char.IsNumber(currentChar) || currentChar == '-' || currentChar == '.')
-                        {
+                        if (char.IsNumber(currentChar) || currentChar == '-' || currentChar == '.') {
                             ParseNumber(ReadType.Read);
                             return true;
                         }
@@ -1689,22 +1487,16 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            while (true)
-            {
+            while (true) {
                 char currentChar = _chars[_charPos];
 
-                switch (currentChar)
-                {
+                switch (currentChar) {
                     case '\0':
-                        if (_charsUsed == _charPos)
-                        {
-                            if (ReadData(false) == 0)
-                            {
+                        if (_charsUsed == _charPos) {
+                            if (ReadData(false) == 0) {
                                 return;
                             }
-                        }
-                        else
-                        {
+                        } else {
                             _charPos++;
                         }
                         break;
@@ -1715,12 +1507,9 @@ namespace Simula.Scripting.Json
                         ProcessLineFeed();
                         break;
                     default:
-                        if (currentChar == ' ' || char.IsWhiteSpace(currentChar))
-                        {
+                        if (currentChar == ' ' || char.IsWhiteSpace(currentChar)) {
                             _charPos++;
-                        }
-                        else
-                        {
+                        } else {
                             return;
                         }
                         break;
@@ -1732,61 +1521,42 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            if (MatchValueWithTrailingSeparator("new"))
-            {
+            if (MatchValueWithTrailingSeparator("new")) {
                 EatWhitespace();
 
                 int initialPosition = _charPos;
                 int endPosition;
 
-                while (true)
-                {
+                while (true) {
                     char currentChar = _chars[_charPos];
-                    if (currentChar == '\0')
-                    {
-                        if (_charsUsed == _charPos)
-                        {
-                            if (ReadData(true) == 0)
-                            {
+                    if (currentChar == '\0') {
+                        if (_charsUsed == _charPos) {
+                            if (ReadData(true) == 0) {
                                 throw JsonReaderException.Create(this, "Unexpected end while parsing constructor.");
                             }
-                        }
-                        else
-                        {
+                        } else {
                             endPosition = _charPos;
                             _charPos++;
                             break;
                         }
-                    }
-                    else if (char.IsLetterOrDigit(currentChar))
-                    {
+                    } else if (char.IsLetterOrDigit(currentChar)) {
                         _charPos++;
-                    }
-                    else if (currentChar == StringUtils.CarriageReturn)
-                    {
+                    } else if (currentChar == StringUtils.CarriageReturn) {
                         endPosition = _charPos;
                         ProcessCarriageReturn(true);
                         break;
-                    }
-                    else if (currentChar == StringUtils.LineFeed)
-                    {
+                    } else if (currentChar == StringUtils.LineFeed) {
                         endPosition = _charPos;
                         ProcessLineFeed();
                         break;
-                    }
-                    else if (char.IsWhiteSpace(currentChar))
-                    {
+                    } else if (char.IsWhiteSpace(currentChar)) {
                         endPosition = _charPos;
                         _charPos++;
                         break;
-                    }
-                    else if (currentChar == '(')
-                    {
+                    } else if (currentChar == '(') {
                         endPosition = _charPos;
                         break;
-                    }
-                    else
-                    {
+                    } else {
                         throw JsonReaderException.Create(this, "Unexpected character while parsing constructor: {0}.".FormatWith(CultureInfo.InvariantCulture, currentChar));
                     }
                 }
@@ -1796,8 +1566,7 @@ namespace Simula.Scripting.Json
 
                 EatWhitespace();
 
-                if (_chars[_charPos] != '(')
-                {
+                if (_chars[_charPos] != '(') {
                     throw JsonReaderException.Create(this, "Unexpected character while parsing constructor: {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
                 }
 
@@ -1806,9 +1575,7 @@ namespace Simula.Scripting.Json
                 ClearRecentString();
 
                 SetToken(JsonToken.StartConstructor, constructorName);
-            }
-            else
-            {
+            } else {
                 throw JsonReaderException.Create(this, "Unexpected content while parsing JSON.");
             }
         }
@@ -1839,33 +1606,21 @@ namespace Simula.Scripting.Json
             bool singleDigit = (char.IsDigit(firstChar) && _stringReference.Length == 1);
             bool nonBase10 = (firstChar == '0' && _stringReference.Length > 1 && _stringReference.Chars[_stringReference.StartIndex + 1] != '.' && _stringReference.Chars[_stringReference.StartIndex + 1] != 'e' && _stringReference.Chars[_stringReference.StartIndex + 1] != 'E');
 
-            switch (readType)
-            {
-                case ReadType.ReadAsString:
-                    {
+            switch (readType) {
+                case ReadType.ReadAsString: {
                         string number = _stringReference.ToString();
-                        if (nonBase10)
-                        {
-                            try
-                            {
-                                if (number.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
-                                {
+                        if (nonBase10) {
+                            try {
+                                if (number.StartsWith("0x", StringComparison.OrdinalIgnoreCase)) {
                                     Convert.ToInt64(number, 16);
-                                }
-                                else
-                                {
+                                } else {
                                     Convert.ToInt64(number, 8);
                                 }
-                            }
-                            catch (Exception ex)
-                            {
+                            } catch (Exception ex) {
                                 throw ThrowReaderError("Input string '{0}' is not a valid number.".FormatWith(CultureInfo.InvariantCulture, number), ex);
                             }
-                        }
-                        else
-                        {
-                            if (!double.TryParse(number, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
-                            {
+                        } else {
+                            if (!double.TryParse(number, NumberStyles.Float, CultureInfo.InvariantCulture, out _)) {
                                 throw ThrowReaderError("Input string '{0}' is not a valid number.".FormatWith(CultureInfo.InvariantCulture, _stringReference.ToString()));
                             }
                         }
@@ -1874,40 +1629,26 @@ namespace Simula.Scripting.Json
                         numberValue = number;
                     }
                     break;
-                case ReadType.ReadAsInt32:
-                    {
-                        if (singleDigit)
-                        {
+                case ReadType.ReadAsInt32: {
+                        if (singleDigit) {
                             numberValue = firstChar - 48;
-                        }
-                        else if (nonBase10)
-                        {
+                        } else if (nonBase10) {
                             string number = _stringReference.ToString();
 
-                            try
-                            {
+                            try {
                                 int integer = number.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? Convert.ToInt32(number, 16) : Convert.ToInt32(number, 8);
 
                                 numberValue = integer;
-                            }
-                            catch (Exception ex)
-                            {
+                            } catch (Exception ex) {
                                 throw ThrowReaderError("Input string '{0}' is not a valid integer.".FormatWith(CultureInfo.InvariantCulture, number), ex);
                             }
-                        }
-                        else
-                        {
+                        } else {
                             ParseResult parseResult = ConvertUtils.Int32TryParse(_stringReference.Chars, _stringReference.StartIndex, _stringReference.Length, out int value);
-                            if (parseResult == ParseResult.Success)
-                            {
+                            if (parseResult == ParseResult.Success) {
                                 numberValue = value;
-                            }
-                            else if (parseResult == ParseResult.Overflow)
-                            {
+                            } else if (parseResult == ParseResult.Overflow) {
                                 throw ThrowReaderError("JSON integer {0} is too large or small for an Int32.".FormatWith(CultureInfo.InvariantCulture, _stringReference.ToString()));
-                            }
-                            else
-                            {
+                            } else {
                                 throw ThrowReaderError("Input string '{0}' is not a valid integer.".FormatWith(CultureInfo.InvariantCulture, _stringReference.ToString()));
                             }
                         }
@@ -1915,36 +1656,24 @@ namespace Simula.Scripting.Json
                         numberType = JsonToken.Integer;
                     }
                     break;
-                case ReadType.ReadAsDecimal:
-                    {
-                        if (singleDigit)
-                        {
+                case ReadType.ReadAsDecimal: {
+                        if (singleDigit) {
                             numberValue = (decimal)firstChar - 48;
-                        }
-                        else if (nonBase10)
-                        {
+                        } else if (nonBase10) {
                             string number = _stringReference.ToString();
 
-                            try
-                            {
+                            try {
                                 long integer = number.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? Convert.ToInt64(number, 16) : Convert.ToInt64(number, 8);
 
                                 numberValue = Convert.ToDecimal(integer);
-                            }
-                            catch (Exception ex)
-                            {
+                            } catch (Exception ex) {
                                 throw ThrowReaderError("Input string '{0}' is not a valid decimal.".FormatWith(CultureInfo.InvariantCulture, number), ex);
                             }
-                        }
-                        else
-                        {
+                        } else {
                             ParseResult parseResult = ConvertUtils.DecimalTryParse(_stringReference.Chars, _stringReference.StartIndex, _stringReference.Length, out decimal value);
-                            if (parseResult == ParseResult.Success)
-                            {
+                            if (parseResult == ParseResult.Success) {
                                 numberValue = value;
-                            }
-                            else
-                            {
+                            } else {
                                 throw ThrowReaderError("Input string '{0}' is not a valid decimal.".FormatWith(CultureInfo.InvariantCulture, _stringReference.ToString()));
                             }
                         }
@@ -1952,37 +1681,25 @@ namespace Simula.Scripting.Json
                         numberType = JsonToken.Float;
                     }
                     break;
-                case ReadType.ReadAsDouble:
-                    {
-                        if (singleDigit)
-                        {
+                case ReadType.ReadAsDouble: {
+                        if (singleDigit) {
                             numberValue = (double)firstChar - 48;
-                        }
-                        else if (nonBase10)
-                        {
+                        } else if (nonBase10) {
                             string number = _stringReference.ToString();
 
-                            try
-                            {
+                            try {
                                 long integer = number.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? Convert.ToInt64(number, 16) : Convert.ToInt64(number, 8);
 
                                 numberValue = Convert.ToDouble(integer);
-                            }
-                            catch (Exception ex)
-                            {
+                            } catch (Exception ex) {
                                 throw ThrowReaderError("Input string '{0}' is not a valid double.".FormatWith(CultureInfo.InvariantCulture, number), ex);
                             }
-                        }
-                        else
-                        {
+                        } else {
                             string number = _stringReference.ToString();
 
-                            if (double.TryParse(number, NumberStyles.Float, CultureInfo.InvariantCulture, out double value))
-                            {
+                            if (double.TryParse(number, NumberStyles.Float, CultureInfo.InvariantCulture, out double value)) {
                                 numberValue = value;
-                            }
-                            else
-                            {
+                            } else {
                                 throw ThrowReaderError("Input string '{0}' is not a valid double.".FormatWith(CultureInfo.InvariantCulture, _stringReference.ToString()));
                             }
                         }
@@ -1991,38 +1708,26 @@ namespace Simula.Scripting.Json
                     }
                     break;
                 case ReadType.Read:
-                case ReadType.ReadAsInt64:
-                    {
-                        if (singleDigit)
-                        {
+                case ReadType.ReadAsInt64: {
+                        if (singleDigit) {
                             numberValue = (long)firstChar - 48;
                             numberType = JsonToken.Integer;
-                        }
-                        else if (nonBase10)
-                        {
+                        } else if (nonBase10) {
                             string number = _stringReference.ToString();
 
-                            try
-                            {
+                            try {
                                 numberValue = number.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? Convert.ToInt64(number, 16) : Convert.ToInt64(number, 8);
-                            }
-                            catch (Exception ex)
-                            {
+                            } catch (Exception ex) {
                                 throw ThrowReaderError("Input string '{0}' is not a valid number.".FormatWith(CultureInfo.InvariantCulture, number), ex);
                             }
 
                             numberType = JsonToken.Integer;
-                        }
-                        else
-                        {
+                        } else {
                             ParseResult parseResult = ConvertUtils.Int64TryParse(_stringReference.Chars, _stringReference.StartIndex, _stringReference.Length, out long value);
-                            if (parseResult == ParseResult.Success)
-                            {
+                            if (parseResult == ParseResult.Success) {
                                 numberValue = value;
                                 numberType = JsonToken.Integer;
-                            }
-                            else if (parseResult == ParseResult.Overflow)
-                            {
+                            } else if (parseResult == ParseResult.Overflow) {
 #if HAVE_BIG_INTEGER
                                 string number = _stringReference.ToString();
 
@@ -2036,31 +1741,20 @@ namespace Simula.Scripting.Json
 #else
                                 throw ThrowReaderError("JSON integer {0} is too large or small for an Int64.".FormatWith(CultureInfo.InvariantCulture, _stringReference.ToString()));
 #endif
-                            }
-                            else
-                            {
-                                if (_floatParseHandling == FloatParseHandling.Decimal)
-                                {
+                            } else {
+                                if (_floatParseHandling == FloatParseHandling.Decimal) {
                                     parseResult = ConvertUtils.DecimalTryParse(_stringReference.Chars, _stringReference.StartIndex, _stringReference.Length, out decimal d);
-                                    if (parseResult == ParseResult.Success)
-                                    {
+                                    if (parseResult == ParseResult.Success) {
                                         numberValue = d;
-                                    }
-                                    else
-                                    {
+                                    } else {
                                         throw ThrowReaderError("Input string '{0}' is not a valid decimal.".FormatWith(CultureInfo.InvariantCulture, _stringReference.ToString()));
                                     }
-                                }
-                                else
-                                {
+                                } else {
                                     string number = _stringReference.ToString();
 
-                                    if (double.TryParse(number, NumberStyles.Float, CultureInfo.InvariantCulture, out double d))
-                                    {
+                                    if (double.TryParse(number, NumberStyles.Float, CultureInfo.InvariantCulture, out double d)) {
                                         numberValue = d;
-                                    }
-                                    else
-                                    {
+                                    } else {
                                         throw ThrowReaderError("Input string '{0}' is not a valid number.".FormatWith(CultureInfo.InvariantCulture, _stringReference.ToString()));
                                     }
                                 }
@@ -2097,23 +1791,17 @@ namespace Simula.Scripting.Json
             MiscellaneousUtils.Assert(_chars != null);
             _charPos++;
 
-            if (!EnsureChars(1, false))
-            {
+            if (!EnsureChars(1, false)) {
                 throw JsonReaderException.Create(this, "Unexpected end while parsing comment.");
             }
 
             bool singlelineComment;
 
-            if (_chars[_charPos] == '*')
-            {
+            if (_chars[_charPos] == '*') {
                 singlelineComment = false;
-            }
-            else if (_chars[_charPos] == '/')
-            {
+            } else if (_chars[_charPos] == '/') {
                 singlelineComment = true;
-            }
-            else
-            {
+            } else {
                 throw JsonReaderException.Create(this, "Error parsing comment. Expected: *, got {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
             }
 
@@ -2121,38 +1809,28 @@ namespace Simula.Scripting.Json
 
             int initialPosition = _charPos;
 
-            while (true)
-            {
-                switch (_chars[_charPos])
-                {
+            while (true) {
+                switch (_chars[_charPos]) {
                     case '\0':
-                        if (_charsUsed == _charPos)
-                        {
-                            if (ReadData(true) == 0)
-                            {
-                                if (!singlelineComment)
-                                {
+                        if (_charsUsed == _charPos) {
+                            if (ReadData(true) == 0) {
+                                if (!singlelineComment) {
                                     throw JsonReaderException.Create(this, "Unexpected end while parsing comment.");
                                 }
 
                                 EndComment(setToken, initialPosition, _charPos);
                                 return;
                             }
-                        }
-                        else
-                        {
+                        } else {
                             _charPos++;
                         }
                         break;
                     case '*':
                         _charPos++;
 
-                        if (!singlelineComment)
-                        {
-                            if (EnsureChars(0, true))
-                            {
-                                if (_chars[_charPos] == '/')
-                                {
+                        if (!singlelineComment) {
+                            if (EnsureChars(0, true)) {
+                                if (_chars[_charPos] == '/') {
                                     EndComment(setToken, initialPosition, _charPos - 1);
 
                                     _charPos++;
@@ -2162,16 +1840,14 @@ namespace Simula.Scripting.Json
                         }
                         break;
                     case StringUtils.CarriageReturn:
-                        if (singlelineComment)
-                        {
+                        if (singlelineComment) {
                             EndComment(setToken, initialPosition, _charPos);
                             return;
                         }
                         ProcessCarriageReturn(true);
                         break;
                     case StringUtils.LineFeed:
-                        if (singlelineComment)
-                        {
+                        if (singlelineComment) {
                             EndComment(setToken, initialPosition, _charPos);
                             return;
                         }
@@ -2186,8 +1862,7 @@ namespace Simula.Scripting.Json
 
         private void EndComment(bool setToken, int initialPosition, int endPosition)
         {
-            if (setToken)
-            {
+            if (setToken) {
                 SetToken(JsonToken.Comment, new string(_chars, initialPosition, endPosition - initialPosition));
             }
         }
@@ -2201,16 +1876,13 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            if (!enoughChars)
-            {
+            if (!enoughChars) {
                 _charPos = _charsUsed;
                 throw CreateUnexpectedEndException();
             }
 
-            for (int i = 0; i < value.Length; i++)
-            {
-                if (_chars[_charPos + i] != value[i])
-                {
+            for (int i = 0; i < value.Length; i++) {
+                if (_chars[_charPos + i] != value[i]) {
                     _charPos += i;
                     return false;
                 }
@@ -2226,13 +1898,11 @@ namespace Simula.Scripting.Json
             MiscellaneousUtils.Assert(_chars != null);
             bool match = MatchValue(value);
 
-            if (!match)
-            {
+            if (!match) {
                 return false;
             }
 
-            if (!EnsureChars(0, false))
-            {
+            if (!EnsureChars(0, false)) {
                 return true;
             }
 
@@ -2243,15 +1913,13 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            switch (c)
-            {
+            switch (c) {
                 case '}':
                 case ']':
                 case ',':
                     return true;
                 case '/':
-                    if (!EnsureChars(1, false))
-                    {
+                    if (!EnsureChars(1, false)) {
                         return false;
                     }
 
@@ -2259,8 +1927,7 @@ namespace Simula.Scripting.Json
 
                     return (nextChart == '*' || nextChart == '/');
                 case ')':
-                    if (CurrentState == State.Constructor || CurrentState == State.ConstructorStart)
-                    {
+                    if (CurrentState == State.Constructor || CurrentState == State.ConstructorStart) {
                         return true;
                     }
                     break;
@@ -2270,8 +1937,7 @@ namespace Simula.Scripting.Json
                 case StringUtils.CarriageReturn:
                     return true;
                 default:
-                    if (char.IsWhiteSpace(c))
-                    {
+                    if (char.IsWhiteSpace(c)) {
                         return true;
                     }
                     break;
@@ -2282,48 +1948,36 @@ namespace Simula.Scripting.Json
 
         private void ParseTrue()
         {
-            if (MatchValueWithTrailingSeparator(JsonConvert.True))
-            {
+            if (MatchValueWithTrailingSeparator(JsonConvert.True)) {
                 SetToken(JsonToken.Boolean, true);
-            }
-            else
-            {
+            } else {
                 throw JsonReaderException.Create(this, "Error parsing boolean value.");
             }
         }
 
         private void ParseNull()
         {
-            if (MatchValueWithTrailingSeparator(JsonConvert.Null))
-            {
+            if (MatchValueWithTrailingSeparator(JsonConvert.Null)) {
                 SetToken(JsonToken.Null);
-            }
-            else
-            {
+            } else {
                 throw JsonReaderException.Create(this, "Error parsing null value.");
             }
         }
 
         private void ParseUndefined()
         {
-            if (MatchValueWithTrailingSeparator(JsonConvert.Undefined))
-            {
+            if (MatchValueWithTrailingSeparator(JsonConvert.Undefined)) {
                 SetToken(JsonToken.Undefined);
-            }
-            else
-            {
+            } else {
                 throw JsonReaderException.Create(this, "Error parsing undefined value.");
             }
         }
 
         private void ParseFalse()
         {
-            if (MatchValueWithTrailingSeparator(JsonConvert.False))
-            {
+            if (MatchValueWithTrailingSeparator(JsonConvert.False)) {
                 SetToken(JsonToken.Boolean, false);
-            }
-            else
-            {
+            } else {
                 throw JsonReaderException.Create(this, "Error parsing boolean value.");
             }
         }
@@ -2335,14 +1989,11 @@ namespace Simula.Scripting.Json
 
         private object ParseNumberNegativeInfinity(ReadType readType, bool matched)
         {
-            if (matched)
-            {
-                switch (readType)
-                {
+            if (matched) {
+                switch (readType) {
                     case ReadType.Read:
                     case ReadType.ReadAsDouble:
-                        if (_floatParseHandling == FloatParseHandling.Double)
-                        {
+                        if (_floatParseHandling == FloatParseHandling.Double) {
                             SetToken(JsonToken.Float, double.NegativeInfinity);
                             return double.NegativeInfinity;
                         }
@@ -2364,14 +2015,11 @@ namespace Simula.Scripting.Json
         }
         private object ParseNumberPositiveInfinity(ReadType readType, bool matched)
         {
-            if (matched)
-            {
-                switch (readType)
-                {
+            if (matched) {
+                switch (readType) {
                     case ReadType.Read:
                     case ReadType.ReadAsDouble:
-                        if (_floatParseHandling == FloatParseHandling.Double)
-                        {
+                        if (_floatParseHandling == FloatParseHandling.Double) {
                             SetToken(JsonToken.Float, double.PositiveInfinity);
                             return double.PositiveInfinity;
                         }
@@ -2394,14 +2042,11 @@ namespace Simula.Scripting.Json
 
         private object ParseNumberNaN(ReadType readType, bool matched)
         {
-            if (matched)
-            {
-                switch (readType)
-                {
+            if (matched) {
+                switch (readType) {
                     case ReadType.Read:
                     case ReadType.ReadAsDouble:
-                        if (_floatParseHandling == FloatParseHandling.Double)
-                        {
+                        if (_floatParseHandling == FloatParseHandling.Double) {
                             SetToken(JsonToken.Float, double.NaN);
                             return double.NaN;
                         }
@@ -2420,14 +2065,12 @@ namespace Simula.Scripting.Json
         {
             base.Close();
 
-            if (_chars != null)
-            {
+            if (_chars != null) {
                 BufferUtils.ReturnBuffer(_arrayPool, _chars);
                 _chars = null;
             }
 
-            if (CloseInput)
-            {
+            if (CloseInput) {
 #if HAVE_STREAM_READER_WRITER_CLOSE
                 _reader?.Close();
 #else
@@ -2441,12 +2084,9 @@ namespace Simula.Scripting.Json
         {
             return true;
         }
-        public int LineNumber
-        {
-            get
-            {
-                if (CurrentState == State.Start && LinePosition == 0 && TokenType != JsonToken.Comment)
-                {
+        public int LineNumber {
+            get {
+                if (CurrentState == State.Start && LinePosition == 0 && TokenType != JsonToken.Comment) {
                     return 0;
                 }
 

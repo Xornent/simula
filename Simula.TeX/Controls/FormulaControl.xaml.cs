@@ -1,70 +1,61 @@
+using Simula.TeX.Boxes;
+using Simula.TeX.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Simula.TeX.Boxes;
-using Simula.TeX.Exceptions;
 
 namespace Simula.TeX.Controls
 {
 
     public partial class FormulaControl : UserControl
     {
-        private static TexFormulaParser formulaParser = new TexFormulaParser();
+        private static readonly TexFormulaParser formulaParser = new TexFormulaParser();
         private TexFormula? texFormula;
 
-        public string Formula
-        {
+        public string Formula {
             get { return (string)GetValue(FormulaProperty); }
             set { SetValue(FormulaProperty, value); }
         }
 
-        public double Scale
-        {
+        public double Scale {
             get { return (double)GetValue(ScaleProperty); }
             set { SetValue(ScaleProperty, value); }
         }
 
-        public string SystemTextFontName
-        {
+        public string SystemTextFontName {
             get => (string)GetValue(SystemTextFontNameProperty);
             set => SetValue(SystemTextFontNameProperty, value);
         }
 
-        public bool HasError
-        {
+        public bool HasError {
             get { return (bool)GetValue(HasErrorProperty); }
             private set { SetValue(HasErrorProperty, value); }
         }
 
-        public ObservableCollection<Exception> Errors
-        {
+        public ObservableCollection<Exception> Errors {
             get { return (ObservableCollection<Exception>)GetValue(ErrorsProperty); }
             private set { SetValue(ErrorsProperty, value); }
         }
 
-        public ControlTemplate ErrorTemplate
-        {
+        public ControlTemplate ErrorTemplate {
             get { return (ControlTemplate)GetValue(ErrorTemplateProperty); }
             set { SetValue(ErrorTemplateProperty, value); }
         }
 
-        public int SelectionStart
-        {
+        public int SelectionStart {
             get { return (int)GetValue(SelectionStartProperty); }
             set { SetValue(SelectionStartProperty, value); }
         }
 
-        public int SelectionLength
-        {
+        public int SelectionLength {
             get { return (int)GetValue(SelectionLengthProperty); }
             set { SetValue(SelectionLengthProperty, value); }
         }
 
-        public Brush SelectionBrush
-        {
+        public Brush SelectionBrush {
             get { return (Brush)GetValue(SelectionBrushProperty); }
             set { SetValue(SelectionBrushProperty, value); }
         }
@@ -113,8 +104,7 @@ namespace Simula.TeX.Controls
         private void Render()
         {
             // Create formula object from input text.
-            if (texFormula == null)
-            {
+            if (texFormula == null) {
                 formulaContainerElement.Visual = null;
                 return;
             }
@@ -123,16 +113,13 @@ namespace Simula.TeX.Controls
             var visual = new DrawingVisual();
             var renderer = texFormula.GetRenderer(TexStyle.Display, Scale, SystemTextFontName);
             var formulaSource = texFormula.Source;
-            if (formulaSource != null)
-            {
+            if (formulaSource != null) {
                 var selectionBrush = SelectionBrush;
-                if (selectionBrush != null)
-                {
+                if (selectionBrush != null) {
                     var allBoxes = new List<Box>(renderer.Box.Children);
                     var selectionStart = SelectionStart;
                     var selectionEnd = selectionStart + SelectionLength;
-                    for (var idx = 0; idx < allBoxes.Count; idx++)
-                    {
+                    for (var idx = 0; idx < allBoxes.Count; idx++) {
                         var box = allBoxes[idx];
                         allBoxes.AddRange(box.Children);
                         var source = box.Source;
@@ -142,16 +129,14 @@ namespace Simula.TeX.Controls
 
                         if (selectionStart < source.Start + source.Length
                             && source.Start < selectionEnd
-                            && box is CharBox)
-                        {
+                            && box is CharBox) {
                             box.Background = selectionBrush;
                         }
                     }
                 }
             }
 
-            using (var drawingContext = visual.RenderOpen())
-            {
+            using (var drawingContext = visual.RenderOpen()) {
                 renderer.Render(drawingContext, 0, 0);
             }
             formulaContainerElement.Visual = visual;
@@ -161,15 +146,12 @@ namespace Simula.TeX.Controls
         {
             var control = (FormulaControl)d;
             var formula = (string)baseValue;
-            try
-            {
+            try {
                 control.HasError = false;
                 control.Errors.Clear();
                 control.texFormula = formulaParser.Parse(formula);
                 return baseValue;
-            }
-            catch (TexException e)
-            {
+            } catch (TexException e) {
                 control.SetError(e);
                 return "";
             }
@@ -184,12 +166,9 @@ namespace Simula.TeX.Controls
         private static void OnRenderSettingsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var control = (FormulaControl)d;
-            try
-            {
+            try {
                 control.Render();
-            }
-            catch (TexException exception)
-            {
+            } catch (TexException exception) {
                 control.SetError(exception);
             }
         }

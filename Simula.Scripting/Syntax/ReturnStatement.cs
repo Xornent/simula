@@ -1,16 +1,15 @@
-﻿using Simula.Scripting.Compilation;
-using Simula.Scripting.Debugging;
+﻿using Simula.Scripting.Contexts;
 using Simula.Scripting.Token;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Simula.Scripting.Syntax {
-    
-    public class ReturnStatement : Statement {
-        EvaluationStatement? Evaluation = null;
-        public override void Parse(TokenCollection sentence) {
-            if(sentence.Count == 1) {
+namespace Simula.Scripting.Syntax
+{
+
+    public class ReturnStatement : Statement
+    {
+        private EvaluationStatement? Evaluation = null;
+        public override void Parse(TokenCollection sentence)
+        {
+            if (sentence.Count == 1) {
                 return;
             } else {
                 sentence.RemoveAt(0);
@@ -19,11 +18,12 @@ namespace Simula.Scripting.Syntax {
             }
         }
 
-        public override ExecutionResult Execute(RuntimeContext ctx) {
-            if (Evaluation == null) return new ExecutionResult();
+        public override Execution Execute(DynamicRuntime ctx)
+        {
+            if (Evaluation == null) return new Execution() { Flag = ExecutionFlag.Return };
             else {
                 var result = Evaluation.Execute(ctx);
-                result.Flag = ExecutableFlag.Return;
+                result.Flag = ExecutionFlag.Return;
                 return result;
             }
         }

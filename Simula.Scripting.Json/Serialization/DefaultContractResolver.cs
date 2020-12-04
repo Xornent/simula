@@ -4,14 +4,12 @@ using System.Collections;
 #if HAVE_CONCURRENT_DICTIONARY
 using System.Collections.Concurrent;
 #endif
-using Simula.Scripting.Json.Schema;
 using System.Collections.Generic;
 using System.ComponentModel;
 #if HAVE_DYNAMIC
 using System.Dynamic;
 #endif
 using System.Globalization;
-using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization;
 #if HAVE_CAS
@@ -27,7 +25,6 @@ using Simula.Scripting.Json.Utilities.LinqBridge;
 using System.Linq;
 
 #endif
-using Simula.Scripting.Json.Serialization;
 
 namespace Simula.Scripting.Json.Serialization
 {
@@ -110,17 +107,13 @@ namespace Simula.Scripting.Json.Serialization
 
         private static bool FilterMembers(MemberInfo member)
         {
-            if (member is PropertyInfo property)
-            {
-                if (ReflectionUtils.IsIndexedProperty(property))
-                {
+            if (member is PropertyInfo property) {
+                if (ReflectionUtils.IsIndexedProperty(property)) {
                     return false;
                 }
 
                 return !ReflectionUtils.IsByRefLikeType(property.PropertyType);
-            }
-            else if (member is FieldInfo field)
-            {
+            } else if (member is FieldInfo field) {
                 return !ReflectionUtils.IsByRefLikeType(field.FieldType);
             }
 
@@ -141,8 +134,7 @@ namespace Simula.Scripting.Json.Serialization
 
             List<MemberInfo> serializableMembers = new List<MemberInfo>();
 
-            if (memberSerialization != MemberSerialization.Fields)
-            {
+            if (memberSerialization != MemberSerialization.Fields) {
 #if HAVE_DATA_CONTRACTS
                 DataContractAttribute? dataContractAttribute = JsonTypeReflector.GetDataContractAttribute(objectType);
 #endif
@@ -152,32 +144,22 @@ namespace Simula.Scripting.Json.Serialization
                     .Where(FilterMembers).ToList();
 #pragma warning restore 618
 
-                foreach (MemberInfo member in allMembers)
-                {
-                    if (SerializeCompilerGeneratedMembers || !member.IsDefined(typeof(CompilerGeneratedAttribute), true))
-                    {
-                        if (defaultMembers.Contains(member))
-                        {
+                foreach (MemberInfo member in allMembers) {
+                    if (SerializeCompilerGeneratedMembers || !member.IsDefined(typeof(CompilerGeneratedAttribute), true)) {
+                        if (defaultMembers.Contains(member)) {
                             serializableMembers.Add(member);
-                        }
-                        else
-                        {
-                            if (JsonTypeReflector.GetAttribute<JsonPropertyAttribute>(member) != null)
-                            {
+                        } else {
+                            if (JsonTypeReflector.GetAttribute<JsonPropertyAttribute>(member) != null) {
                                 serializableMembers.Add(member);
-                            }
-                            else if (JsonTypeReflector.GetAttribute<JsonRequiredAttribute>(member) != null)
-                            {
+                            } else if (JsonTypeReflector.GetAttribute<JsonRequiredAttribute>(member) != null) {
                                 serializableMembers.Add(member);
                             }
 #if HAVE_DATA_CONTRACTS
-                            else if (dataContractAttribute != null && JsonTypeReflector.GetAttribute<DataMemberAttribute>(member) != null)
-                            {
+                            else if (dataContractAttribute != null && JsonTypeReflector.GetAttribute<DataMemberAttribute>(member) != null) {
                                 serializableMembers.Add(member);
                             }
 #endif
-                            else if (memberSerialization == MemberSerialization.Fields && member.MemberType() == MemberTypes.Field)
-                            {
+                            else if (memberSerialization == MemberSerialization.Fields && member.MemberType() == MemberTypes.Field) {
                                 serializableMembers.Add(member);
                             }
                         }
@@ -185,22 +167,16 @@ namespace Simula.Scripting.Json.Serialization
                 }
 
 #if HAVE_DATA_CONTRACTS
-                if (objectType.AssignableToTypeName("System.Data.Objects.DataClasses.EntityObject", false, out _))
-                {
+                if (objectType.AssignableToTypeName("System.Data.Objects.DataClasses.EntityObject", false, out _)) {
                     serializableMembers = serializableMembers.Where(ShouldSerializeEntityMember).ToList();
                 }
 #endif
-                if (typeof(Exception).IsAssignableFrom(objectType))
-                {
+                if (typeof(Exception).IsAssignableFrom(objectType)) {
                     serializableMembers = serializableMembers.Where(m => !string.Equals(m.Name, "TargetSite", StringComparison.Ordinal)).ToList();
                 }
-            }
-            else
-            {
-                foreach (MemberInfo member in allMembers)
-                {
-                    if (member is FieldInfo field && !field.IsStatic)
-                    {
+            } else {
+                foreach (MemberInfo member in allMembers) {
+                    if (member is FieldInfo field && !field.IsStatic) {
                         serializableMembers.Add(member);
                     }
                 }
@@ -212,10 +188,8 @@ namespace Simula.Scripting.Json.Serialization
 #if HAVE_DATA_CONTRACTS
         private bool ShouldSerializeEntityMember(MemberInfo memberInfo)
         {
-            if (memberInfo is PropertyInfo propertyInfo)
-            {
-                if (propertyInfo.PropertyType.IsGenericType() && propertyInfo.PropertyType.GetGenericTypeDefinition().FullName == "System.Data.Objects.DataClasses.EntityReference`1")
-                {
+            if (memberInfo is PropertyInfo propertyInfo) {
+                if (propertyInfo.PropertyType.IsGenericType() && propertyInfo.PropertyType.GetGenericTypeDefinition().FullName == "System.Data.Objects.DataClasses.EntityReference`1") {
                     return false;
                 }
             }
@@ -241,57 +215,44 @@ namespace Simula.Scripting.Json.Serialization
             Func<string, string>? extensionDataNameResolver = null;
 
             JsonObjectAttribute? attribute = JsonTypeReflector.GetCachedAttribute<JsonObjectAttribute>(contract.NonNullableUnderlyingType);
-            if (attribute != null)
-            {
+            if (attribute != null) {
                 contract.ItemRequired = attribute._itemRequired;
                 contract.ItemNullValueHandling = attribute._itemNullValueHandling;
                 contract.MissingMemberHandling = attribute._missingMemberHandling;
 
-                if (attribute.NamingStrategyType != null)
-                {
+                if (attribute.NamingStrategyType != null) {
                     NamingStrategy namingStrategy = JsonTypeReflector.GetContainerNamingStrategy(attribute)!;
                     extensionDataNameResolver = s => namingStrategy.GetDictionaryKey(s);
                 }
             }
 
-            if (extensionDataNameResolver == null)
-            {
+            if (extensionDataNameResolver == null) {
                 extensionDataNameResolver = ResolveExtensionDataName;
             }
 
             contract.ExtensionDataNameResolver = extensionDataNameResolver;
 
-            if (contract.IsInstantiable)
-            {
+            if (contract.IsInstantiable) {
                 ConstructorInfo? overrideConstructor = GetAttributeConstructor(contract.NonNullableUnderlyingType);
-                if (overrideConstructor != null)
-                {
+                if (overrideConstructor != null) {
                     contract.OverrideCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateParameterizedConstructor(overrideConstructor);
                     contract.CreatorParameters.AddRange(CreateConstructorParameters(overrideConstructor, contract.Properties));
-                }
-                else if (contract.MemberSerialization == MemberSerialization.Fields)
-                {
+                } else if (contract.MemberSerialization == MemberSerialization.Fields) {
 #if HAVE_BINARY_FORMATTER
                     if (JsonTypeReflector.FullyTrusted)
                     {
                         contract.DefaultCreator = contract.GetUninitializedObject;
                     }
 #endif
-                }
-                else if (contract.DefaultCreator == null || contract.DefaultCreatorNonPublic)
-                {
+                } else if (contract.DefaultCreator == null || contract.DefaultCreatorNonPublic) {
                     ConstructorInfo? constructor = GetParameterizedConstructor(contract.NonNullableUnderlyingType);
-                    if (constructor != null)
-                    {
+                    if (constructor != null) {
                         contract.ParameterizedCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateParameterizedConstructor(constructor);
                         contract.CreatorParameters.AddRange(CreateConstructorParameters(constructor, contract.Properties));
                     }
-                }
-                else if (contract.NonNullableUnderlyingType.IsValueType())
-                {
+                } else if (contract.NonNullableUnderlyingType.IsValueType()) {
                     ConstructorInfo? constructor = GetImmutableConstructor(contract.NonNullableUnderlyingType, contract.Properties);
-                    if (constructor != null)
-                    {
+                    if (constructor != null) {
                         contract.OverrideCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateParameterizedConstructor(constructor);
                         contract.CreatorParameters.AddRange(CreateConstructorParameters(constructor, contract.Properties));
                     }
@@ -299,12 +260,10 @@ namespace Simula.Scripting.Json.Serialization
             }
 
             MemberInfo extensionDataMember = GetExtensionDataMemberForType(contract.NonNullableUnderlyingType);
-            if (extensionDataMember != null)
-            {
+            if (extensionDataMember != null) {
                 SetExtensionDataDelegates(contract, extensionDataMember);
             }
-            if (Array.IndexOf(BlacklistedTypeNames, objectType.FullName) != -1)
-            {
+            if (Array.IndexOf(BlacklistedTypeNames, objectType.FullName) != -1) {
                 contract.OnSerializingCallbacks.Add(ThrowUnableToSerializeError);
             }
 
@@ -318,8 +277,7 @@ namespace Simula.Scripting.Json.Serialization
 
         private MemberInfo GetExtensionDataMemberForType(Type type)
         {
-            IEnumerable<MemberInfo> members = GetClassHierarchyForType(type).SelectMany(baseType =>
-            {
+            IEnumerable<MemberInfo> members = GetClassHierarchyForType(type).SelectMany(baseType => {
                 IList<MemberInfo> m = new List<MemberInfo>();
                 m.AddRange(baseType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly));
                 m.AddRange(baseType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly));
@@ -327,32 +285,26 @@ namespace Simula.Scripting.Json.Serialization
                 return m;
             });
 
-            MemberInfo extensionDataMember = members.LastOrDefault(m =>
-            {
+            MemberInfo extensionDataMember = members.LastOrDefault(m => {
                 MemberTypes memberType = m.MemberType();
-                if (memberType != MemberTypes.Property && memberType != MemberTypes.Field)
-                {
+                if (memberType != MemberTypes.Property && memberType != MemberTypes.Field) {
                     return false;
                 }
-                if (!m.IsDefined(typeof(JsonExtensionDataAttribute), false))
-                {
+                if (!m.IsDefined(typeof(JsonExtensionDataAttribute), false)) {
                     return false;
                 }
 
-                if (!ReflectionUtils.CanReadMemberValue(m, true))
-                {
+                if (!ReflectionUtils.CanReadMemberValue(m, true)) {
                     throw new JsonException("Invalid extension data attribute on '{0}'. Member '{1}' must have a getter.".FormatWith(CultureInfo.InvariantCulture, GetClrTypeFullName(m.DeclaringType), m.Name));
                 }
 
                 Type t = ReflectionUtils.GetMemberUnderlyingType(m);
 
-                if (ReflectionUtils.ImplementsGenericDefinition(t, typeof(IDictionary<,>), out Type? dictionaryType))
-                {
+                if (ReflectionUtils.ImplementsGenericDefinition(t, typeof(IDictionary<,>), out Type? dictionaryType)) {
                     Type keyType = dictionaryType.GetGenericArguments()[0];
                     Type valueType = dictionaryType.GetGenericArguments()[1];
 
-                    if (keyType.IsAssignableFrom(typeof(string)) && valueType.IsAssignableFrom(typeof(JToken)))
-                    {
+                    if (keyType.IsAssignableFrom(typeof(string)) && valueType.IsAssignableFrom(typeof(JToken))) {
                         return true;
                     }
                 }
@@ -366,8 +318,7 @@ namespace Simula.Scripting.Json.Serialization
         private static void SetExtensionDataDelegates(JsonObjectContract contract, MemberInfo member)
         {
             JsonExtensionDataAttribute? extensionDataAttribute = ReflectionUtils.GetAttribute<JsonExtensionDataAttribute>(member);
-            if (extensionDataAttribute == null)
-            {
+            if (extensionDataAttribute == null) {
                 return;
             }
 
@@ -379,38 +330,30 @@ namespace Simula.Scripting.Json.Serialization
             Type valueType = dictionaryType!.GetGenericArguments()[1];
 
             Type createdType;
-            if (ReflectionUtils.IsGenericDefinition(t, typeof(IDictionary<,>)))
-            {
+            if (ReflectionUtils.IsGenericDefinition(t, typeof(IDictionary<,>))) {
                 createdType = typeof(Dictionary<,>).MakeGenericType(keyType, valueType);
-            }
-            else
-            {
+            } else {
                 createdType = t;
             }
 
             Func<object, object?> getExtensionDataDictionary = JsonTypeReflector.ReflectionDelegateFactory.CreateGet<object>(member);
 
-            if (extensionDataAttribute.ReadData)
-            {
+            if (extensionDataAttribute.ReadData) {
                 Action<object, object?>? setExtensionDataDictionary = (ReflectionUtils.CanSetMemberValue(member, true, false))
                  ? JsonTypeReflector.ReflectionDelegateFactory.CreateSet<object>(member)
                  : null;
                 Func<object> createExtensionDataDictionary = JsonTypeReflector.ReflectionDelegateFactory.CreateDefaultConstructor<object>(createdType);
                 MethodInfo? setMethod = t.GetProperty("Item", BindingFlags.Public | BindingFlags.Instance, null, valueType, new[] { keyType }, null)?.GetSetMethod();
-                if (setMethod == null)
-                {
+                if (setMethod == null) {
                     setMethod = dictionaryType!.GetProperty("Item", BindingFlags.Public | BindingFlags.Instance, null, valueType, new[] { keyType }, null)?.GetSetMethod();
                 }
 
                 MethodCall<object, object?> setExtensionDataDictionaryValue = JsonTypeReflector.ReflectionDelegateFactory.CreateMethodCall<object>(setMethod!);
 
-                ExtensionDataSetter extensionDataSetter = (o, key, value) =>
-                {
+                ExtensionDataSetter extensionDataSetter = (o, key, value) => {
                     object? dictionary = getExtensionDataDictionary(o);
-                    if (dictionary == null)
-                    {
-                        if (setExtensionDataDictionary == null)
-                        {
+                    if (dictionary == null) {
+                        if (setExtensionDataDictionary == null) {
                             throw new JsonSerializationException("Cannot set value onto extension data member '{0}'. The extension data collection is null and it cannot be set.".FormatWith(CultureInfo.InvariantCulture, member.Name));
                         }
 
@@ -424,17 +367,14 @@ namespace Simula.Scripting.Json.Serialization
                 contract.ExtensionDataSetter = extensionDataSetter;
             }
 
-            if (extensionDataAttribute.WriteData)
-            {
+            if (extensionDataAttribute.WriteData) {
                 Type enumerableWrapper = typeof(EnumerableDictionaryWrapper<,>).MakeGenericType(keyType, valueType);
                 ConstructorInfo constructors = enumerableWrapper.GetConstructors().First();
                 ObjectConstructor<object> createEnumerableWrapper = JsonTypeReflector.ReflectionDelegateFactory.CreateParameterizedConstructor(constructors);
 
-                ExtensionDataGetter extensionDataGetter = o =>
-                {
+                ExtensionDataGetter extensionDataGetter = o => {
                     object? dictionary = getExtensionDataDictionary(o);
-                    if (dictionary == null)
-                    {
+                    if (dictionary == null) {
                         return null;
                     }
 
@@ -458,8 +398,7 @@ namespace Simula.Scripting.Json.Serialization
 
             public IEnumerator<KeyValuePair<object, object>> GetEnumerator()
             {
-                foreach (KeyValuePair<TEnumeratorKey, TEnumeratorValue> item in _e)
-                {
+                foreach (KeyValuePair<TEnumeratorKey, TEnumeratorValue> item in _e) {
                     yield return new KeyValuePair<object, object>(item.Key!, item.Value!);
                 }
             }
@@ -474,18 +413,15 @@ namespace Simula.Scripting.Json.Serialization
         {
             IEnumerator<ConstructorInfo> en = objectType.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(c => c.IsDefined(typeof(JsonConstructorAttribute), true)).GetEnumerator();
 
-            if (en.MoveNext())
-            {
+            if (en.MoveNext()) {
                 ConstructorInfo conInfo = en.Current;
-                if (en.MoveNext())
-                {
+                if (en.MoveNext()) {
                     throw new JsonException("Multiple constructors with the JsonConstructorAttribute.");
                 }
 
                 return conInfo;
             }
-            if (objectType == typeof(Version))
-            {
+            if (objectType == typeof(Version)) {
                 return objectType.GetConstructor(new[] { typeof(int), typeof(int), typeof(int), typeof(int) });
             }
 
@@ -496,19 +432,14 @@ namespace Simula.Scripting.Json.Serialization
         {
             IEnumerable<ConstructorInfo> constructors = objectType.GetConstructors();
             IEnumerator<ConstructorInfo> en = constructors.GetEnumerator();
-            if (en.MoveNext())
-            {
+            if (en.MoveNext()) {
                 ConstructorInfo constructor = en.Current;
-                if (!en.MoveNext())
-                {
+                if (!en.MoveNext()) {
                     ParameterInfo[] parameters = constructor.GetParameters();
-                    if (parameters.Length > 0)
-                    {
-                        foreach (ParameterInfo parameterInfo in parameters)
-                        {
+                    if (parameters.Length > 0) {
+                        foreach (ParameterInfo parameterInfo in parameters) {
                             JsonProperty? memberProperty = MatchProperty(memberProperties, parameterInfo.Name, parameterInfo.ParameterType);
-                            if (memberProperty == null || memberProperty.Writable)
-                            {
+                            if (memberProperty == null || memberProperty.Writable) {
                                 return null;
                             }
                         }
@@ -526,11 +457,9 @@ namespace Simula.Scripting.Json.Serialization
 #if PORTABLE
             IEnumerable<ConstructorInfo> constructors = objectType.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
             IEnumerator<ConstructorInfo> en = constructors.GetEnumerator();
-            if (en.MoveNext())
-            {
+            if (en.MoveNext()) {
                 ConstructorInfo conInfo = en.Current;
-                if (!en.MoveNext())
-                {
+                if (!en.MoveNext()) {
                     return conInfo;
                 }
             }
@@ -549,20 +478,16 @@ namespace Simula.Scripting.Json.Serialization
 
             JsonPropertyCollection parameterCollection = new JsonPropertyCollection(constructor.DeclaringType);
 
-            foreach (ParameterInfo parameterInfo in constructorParameters)
-            {
-                if (parameterInfo.Name == null)
-                {
+            foreach (ParameterInfo parameterInfo in constructorParameters) {
+                if (parameterInfo.Name == null) {
                     continue;
                 }
 
                 JsonProperty? matchingMemberProperty = MatchProperty(memberProperties, parameterInfo.Name, parameterInfo.ParameterType);
-                if (matchingMemberProperty != null || parameterInfo.Name != null)
-                {
+                if (matchingMemberProperty != null || parameterInfo.Name != null) {
                     JsonProperty property = CreatePropertyFromConstructorParameter(matchingMemberProperty, parameterInfo);
 
-                    if (property != null)
-                    {
+                    if (property != null) {
                         parameterCollection.AddProperty(property);
                     }
                 }
@@ -573,14 +498,12 @@ namespace Simula.Scripting.Json.Serialization
 
         private JsonProperty? MatchProperty(JsonPropertyCollection properties, string name, Type type)
         {
-            if (name == null)
-            {
+            if (name == null) {
                 return null;
             }
 
             JsonProperty? property = properties.GetClosestMatchProperty(name);
-            if (property == null || property.PropertyType != type)
-            {
+            if (property == null || property.PropertyType != type) {
                 return null;
             }
 
@@ -596,13 +519,11 @@ namespace Simula.Scripting.Json.Serialization
 
             property.Readable = false;
             property.Writable = true;
-            if (matchingMemberProperty != null)
-            {
+            if (matchingMemberProperty != null) {
                 property.PropertyName = (property.PropertyName != parameterInfo.Name) ? property.PropertyName : matchingMemberProperty.PropertyName;
                 property.Converter = property.Converter ?? matchingMemberProperty.Converter;
 
-                if (!property._hasExplicitDefaultValue && matchingMemberProperty._hasExplicitDefaultValue)
-                {
+                if (!property._hasExplicitDefaultValue && matchingMemberProperty._hasExplicitDefaultValue) {
                     property.DefaultValue = matchingMemberProperty.DefaultValue;
                 }
 
@@ -633,16 +554,13 @@ namespace Simula.Scripting.Json.Serialization
         private void InitializeContract(JsonContract contract)
         {
             JsonContainerAttribute? containerAttribute = JsonTypeReflector.GetCachedAttribute<JsonContainerAttribute>(contract.NonNullableUnderlyingType);
-            if (containerAttribute != null)
-            {
+            if (containerAttribute != null) {
                 contract.IsReference = containerAttribute._isReference;
             }
 #if HAVE_DATA_CONTRACTS
-            else
-            {
+            else {
                 DataContractAttribute? dataContractAttribute = JsonTypeReflector.GetDataContractAttribute(contract.NonNullableUnderlyingType);
-                if (dataContractAttribute != null && dataContractAttribute.IsReference)
-                {
+                if (dataContractAttribute != null && dataContractAttribute.IsReference) {
                     contract.IsReference = true;
                 }
             }
@@ -652,8 +570,7 @@ namespace Simula.Scripting.Json.Serialization
             contract.InternalConverter = JsonSerializer.GetMatchingConverter(BuiltInConverters, contract.NonNullableUnderlyingType);
 
             if (contract.IsInstantiable
-                && (ReflectionUtils.HasDefaultConstructor(contract.CreatedType, true) || contract.CreatedType.IsValueType()))
-            {
+                && (ReflectionUtils.HasDefaultConstructor(contract.CreatedType, true) || contract.CreatedType.IsValueType())) {
                 contract.DefaultCreator = GetDefaultCreator(contract.CreatedType);
 
                 contract.DefaultCreatorNonPublic = (!contract.CreatedType.IsValueType() &&
@@ -673,28 +590,23 @@ namespace Simula.Scripting.Json.Serialization
                 out List<SerializationCallback>? onDeserialized,
                 out List<SerializationErrorCallback>? onError);
 
-            if (onSerializing != null)
-            {
+            if (onSerializing != null) {
                 contract.OnSerializingCallbacks.AddRange(onSerializing);
             }
 
-            if (onSerialized != null)
-            {
+            if (onSerialized != null) {
                 contract.OnSerializedCallbacks.AddRange(onSerialized);
             }
 
-            if (onDeserializing != null)
-            {
+            if (onDeserializing != null) {
                 contract.OnDeserializingCallbacks.AddRange(onDeserializing);
             }
 
-            if (onDeserialized != null)
-            {
+            if (onDeserialized != null) {
                 contract.OnDeserializedCallbacks.AddRange(onDeserialized);
             }
 
-            if (onError != null)
-            {
+            if (onError != null) {
                 contract.OnErrorCallbacks.AddRange(onError);
             }
         }
@@ -707,8 +619,7 @@ namespace Simula.Scripting.Json.Serialization
             onDeserialized = null;
             onError = null;
 
-            foreach (Type baseType in GetClassHierarchyForType(type))
-            {
+            foreach (Type baseType in GetClassHierarchyForType(type)) {
                 MethodInfo? currentOnSerializing = null;
                 MethodInfo? currentOnSerialized = null;
                 MethodInfo? currentOnDeserializing = null;
@@ -718,42 +629,35 @@ namespace Simula.Scripting.Json.Serialization
                 bool skipSerializing = ShouldSkipSerializing(baseType);
                 bool skipDeserialized = ShouldSkipDeserialized(baseType);
 
-                foreach (MethodInfo method in baseType.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-                {
-                    if (method.ContainsGenericParameters)
-                    {
+                foreach (MethodInfo method in baseType.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)) {
+                    if (method.ContainsGenericParameters) {
                         continue;
                     }
 
                     Type? prevAttributeType = null;
                     ParameterInfo[] parameters = method.GetParameters();
 
-                    if (!skipSerializing && IsValidCallback(method, parameters, typeof(OnSerializingAttribute), currentOnSerializing, ref prevAttributeType))
-                    {
+                    if (!skipSerializing && IsValidCallback(method, parameters, typeof(OnSerializingAttribute), currentOnSerializing, ref prevAttributeType)) {
                         onSerializing = onSerializing ?? new List<SerializationCallback>();
                         onSerializing.Add(JsonContract.CreateSerializationCallback(method));
                         currentOnSerializing = method;
                     }
-                    if (IsValidCallback(method, parameters, typeof(OnSerializedAttribute), currentOnSerialized, ref prevAttributeType))
-                    {
+                    if (IsValidCallback(method, parameters, typeof(OnSerializedAttribute), currentOnSerialized, ref prevAttributeType)) {
                         onSerialized = onSerialized ?? new List<SerializationCallback>();
                         onSerialized.Add(JsonContract.CreateSerializationCallback(method));
                         currentOnSerialized = method;
                     }
-                    if (IsValidCallback(method, parameters, typeof(OnDeserializingAttribute), currentOnDeserializing, ref prevAttributeType))
-                    {
+                    if (IsValidCallback(method, parameters, typeof(OnDeserializingAttribute), currentOnDeserializing, ref prevAttributeType)) {
                         onDeserializing = onDeserializing ?? new List<SerializationCallback>();
                         onDeserializing.Add(JsonContract.CreateSerializationCallback(method));
                         currentOnDeserializing = method;
                     }
-                    if (!skipDeserialized && IsValidCallback(method, parameters, typeof(OnDeserializedAttribute), currentOnDeserialized, ref prevAttributeType))
-                    {
+                    if (!skipDeserialized && IsValidCallback(method, parameters, typeof(OnDeserializedAttribute), currentOnDeserialized, ref prevAttributeType)) {
                         onDeserialized = onDeserialized ?? new List<SerializationCallback>();
                         onDeserialized.Add(JsonContract.CreateSerializationCallback(method));
                         currentOnDeserialized = method;
                     }
-                    if (IsValidCallback(method, parameters, typeof(OnErrorAttribute), currentOnError, ref prevAttributeType))
-                    {
+                    if (IsValidCallback(method, parameters, typeof(OnErrorAttribute), currentOnError, ref prevAttributeType)) {
                         onError = onError ?? new List<SerializationErrorCallback>();
                         onError.Add(JsonContract.CreateSerializationErrorCallback(method));
                         currentOnError = method;
@@ -764,12 +668,10 @@ namespace Simula.Scripting.Json.Serialization
 
         private static bool IsConcurrentOrObservableCollection(Type t)
         {
-            if (t.IsGenericType())
-            {
+            if (t.IsGenericType()) {
                 Type definition = t.GetGenericTypeDefinition();
 
-                switch (definition.FullName)
-                {
+                switch (definition.FullName) {
                     case "System.Collections.Concurrent.ConcurrentQueue`1":
                     case "System.Collections.Concurrent.ConcurrentStack`1":
                     case "System.Collections.Concurrent.ConcurrentBag`1":
@@ -784,14 +686,12 @@ namespace Simula.Scripting.Json.Serialization
 
         private static bool ShouldSkipDeserialized(Type t)
         {
-            if (IsConcurrentOrObservableCollection(t))
-            {
+            if (IsConcurrentOrObservableCollection(t)) {
                 return true;
             }
 
 #if HAVE_FSHARP_TYPES
-            if (t.Name == FSharpUtils.FSharpSetTypeName || t.Name == FSharpUtils.FSharpMapTypeName)
-            {
+            if (t.Name == FSharpUtils.FSharpSetTypeName || t.Name == FSharpUtils.FSharpMapTypeName) {
                 return true;
             }
 #endif
@@ -801,14 +701,12 @@ namespace Simula.Scripting.Json.Serialization
 
         private static bool ShouldSkipSerializing(Type t)
         {
-            if (IsConcurrentOrObservableCollection(t))
-            {
+            if (IsConcurrentOrObservableCollection(t)) {
                 return true;
             }
 
 #if HAVE_FSHARP_TYPES
-            if (t.Name == FSharpUtils.FSharpSetTypeName || t.Name == FSharpUtils.FSharpMapTypeName)
-            {
+            if (t.Name == FSharpUtils.FSharpSetTypeName || t.Name == FSharpUtils.FSharpMapTypeName) {
                 return true;
             }
 #endif
@@ -821,8 +719,7 @@ namespace Simula.Scripting.Json.Serialization
             List<Type> ret = new List<Type>();
 
             Type current = type;
-            while (current != null && current != typeof(object))
-            {
+            while (current != null && current != typeof(object)) {
                 ret.Add(current);
                 current = current.BaseType();
             }
@@ -835,35 +732,26 @@ namespace Simula.Scripting.Json.Serialization
             InitializeContract(contract);
 
             JsonContainerAttribute? containerAttribute = JsonTypeReflector.GetAttribute<JsonContainerAttribute>(objectType);
-            if (containerAttribute?.NamingStrategyType != null)
-            {
+            if (containerAttribute?.NamingStrategyType != null) {
                 NamingStrategy namingStrategy = JsonTypeReflector.GetContainerNamingStrategy(containerAttribute)!;
                 contract.DictionaryKeyResolver = s => namingStrategy.GetDictionaryKey(s);
-            }
-            else
-            {
+            } else {
                 contract.DictionaryKeyResolver = ResolveDictionaryKey;
             }
 
             ConstructorInfo? overrideConstructor = GetAttributeConstructor(contract.NonNullableUnderlyingType);
 
-            if (overrideConstructor != null)
-            {
+            if (overrideConstructor != null) {
                 ParameterInfo[] parameters = overrideConstructor.GetParameters();
                 Type expectedParameterType = (contract.DictionaryKeyType != null && contract.DictionaryValueType != null)
                     ? typeof(IEnumerable<>).MakeGenericType(typeof(KeyValuePair<,>).MakeGenericType(contract.DictionaryKeyType, contract.DictionaryValueType))
                     : typeof(IDictionary);
 
-                if (parameters.Length == 0)
-                {
+                if (parameters.Length == 0) {
                     contract.HasParameterizedCreator = false;
-                }
-                else if (parameters.Length == 1 && expectedParameterType.IsAssignableFrom(parameters[0].ParameterType))
-                {
+                } else if (parameters.Length == 1 && expectedParameterType.IsAssignableFrom(parameters[0].ParameterType)) {
                     contract.HasParameterizedCreator = true;
-                }
-                else
-                {
+                } else {
                     throw new JsonException("Constructor for '{0}' must have no parameters or a single parameter that implements '{1}'.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType, expectedParameterType));
                 }
 
@@ -879,23 +767,17 @@ namespace Simula.Scripting.Json.Serialization
 
             ConstructorInfo? overrideConstructor = GetAttributeConstructor(contract.NonNullableUnderlyingType);
 
-            if (overrideConstructor != null)
-            {
+            if (overrideConstructor != null) {
                 ParameterInfo[] parameters = overrideConstructor.GetParameters();
                 Type expectedParameterType = (contract.CollectionItemType != null)
                     ? typeof(IEnumerable<>).MakeGenericType(contract.CollectionItemType)
                     : typeof(IEnumerable);
 
-                if (parameters.Length == 0)
-                {
+                if (parameters.Length == 0) {
                     contract.HasParameterizedCreator = false;
-                }
-                else if (parameters.Length == 1 && expectedParameterType.IsAssignableFrom(parameters[0].ParameterType))
-                {
+                } else if (parameters.Length == 1 && expectedParameterType.IsAssignableFrom(parameters[0].ParameterType)) {
                     contract.HasParameterizedCreator = true;
-                }
-                else
-                {
+                } else {
                     throw new JsonException("Constructor for '{0}' must have no parameters or a single parameter that implements '{1}'.".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType, expectedParameterType));
                 }
 
@@ -947,13 +829,10 @@ namespace Simula.Scripting.Json.Serialization
             InitializeContract(contract);
 
             JsonContainerAttribute? containerAttribute = JsonTypeReflector.GetAttribute<JsonContainerAttribute>(objectType);
-            if (containerAttribute?.NamingStrategyType != null)
-            {
+            if (containerAttribute?.NamingStrategyType != null) {
                 NamingStrategy namingStrategy = JsonTypeReflector.GetContainerNamingStrategy(containerAttribute)!;
                 contract.PropertyNameResolver = s => namingStrategy.GetDictionaryKey(s);
-            }
-            else
-            {
+            } else {
                 contract.PropertyNameResolver = ResolveDictionaryKey;
             }
 
@@ -973,46 +852,38 @@ namespace Simula.Scripting.Json.Serialization
         {
             Type t = ReflectionUtils.EnsureNotByRefType(objectType);
 
-            if (IsJsonPrimitiveType(t))
-            {
+            if (IsJsonPrimitiveType(t)) {
                 return CreatePrimitiveContract(objectType);
             }
 
             t = ReflectionUtils.EnsureNotNullableType(t);
             JsonContainerAttribute? containerAttribute = JsonTypeReflector.GetCachedAttribute<JsonContainerAttribute>(t);
 
-            if (containerAttribute is JsonObjectAttribute)
-            {
+            if (containerAttribute is JsonObjectAttribute) {
                 return CreateObjectContract(objectType);
             }
 
-            if (containerAttribute is JsonArrayAttribute)
-            {
+            if (containerAttribute is JsonArrayAttribute) {
                 return CreateArrayContract(objectType);
             }
 
-            if (containerAttribute is JsonDictionaryAttribute)
-            {
+            if (containerAttribute is JsonDictionaryAttribute) {
                 return CreateDictionaryContract(objectType);
             }
 
-            if (t == typeof(JToken) || t.IsSubclassOf(typeof(JToken)))
-            {
+            if (t == typeof(JToken) || t.IsSubclassOf(typeof(JToken))) {
                 return CreateLinqContract(objectType);
             }
 
-            if (CollectionUtils.IsDictionaryType(t))
-            {
+            if (CollectionUtils.IsDictionaryType(t)) {
                 return CreateDictionaryContract(objectType);
             }
 
-            if (typeof(IEnumerable).IsAssignableFrom(t))
-            {
+            if (typeof(IEnumerable).IsAssignableFrom(t)) {
                 return CreateArrayContract(objectType);
             }
 
-            if (CanConvertToString(t))
-            {
+            if (CanConvertToString(t)) {
                 return CreateStringContract(objectType);
             }
 
@@ -1024,8 +895,7 @@ namespace Simula.Scripting.Json.Serialization
 #endif
 
 #if HAVE_DYNAMIC
-            if (typeof(IDynamicMetaObjectProvider).IsAssignableFrom(t))
-            {
+            if (typeof(IDynamicMetaObjectProvider).IsAssignableFrom(t)) {
                 return CreateDynamicContract(objectType);
             }
 #endif
@@ -1063,14 +933,12 @@ namespace Simula.Scripting.Json.Serialization
         internal static bool CanConvertToString(Type type)
         {
 #if HAVE_TYPE_DESCRIPTOR
-            if (JsonTypeReflector.CanTypeDescriptorConvertString(type, out _))
-            {
+            if (JsonTypeReflector.CanTypeDescriptorConvertString(type, out _)) {
                 return true;
             }
 #endif
 
-            if (type == typeof(Type) || type.IsSubclassOf(typeof(Type)))
-            {
+            if (type == typeof(Type) || type.IsSubclassOf(typeof(Type))) {
                 return true;
             }
 
@@ -1079,42 +947,32 @@ namespace Simula.Scripting.Json.Serialization
 
         private static bool IsValidCallback(MethodInfo method, ParameterInfo[] parameters, Type attributeType, MethodInfo? currentCallback, ref Type? prevAttributeType)
         {
-            if (!method.IsDefined(attributeType, false))
-            {
+            if (!method.IsDefined(attributeType, false)) {
                 return false;
             }
 
-            if (currentCallback != null)
-            {
+            if (currentCallback != null) {
                 throw new JsonException("Invalid attribute. Both '{0}' and '{1}' in type '{2}' have '{3}'.".FormatWith(CultureInfo.InvariantCulture, method, currentCallback, GetClrTypeFullName(method.DeclaringType), attributeType));
             }
 
-            if (prevAttributeType != null)
-            {
+            if (prevAttributeType != null) {
                 throw new JsonException("Invalid Callback. Method '{3}' in type '{2}' has both '{0}' and '{1}'.".FormatWith(CultureInfo.InvariantCulture, prevAttributeType, attributeType, GetClrTypeFullName(method.DeclaringType), method));
             }
 
-            if (method.IsVirtual)
-            {
+            if (method.IsVirtual) {
                 throw new JsonException("Virtual Method '{0}' of type '{1}' cannot be marked with '{2}' attribute.".FormatWith(CultureInfo.InvariantCulture, method, GetClrTypeFullName(method.DeclaringType), attributeType));
             }
 
-            if (method.ReturnType != typeof(void))
-            {
+            if (method.ReturnType != typeof(void)) {
                 throw new JsonException("Serialization Callback '{1}' in type '{0}' must return void.".FormatWith(CultureInfo.InvariantCulture, GetClrTypeFullName(method.DeclaringType), method));
             }
 
-            if (attributeType == typeof(OnErrorAttribute))
-            {
-                if (parameters == null || parameters.Length != 2 || parameters[0].ParameterType != typeof(StreamingContext) || parameters[1].ParameterType != typeof(ErrorContext))
-                {
+            if (attributeType == typeof(OnErrorAttribute)) {
+                if (parameters == null || parameters.Length != 2 || parameters[0].ParameterType != typeof(StreamingContext) || parameters[1].ParameterType != typeof(ErrorContext)) {
                     throw new JsonException("Serialization Error Callback '{1}' in type '{0}' must have two parameters of type '{2}' and '{3}'.".FormatWith(CultureInfo.InvariantCulture, GetClrTypeFullName(method.DeclaringType), method, typeof(StreamingContext), typeof(ErrorContext)));
                 }
-            }
-            else
-            {
-                if (parameters == null || parameters.Length != 1 || parameters[0].ParameterType != typeof(StreamingContext))
-                {
+            } else {
+                if (parameters == null || parameters.Length != 1 || parameters[0].ParameterType != typeof(StreamingContext)) {
                     throw new JsonException("Serialization Callback '{1}' in type '{0}' must have a single parameter of type '{2}'.".FormatWith(CultureInfo.InvariantCulture, GetClrTypeFullName(method.DeclaringType), method, typeof(StreamingContext)));
                 }
             }
@@ -1126,8 +984,7 @@ namespace Simula.Scripting.Json.Serialization
 
         internal static string GetClrTypeFullName(Type type)
         {
-            if (type.IsGenericTypeDefinition() || !type.ContainsGenericParameters())
-            {
+            if (type.IsGenericTypeDefinition() || !type.ContainsGenericParameters()) {
                 return type.FullName;
             }
 
@@ -1136,8 +993,7 @@ namespace Simula.Scripting.Json.Serialization
         protected virtual IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
         {
             List<MemberInfo> members = GetSerializableMembers(type);
-            if (members == null)
-            {
+            if (members == null) {
                 throw new JsonSerializationException("Null collection of serializable members returned.");
             }
 
@@ -1145,14 +1001,11 @@ namespace Simula.Scripting.Json.Serialization
 
             JsonPropertyCollection properties = new JsonPropertyCollection(type);
 
-            foreach (MemberInfo member in members)
-            {
+            foreach (MemberInfo member in members) {
                 JsonProperty property = CreateProperty(member, memberSerialization);
 
-                if (property != null)
-                {
-                    lock (nameTable)
-                    {
+                if (property != null) {
+                    lock (nameTable) {
                         property.PropertyName = nameTable.Add(property.PropertyName!);
                     }
 
@@ -1199,24 +1052,19 @@ namespace Simula.Scripting.Json.Serialization
 
             SetPropertySettingsFromAttributes(property, member, member.Name, member.DeclaringType, memberSerialization, out bool allowNonPublicAccess);
 
-            if (memberSerialization != MemberSerialization.Fields)
-            {
+            if (memberSerialization != MemberSerialization.Fields) {
                 property.Readable = ReflectionUtils.CanReadMemberValue(member, allowNonPublicAccess);
                 property.Writable = ReflectionUtils.CanSetMemberValue(member, allowNonPublicAccess, property.HasMemberAttribute);
-            }
-            else
-            {
+            } else {
                 property.Readable = true;
                 property.Writable = true;
             }
 
-            if (!IgnoreShouldSerializeMembers)
-            {
+            if (!IgnoreShouldSerializeMembers) {
                 property.ShouldSerialize = CreateShouldSerializeTest(member);
             }
 
-            if (!IgnoreIsSpecifiedMembers)
-            {
+            if (!IgnoreIsSpecifiedMembers) {
                 SetIsSpecifiedActions(property, member, allowNonPublicAccess);
             }
 
@@ -1231,12 +1079,9 @@ namespace Simula.Scripting.Json.Serialization
             MemberInfo? memberInfo = attributeProvider as MemberInfo;
 
             DataMemberAttribute? dataMemberAttribute;
-            if (dataContractAttribute != null && memberInfo != null)
-            {
-                dataMemberAttribute = JsonTypeReflector.GetDataMemberAttribute((MemberInfo)memberInfo);
-            }
-            else
-            {
+            if (dataContractAttribute != null && memberInfo != null) {
+                dataMemberAttribute = JsonTypeReflector.GetDataMemberAttribute(memberInfo);
+            } else {
                 dataMemberAttribute = null;
             }
 #endif
@@ -1246,20 +1091,17 @@ namespace Simula.Scripting.Json.Serialization
 
             string mappedName;
             bool hasSpecifiedName;
-            if (propertyAttribute?.PropertyName != null)
-            {
+            if (propertyAttribute?.PropertyName != null) {
                 mappedName = propertyAttribute.PropertyName;
                 hasSpecifiedName = true;
             }
 #if HAVE_DATA_CONTRACTS
-            else if (dataMemberAttribute?.Name != null)
-            {
+            else if (dataMemberAttribute?.Name != null) {
                 mappedName = dataMemberAttribute.Name;
                 hasSpecifiedName = true;
             }
 #endif
-            else
-            {
+            else {
                 mappedName = name;
                 hasSpecifiedName = false;
             }
@@ -1267,33 +1109,24 @@ namespace Simula.Scripting.Json.Serialization
             JsonContainerAttribute? containerAttribute = JsonTypeReflector.GetAttribute<JsonContainerAttribute>(declaringType);
 
             NamingStrategy? namingStrategy;
-            if (propertyAttribute?.NamingStrategyType != null)
-            {
+            if (propertyAttribute?.NamingStrategyType != null) {
                 namingStrategy = JsonTypeReflector.CreateNamingStrategyInstance(propertyAttribute.NamingStrategyType, propertyAttribute.NamingStrategyParameters);
-            }
-            else if (containerAttribute?.NamingStrategyType != null)
-            {
+            } else if (containerAttribute?.NamingStrategyType != null) {
                 namingStrategy = JsonTypeReflector.GetContainerNamingStrategy(containerAttribute);
-            }
-            else
-            {
+            } else {
                 namingStrategy = NamingStrategy;
             }
 
-            if (namingStrategy != null)
-            {
+            if (namingStrategy != null) {
                 property.PropertyName = namingStrategy.GetPropertyName(mappedName, hasSpecifiedName);
-            }
-            else
-            {
+            } else {
                 property.PropertyName = ResolvePropertyName(mappedName);
             }
-            
+
             property.UnderlyingName = name;
 
             bool hasMemberAttribute = false;
-            if (propertyAttribute != null)
-            {
+            if (propertyAttribute != null) {
                 property._required = propertyAttribute._required;
                 property.Order = propertyAttribute._order;
                 property.DefaultValueHandling = propertyAttribute._defaultValueHandling;
@@ -1308,9 +1141,7 @@ namespace Simula.Scripting.Json.Serialization
                 property.ItemConverter = propertyAttribute.ItemConverterType != null ? JsonTypeReflector.CreateJsonConverterInstance(propertyAttribute.ItemConverterType, propertyAttribute.ItemConverterParameters) : null;
                 property.ItemReferenceLoopHandling = propertyAttribute._itemReferenceLoopHandling;
                 property.ItemTypeNameHandling = propertyAttribute._itemTypeNameHandling;
-            }
-            else
-            {
+            } else {
                 property.NullValueHandling = null;
                 property.ReferenceLoopHandling = null;
                 property.ObjectCreationHandling = null;
@@ -1321,8 +1152,7 @@ namespace Simula.Scripting.Json.Serialization
                 property.ItemReferenceLoopHandling = null;
                 property.ItemTypeNameHandling = null;
 #if HAVE_DATA_CONTRACTS
-                if (dataMemberAttribute != null)
-                {
+                if (dataMemberAttribute != null) {
                     property._required = (dataMemberAttribute.IsRequired) ? Required.AllowNull : Required.Default;
                     property.Order = (dataMemberAttribute.Order != -1) ? (int?)dataMemberAttribute.Order : null;
                     property.DefaultValueHandling = (!dataMemberAttribute.EmitDefaultValue) ? (DefaultValueHandling?)DefaultValueHandling.Ignore : null;
@@ -1331,8 +1161,7 @@ namespace Simula.Scripting.Json.Serialization
 #endif
             }
 
-            if (requiredAttribute != null)
-            {
+            if (requiredAttribute != null) {
                 property._required = Required.Always;
                 hasMemberAttribute = true;
             }
@@ -1347,40 +1176,33 @@ namespace Simula.Scripting.Json.Serialization
 #endif
                 ;
 
-            if (memberSerialization != MemberSerialization.OptIn)
-            {
+            if (memberSerialization != MemberSerialization.OptIn) {
                 bool hasIgnoreDataMemberAttribute = false;
 
 #if HAVE_IGNORE_DATA_MEMBER_ATTRIBUTE
                 hasIgnoreDataMemberAttribute = (JsonTypeReflector.GetAttribute<IgnoreDataMemberAttribute>(attributeProvider) != null);
 #endif
                 property.Ignored = (hasJsonIgnoreAttribute || hasIgnoreDataMemberAttribute);
-            }
-            else
-            {
+            } else {
                 property.Ignored = (hasJsonIgnoreAttribute || !hasMemberAttribute);
             }
             property.Converter = JsonTypeReflector.GetJsonConverter(attributeProvider);
 
             DefaultValueAttribute? defaultValueAttribute = JsonTypeReflector.GetAttribute<DefaultValueAttribute>(attributeProvider);
-            if (defaultValueAttribute != null)
-            {
+            if (defaultValueAttribute != null) {
                 property.DefaultValue = defaultValueAttribute.Value;
             }
 
             allowNonPublicAccess = false;
 #pragma warning disable 618
-            if ((DefaultMembersSearchFlags & BindingFlags.NonPublic) == BindingFlags.NonPublic)
-            {
+            if ((DefaultMembersSearchFlags & BindingFlags.NonPublic) == BindingFlags.NonPublic) {
                 allowNonPublicAccess = true;
             }
 #pragma warning restore 618
-            if (hasMemberAttribute)
-            {
+            if (hasMemberAttribute) {
                 allowNonPublicAccess = true;
             }
-            if (memberSerialization == MemberSerialization.Fields)
-            {
+            if (memberSerialization == MemberSerialization.Fields) {
                 allowNonPublicAccess = true;
             }
         }
@@ -1389,8 +1211,7 @@ namespace Simula.Scripting.Json.Serialization
         {
             MethodInfo shouldSerializeMethod = member.DeclaringType.GetMethod(JsonTypeReflector.ShouldSerializePrefix + member.Name, ReflectionUtils.EmptyTypes);
 
-            if (shouldSerializeMethod == null || shouldSerializeMethod.ReturnType != typeof(bool))
-            {
+            if (shouldSerializeMethod == null || shouldSerializeMethod.ReturnType != typeof(bool)) {
                 return null;
             }
 
@@ -1403,13 +1224,11 @@ namespace Simula.Scripting.Json.Serialization
         private void SetIsSpecifiedActions(JsonProperty property, MemberInfo member, bool allowNonPublicAccess)
         {
             MemberInfo? specifiedMember = member.DeclaringType.GetProperty(member.Name + JsonTypeReflector.SpecifiedPostfix, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            if (specifiedMember == null)
-            {
+            if (specifiedMember == null) {
                 specifiedMember = member.DeclaringType.GetField(member.Name + JsonTypeReflector.SpecifiedPostfix, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             }
 
-            if (specifiedMember == null || ReflectionUtils.GetMemberUnderlyingType(specifiedMember) != typeof(bool))
-            {
+            if (specifiedMember == null || ReflectionUtils.GetMemberUnderlyingType(specifiedMember) != typeof(bool)) {
                 return;
             }
 
@@ -1417,15 +1236,13 @@ namespace Simula.Scripting.Json.Serialization
 
             property.GetIsSpecified = o => (bool)specifiedPropertyGet(o);
 
-            if (ReflectionUtils.CanSetMemberValue(specifiedMember, allowNonPublicAccess, false))
-            {
+            if (ReflectionUtils.CanSetMemberValue(specifiedMember, allowNonPublicAccess, false)) {
                 property.SetIsSpecified = JsonTypeReflector.ReflectionDelegateFactory.CreateSet<object>(specifiedMember);
             }
         }
         protected virtual string ResolvePropertyName(string propertyName)
         {
-            if (NamingStrategy != null)
-            {
+            if (NamingStrategy != null) {
                 return NamingStrategy.GetPropertyName(propertyName, false);
             }
 
@@ -1433,8 +1250,7 @@ namespace Simula.Scripting.Json.Serialization
         }
         protected virtual string ResolveExtensionDataName(string extensionDataName)
         {
-            if (NamingStrategy != null)
-            {
+            if (NamingStrategy != null) {
                 return NamingStrategy.GetExtensionDataName(extensionDataName);
             }
 
@@ -1442,8 +1258,7 @@ namespace Simula.Scripting.Json.Serialization
         }
         protected virtual string ResolveDictionaryKey(string dictionaryKey)
         {
-            if (NamingStrategy != null)
-            {
+            if (NamingStrategy != null) {
                 return NamingStrategy.GetDictionaryKey(dictionaryKey);
             }
 

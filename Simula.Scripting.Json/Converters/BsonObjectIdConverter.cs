@@ -1,8 +1,8 @@
 ﻿
-using System;
 using Simula.Scripting.Json.Bson;
-using System.Globalization;
 using Simula.Scripting.Json.Utilities;
+using System;
+using System.Globalization;
 
 #nullable disable
 
@@ -15,19 +15,15 @@ namespace Simula.Scripting.Json.Converters
         {
             BsonObjectId objectId = (BsonObjectId)value;
 
-            if (writer is BsonWriter bsonWriter)
-            {
+            if (writer is BsonWriter bsonWriter) {
                 bsonWriter.WriteObjectId(objectId.Value);
-            }
-            else
-            {
+            } else {
                 writer.WriteValue(objectId.Value);
             }
         }
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            if (reader.TokenType != JsonToken.Bytes)
-            {
+            if (reader.TokenType != JsonToken.Bytes) {
                 throw new JsonSerializationException("Expected Bytes but got {0}.".FormatWith(CultureInfo.InvariantCulture, reader.TokenType));
             }
 

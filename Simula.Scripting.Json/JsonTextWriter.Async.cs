@@ -9,7 +9,6 @@ using System.Numerics;
 #endif
 using System.Threading.Tasks;
 using Simula.Scripting.Json.Utilities;
-using System.Diagnostics;
 
 namespace Simula.Scripting.Json
 {
@@ -43,8 +42,7 @@ namespace Simula.Scripting.Json
 
         internal Task DoWriteEndAsync(JsonToken token, CancellationToken cancellationToken)
         {
-            switch (token)
-            {
+            switch (token) {
                 case JsonToken.EndObject:
                     return _writer.WriteAsync('}', cancellationToken);
                 case JsonToken.EndArray:
@@ -67,8 +65,7 @@ namespace Simula.Scripting.Json
                 cancellationToken.ThrowIfCancellationRequested();
             }
 
-            while (Top > 0)
-            {
+            while (Top > 0) {
                 await WriteEndAsync(cancellationToken).ConfigureAwait(false);
             }
 
@@ -90,8 +87,7 @@ namespace Simula.Scripting.Json
             int newLineLen = SetIndentChars();
             MiscellaneousUtils.Assert(_indentChars != null);
 
-            if (currentIndentCount <= IndentCharBufferSize)
-            {
+            if (currentIndentCount <= IndentCharBufferSize) {
                 return _writer.WriteAsync(_indentChars, 0, newLineLen + currentIndentCount, cancellationToken);
             }
 
@@ -104,8 +100,7 @@ namespace Simula.Scripting.Json
 
             await _writer.WriteAsync(_indentChars, 0, newLineLen + Math.Min(currentIndentCount, IndentCharBufferSize), cancellationToken).ConfigureAwait(false);
 
-            while ((currentIndentCount -= IndentCharBufferSize) > 0)
-            {
+            while ((currentIndentCount -= IndentCharBufferSize) > 0) {
                 await _writer.WriteAsync(_indentChars, newLineLen, Math.Min(currentIndentCount, IndentCharBufferSize), cancellationToken).ConfigureAwait(false);
             }
         }
@@ -113,8 +108,7 @@ namespace Simula.Scripting.Json
         private Task WriteValueInternalAsync(JsonToken token, string value, CancellationToken cancellationToken)
         {
             Task task = InternalWriteValueAsync(token, cancellationToken);
-            if (task.IsCompletedSucessfully())
-            {
+            if (task.IsCompletedSucessfully()) {
                 return _writer.WriteAsync(value, cancellationToken);
             }
 
@@ -156,8 +150,7 @@ namespace Simula.Scripting.Json
 
         private Task WriteDigitsAsync(ulong uvalue, bool negative, CancellationToken cancellationToken)
         {
-            if (uvalue <= 9 & !negative)
-            {
+            if (uvalue <= 9 & !negative) {
                 return _writer.WriteAsync((char)('0' + uvalue), cancellationToken);
             }
 
@@ -168,8 +161,7 @@ namespace Simula.Scripting.Json
         private Task WriteIntegerValueAsync(ulong uvalue, bool negative, CancellationToken cancellationToken)
         {
             Task task = InternalWriteValueAsync(JsonToken.Integer, cancellationToken);
-            if (task.IsCompletedSucessfully())
-            {
+            if (task.IsCompletedSucessfully()) {
                 return WriteDigitsAsync(uvalue, negative, cancellationToken);
             }
 
@@ -185,8 +177,7 @@ namespace Simula.Scripting.Json
         internal Task WriteIntegerValueAsync(long value, CancellationToken cancellationToken)
         {
             bool negative = value < 0;
-            if (negative)
-            {
+            if (negative) {
                 value = -value;
             }
 
@@ -210,14 +201,12 @@ namespace Simula.Scripting.Json
         internal Task DoWritePropertyNameAsync(string name, CancellationToken cancellationToken)
         {
             Task task = InternalWritePropertyNameAsync(name, cancellationToken);
-            if (!task.IsCompletedSucessfully())
-            {
+            if (!task.IsCompletedSucessfully()) {
                 return DoWritePropertyNameAsync(task, name, cancellationToken);
             }
 
             task = WriteEscapedStringAsync(name, _quoteName, cancellationToken);
-            if (task.IsCompletedSucessfully())
-            {
+            if (task.IsCompletedSucessfully()) {
                 return _writer.WriteAsync(':', cancellationToken);
             }
 
@@ -241,21 +230,16 @@ namespace Simula.Scripting.Json
         {
             await InternalWritePropertyNameAsync(name, cancellationToken).ConfigureAwait(false);
 
-            if (escape)
-            {
+            if (escape) {
                 await WriteEscapedStringAsync(name, _quoteName, cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                if (_quoteName)
-                {
+            } else {
+                if (_quoteName) {
                     await _writer.WriteAsync(_quoteChar).ConfigureAwait(false);
                 }
 
                 await _writer.WriteAsync(name, cancellationToken).ConfigureAwait(false);
 
-                if (_quoteName)
-                {
+                if (_quoteName) {
                     await _writer.WriteAsync(_quoteChar).ConfigureAwait(false);
                 }
             }
@@ -270,8 +254,7 @@ namespace Simula.Scripting.Json
         internal Task DoWriteStartArrayAsync(CancellationToken cancellationToken)
         {
             Task task = InternalWriteStartAsync(JsonToken.StartArray, JsonContainerType.Array, cancellationToken);
-            if (task.IsCompletedSucessfully())
-            {
+            if (task.IsCompletedSucessfully()) {
                 return _writer.WriteAsync('[', cancellationToken);
             }
 
@@ -292,8 +275,7 @@ namespace Simula.Scripting.Json
         internal Task DoWriteStartObjectAsync(CancellationToken cancellationToken)
         {
             Task task = InternalWriteStartAsync(JsonToken.StartObject, JsonContainerType.Object, cancellationToken);
-            if (task.IsCompletedSucessfully())
-            {
+            if (task.IsCompletedSucessfully()) {
                 return _writer.WriteAsync('{', cancellationToken);
             }
 
@@ -327,8 +309,7 @@ namespace Simula.Scripting.Json
         internal Task DoWriteUndefinedAsync(CancellationToken cancellationToken)
         {
             Task task = InternalWriteValueAsync(JsonToken.Undefined, cancellationToken);
-            if (task.IsCompletedSucessfully())
-            {
+            if (task.IsCompletedSucessfully()) {
                 return _writer.WriteAsync(JsonConvert.Undefined, cancellationToken);
             }
 
@@ -422,14 +403,11 @@ namespace Simula.Scripting.Json
             await InternalWriteValueAsync(JsonToken.Date, cancellationToken).ConfigureAwait(false);
             value = DateTimeUtils.EnsureDateTime(value, DateTimeZoneHandling);
 
-            if (StringUtils.IsNullOrEmpty(DateFormatString))
-            {
+            if (StringUtils.IsNullOrEmpty(DateFormatString)) {
                 int length = WriteValueToBuffer(value);
 
                 await _writer.WriteAsync(_writeBuffer!, 0, length, cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
+            } else {
                 await _writer.WriteAsync(_quoteChar).ConfigureAwait(false);
                 await _writer.WriteAsync(value.ToString(DateFormatString, Culture), cancellationToken).ConfigureAwait(false);
                 await _writer.WriteAsync(_quoteChar).ConfigureAwait(false);
@@ -453,14 +431,11 @@ namespace Simula.Scripting.Json
         {
             await InternalWriteValueAsync(JsonToken.Date, cancellationToken).ConfigureAwait(false);
 
-            if (StringUtils.IsNullOrEmpty(DateFormatString))
-            {
+            if (StringUtils.IsNullOrEmpty(DateFormatString)) {
                 int length = WriteValueToBuffer(value);
 
                 await _writer.WriteAsync(_writeBuffer!, 0, length, cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
+            } else {
                 await _writer.WriteAsync(_quoteChar).ConfigureAwait(false);
                 await _writer.WriteAsync(value.ToString(DateFormatString, Culture), cancellationToken).ConfigureAwait(false);
                 await _writer.WriteAsync(_quoteChar).ConfigureAwait(false);
@@ -580,10 +555,8 @@ namespace Simula.Scripting.Json
 #endif
         public override Task WriteValueAsync(object? value, CancellationToken cancellationToken = default)
         {
-            if (_safeAsync)
-            {
-                if (value == null)
-                {
+            if (_safeAsync) {
+                if (value == null) {
                     return WriteNullAsync(cancellationToken);
                 }
 #if HAVE_BIG_INTEGER
@@ -634,8 +607,7 @@ namespace Simula.Scripting.Json
         internal Task DoWriteValueAsync(string? value, CancellationToken cancellationToken)
         {
             Task task = InternalWriteValueAsync(JsonToken.String, cancellationToken);
-            if (task.IsCompletedSucessfully())
-            {
+            if (task.IsCompletedSucessfully()) {
                 return value == null ? _writer.WriteAsync(JsonConvert.Null, cancellationToken) : WriteEscapedStringAsync(value, true, cancellationToken);
             }
 
@@ -706,8 +678,7 @@ namespace Simula.Scripting.Json
         internal Task WriteValueNotNullAsync(Uri value, CancellationToken cancellationToken)
         {
             Task task = InternalWriteValueAsync(JsonToken.String, cancellationToken);
-            if (task.IsCompletedSucessfully())
-            {
+            if (task.IsCompletedSucessfully()) {
                 return WriteEscapedStringAsync(value.OriginalString, true, cancellationToken);
             }
 
@@ -767,8 +738,7 @@ namespace Simula.Scripting.Json
         {
             UpdateScopeWithFinishedValue();
             Task task = AutoCompleteAsync(JsonToken.Undefined, cancellationToken);
-            if (task.IsCompletedSucessfully())
-            {
+            if (task.IsCompletedSucessfully()) {
                 return WriteRawAsync(json, cancellationToken);
             }
 
@@ -783,25 +753,21 @@ namespace Simula.Scripting.Json
 
         internal char[] EnsureWriteBuffer(int length, int copyTo)
         {
-            if (length < 35)
-            {
+            if (length < 35) {
                 length = 35;
             }
 
             char[]? buffer = _writeBuffer;
-            if (buffer == null)
-            {
+            if (buffer == null) {
                 return _writeBuffer = BufferUtils.RentBuffer(_arrayPool, length);
             }
 
-            if (buffer.Length >= length)
-            {
+            if (buffer.Length >= length) {
                 return buffer;
             }
 
             char[] newBuffer = BufferUtils.RentBuffer(_arrayPool, length);
-            if (copyTo != 0)
-            {
+            if (copyTo != 0) {
                 Array.Copy(buffer, newBuffer, copyTo);
             }
 

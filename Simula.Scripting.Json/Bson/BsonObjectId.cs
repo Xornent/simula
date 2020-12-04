@@ -1,6 +1,6 @@
 ﻿
-using System;
 using Simula.Scripting.Json.Utilities;
+using System;
 
 #nullable disable
 
@@ -13,8 +13,7 @@ namespace Simula.Scripting.Json.Bson
         public BsonObjectId(byte[] value)
         {
             ValidationUtils.ArgumentNotNull(value, nameof(value));
-            if (value.Length != 12)
-            {
+            if (value.Length != 12) {
                 throw new ArgumentException("An ObjectId must be 12 bytes", nameof(value));
             }
 

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Media;
-using Simula.TeX.Utils;
 
 namespace Simula.TeX.Colors
 {
@@ -33,10 +32,9 @@ namespace Simula.TeX.Colors
 
         protected override Color? ParseComponents(List<string> components)
         {
-            var values = components.Select(x =>
-            {
+            var values = components.Select(x => {
                 var (success, val) = TryParseComponent(x);
-                return success ? (T?) val : null;
+                return success ? (T?)val : null;
             }).ToArray();
             var index = 0;
             T? alpha = DefaultAlpha;
@@ -51,7 +49,7 @@ namespace Simula.TeX.Colors
                 alpha = values[index];
 
             return alpha == null || r == null || g == null || b == null
-                ? (Color?) null
+                ? (Color?)null
                 : Color.FromArgb(
                     GetByteValue(alpha.Value),
                     GetByteValue(r.Value),

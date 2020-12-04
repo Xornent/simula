@@ -1,11 +1,11 @@
 ﻿
 namespace Simula.Editor.Utils
 {
-	static class Constants
-	{
-		/// <summary>
-		/// Multiply with this constant to convert from points to device-independent pixels.
-		/// </summary>
-		public const double PixelPerPoint = 4 / 3.0;
-	}
+    internal static class Constants
+    {
+        /// <summary>
+        /// Multiply with this constant to convert from points to device-independent pixels.
+        /// </summary>
+        public const double PixelPerPoint = 4 / 3.0;
+    }
 }

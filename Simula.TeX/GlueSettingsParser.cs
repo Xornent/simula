@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Xml.Linq;
 
 namespace Simula.TeX
@@ -13,8 +10,8 @@ namespace Simula.TeX
     {
         private static readonly string resourceName = TexUtilities.ResourcesDataDirectory + "GlueSettings.xml";
 
-        private static IDictionary<string, TexAtomType> typeMappings;
-        private static IDictionary<string, TexStyle> styleMappings;
+        private static readonly IDictionary<string, TexAtomType> typeMappings;
+        private static readonly IDictionary<string, TexStyle> styleMappings;
 
         static GlueSettingsParser()
         {
@@ -48,24 +45,24 @@ namespace Simula.TeX
 
         private static void SetStyleMappings()
         {
-            styleMappings.Add("display", (TexStyle)((int)TexStyle.Display / 2));
+            styleMappings.Add("display", (int)TexStyle.Display / 2);
             styleMappings.Add("text", (TexStyle)((int)TexStyle.Text / 2));
             styleMappings.Add("script", (TexStyle)((int)TexStyle.Script / 2));
             styleMappings.Add("script_script", (TexStyle)((int)TexStyle.ScriptScript / 2));
         }
 
-        private IList<Glue> glueTypes;
-        private IDictionary<string, int> glueTypeMappings;
+        private readonly IList<Glue> glueTypes;
+        private readonly IDictionary<string, int> glueTypeMappings;
 
-        private XElement rootElement;
+        private readonly XElement rootElement;
 
         public GlueSettingsParser()
         {
             var doc = XDocument.Load(new System.IO.StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName)!));
-            this.rootElement = doc.Root;
+            rootElement = doc.Root;
 
-            this.glueTypes = new List<Glue>();
-            this.glueTypeMappings = new Dictionary<string, int>();
+            glueTypes = new List<Glue>();
+            glueTypeMappings = new Dictionary<string, int>();
 
             ParseGlueTypes();
         }
@@ -75,21 +72,18 @@ namespace Simula.TeX
             return glueTypes;
         }
 
-        public int[, ,] GetGlueRules()
+        public int[,,] GetGlueRules()
         {
             var rules = new int[typeMappings.Count, typeMappings.Count, styleMappings.Count];
 
             var glueTableElement = rootElement.Element("GlueTable");
-            if (glueTableElement != null)
-            {
-                foreach (var glueElement in glueTableElement.Elements("Glue"))
-                {
+            if (glueTableElement != null) {
+                foreach (var glueElement in glueTableElement.Elements("Glue")) {
                     var leftType = typeMappings[glueElement.AttributeValue("lefttype")];
                     var rightType = typeMappings[glueElement.AttributeValue("righttype")];
                     var glueType = glueTypeMappings[glueElement.AttributeValue("gluetype")];
 
-                    foreach (var styleElement in glueElement.Elements("Style"))
-                    {
+                    foreach (var styleElement in glueElement.Elements("Style")) {
                         var styleName = styleElement.AttributeValue("name");
                         rules[(int)leftType, (int)rightType, (int)styleMappings[styleName]] = glueType;
                     }
@@ -105,10 +99,8 @@ namespace Simula.TeX
             int index = 0;
 
             var glueTypesElement = rootElement.Element("GlueTypes");
-            if (glueTypesElement != null)
-            {
-                foreach (var glueTypeElement in glueTypesElement.Elements("GlueType"))
-                {
+            if (glueTypesElement != null) {
+                foreach (var glueTypeElement in glueTypesElement.Elements("GlueType")) {
                     var name = glueTypeElement.AttributeValue("name");
                     var glue = CreateGlue(glueTypeElement, name);
                     if (name.Equals("default", StringComparison.InvariantCultureIgnoreCase))
@@ -119,15 +111,13 @@ namespace Simula.TeX
             }
 
             // Create default glue type if it does not exist.
-            if (defaultIndex < 0)
-            {
+            if (defaultIndex < 0) {
                 defaultIndex = index;
                 glueTypes.Add(new Glue(0, 0, 0, "default"));
             }
 
             // Insure that default glue type is first in list.
-            if (defaultIndex > 0)
-            {
+            if (defaultIndex > 0) {
                 var tempGlueType = glueTypes[defaultIndex];
                 glueTypes[defaultIndex] = glueTypes[0];
                 glueTypes[0] = tempGlueType;

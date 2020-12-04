@@ -7,8 +7,7 @@ namespace Simula.Scripting.Json
     public sealed class JsonArrayAttribute : JsonContainerAttribute
     {
         private bool _allowNullItems;
-        public bool AllowNullItems
-        {
+        public bool AllowNullItems {
             get => _allowNullItems;
             set => _allowNullItems = value;
         }
