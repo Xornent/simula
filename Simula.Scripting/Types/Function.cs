@@ -19,18 +19,25 @@ namespace Simula.Scripting.Types
     /// -                  operator :: binary (array :: parameter flag)
     /// call               ( ... )
     /// </summary>
-    public class Function
+    public class Function : Var
     {
         private Func<dynamic, dynamic[], dynamic>[] raw = new Func<dynamic, dynamic[], dynamic>[] { };
-        public Function(Func<dynamic, dynamic[], dynamic> function)
+        public Function() 
+        {
+            this._fields.Add("isMultiple", false);
+        }
+
+        public Function(Func<dynamic, dynamic[], dynamic> function) : this()
         {
             this.raw = new Func<dynamic, dynamic[], dynamic>[] { function };
         }
 
-        public Function(Func<dynamic, dynamic[], dynamic>[] functions)
+        public Function(Func<dynamic, dynamic[], dynamic>[] functions) : this()
         {
             var list = raw.ToList();
             list.AddRange(functions);
+            if (list.Count > 1)
+                this._fields["isMultiple"] = new Boolean(true);
             raw = list.ToArray();
         }
 
@@ -43,25 +50,32 @@ namespace Simula.Scripting.Types
         public static Function removeFunction;
         public static Function select;
         public static Function given;
-        public Boolean isMultiple {
-            get { return new Boolean(raw?.Count() > 1); }
-        }
 
         public dynamic _call(object? sender, dynamic[] parameter) 
         {
-            return raw[0](sender, parameter);
+            return raw[0](sender ?? Null.NULL, parameter);
         }
 
         public static Function _substract;
         public static Function _add;
+
+        internal new string name;
+        internal new string type = "func";
+
+        public override string ToString()
+        {
+            return "func";
+        }
     }
 
-    public class Parameter
+    public class Parameter : Var
     {
+        internal new string type = "param";
     }
 
-    public class Pair
+    public class Pair : Var
     {
+        public Pair() { }
         public Pair(String memberKey, dynamic member)
         {
             this.key = memberKey;
@@ -70,5 +84,7 @@ namespace Simula.Scripting.Types
 
         public String key;
         public dynamic value;
+
+        internal new string type = "pair";
     }
 }

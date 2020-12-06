@@ -1,5 +1,6 @@
 ﻿using Simula.Scripting.Contexts;
 using Simula.Scripting.Token;
+using Simula.Scripting.Build;
 
 namespace Simula.Scripting.Syntax
 {
@@ -14,5 +15,7 @@ namespace Simula.Scripting.Syntax
         {
             return new Execution() { Flag = ExecutionFlag.Go };
         }
+
+        public virtual string Generate(GenerationContext ctx) { return ""; }
     }
 }

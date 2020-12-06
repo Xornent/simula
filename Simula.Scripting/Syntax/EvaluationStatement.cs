@@ -1,4 +1,5 @@
-﻿using Simula.Scripting.Contexts;
+﻿using Simula.Scripting.Build;
+using Simula.Scripting.Contexts;
 using Simula.Scripting.Token;
 using System.Collections.Generic;
 
@@ -15,6 +16,12 @@ namespace Simula.Scripting.Syntax
             var operation = EvaluateOperators[0];
 
             return operation.Operate(ctx);
+        }
+
+        public override string Generate(GenerationContext ctx)
+        {
+            string code = ctx.Indention() + EvaluateOperators[0].Generate(ctx);
+            return code;
         }
 
         private string EvalString = "";
@@ -169,7 +176,8 @@ namespace Simula.Scripting.Syntax
                                         token.Insert(c - 1, op ?? new OperatorStatement());
                                         return true;
                                     default:
-                                        op = new BinaryOperation();
+                                        if (operation == ".") op = new MemberOperation();
+                                        else op = new BinaryOperation();
                                         op.Left = token[c-1];
                                         op.Right = token[c+1];
                                         op.Operator = new Operator(operation);
@@ -230,7 +238,8 @@ namespace Simula.Scripting.Syntax
                                         token.Insert(c - 1, op ?? new OperatorStatement());
                                         return true;
                                     default:
-                                        op = new BinaryOperation();
+                                        if (operation == ".") op = new MemberOperation();
+                                        else op = new BinaryOperation();
                                         op.Left = token[c-1];
                                         op.Right = token[c+1];
                                         op.Operator = new Operator(operation);

@@ -1,5 +1,6 @@
 ﻿using Simula.Scripting.Contexts;
 using Simula.Scripting.Token;
+using Simula.Scripting.Build;
 using System.Collections.Generic;
 
 namespace Simula.Scripting.Syntax
@@ -170,6 +171,19 @@ namespace Simula.Scripting.Syntax
             }
 
             return new Execution();
+        }
+
+        public override string Generate(GenerationContext ctx)
+        {
+            string code = ctx.Indention() + "{\n";
+            ctx.IndentionLevel++;
+            foreach (var item in this.Children) {
+                code += (item.Generate(ctx) + "\n");
+            }
+            ctx.IndentionLevel--;
+            code += ctx.Indention() + "}";
+
+            return code;
         }
     }
 }

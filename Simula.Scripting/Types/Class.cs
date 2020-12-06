@@ -2,38 +2,30 @@
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using Simula.Scripting.Contexts;
 using System.Text;
 
 namespace Simula.Scripting.Types
 {
-    public class Class
+    public class Class : Var
     {
-        public Class() 
-        {
-            _create = new Function((self, args) => {
-                return Types.Null.NULL;
-            });
-        }
-
+        public Class() { }
         public Class(Type type, dynamic[]? native = null)
         {
             this.ClrType = type;
             this.ClrArguments = native;
         }
 
-        public Class(Function creator)
-        {
-            this._create = creator;
-        }
-
         private Type ClrType;
         private dynamic[]? ClrArguments;
 
-        public Function _create = new Function((self, args) => {
+        public static Function _create = new Function((self, args) => {
             dynamic expando = new ExpandoObject();
             var instance = Activator.CreateInstance(self.ClrType, System.Reflection.BindingFlags.Default, null, self.ClrArgument, null);
+            if (!DynamicRuntime.FunctionCache.ContainsKey(instance.type))
+                DynamicRuntime.CacheFunction(instance.type, instance.GetType());
             return instance ?? Null.NULL;
-
+            
             if (instance == null) return Null.NULL;
             
             expando._instance = instance;
@@ -52,7 +44,7 @@ namespace Simula.Scripting.Types
             return expando;
         });
 
-        public Class type;
+        internal new string type = "class";
 
         public static Class typeNull = new Class(typeof(Null));
         public static Class typeClass = new Class(typeof(Class));
@@ -63,5 +55,10 @@ namespace Simula.Scripting.Types
         public static Class typeBool = new Class(typeof(Boolean));
         public static Class typeString = new Class(typeof(String));
         public static Class typeArr = new Class(typeof(Array));
+
+        public override string ToString()
+        {
+            return "class";
+        }
     }
 }

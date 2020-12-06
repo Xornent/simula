@@ -22,16 +22,11 @@ namespace Simula.Scripting.Syntax
                 ops[ops.Count - 1] = item;
             }
 
-            foreach (var item in ops) {
-                if (item == null) members.Add(new Execution());
-                else members.Add(item.Operate(ctx));
-            }
-
-            if (members.Count > 0) return members[0];
+            if (ops.Count > 0) return ops[0].Operate(ctx);
             else return new Execution();
         }
 
-        public List<Execution> OperateList(DynamicRuntime ctx) {
+        public List<Execution> FullExecution(DynamicRuntime ctx) {
             List<Execution> members = new List<Execution>();
             if (EvaluateOperators.Count == 0) return new List<Execution>();
             List<OperatorStatement?> ops = new List<OperatorStatement?>() { null };
@@ -53,11 +48,62 @@ namespace Simula.Scripting.Syntax
 
             return members;
         }
+
+        public List<dynamic> DynamicFullExecution(DynamicRuntime ctx)
+        {
+            List<dynamic> members = new List<dynamic>();
+            if (EvaluateOperators.Count == 0) return new List<dynamic>();
+            List<OperatorStatement?> ops = new List<OperatorStatement?>() { null };
+            foreach (var item in this.EvaluateOperators) {
+                if (item is SelfOperation) {
+                    if (((SelfOperation)item).Self == ",") {
+                        ops.Add(null);
+                        continue;
+                    }
+                }
+
+                ops[ops.Count - 1] = item;
+            }
+
+            foreach (var item in ops) {
+                if (item == null) members.Add(Types.Null.NULL);
+                else members.Add(item.Operate(ctx).Result);
+            }
+
+            return members;
+        }
     }
 
     public class ParenthesisOperation : ParameterOperation { }
     public class BracketOperation : ParameterOperation { }
-    public class BraceOperation : ParameterOperation { }
+    public class BraceOperation : ParameterOperation 
+    {
+        public override Execution Operate(DynamicRuntime ctx)
+        {
+            Types.Array arr = new Types.Array();
+            List<dynamic> members = new List<dynamic>();
+            if (EvaluateOperators.Count == 0) return new Execution(ctx, arr);
+            List<OperatorStatement?> ops = new List<OperatorStatement?>() { null };
+            foreach (var item in this.EvaluateOperators) {
+                if (item is SelfOperation) {
+                    if (((SelfOperation)item).Self == ",") {
+                        ops.Add(null);
+                        continue;
+                    }
+                }
+
+                ops[ops.Count - 1] = item;
+            }
+
+            foreach (var item in ops) {
+                if (item == null) members.Add(Types.Null.NULL);
+                else members.Add(item.Operate(ctx).Result);
+            }
+
+            arr = new Types.Array(members.ToArray());
+            return new Execution(ctx, arr);
+        }
+    }
 
     public class IndexOperation : OperatorStatement
     {
@@ -66,6 +112,19 @@ namespace Simula.Scripting.Syntax
 
     public class FunctionCallOperation : OperatorStatement
     {
-        
+        public override Execution Operate(DynamicRuntime ctx)
+        {
+            if (this.Left == null) return new Execution();
+            dynamic[] args = ((ParameterOperation)(this.Right)).DynamicFullExecution(ctx).ToArray();
+            dynamic obj = this.Left.Operate(ctx).Result;
+
+            if(obj.type == "class") {
+                return Types.Class._create._call(obj, args);
+            } else if(obj.type == "func") {
+                return new Execution(ctx, obj._call(obj, args));
+            }
+
+            return new Execution();
+        }
     }
 }

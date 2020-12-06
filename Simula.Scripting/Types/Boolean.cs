@@ -4,13 +4,10 @@ using System.Text;
 
 namespace Simula.Scripting.Types
 {
-    public class Boolean
+    public class Boolean : Var
     {
         private bool raw = false;
-        public Boolean()
-        {
-        }
-
+        public Boolean() { }
         public Boolean(bool val)
         {
             this.raw = val;
@@ -20,18 +17,18 @@ namespace Simula.Scripting.Types
             return (Boolean)(self.raw == args[0]);
         });
 
-        public Function _notequals = new Function((self, args) => {
+        public static Function _notequals = new Function((self, args) => {
             return (Boolean)(self.raw != args[0]);
         });
 
-        public Function _not = new Function((self, args) => {
+        public static Function _not = new Function((self, args) => {
             return new Boolean(!(self.raw));
         });
 
-        public Function _add;
-        public Function _or;
+        public static Function _and;
+        public static Function _or;
 
-        public Class type = Class.typeBool;
+        internal new string type = "bool";
 
         public static implicit operator bool(Boolean b)
         {
@@ -41,6 +38,11 @@ namespace Simula.Scripting.Types
         public static implicit operator Boolean(bool b)
         {
             return new Boolean(b);
+        }
+
+        public override string ToString()
+        {
+            return raw.ToString();
         }
     }
 }

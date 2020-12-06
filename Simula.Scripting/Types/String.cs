@@ -3,9 +3,10 @@ using System.Dynamic;
 
 namespace Simula.Scripting.Types
 {
-    public class String
+    public class String : Var
     {
         private string raw = "";
+        public String() { }
         public String(string systemString)
         {
             this.raw = systemString;
@@ -18,5 +19,17 @@ namespace Simula.Scripting.Types
         public static Function toUpper = new Function((self, args) => {
             return new String(self.raw.ToUpper());
         });
+
+        internal new string type = "string";
+
+        public static implicit operator string(String str)
+        {
+            return str.raw;
+        }
+
+        public override string ToString()
+        {
+            return raw;
+        }
     }
 }

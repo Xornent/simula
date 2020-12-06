@@ -2,6 +2,8 @@ using Simula.Scripting.Syntax;
 using System.Collections.Generic;
 using System.Dynamic;
 using Simula.Scripting.Types;
+using System;
+using System.Reflection;
 
 namespace Simula.Scripting.Contexts
 {
@@ -29,9 +31,26 @@ namespace Simula.Scripting.Contexts
             Store.@string = Class.typeString;
             Store.@bool = Class.typeBool;
             Store.@array = Class.typeArr;
+
+            Store.alert = new Function((self, args) => {
+                if(args[0] == null) System.Windows.MessageBox.Show("INVALID : NULL");
+                else System.Windows.MessageBox.Show((args[0]).ToString());
+                return args[0];
+            })
+            { name = "alert" };
+
+            CacheFunction("int", typeof(Integer));
+            CacheFunction("float", typeof(Float));
+            CacheFunction("func", typeof(Function));
+            CacheFunction("class", typeof(Class));
+            CacheFunction("selector", typeof(Selector));
+            CacheFunction("string", typeof(Simula.Scripting.Types.String));
+            CacheFunction("bool", typeof(Simula.Scripting.Types.Boolean));
+            CacheFunction("array", typeof(Simula.Scripting.Types.Array));
         }
 
         public dynamic Store = new ExpandoObject();
+        public static Dictionary<string, List<Function>> FunctionCache = new Dictionary<string, List<Function>>();
         public static Dictionary<string, Operator> Registry = new Dictionary<string, Operator>() {
             {"_multiply", new Operator("*")},
             {"_divide", new Operator("/")},
@@ -46,7 +65,24 @@ namespace Simula.Scripting.Contexts
             {"_notequals", new Operator("!=")},
             {"_or", new Operator("||")},
             {"_and", new Operator("&&")},
-            {"_assign", new Operator("=")}
+            {"_assign", new Operator("=")},
+            {"_addassign", new Operator("+=") }
         };
+
+        public static void CacheFunction(string alias, Type type)
+        {
+            if (FunctionCache.ContainsKey(alias)) FunctionCache.Remove(alias);
+            List<Function> functions = new List<Function>();
+            foreach(var field in type.GetFields()) {
+                if(field.IsStatic) {
+                    if (field.GetValue(null) is Function f) {
+                        f.name = field.Name;
+                        functions.Add(f);
+                    }
+                }
+            }
+
+            FunctionCache.Add(alias, functions);
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Simula.Scripting.Contexts;
+﻿using Simula.Scripting.Build;
+using Simula.Scripting.Contexts;
 using Simula.Scripting.Token;
 
 namespace Simula.Scripting.Syntax
@@ -15,6 +16,12 @@ namespace Simula.Scripting.Syntax
         public override Execution Execute(DynamicRuntime ctx)
         {
             return new Execution() { Flag = ExecutionFlag.Break };
+        }
+
+        public override string Generate(GenerationContext ctx)
+        {
+            string code = ctx.Indention() + "break;";
+            return code;
         }
     }
 }

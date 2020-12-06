@@ -6,9 +6,10 @@ using System.Numerics;
 
 namespace Simula.Scripting.Types
 {
-    public class Integer
+    public class Integer : Var
     {
         private BigInteger raw = 0;
+        public Integer() { }
         public Integer(BigInteger bigint)
         {
             this.raw = bigint;
@@ -63,14 +64,17 @@ namespace Simula.Scripting.Types
             return new Boolean(self.raw != args[0].raw);
         });
 
+        public static Function _addassign = new Function((self, args) => {
+            self.raw += args[0];
+            return self;
+        });
+
         public Function _lshift;
         public Function _rshift;
         public Function _lincrement;
         public Function _rincrement;
         public Function _ldecrement;
         public Function _rdecrement;
-
-        public Class type = Class.typeInt;
 
         public static implicit operator BigInteger(Integer i)
         {
@@ -90,6 +94,13 @@ namespace Simula.Scripting.Types
         public static implicit operator Integer(int i) 
         {
             return new Integer(i);
+        }
+
+        internal new string type = "int";
+
+        public override string ToString()
+        {
+            return raw.ToString();
         }
     }
 }

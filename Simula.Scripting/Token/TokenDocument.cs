@@ -111,7 +111,8 @@ namespace Simula.Scripting.Token
                         } else if (token == ";") {
                             end = new Position(linenum, columnnum - 1);
                             token.Location = new Span(start, end);
-                            Tokens.Add(token);
+                            token = new Token("");
+                            start = new Position(linenum, columnnum + 1);
                             Tokens.Add(new Token("<newline>", new Span(
                                 new Position(linenum, columnnum), new Position(linenum, columnnum))));
                         }

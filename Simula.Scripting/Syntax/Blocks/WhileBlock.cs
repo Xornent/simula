@@ -22,15 +22,12 @@ namespace Simula.Scripting.Syntax
         {
             var code = new BlockStatement() { Children = this.Children };
             var evaluation = (bool?)(this.Evaluation?.Execute(ctx).Result) ?? false;
-            int i = 0;
             while (evaluation) {
                 var result = code.Execute(ctx);
                 if(result.Flag == ExecutionFlag.Continue) continue;
                 if(result.Flag == ExecutionFlag.Break) break;
 
                 evaluation = (bool?)(this.Evaluation?.Execute(ctx).Result) ?? false;
-                i++;
-                evaluation = i < 1000000;
             }
             
             return new Execution();
