@@ -14,9 +14,6 @@ namespace Simula.Scripting.Syntax
 
         public new void Parse(TokenCollection collection)
         {
-
-            // enum [readonly EvaluationStatement] in [EvaluationStatement] [at [writable EvaluationStatement]]
-
             System.Dynamic.ExpandoObject expando = new System.Dynamic.ExpandoObject();
             expando.TryAdd("_init", (Func<dynamic[], dynamic>)(delegate (dynamic[] a) {
                 return "s";

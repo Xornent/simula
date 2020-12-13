@@ -9,18 +9,19 @@ namespace Simula.Scripting.Syntax
     public class BinaryOperation : OperatorStatement
     {
         IDictionary<string, object> store = new Dictionary<string, object>();
-        public override Execution Operate(DynamicRuntime ctx) {
-            if(store.Count == 0) store = (IDictionary<string, object>)ctx.Store;
+        public override Execution Operate(DynamicRuntime ctx)
+        {
+            if (store.Count == 0) store = (IDictionary<string, object>)ctx.Store;
             if (this.Left == null) return new Execution();
-            if(this.Right == null) return new Execution();
+            if (this.Right == null) return new Execution();
             if (this.Operator.Symbol == "=") {
                 dynamic result = this.Right.Operate(ctx).Result;
                 if (this.Left is SelfOperation self) {
                     store[self.Self] = result;
-                } else if(this.Left is MemberOperation member) {
+                } else if (this.Left is MemberOperation member) {
                     string raw = member.Right.RawEvaluateToken[0];
                     dynamic eval = member.Left.Operate(ctx).Result;
-                    if(eval is ExpandoObject exp) {
+                    if (eval is ExpandoObject exp) {
                         IDictionary<string, object> contents = (IDictionary<string, object>)exp;
                         contents[raw] = result;
                     } else {
@@ -68,11 +69,11 @@ namespace Simula.Scripting.Syntax
                 }
 
                 string type = left.type;
-                if (!DynamicRuntime.FunctionCache.ContainsKey(type)) {
-                    DynamicRuntime.CacheFunction(type, left.GetType());
+                if (!ctx.FunctionCache.ContainsKey(type)) {
+                    ctx.CacheFunction(type, left.GetType());
                 }
 
-                var function = DynamicRuntime.FunctionCache[type].Find((func) => {
+                var function = ctx.FunctionCache[type].Find((func) => {
                     if (func.name == raw) return true;
                     else return false;
                 });

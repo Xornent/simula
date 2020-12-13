@@ -45,9 +45,10 @@ namespace Simula.Scripting.Syntax
             }
 
             IDictionary<string, object> dict = (IDictionary<string, object>) ctx.Store;
-            if(dict.ContainsKey(raw))
+            if (dict.ContainsKey(raw)) {
+                if (dict[raw] is Reference r) return new Execution(ctx, r.GetDynamic());
                 return new Execution(ctx, dict[raw]);
-                else return new Execution();
+            } else return new Execution();
         }
     }
 }

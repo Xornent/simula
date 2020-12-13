@@ -7,9 +7,6 @@ using Simula.Scripting.Contexts;
 
 namespace Simula.Pages
 {
-    /// <summary>
-    /// SourceEditor.xaml 的交互逻辑
-    /// </summary>
     public partial class SourceEditor : UserControl
     {
         public SourceEditor()

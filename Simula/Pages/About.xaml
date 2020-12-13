@@ -51,17 +51,17 @@
                         <StackPanel Orientation="Vertical">
                             <Label Content="更新日志" HorizontalAlignment="Center" FontSize="15" Margin="0,0,0,0"/>
                             <StackPanel Orientation="Vertical">
-                                <Label Content="版本 0.0.3"  FontSize="13" FontFamily="Consolas, simsun" Margin="0,10,0,0"/>
+                                <Label Content="版本 0.3.0"  FontSize="13" FontFamily="Consolas, simsun" Margin="0,10,0,0"/>
                                 <TextBlock Grid.Column="1" Margin="20,0,0,0" FontFamily="Consolas, simsun" LineHeight="16"
                                        Text="1. 简易的 Simula Script 语言标准
                                              2. 代码编辑器的非智能实现" 
                                        TextWrapping="Wrap" Foreground="Gray"/>
-                                <Label Content="版本 0.0.2"  FontSize="13" FontFamily="Consolas, simsun" Margin="0,10,0,0"/>
+                                <Label Content="版本 0.2.0"  FontSize="13" FontFamily="Consolas, simsun" Margin="0,10,0,0"/>
                                 <TextBlock Grid.Column="1" Margin="20,0,0,0" FontFamily="Consolas, simsun" LineHeight="16"
                                        Text="1. 设计用户界面，定义了停靠选项卡和菜单的材质
                                              2. 取消了停靠式窗口的设计" 
                                        TextWrapping="Wrap" Foreground="Gray"/>
-                                <Label Content="版本 0.0.1"  FontSize="13" FontFamily="Consolas, simsun" Margin="0,10,0,0"/>
+                                <Label Content="版本 0.1.0"  FontSize="13" FontFamily="Consolas, simsun" Margin="0,10,0,0"/>
                                 <TextBlock Grid.Column="1" Margin="20,0,0,0" FontFamily="Consolas, simsun" LineHeight="16"
                                        Text="1. 设计用户界面，定义了窗口，主选项卡的基本设计
                                              2. 从 Project Anura Windows 的界面中迁移" 

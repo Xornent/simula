@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Simula.Scripting.Contexts;
+using System.Dynamic;
+using Simula.Scripting.Types;
 
 namespace Simula.Scripting.Syntax
 {
@@ -119,9 +121,14 @@ namespace Simula.Scripting.Syntax
             dynamic obj = this.Left.Operate(ctx).Result;
 
             if(obj.type == "class") {
-                return Types.Class._create._call(obj, args);
+                return new Execution(ctx, Types.Class._create._call(obj, args));
             } else if(obj.type == "func") {
-                return new Execution(ctx, obj._call(obj, args));
+                if(this.Left is MemberOperation member) {
+                    var caller = member.Left.Operate(ctx).Result;
+                    return new Execution(ctx, obj._call(caller, args));
+                }
+
+                return new Execution(ctx, obj._call(null, args));
             }
 
             return new Execution();

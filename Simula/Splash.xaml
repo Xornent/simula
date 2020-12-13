@@ -15,11 +15,11 @@
                 <TextBlock TextAlignment="Right"  Canvas.Left="485" Canvas.Top="20" FontWeight="Black" Text="0.1.0 α - Build 62" Foreground="OrangeRed" FontSize="20"/>
                 <Grid Height="16"/>
                 <TextBlock TextAlignment="Right" Canvas.Left="345" Canvas.Top="80" Text="Simula" FontWeight="Light" FontSize="70"/>
-                <TextBlock TextAlignment="Right" FontSize="11"  TextOptions.TextFormattingMode="Display" Text="Loading Simula Scripting Base Classes ..."/>
-                <Grid Height="16"/>
+                <TextBlock FontFamily="Consolas" TextAlignment="Right" FontSize="11"  TextOptions.TextFormattingMode="Display" Text="Loading Simula Scripting Base Classes ..."/>
+                <Grid Height="26"/>
                 <TextBlock TextAlignment="Right" FontWeight="Bold" Text="版权所有 © Xornent S.I. 2020." FontSize="11"/>
                 <Grid Height="6"/>
-                <TextBlock TextAlignment="Right" Foreground="Gray" FontWeight="Light" Text="本软件的副本是免费发放的, 你应该可以在正规渠道获取合法的发行版本只要你使用, 分发和修改遵守其公共许可协议" LineHeight="15" TextWrapping="Wrap" FontSize="11"/>
+                <TextBlock TextAlignment="Right" Foreground="#555555" FontWeight="Regular" Text="本软件的副本是免费发放的, 你应该可以在正规渠道获取合法的发行版本只要你使用, 分发和修改遵守其公共许可协议" LineHeight="15" TextWrapping="Wrap" FontSize="11"/>
             </StackPanel>
         </Grid>
         <Label Visibility="Hidden" Canvas.Left="370" Canvas.Top="14" FontWeight="UltraLight" Content="Extended" Foreground="OrangeRed" FontSize="25"/>

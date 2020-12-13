@@ -21,13 +21,13 @@ namespace Simula.Scripting.Types
 
         public static Function _create = new Function((self, args) => {
             dynamic expando = new ExpandoObject();
-            var instance = Activator.CreateInstance(self.ClrType, System.Reflection.BindingFlags.Default, null, self.ClrArgument, null);
-            if (!DynamicRuntime.FunctionCache.ContainsKey(instance.type))
-                DynamicRuntime.CacheFunction(instance.type, instance.GetType());
+            var instance = Activator.CreateInstance(self.ClrType, System.Reflection.BindingFlags.Default, null, self.ClrArguments, null);
+            if (!args[0].FunctionCache.ContainsKey(instance.type))
+                args[0].CacheFunction(instance.type, instance.GetType());
             return instance ?? Null.NULL;
-            
+
             if (instance == null) return Null.NULL;
-            
+
             expando._instance = instance;
             var dictionary = (IDictionary<string, object>)expando;
             foreach (var field in self.ClrType.GetFields()) {
@@ -42,19 +42,9 @@ namespace Simula.Scripting.Types
                 expando._init(args);
 
             return expando;
-        });
+        }, new List<Pair>() { });
 
-        internal new string type = "class";
-
-        public static Class typeNull = new Class(typeof(Null));
-        public static Class typeClass = new Class(typeof(Class));
-        public static Class typeFunc = new Class(typeof(Function));
-        public static Class typeSelector = new Class(typeof(Selector));
-        public static Class typeInt = new Class(typeof(Integer));
-        public static Class typeFloat = new Class(typeof(Float));
-        public static Class typeBool = new Class(typeof(Boolean));
-        public static Class typeString = new Class(typeof(String));
-        public static Class typeArr = new Class(typeof(Array));
+        internal new string type = "sys.class";
 
         public override string ToString()
         {

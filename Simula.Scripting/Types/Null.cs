@@ -1,5 +1,8 @@
 using System.Dynamic;
 using System.Collections.Generic;
+using Simula.Scripting.Contexts;
+using Simula.Scripting.Token;
+using Simula.Scripting.Syntax;
 
 namespace Simula.Scripting.Types
 {
@@ -11,6 +14,9 @@ namespace Simula.Scripting.Types
             switch (binder.Name) {
                 case "type":
                     result = new String("null");
+                    return true;
+                case "fullName":
+                    result = "null";
                     return true;
                 default:
                     result = NULL;
@@ -31,8 +37,10 @@ namespace Simula.Scripting.Types
 
     public class Var
     {
-        internal string name;
-        internal string type;
+        internal string fullName = "";
+        internal string name = "";
+        internal string type = "";
+        internal uint pointer = 0;
         internal Dictionary<string, dynamic> _fields = new Dictionary<string, dynamic>();
     }
 }

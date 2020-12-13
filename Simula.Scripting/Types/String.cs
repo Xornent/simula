@@ -1,5 +1,6 @@
 using System;
 using System.Dynamic;
+using System.Collections.Generic;
 
 namespace Simula.Scripting.Types
 {
@@ -14,13 +15,13 @@ namespace Simula.Scripting.Types
 
         public static Function toString = new Function((self, args) => {
             return new String(self.raw);
-        });
+        }, new List<Pair>() { });
 
         public static Function toUpper = new Function((self, args) => {
             return new String(self.raw.ToUpper());
-        });
+        }, new List<Pair>() { });
 
-        internal new string type = "string";
+        internal new string type = "sys.string";
 
         public static implicit operator string(String str)
         {

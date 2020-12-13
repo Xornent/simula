@@ -153,7 +153,6 @@ namespace Simula.Scripting.Syntax
 
                     switch (result.Flag) {
                         case ExecutionFlag.Pass:
-                            return new Execution(ctx, result.Result, ExecutionFlag.Pass);
                         case ExecutionFlag.Return:
                             return new Execution(ctx, result.Result, ExecutionFlag.Return);
                         case ExecutionFlag.Break:

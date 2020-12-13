@@ -21,29 +21,37 @@ namespace Simula.Scripting.Types
     /// </summary>
     public class Function : Var
     {
-        private Func<dynamic, dynamic[], dynamic>[] raw = new Func<dynamic, dynamic[], dynamic>[] { };
+        private List<Func<dynamic, dynamic[], dynamic>> raw = new List<Func<dynamic, dynamic[], dynamic>> { };
+        private List<List<Pair>> param = new List<List<Pair>>();
         public Function() 
         {
             this._fields.Add("isMultiple", false);
         }
 
-        public Function(Func<dynamic, dynamic[], dynamic> function) : this()
+        public Function(Func<dynamic, dynamic[], dynamic> function,
+                        List<Pair> pairs) : this()
         {
-            this.raw = new Func<dynamic, dynamic[], dynamic>[] { function };
+            this.raw.Add(function);
         }
 
-        public Function(Func<dynamic, dynamic[], dynamic>[] functions) : this()
+        public Function(List<Func<dynamic, dynamic[], dynamic>> functions,
+                        List<List<Pair>> pairs) : this()
         {
-            var list = raw.ToList();
-            list.AddRange(functions);
-            if (list.Count > 1)
-                this._fields["isMultiple"] = new Boolean(true);
-            raw = list.ToArray();
+            raw.AddRange(functions);
+            param.AddRange(pairs);
         }
 
         public Function(Function function)
         {
             this.raw = function.raw;
+        }
+
+        public void AddFunction(Func<dynamic, dynamic[], dynamic> function, List<Pair> pairs)
+        {
+            this.raw.Add(function);
+            this.param.Add(pairs);
+            if (raw.Count > 1)
+                this._fields["isMultiple"] = new Boolean(true);
         }
 
         public static Function addFunction;
@@ -60,17 +68,12 @@ namespace Simula.Scripting.Types
         public static Function _add;
 
         internal new string name;
-        internal new string type = "func";
+        internal new string type = "sys.func";
 
         public override string ToString()
         {
             return "func";
         }
-    }
-
-    public class Parameter : Var
-    {
-        internal new string type = "param";
     }
 
     public class Pair : Var
@@ -85,6 +88,20 @@ namespace Simula.Scripting.Types
         public String key;
         public dynamic value;
 
-        internal new string type = "pair";
+        internal new string type = "sys.pair";
+    }
+
+    [System.AttributeUsage(AttributeTargets.All, Inherited = false, AllowMultiple = true)]
+    sealed class FunctionParameterAttribute : Attribute
+    {
+        readonly List<Pair> param = new List<Pair>();
+        public FunctionParameterAttribute(List<Pair> paramInfo)
+        {
+            this.param = paramInfo;
+        }
+
+        public List<Pair> Parameter {
+            get { return param; }
+        }
     }
 }

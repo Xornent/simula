@@ -15,20 +15,20 @@ namespace Simula.Scripting.Types
 
         public static Function _equals = new Function((self, args) => {
             return (Boolean)(self.raw == args[0]);
-        });
+        }, new List<Pair>() { new Pair(new String("right"), new String("bool")) });
 
         public static Function _notequals = new Function((self, args) => {
             return (Boolean)(self.raw != args[0]);
-        });
+        }, new List<Pair>() { new Pair(new String("right"), new String("bool")) });
 
         public static Function _not = new Function((self, args) => {
             return new Boolean(!(self.raw));
-        });
+        }, new List<Pair>() { });
 
         public static Function _and;
         public static Function _or;
 
-        internal new string type = "bool";
+        internal new string type = "sys.bool";
 
         public static implicit operator bool(Boolean b)
         {

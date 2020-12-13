@@ -10,7 +10,7 @@ namespace Simula.Scripting.Types
         public BigInteger rawdata = 0;
         public BigInteger point = 0;
 
-        internal new string type = "float";
+        internal new string type = "sys.float";
 
         public override string ToString()
         {

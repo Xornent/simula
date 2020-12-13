@@ -1189,7 +1189,7 @@
                                     <TextBlock Width="16" Height="16" Text="{TemplateBinding Tag}" Margin="0,2,0,0" FontFamily="Segoe MDL2 Assets"/>
                                 </Grid>
 
-                                <ContentPresenter x:Name="PART_Header" ContentSource="Header" Margin="0, 0,0,0"
+                                <ContentPresenter x:Name="PART_Header" TextElement.FontWeight="Bold" ContentSource="Header" Margin="0, 0,0,0"
                                                   HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
                             </StackPanel>
                         </Border>

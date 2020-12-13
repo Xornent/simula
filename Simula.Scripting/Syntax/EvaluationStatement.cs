@@ -38,7 +38,7 @@ namespace Simula.Scripting.Syntax
             // 运算符次序
 
             // 1. 类型成员运算符(.)
-            // 2. 子类型运算符({...}), 子函数运算符((...))
+            // 2. 子函数运算符((...))
             // 3. 括号表达式运算符(()), 索引表达式运算符([])
             // 4. 指数运算符(**)
             // 5. 乘运算符(*), 除运算符(/)
@@ -181,7 +181,7 @@ namespace Simula.Scripting.Syntax
                                         op.Left = token[c-1];
                                         op.Right = token[c+1];
                                         op.Operator = new Operator(operation);
-                                        break;
+                                        goto case "final";
                                 }
                             }
                         }

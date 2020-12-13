@@ -6,6 +6,6 @@ namespace Simula.Scripting.Types
 {
     public class Selector : Var
     {
-        internal new string type = "selector";
+        internal new string type = "sys.selector";
     }
 }

@@ -23,11 +23,7 @@
             </Grid>
             <Grid>
                 <DockPanel>
-                    <scripting:SimulaTextEditor ShowLineNumbers="True" Language="Simula" x:Name="editor" Margin="5 0 0 0">
-                        <scripting:SimulaTextEditor.Effect>
-                            <DropShadowEffect BlurRadius="5" ShadowDepth="2" Opacity="0.2" Direction="45"/>
-                        </scripting:SimulaTextEditor.Effect>
-                    </scripting:SimulaTextEditor>
+                    <scripting:SimulaTextEditor ShowLineNumbers="True" Language="Simula" x:Name="editor" Margin="6 0 0 0"/>
                 </DockPanel>
             </Grid>
         </DockPanel>

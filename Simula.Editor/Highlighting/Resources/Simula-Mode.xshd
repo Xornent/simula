@@ -1,92 +1,97 @@
 ﻿<?xml version="1.0"?>
 <SyntaxDefinition name="Simula" extensions=".s;.sl" xmlns="http://Simula.net/sharpdevelop/syntaxdefinition/2008">
-	<Color name="ProcessorKeys" foreground="#989419" fontWeight="bold"/>
-	<Color name="BlockKeys" foreground="#009420"/>
-	<Color name="Comment" foreground="Green" fontWeight="bold"/>
-	<Color name="BasicKeys" foreground="#0076ca"/>
-	<Color name="VisibilityKeys" foreground="#961998"/>
-	<Color name="ContextKeys" foreground="#ff008d"/>
-	<Color name="BuiltinTypeKeys" foreground="#009fb9" fontWeight="bold"/>
-	<Color name="Class" foreground="#009fb9" fontWeight="bold"/>
-	<Color name="Function" foreground="#455c90" fontWeight="bold"/>
-	<Color name="Digit" foreground="#91b500"/>
-	<Color name="String" foreground="#c36d01" fontWeight="bold"/>
-	<Color name="Punctuation" foreground="#ababab" />
-	
-<RuleSet ignoreCase="true">
-	    <Span color="Comment">
-			<Begin>'</Begin>
-		</Span>
-        <Span color="String">
-			<Begin>"</Begin>
-			<End>"</End>
-			<RuleSet>
-				<!-- span for escape sequences -->
-				<Span begin="\\" end="."/>
-			</RuleSet>
-		</Span>
-	
-	   <Keywords color="ProcessorKeys">
-			<Word>option</Word>
-	        <Word>use</Word>
-	        <Word>module</Word>
-	        <Word>def</Word>
-		</Keywords>
-		<Keywords color="BasicKeys">
-			<Word>class</Word>
-	        <Word>func</Word>
-			<Word>var</Word>
-	        <Word>null</Word>
-		</Keywords>
-	    <Keywords color="VisibilityKeys">
-			<Word>expose</Word>
-	        <Word>hidden</Word>
-		</Keywords>
-	    <Keywords color="ContextKeys">
-			<Word>continue</Word>
-	        <Word>pass</Word>
-		    <Word>go</Word>
-		    <Word>return</Word>
-		    <Word>end</Word>
-		    <Word>break</Word>
-		</Keywords>
-		<Keywords color="BuiltinTypeKeys">
-			<Word>object</Word>
-	        <Word>int</Word>
-		    <Word>float</Word>
-		    <Word>dimension</Word>
-		    <Word>bool</Word>
-		    <Word>string</Word>
-		</Keywords>
-		<Keywords color="BlockKeys">
-			<Word>if</Word>
-	        <Word>else</Word>
-		    <Word>eif</Word>
-		    <Word>in</Word>
-		    <Word>at</Word>
-		    <Word>while</Word>
-			<Word>enum</Word>
-		</Keywords>
-		
-        <Rule color="Function">
-		(?&lt;=func\s|\.)
-		\b
-		[\d\w_]+  # an identifier
-		(?=\s*\() # followed by (
-		</Rule>
-		
-		<!-- Digits -->
-		<Rule color="Digit">
-			\b0[xX][0-9a-fA-F]+  # hex number
-		|	
-			(	\b\d+(\.[0-9]+)?   #number with optional floating point
-			|	\.[0-9]+           #or just starting with floating point
-			)
-			([eE][+-]?[0-9]+)? # optional exponent
-		</Rule>
-		
-		<Rule color="Punctuation">
-			[?,.;()\[\]{}+\-/%*&lt;&gt;^+~!|&amp;]+
-		</Rule>
-</RuleSet>
+  <Color name="ProcessorKeys" foreground="#989419" fontWeight="bold"/>
+  <Color name="BlockKeys" foreground="#009420"/>
+  <Color name="Comment" foreground="Green" fontWeight="bold"/>
+  <Color name="BasicKeys" foreground="#0076ca"/>
+  <Color name="VisibilityKeys" foreground="#961998"/>
+  <Color name="ContextKeys" foreground="#ff008d"/>
+  <Color name="BuiltinTypeKeys" foreground="#009fb9" fontWeight="bold"/>
+  <Color name="Class" foreground="#009fb9" fontWeight="bold"/>
+  <Color name="Function" foreground="#455c90" fontWeight="bold"/>
+  <Color name="Digit" foreground="#91b500"/>
+  <Color name="String" foreground="#c36d01" fontWeight="bold"/>
+  <Color name="Punctuation" foreground="#ababab" />
+
+  <RuleSet ignoreCase="true">
+    <Span color="Comment">
+      <Begin>'</Begin>
+    </Span>
+    <Span color="String">
+      <Begin>"</Begin>
+      <End>"</End>
+      <RuleSet>
+        <!-- span for escape sequences -->
+        <Span begin="\\" end="."/>
+      </RuleSet>
+    </Span>
+
+    <Keywords color="ProcessorKeys">
+      <Word>option</Word>
+      <Word>use</Word>
+      <Word>module</Word>
+      <Word>def</Word>
+      <Word>derives</Word>
+      <Word>conditional</Word>
+    </Keywords>
+    <Keywords color="BasicKeys">
+      <Word>class</Word>
+      <Word>func</Word>
+      <Word>var</Word>
+      <Word>selector</Word>
+      <Word>null</Word>
+    </Keywords>
+    <Keywords color="VisibilityKeys">
+      <Word>expose</Word>
+      <Word>hidden</Word>
+    </Keywords>
+    <Keywords color="ContextKeys">
+      <Word>continue</Word>
+      <Word>pass</Word>
+      <Word>go</Word>
+      <Word>return</Word>
+      <Word>end</Word>
+      <Word>break</Word>
+    </Keywords>
+    <Keywords color="BuiltinTypeKeys">
+      <Word>object</Word>
+      <Word>int</Word>
+      <Word>float</Word>
+      <Word>array</Word>
+      <Word>bool</Word>
+      <Word>string</Word>
+      <Word>pair</Word>
+      <Word>parameter</Word>
+    </Keywords>
+    <Keywords color="BlockKeys">
+      <Word>if</Word>
+      <Word>else</Word>
+      <Word>eif</Word>
+      <Word>in</Word>
+      <Word>at</Word>
+      <Word>while</Word>
+      <Word>enum</Word>
+    </Keywords>
+
+    <Rule color="Function">
+      (?&lt;=func\s|\.)
+      \b
+      [\d\w_]+  # an identifier
+      (?=\s*\() # followed by (
+    </Rule>
+
+    <!-- Digits -->
+    <Rule color="Digit">
+      \b0[xX][0-9a-fA-F]+  # hex number
+      |
+      (	\b\d+(\.[0-9]+)?   #number with optional floating point
+      |	\.[0-9]+           #or just starting with floating point
+      )
+      ([eE][+-]?[0-9]+)? # optional exponent
+    </Rule>
+
+    <Rule color="Punctuation">
+      [?,.;()\[\]{}+\-/%*&lt;&gt;^+~!|&amp;]+
+    </Rule>
+  </RuleSet>
 </SyntaxDefinition>

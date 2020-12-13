@@ -159,7 +159,7 @@ namespace Simula
             blockImg.TextAlignment = TextAlignment.Center;
             blockImg.FontFamily = new FontFamily("Segoe MDL2 Assets");
             TextBlock block = new TextBlock();
-            block.FontFamily = new FontFamily("Adobe Clean Han SC");
+            block.FontFamily = new FontFamily("PingFang SC");
             block.FontWeight = FontWeights.Bold;
             block.TextAlignment = TextAlignment.Center;
             block.VerticalAlignment = VerticalAlignment.Center;
