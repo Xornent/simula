@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Simula.Scripting.Contexts;
 using System.Dynamic;
+using Simula.Scripting.Types;
 
 namespace Simula.Scripting.Syntax
 {
@@ -16,27 +17,28 @@ namespace Simula.Scripting.Syntax
             if (this.Right == null) return new Execution();
             if (this.Operator.Symbol == "=") {
                 dynamic result = this.Right.Operate(ctx).Result;
+
                 if (this.Left is SelfOperation self) {
-                    store[self.Self] = result;
+                    ctx.SetMemberReferenceCheck(self.Self, result);
                 } else if (this.Left is MemberOperation member) {
                     string raw = member.Right.RawEvaluateToken[0];
                     dynamic eval = member.Left.Operate(ctx).Result;
                     if (eval is ExpandoObject exp) {
-                        IDictionary<string, object> contents = (IDictionary<string, object>)exp;
-                        contents[raw] = result;
+                        ctx.SetMemberReferenceCheck(exp, raw, result, eval.fullName[0]);
                     } else {
-                        if (eval._fields.ContainsKey(raw)) {
-                            eval._fields[raw] = result;
-                        } else {
-                            eval._fields.Add(raw, result);
-                        }
+                        ctx.SetMemberReferenceCheck(eval._fields, raw, result, eval.fullName[0]);
                     }
                 }
+
                 return new Execution(ctx, result);
 
             } else {
                 var left = this.Left.Operate(ctx).Result;
                 var right = this.Right.Operate(ctx).Result;
+                while (left is Execution) left = left.Result;
+                while (right is Execution) right = right.Result;
+                if (left is Reference re) { left = re.GetDynamic(); }
+                if (right is Reference refer) { right = refer.GetDynamic(); }
 
                 switch (this.Operator.Symbol) {
                     default:
@@ -45,8 +47,13 @@ namespace Simula.Scripting.Syntax
                             else return false;
                         }));
 
-                        return new Execution(ctx, ((Types.Function)(left.GetType().GetField(pair.Key).GetValue(null)))
-                              ._call(left, new dynamic[] { right }));
+                        if (left._fields.ContainsKey(pair.Key)) {
+                            return new Execution(ctx, ((Function)(left._fields[pair.Key]))?._call(left, new dynamic[] { right }));
+                        }
+
+                        return new Execution(ctx, ctx.FunctionCache[(string)left.type].Find((func) => {
+                                  return func.name == pair.Key;
+                              })?._call(left, new dynamic[] { right }));
                 }
             }
         }
@@ -61,7 +68,9 @@ namespace Simula.Scripting.Syntax
             if (left is ExpandoObject expando) {
                 IDictionary<string, object> dict = (IDictionary<string, object>)expando;
                 if (dict.ContainsKey(raw))
-                    return new Execution(ctx, dict[raw]);
+                    if (dict[raw] is Reference re)
+                        return new Execution(ctx, re.GetDynamic());
+                    else return new Execution(ctx, dict[raw]);
                 else return new Execution();
             } else {
                 if (left._fields.ContainsKey(raw)) {

@@ -9,13 +9,13 @@ namespace Simula.Scripting.Types
     public class Integer : Var
     {
         private BigInteger raw = 0;
-        public Integer() { }
-        public Integer(BigInteger bigint)
+        public Integer() : base() { }
+        public Integer(BigInteger bigint) : base()
         {
             this.raw = bigint;
         }
 
-        public Integer(int val)
+        public Integer(int val) : base()
         {
             this.raw = val;
         }

@@ -5,6 +5,7 @@ using System.IO;
 using Simula.Scripting.Contexts;
 using Simula.Scripting.Syntax;
 using Simula.Scripting.Token;
+using Simula.Scripting.Types;
 
 namespace Simula.Scripting.Dom
 {
@@ -51,7 +52,33 @@ namespace Simula.Scripting.Dom
                         case DefinitionType.Constant:
                             break;
                         case DefinitionType.Function:
+                            List<Pair> funcParams = new List<Pair>();
+                            foreach (var par in def.FunctionParameters) {
+                                funcParams.Add(new Pair(new Types.String(par.Name ?? ""), new Types.String("any")));
+                            }
 
+                            Function func = new Function((Func<dynamic, dynamic[], dynamic>)((self, args) => {
+                                ScopeContext scope = new ScopeContext();
+                                var dict = (IDictionary<string, object>)scope.Store;
+                                scope.Permeable = true;
+
+                                int count = 0;
+                                foreach (var par in def.FunctionParameters) {
+                                    dict[par.Name ?? ""] = args[count];
+                                    count++;
+                                }
+
+                                ctx.Scopes.Add(scope);
+
+                                BlockStatement block = new BlockStatement() { Children = def.Children };
+                                dynamic result = block.Execute(ctx);
+
+                                ctx.Scopes.RemoveAt(ctx.Scopes.Count - 1);
+                                return result;
+                            }), funcParams);
+
+                            var dict = (IDictionary<string, object>)ctx.Store;
+                            dict[def.FunctionName] = func;
                             break;
                         case DefinitionType.Class:
                             break;

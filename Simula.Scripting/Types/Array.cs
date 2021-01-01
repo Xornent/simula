@@ -9,8 +9,8 @@ namespace Simula.Scripting.Types
     public class Array : Var
     {
         private dynamic[] raw = new dynamic[] { };
-        public Array() { }
-        public Array(dynamic[] arr)
+        public Array() : base() { }
+        public Array(dynamic[] arr) : base()
         {
             this.raw = arr;
         }

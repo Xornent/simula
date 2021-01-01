@@ -7,8 +7,8 @@ namespace Simula.Scripting.Types
     public class Boolean : Var
     {
         private bool raw = false;
-        public Boolean() { }
-        public Boolean(bool val)
+        public Boolean() : base() { }
+        public Boolean(bool val) : base()
         {
             this.raw = val;
         }

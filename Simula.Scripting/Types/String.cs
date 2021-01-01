@@ -7,8 +7,8 @@ namespace Simula.Scripting.Types
     public class String : Var
     {
         private string raw = "";
-        public String() { }
-        public String(string systemString)
+        public String() : base() { }
+        public String(string systemString) : base()
         {
             this.raw = systemString;
         }

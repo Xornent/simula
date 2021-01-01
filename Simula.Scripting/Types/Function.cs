@@ -23,7 +23,7 @@ namespace Simula.Scripting.Types
     {
         private List<Func<dynamic, dynamic[], dynamic>> raw = new List<Func<dynamic, dynamic[], dynamic>> { };
         private List<List<Pair>> param = new List<List<Pair>>();
-        public Function() 
+        public Function() : base()
         {
             this._fields.Add("isMultiple", false);
         }
@@ -32,6 +32,7 @@ namespace Simula.Scripting.Types
                         List<Pair> pairs) : this()
         {
             this.raw.Add(function);
+            param.Add(pairs);
         }
 
         public Function(List<Func<dynamic, dynamic[], dynamic>> functions,
@@ -41,7 +42,7 @@ namespace Simula.Scripting.Types
             param.AddRange(pairs);
         }
 
-        public Function(Function function)
+        public Function(Function function) : base()
         {
             this.raw = function.raw;
         }
@@ -72,7 +73,18 @@ namespace Simula.Scripting.Types
 
         public override string ToString()
         {
-            return "func";
+            string expr = "";
+            for(int id = 0; id<this.raw.Count; id++) {
+                var pair = param[id];
+                List<string> paramList = new List<string>();
+                foreach (var item in pair) {
+                    paramList.Add(item.ToString());
+                }
+
+                expr += "func " + this.name + " (" + paramList.JoinString(", ") + ")\n";
+            }
+            expr = expr.Trim('\n');
+            return expr == "" ? "func" : expr;
         }
     }
 
@@ -87,6 +99,11 @@ namespace Simula.Scripting.Types
 
         public String key;
         public dynamic value;
+
+        public override string ToString()
+        {
+            return value.ToString() + " " + key.ToString();
+        }
 
         internal new string type = "sys.pair";
     }

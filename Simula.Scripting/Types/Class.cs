@@ -9,14 +9,14 @@ namespace Simula.Scripting.Types
 {
     public class Class : Var
     {
-        public Class() { }
-        public Class(Type type, dynamic[]? native = null)
+        public Class() : base() { }
+        public Class(Type type, dynamic[]? native = null) : base()
         {
             this.ClrType = type;
             this.ClrArguments = native;
         }
 
-        private Type ClrType;
+        private Type? ClrType;
         private dynamic[]? ClrArguments;
 
         public static Function _create = new Function((self, args) => {
@@ -48,6 +48,10 @@ namespace Simula.Scripting.Types
 
         public override string ToString()
         {
+            if(ClrType != null) {
+                return "<native> class: " + ClrType.Name;
+            }
+
             return "class";
         }
     }

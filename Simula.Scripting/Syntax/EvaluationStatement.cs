@@ -7,11 +7,26 @@ namespace Simula.Scripting.Syntax
 {
     public class EvaluationStatement : Statement
     {
+        public EvaluationStatement(bool cache = false)
+        {
+            this.cache = cache;
+        }
+
         public TokenCollection RawEvaluateToken = new TokenCollection();
         public List<OperatorStatement> EvaluateOperators = new List<OperatorStatement>();
+        private bool cache = false;
+        private dynamic? cacheObject = null;
 
         public override Execution Execute(DynamicRuntime ctx)
         {
+            if(cache) {
+                if (cacheObject == null) {
+                    var op = EvaluateOperators[0];
+                    cacheObject = op.Operate(ctx);
+                    return cacheObject;
+                } else return cacheObject;
+            }
+
             if (EvaluateOperators.Count > 1) return new Execution();
             var operation = EvaluateOperators[0];
 

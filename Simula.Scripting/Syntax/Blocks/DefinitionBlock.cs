@@ -33,7 +33,8 @@ namespace Simula.Scripting.Syntax
 
         public Token.Token? ClassName;
         public List<Parameter> ClassParameters = new List<Parameter>();
-        public EvaluationStatement? ClassInheritage;
+        public List<EvaluationStatement?> ClassInheritages = new List<EvaluationStatement?>();
+        public List<EvaluationStatement?> ClassDerivations = new List<EvaluationStatement?>();
         public EvaluationStatement? ClassAlias;
 
         public Token.Token? ConstantName;
@@ -168,7 +169,7 @@ namespace Simula.Scripting.Syntax
 
             // 在此处的 collection 值应为序列
 
-            // class_name<[class parameters ...]> [: inherit] [= defined<...>]
+            // class_name [: a, b, c ...] [derives a, b, c ...]  [= defined<...>]
             // func_name([function parameters]) [= defined(...)]
             // const_name = defined
 
@@ -179,7 +180,7 @@ namespace Simula.Scripting.Syntax
                         if (l.Count == 2) {
                             ConstantName = l[0][0];
 
-                            EvaluationStatement eval = new EvaluationStatement();
+                            EvaluationStatement eval = new EvaluationStatement(true);
                             eval.Parse(l[1]);
                             ConstantValue = eval;
                         } else collection[0].Error = new TokenizerException("SS0002");
@@ -190,7 +191,7 @@ namespace Simula.Scripting.Syntax
                         var l = collection.Split(new Token.Token("="));
                         if (l.Count == 2) {
                             ParseAbsoluteFunctionDefinition(l[0]);
-                            EvaluationStatement eval = new EvaluationStatement();
+                            EvaluationStatement eval = new EvaluationStatement(true);
                             eval.Parse(l[1]);
                             FunctionAlias = eval;
                         } else collection[0].Error = new TokenizerException("SS0002");
@@ -203,7 +204,7 @@ namespace Simula.Scripting.Syntax
                         var l = collection.Split(new Token.Token("="));
                         if (l.Count == 2) {
                             ParseClassDefinition(l[0]);
-                            EvaluationStatement eval = new EvaluationStatement();
+                            EvaluationStatement eval = new EvaluationStatement(true);
                             eval.Parse(l[1]);
                             ClassAlias = eval;
                         } else collection[0].Error = new TokenizerException("SS0002");
@@ -216,13 +217,33 @@ namespace Simula.Scripting.Syntax
 
         private void ParseClassDefinition(TokenCollection collection)
         {
+            if (collection.Contains(new Token.Token("derives"))) {
+                var l = collection.Split(new Token.Token("derives"));
+                if (l.Count == 2) {
+                    ParseClassDefinition(l[0]);
+
+                    var derivationList = l[1].Split(new Token.Token(","));
+                    foreach (var item in derivationList) {
+                        EvaluationStatement eval = new EvaluationStatement(true);
+                        eval.Parse(item);
+                        this.ClassDerivations.Add(eval);
+                    }
+
+                    return;
+                } else collection[0].Error = new TokenizerException("SS0015");
+            }
+
             if (collection.Contains(new Token.Token(":"))) {
                 var l = collection.Split(new Token.Token(":"));
                 if (l.Count == 2) {
                     ParseAbsoluteClassName(l[0]);
-                    EvaluationStatement eval = new EvaluationStatement();
-                    eval.Parse(l[1]);
-                    ClassInheritage = eval;
+
+                    var inheritage = l[1].Split(new Token.Token(","));
+                    foreach (var item in inheritage) {
+                        EvaluationStatement eval = new EvaluationStatement(true);
+                        eval.Parse(item);
+                        this.ClassInheritages.Add(eval);
+                    }
                 } else collection[0].Error = new TokenizerException("SS0015");
             } else {
                 ParseAbsoluteClassName(collection);
@@ -256,7 +277,7 @@ namespace Simula.Scripting.Syntax
                         Parameter par = new Parameter();
                         par.Name = item.Last();
                         item.RemoveLast();
-                        EvaluationStatement e = new EvaluationStatement();
+                        EvaluationStatement e = new EvaluationStatement(true);
                         e.Parse(item);
                         par.Type = e;
                         FunctionParameters.Add(par);

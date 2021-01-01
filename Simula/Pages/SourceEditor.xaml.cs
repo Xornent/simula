@@ -17,13 +17,12 @@ namespace Simula.Pages
         public void HandleRun(object sender, EventArgs e)
         {
             DynamicRuntime runtime = new DynamicRuntime();
-            BlockStatement block = new BlockStatement();
-            TokenDocument doc = new TokenDocument();
-            doc.Tokenize(this.editor.Text);
-            block.Parse(doc.Tokens);
+            Simula.Scripting.Dom.Source src = Scripting.Dom.Source.FromSourceCode(editor.Text);
+            src.LoadDefinition(runtime);
+
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            block.Execute(runtime);
+            src.Body.Execute(runtime);
             sw.Stop();
             System.Windows.MessageBox.Show(sw.ElapsedMilliseconds.ToString()+" ms");
         }

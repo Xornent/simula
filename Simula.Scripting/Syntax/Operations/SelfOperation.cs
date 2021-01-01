@@ -16,9 +16,9 @@ namespace Simula.Scripting.Syntax
         public override Execution Operate(DynamicRuntime ctx)
         {
             string raw = this.Self.ToString();
-            if(raw.StartsWith("\"") && raw.EndsWith("\"") && (!raw.EndsWith("\\\""))) {
+            if (raw.StartsWith("\"") && raw.EndsWith("\"") && (!raw.EndsWith("\\\""))) {
                 Types.String s = new String(raw
-                    .Remove(0,1)
+                    .Remove(0, 1)
                     .Remove(Self.Value.Length - 2, 1)
                     .Replace("\\\"", "\"")
                     .Replace("\\\\", "\\")
@@ -30,12 +30,12 @@ namespace Simula.Scripting.Syntax
                     .Replace("\\r", "\r")
                     .Replace("\\t", "\t")
                     .Replace("\\v", "\v"));
-                    
+
                 return new Execution(ctx, s);
             }
 
-            if(raw.ToLower() == "true") return new Execution(ctx, new Boolean(true));
-            if(raw.ToLower() == "false") return new Execution(ctx, new Boolean(false));
+            if (raw.ToLower() == "true") return new Execution(ctx, new Boolean(true));
+            if (raw.ToLower() == "false") return new Execution(ctx, new Boolean(false));
 
             System.Numerics.BigInteger tempInt;
             bool successInt = System.Numerics.BigInteger.TryParse(raw, out tempInt);
@@ -44,11 +44,10 @@ namespace Simula.Scripting.Syntax
                 return new Execution(ctx, i);
             }
 
-            IDictionary<string, object> dict = (IDictionary<string, object>) ctx.Store;
-            if (dict.ContainsKey(raw)) {
-                if (dict[raw] is Reference r) return new Execution(ctx, r.GetDynamic());
-                return new Execution(ctx, dict[raw]);
-            } else return new Execution();
+            var result = ctx.GetMember(raw);
+            if (result == null) return new Execution();
+            if (result is Reference r) return new Execution(ctx, r.GetDynamic());
+            return new Execution(ctx, result);
         }
     }
 }

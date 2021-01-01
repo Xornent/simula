@@ -64,6 +64,7 @@ namespace Simula.Scripting.Token
         {
             Tokens.Clear();
 
+            int insideBracket = 0;
             int linenum = 0;
             int columnnum = 0;
             string[] lines = source.Split('\n');
@@ -97,17 +98,25 @@ namespace Simula.Scripting.Token
                         token.Value += column;
                     } else {
 
-                        if (token == "(" ||
-                            token == ")" ||
-                            token == "[" ||
-                            token == "]" ||
-                            token == "{" ||
-                            token == "}") {
+                        if (column == '(' ||
+                            column == ')' ||
+                            column == '[' ||
+                            column == ']' ||
+                            column == '{' ||
+                            column == '}') {
                             end = new Position(linenum, columnnum - 1);
                             token.Location = new Span(start, end);
-                            Tokens.Add(token);
+                            if(token!="") Tokens.Add(token);
+                            Tokens.Add(new Token(new string(new char[] { column })) { 
+                                Location = new Span(new Position(linenum, columnnum), new Position(linenum, columnnum))
+                            });
+
+                            if (column == '{') insideBracket++;
+                            else if (column == '}') insideBracket--;
+
                             token = new Token("");
-                            start = new Position(linenum, columnnum);
+                            start = new Position(linenum, columnnum + 1);
+                            continue;
                         } else if (token == ";") {
                             end = new Position(linenum, columnnum - 1);
                             token.Location = new Span(start, end);
@@ -115,6 +124,7 @@ namespace Simula.Scripting.Token
                             start = new Position(linenum, columnnum + 1);
                             Tokens.Add(new Token("<newline>", new Span(
                                 new Position(linenum, columnnum), new Position(linenum, columnnum))));
+                            continue;
                         }
 
                         if (column == ' ') {
@@ -140,7 +150,7 @@ namespace Simula.Scripting.Token
                                         start = new Position(linenum, columnnum);
                                     }
                                 } else if (token.IsValidNumberBeginning()) {
-                                    if (column.IsAlphabet() || column == '\"' || new Token(new string(new char[]{ column })).IsValidSymbolBeginning()) {
+                                    if (column.IsAlphabet() || column == '\"' || new Token(new string(new char[] { column })).IsValidSymbolBeginning()) {
                                         end = new Position(linenum, columnnum - 1);
                                         token.Location = new Span(start, end);
                                         Tokens.Add(token);
@@ -178,8 +188,9 @@ namespace Simula.Scripting.Token
                         }
                         token = new Token("");
                         start = new Position(linenum + 1, 1);
-                        Tokens.Add(new Token("<newline>", new Span(
-                            new Position(linenum, columnnum), new Position(linenum, columnnum))));
+                        if (insideBracket == 0)
+                            Tokens.Add(new Token("<newline>", new Span(
+                                new Position(linenum, columnnum), new Position(linenum, columnnum))));
                     }
                 } else {
                     if (token != "") {
@@ -191,8 +202,9 @@ namespace Simula.Scripting.Token
                         }
                     }
 
-                    Tokens.Add(new Token("<newline>", new Span(
-                       new Position(linenum, columnnum), new Position(linenum, columnnum))));
+                    if (insideBracket == 0)
+                        Tokens.Add(new Token("<newline>", new Span(
+                           new Position(linenum, columnnum), new Position(linenum, columnnum))));
                 }
             }
 

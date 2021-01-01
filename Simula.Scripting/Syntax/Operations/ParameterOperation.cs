@@ -68,8 +68,16 @@ namespace Simula.Scripting.Syntax
             }
 
             foreach (var item in ops) {
+                if (item == null) {
+                    members.Add(Types.Null.NULL);
+                    continue;
+                }
+
+                dynamic result = item.Operate(ctx).Result;
+                while (result is Execution) { result = result.Result; }
                 if (item == null) members.Add(Types.Null.NULL);
-                else members.Add(item.Operate(ctx).Result);
+                
+                members.Add(result);
             }
 
             return members;
@@ -120,9 +128,11 @@ namespace Simula.Scripting.Syntax
             dynamic[] args = ((ParameterOperation)(this.Right)).DynamicFullExecution(ctx).ToArray();
             dynamic obj = this.Left.Operate(ctx).Result;
 
-            if(obj.type == "class") {
-                return new Execution(ctx, Types.Class._create._call(obj, args));
-            } else if(obj.type == "func") {
+            if(obj.type == "sys.class") {
+                var list = args.ToList();
+                list.Insert(0, ctx);
+                return new Execution(ctx, Types.Class._create._call(obj, list.ToArray()));
+            } else if(obj.type == "sys.func") {
                 if(this.Left is MemberOperation member) {
                     var caller = member.Left.Operate(ctx).Result;
                     return new Execution(ctx, obj._call(caller, args));
