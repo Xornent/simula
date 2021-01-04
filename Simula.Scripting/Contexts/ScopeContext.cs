@@ -7,6 +7,11 @@ namespace Simula.Scripting.Contexts
 {
     public class ScopeContext
     {
+        public ScopeContext()
+        {
+            this.Store.fullName = new List<string>() { "" };
+        }
+
         public dynamic Store = new ExpandoObject();
         public bool Permeable { get; set; } = true;
     }

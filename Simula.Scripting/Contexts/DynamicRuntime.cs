@@ -169,11 +169,11 @@ namespace Simula.Scripting.Contexts
             if (Scopes.Count > 0) {
                 bool turn = true;
                 counter--;
-                while (counter >= 0) {
+                while (turn && counter >= 0) {
                     var dict = (IDictionary<string, object>)(Scopes[counter].Store);
                     counter--;
-                    if (dict.ContainsKey(name)) return ((Scopes[counter].Store), dict[name]);
-                    if (Scopes[counter].Permeable) turn = true;
+                    if (dict.ContainsKey(name)) return ((Scopes[counter + 1].Store), dict[name]);
+                    if (Scopes[counter + 1].Permeable) turn = true;
                     else return (this.Store, Null.NULL);
                 }
             }
