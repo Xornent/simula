@@ -1,4 +1,4 @@
-﻿namespace MathNet.Numerics.Integration.GaussRule
+﻿namespace Simula.Maths.Integration.GaussRule
 {
     /// <summary>
     /// Contains two GaussPoint.

@@ -1,11 +1,11 @@
 ﻿#if NATIVE
 
-using MathNet.Numerics.Providers.Common.Mkl;
+using Simula.Maths.Providers.Common.Mkl;
 using System;
 using System.Security;
 using Complex = System.Numerics.Complex;
 
-namespace MathNet.Numerics.Providers.SparseSolver.Mkl
+namespace Simula.Maths.Providers.SparseSolver.Mkl
 {
     /// <summary>
     /// Intel's Math Kernel Library (MKL) direct sparse solver provider.

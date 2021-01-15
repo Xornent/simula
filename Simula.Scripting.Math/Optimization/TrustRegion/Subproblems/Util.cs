@@ -1,7 +1,7 @@
 ﻿using System;
-using MathNet.Numerics.LinearAlgebra;
+using Simula.Maths.LinearAlgebra;
 
-namespace MathNet.Numerics.Optimization.TrustRegion.Subproblems
+namespace Simula.Maths.Optimization.TrustRegion.Subproblems
 {
     internal static class Util
     {

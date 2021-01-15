@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MathNet.Numerics.Random
+namespace Simula.Maths.Random
 {
     public static class RandomSeed
     {

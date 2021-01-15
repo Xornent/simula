@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Numerics;
 
-namespace MathNet.Numerics.Providers.SparseSolver.Managed
+namespace Simula.Maths.Providers.SparseSolver.Managed
 {
     /// <summary>
     /// The managed sparse solver provider

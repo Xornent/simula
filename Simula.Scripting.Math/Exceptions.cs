@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MathNet.Numerics
+namespace Simula.Maths
 {
     /// <summary>
     /// An algorithm failed to converge.

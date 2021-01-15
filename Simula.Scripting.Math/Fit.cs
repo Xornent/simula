@@ -1,39 +1,10 @@
-﻿// <copyright file="Fit.cs" company="Math.NET">
-// Math.NET Numerics, part of the Math.NET Project
-// http://numerics.mathdotnet.com
-// http://github.com/mathnet/mathnet-numerics
-//
-// Copyright (c) 2009-2018 Math.NET
-//
-// Permission is hereby granted, free of charge, to any person
-// obtaining a copy of this software and associated documentation
-// files (the "Software"), to deal in the Software without
-// restriction, including without limitation the rights to use,
-// copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the
-// Software is furnished to do so, subject to the following
-// conditions:
-//
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-// OTHER DEALINGS IN THE SOFTWARE.
-// </copyright>
-
-using System;
+﻿using System;
 using System.Linq;
-using MathNet.Numerics.LinearAlgebra;
-using MathNet.Numerics.LinearRegression;
-using MathNet.Numerics.Providers.LinearAlgebra;
+using Simula.Maths.LinearAlgebra;
+using Simula.Maths.LinearRegression;
+using Simula.Maths.Providers.LinearAlgebra;
 
-namespace MathNet.Numerics
+namespace Simula.Maths
 {
     /// <summary>
     /// Least-Squares Curve Fitting Routines
@@ -171,7 +142,7 @@ namespace MathNet.Numerics
         public static Func<double, double> PolynomialFunc(double[] x, double[] y, int order, DirectRegressionMethod method = DirectRegressionMethod.QR)
         {
             var parameters = Polynomial(x, y, order, method);
-            return z => Numerics.Polynomial.Evaluate(z, parameters);
+            return z => Maths.Polynomial.Evaluate(z, parameters);
         }
 
         /// <summary>

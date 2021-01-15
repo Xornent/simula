@@ -1,9 +1,9 @@
-﻿using MathNet.Numerics.LinearAlgebra;
+﻿using Simula.Maths.LinearAlgebra;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MathNet.Numerics.Optimization
+namespace Simula.Maths.Optimization
 {
     public class LevenbergMarquardtMinimizer : NonlinearMinimizerBase
     {

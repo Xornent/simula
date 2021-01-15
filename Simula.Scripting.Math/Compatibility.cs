@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 
 #if NETSTANDARD1_3
-namespace MathNet.Numerics
+namespace Simula.Maths
 {
     using System;
     using System.Threading;
@@ -142,7 +142,7 @@ namespace MathNet.Numerics
 #endif
 
 #if NETSTANDARD1_3
-namespace MathNet.Numerics
+namespace Simula.Maths
 {
     using System;
 

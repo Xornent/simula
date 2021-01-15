@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MathNet.Numerics.Integration.GaussRule
+namespace Simula.Maths.Integration.GaussRule
 {
     /// <summary>
     /// Creates a Gauss-Kronrod point.

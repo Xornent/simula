@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using MathNet.Numerics.LinearAlgebra;
+using Simula.Maths.LinearAlgebra;
 
-namespace MathNet.Numerics.Optimization.TrustRegion
+namespace Simula.Maths.Optimization.TrustRegion
 {
     public abstract class TrustRegionMinimizerBase : NonlinearMinimizerBase
     {

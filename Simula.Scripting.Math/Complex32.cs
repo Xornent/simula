@@ -1,32 +1,3 @@
-// <copyright file="Complex32.cs" company="Math.NET">
-// Math.NET Numerics, part of the Math.NET Project
-// http://numerics.mathdotnet.com
-// http://github.com/mathnet/mathnet-numerics
-//
-// Copyright (c) 2009-2010 Math.NET
-//
-// Permission is hereby granted, free of charge, to any person
-// obtaining a copy of this software and associated documentation
-// files (the "Software"), to deal in the Software without
-// restriction, including without limitation the rights to use,
-// copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the
-// Software is furnished to do so, subject to the following
-// conditions:
-//
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-// OTHER DEALINGS IN THE SOFTWARE.
-// </copyright>
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -39,7 +10,7 @@ using BigInteger = System.Numerics.BigInteger;
 using System.Runtime;
 #endif
 
-namespace MathNet.Numerics
+namespace Simula.Maths
 {
     /// <summary>
     /// 32-bit single precision complex numbers class.
@@ -69,7 +40,7 @@ namespace MathNet.Numerics
     /// </remarks>
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    [DataContract(Namespace = "urn:MathNet/Numerics")]
+    [DataContract(Namespace = "urn:Simula.Maths")]
     public readonly struct Complex32 : IFormattable, IEquatable<Complex32>
     {
         /// <summary>
@@ -109,31 +80,31 @@ namespace MathNet.Numerics
         }
 
         /// <summary>
-        /// Returns a new <see cref="T:MathNet.Numerics.Complex32" /> instance
+        /// Returns a new <see cref="T:Simula.Maths.Complex32" /> instance
         /// with a real number equal to zero and an imaginary number equal to zero.
         /// </summary>
         public static readonly Complex32 Zero = new Complex32(0.0f, 0.0f);
 
         /// <summary>
-        /// Returns a new <see cref="T:MathNet.Numerics.Complex32" /> instance
+        /// Returns a new <see cref="T:Simula.Maths.Complex32" /> instance
         /// with a real number equal to one and an imaginary number equal to zero.
         /// </summary>
         public static readonly Complex32 One = new Complex32(1.0f, 0.0f);
 
         /// <summary>
-        /// Returns a new <see cref="T:MathNet.Numerics.Complex32" /> instance
+        /// Returns a new <see cref="T:Simula.Maths.Complex32" /> instance
         /// with a real number equal to zero and an imaginary number equal to one.
         /// </summary>
         public static readonly Complex32 ImaginaryOne = new Complex32(0, 1);
 
         /// <summary>
-        /// Returns a new <see cref="T:MathNet.Numerics.Complex32" /> instance
+        /// Returns a new <see cref="T:Simula.Maths.Complex32" /> instance
         /// with real and imaginary numbers positive infinite.
         /// </summary>
         public static readonly Complex32 PositiveInfinity = new Complex32(float.PositiveInfinity, float.PositiveInfinity);
 
         /// <summary>
-        /// Returns a new <see cref="T:MathNet.Numerics.Complex32" /> instance
+        /// Returns a new <see cref="T:Simula.Maths.Complex32" /> instance
         /// with real and imaginary numbers not a number.
         /// </summary>
         public static readonly Complex32 NaN = new Complex32(float.NaN, float.NaN);

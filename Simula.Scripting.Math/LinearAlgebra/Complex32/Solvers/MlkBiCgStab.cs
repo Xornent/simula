@@ -1,40 +1,11 @@
-// <copyright file="MlkBiCgStab.cs" company="Math.NET">
-// Math.NET Numerics, part of the Math.NET Project
-// http://numerics.mathdotnet.com
-// http://github.com/mathnet/mathnet-numerics
-//
-// Copyright (c) 2009-2013 Math.NET
-//
-// Permission is hereby granted, free of charge, to any person
-// obtaining a copy of this software and associated documentation
-// files (the "Software"), to deal in the Software without
-// restriction, including without limitation the rights to use,
-// copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the
-// Software is furnished to do so, subject to the following
-// conditions:
-//
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-// OTHER DEALINGS IN THE SOFTWARE.
-// </copyright>
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using MathNet.Numerics.Distributions;
-using MathNet.Numerics.LinearAlgebra.Solvers;
+using Simula.Maths.Distributions;
+using Simula.Maths.LinearAlgebra.Solvers;
 
-namespace MathNet.Numerics.LinearAlgebra.Complex32.Solvers
+namespace Simula.Maths.LinearAlgebra.Complex32.Solvers
 {
     /// <summary>
     /// A Multiple-Lanczos Bi-Conjugate Gradient stabilized iterative matrix solver.
@@ -59,7 +30,7 @@ namespace MathNet.Numerics.LinearAlgebra.Complex32.Solvers
     /// solver.
     /// </para>
     /// </remarks>
-    public sealed class MlkBiCgStab : IIterativeSolver<Numerics.Complex32>
+    public sealed class MlkBiCgStab : IIterativeSolver<Maths.Complex32>
     {
         /// <summary>
         /// The default number of starting vectors.
@@ -69,7 +40,7 @@ namespace MathNet.Numerics.LinearAlgebra.Complex32.Solvers
         /// <summary>
         /// The collection of starting vectors which are used as the basis for the Krylov sub-space.
         /// </summary>
-        IList<Vector<Numerics.Complex32>> _startingVectors;
+        IList<Vector<Maths.Complex32>> _startingVectors;
 
         /// <summary>
         /// The number of starting vectors used by the algorithm
@@ -112,7 +83,7 @@ namespace MathNet.Numerics.LinearAlgebra.Complex32.Solvers
         /// Gets or sets a series of orthonormal vectors which will be used as basis for the
         /// Krylov sub-space.
         /// </summary>
-        public IList<Vector<Numerics.Complex32>> StartingVectors
+        public IList<Vector<Maths.Complex32>> StartingVectors
         {
             [DebuggerStepThrough]
             get => _startingVectors;
@@ -154,7 +125,7 @@ namespace MathNet.Numerics.LinearAlgebra.Complex32.Solvers
         ///  the <paramref name="numberOfVariables"/> is smaller than
         ///  the <paramref name="maximumNumberOfStartingVectors"/>.
         /// </returns>
-        static IList<Vector<Numerics.Complex32>> CreateStartingVectors(int maximumNumberOfStartingVectors, int numberOfVariables)
+        static IList<Vector<Maths.Complex32>> CreateStartingVectors(int maximumNumberOfStartingVectors, int numberOfVariables)
         {
             // Create no more starting vectors than the size of the problem - 1
             // Get random values and then orthogonalize them with
@@ -168,12 +139,12 @@ namespace MathNet.Numerics.LinearAlgebra.Complex32.Solvers
             var matrix = new DenseMatrix(numberOfVariables, count);
             for (var i = 0; i < matrix.ColumnCount; i++)
             {
-                var samples = new Numerics.Complex32[matrix.RowCount];
+                var samples = new Maths.Complex32[matrix.RowCount];
                 var samplesRe = distribution.Samples().Take(matrix.RowCount).ToArray();
                 var samplesIm = distribution.Samples().Take(matrix.RowCount).ToArray();
                 for (int j = 0; j < matrix.RowCount; j++)
                 {
-                    samples[j] = new Numerics.Complex32((float)samplesRe[j], (float)samplesIm[j]);
+                    samples[j] = new Maths.Complex32((float)samplesRe[j], (float)samplesIm[j]);
                 }
 
                 // Set the column
@@ -185,7 +156,7 @@ namespace MathNet.Numerics.LinearAlgebra.Complex32.Solvers
             var orthogonalMatrix = gs.Q;
 
             // Now transfer this to vectors
-            var result = new List<Vector<Numerics.Complex32>>(orthogonalMatrix.ColumnCount);
+            var result = new List<Vector<Maths.Complex32>>(orthogonalMatrix.ColumnCount);
             for (var i = 0; i < orthogonalMatrix.ColumnCount; i++)
             {
                 result.Add(orthogonalMatrix.Column(i));
@@ -203,9 +174,9 @@ namespace MathNet.Numerics.LinearAlgebra.Complex32.Solvers
         /// <param name="arraySize">Number of vectors</param>
         /// <param name="vectorSize">Size of each vector</param>
         /// <returns>Array of random vectors</returns>
-        static Vector<Numerics.Complex32>[] CreateVectorArray(int arraySize, int vectorSize)
+        static Vector<Maths.Complex32>[] CreateVectorArray(int arraySize, int vectorSize)
         {
-            var result = new Vector<Numerics.Complex32>[arraySize];
+            var result = new Vector<Maths.Complex32>[arraySize];
             for (var i = 0; i < result.Length; i++)
             {
                 result[i] = new DenseVector(vectorSize);
@@ -221,7 +192,7 @@ namespace MathNet.Numerics.LinearAlgebra.Complex32.Solvers
         /// <param name="residual">Residual <see cref="Vector"/> data.</param>
         /// <param name="x">x <see cref="Vector"/> data.</param>
         /// <param name="b">b <see cref="Vector"/> data.</param>
-        static void CalculateTrueResidual(Matrix<Numerics.Complex32> matrix, Vector<Numerics.Complex32> residual, Vector<Numerics.Complex32> x, Vector<Numerics.Complex32> b)
+        static void CalculateTrueResidual(Matrix<Maths.Complex32> matrix, Vector<Maths.Complex32> residual, Vector<Maths.Complex32> x, Vector<Maths.Complex32> b)
         {
             // -Ax = residual
             matrix.Multiply(x, residual);
@@ -240,7 +211,7 @@ namespace MathNet.Numerics.LinearAlgebra.Complex32.Solvers
         /// <param name="result">The result vector, <c>x</c></param>
         /// <param name="iterator">The iterator to use to control when to stop iterating.</param>
         /// <param name="preconditioner">The preconditioner to use for approximations.</param>
-        public void Solve(Matrix<Numerics.Complex32> matrix, Vector<Numerics.Complex32> input, Vector<Numerics.Complex32> result, Iterator<Numerics.Complex32> iterator, IPreconditioner<Numerics.Complex32> preconditioner)
+        public void Solve(Matrix<Maths.Complex32> matrix, Vector<Maths.Complex32> input, Vector<Maths.Complex32> result, Iterator<Maths.Complex32> iterator, IPreconditioner<Maths.Complex32> preconditioner)
         {
             if (matrix.RowCount != matrix.ColumnCount)
             {
@@ -259,12 +230,12 @@ namespace MathNet.Numerics.LinearAlgebra.Complex32.Solvers
 
             if (iterator == null)
             {
-                iterator = new Iterator<Numerics.Complex32>();
+                iterator = new Iterator<Maths.Complex32>();
             }
 
             if (preconditioner == null)
             {
-                preconditioner = new UnitPreconditioner<Numerics.Complex32>();
+                preconditioner = new UnitPreconditioner<Maths.Complex32>();
             }
 
             preconditioner.Initialize(matrix);
@@ -304,7 +275,7 @@ namespace MathNet.Numerics.LinearAlgebra.Complex32.Solvers
             CalculateTrueResidual(matrix, residuals, xtemp, input);
 
             // Define the temporary values
-            var c = new Numerics.Complex32[k];
+            var c = new Maths.Complex32[k];
 
             // Define the temporary vectors
             var gtemp = new DenseVector(residuals.Count);
@@ -414,7 +385,7 @@ namespace MathNet.Numerics.LinearAlgebra.Complex32.Solvers
                     zw.Clear();
 
                     // FOR (s = i, ...., k-1) AND j >= 1
-                    Numerics.Complex32 beta;
+                    Maths.Complex32 beta;
                     if (iterationNumber >= 1)
                     {
                         for (var s = i; s < k - 1; s++)

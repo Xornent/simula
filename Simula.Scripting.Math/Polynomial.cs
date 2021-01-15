@@ -5,22 +5,22 @@ using System.Runtime.Serialization;
 using System.Linq;
 using Complex = System.Numerics.Complex;
 using System.Text;
-using MathNet.Numerics.LinearAlgebra;
-using MathNet.Numerics.LinearAlgebra.Double;
-using MathNet.Numerics.LinearRegression;
-using MathNet.Numerics.LinearAlgebra.Factorization;
+using Simula.Maths.LinearAlgebra;
+using Simula.Maths.LinearAlgebra.Double;
+using Simula.Maths.LinearRegression;
+using Simula.Maths.LinearAlgebra.Factorization;
 
 #if !NETSTANDARD1_3
 using System.Runtime;
 #endif
 
-namespace MathNet.Numerics
+namespace Simula.Maths
 {
     /// <summary>
     /// A single-variable polynomial with real-valued coefficients and non-negative exponents.
     /// </summary>
     [Serializable]
-    [DataContract(Namespace = "urn:MathNet/Numerics")]
+    [DataContract(Namespace = "urn:Simula.Maths")]
     public class Polynomial : IFormattable, IEquatable<Polynomial>
 #if !NETSTANDARD1_3
         , ICloneable
@@ -118,7 +118,7 @@ namespace MathNet.Numerics
         /// </summary>
         public static Polynomial Fit(double[] x, double[] y, int order, DirectRegressionMethod method = DirectRegressionMethod.QR)
         {
-            var coefficients = Numerics.Fit.Polynomial(x, y, order, method);
+            var coefficients = Maths.Fit.Polynomial(x, y, order, method);
             return new Polynomial(coefficients);
         }
 

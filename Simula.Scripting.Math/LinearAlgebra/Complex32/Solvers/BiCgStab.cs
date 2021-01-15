@@ -1,36 +1,7 @@
-// <copyright file="BiCgStab.cs" company="Math.NET">
-// Math.NET Numerics, part of the Math.NET Project
-// http://numerics.mathdotnet.com
-// http://github.com/mathnet/mathnet-numerics
-//
-// Copyright (c) 2009-2013 Math.NET
-//
-// Permission is hereby granted, free of charge, to any person
-// obtaining a copy of this software and associated documentation
-// files (the "Software"), to deal in the Software without
-// restriction, including without limitation the rights to use,
-// copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the
-// Software is furnished to do so, subject to the following
-// conditions:
-//
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-// OTHER DEALINGS IN THE SOFTWARE.
-// </copyright>
-
 using System;
-using MathNet.Numerics.LinearAlgebra.Solvers;
+using Simula.Maths.LinearAlgebra.Solvers;
 
-namespace MathNet.Numerics.LinearAlgebra.Complex32.Solvers
+namespace Simula.Maths.LinearAlgebra.Complex32.Solvers
 {
     /// <summary>
     /// A Bi-Conjugate Gradient stabilized iterative matrix solver.
@@ -61,7 +32,7 @@ namespace MathNet.Numerics.LinearAlgebra.Complex32.Solvers
     /// solver.
     /// </para>
     /// </remarks>
-    public sealed class BiCgStab : IIterativeSolver<Numerics.Complex32>
+    public sealed class BiCgStab : IIterativeSolver<Maths.Complex32>
     {
         /// <summary>
         /// Calculates the <c>true</c> residual of the matrix equation Ax = b according to: residual = b - Ax
@@ -70,7 +41,7 @@ namespace MathNet.Numerics.LinearAlgebra.Complex32.Solvers
         /// <param name="residual">Residual values in <see cref="Vector"/>.</param>
         /// <param name="x">Instance of the <see cref="Vector"/> x.</param>
         /// <param name="b">Instance of the <see cref="Vector"/> b.</param>
-        static void CalculateTrueResidual(Matrix<Numerics.Complex32> matrix, Vector<Numerics.Complex32> residual, Vector<Numerics.Complex32> x, Vector<Numerics.Complex32> b)
+        static void CalculateTrueResidual(Matrix<Maths.Complex32> matrix, Vector<Maths.Complex32> residual, Vector<Maths.Complex32> x, Vector<Maths.Complex32> b)
         {
             // -Ax = residual
             matrix.Multiply(x, residual);
@@ -91,7 +62,7 @@ namespace MathNet.Numerics.LinearAlgebra.Complex32.Solvers
         /// <param name="result">The result <see cref="Vector"/>, <c>x</c>.</param>
         /// <param name="iterator">The iterator to use to control when to stop iterating.</param>
         /// <param name="preconditioner">The preconditioner to use for approximations.</param>
-        public void Solve(Matrix<Numerics.Complex32> matrix, Vector<Numerics.Complex32> input, Vector<Numerics.Complex32> result, Iterator<Numerics.Complex32> iterator, IPreconditioner<Numerics.Complex32> preconditioner)
+        public void Solve(Matrix<Maths.Complex32> matrix, Vector<Maths.Complex32> input, Vector<Maths.Complex32> result, Iterator<Maths.Complex32> iterator, IPreconditioner<Maths.Complex32> preconditioner)
         {
             if (matrix.RowCount != matrix.ColumnCount)
             {
@@ -110,12 +81,12 @@ namespace MathNet.Numerics.LinearAlgebra.Complex32.Solvers
 
             if (iterator == null)
             {
-                iterator = new Iterator<Numerics.Complex32>();
+                iterator = new Iterator<Maths.Complex32>();
             }
 
             if (preconditioner == null)
             {
-                preconditioner = new UnitPreconditioner<Numerics.Complex32>();
+                preconditioner = new UnitPreconditioner<Maths.Complex32>();
             }
 
             preconditioner.Initialize(matrix);
@@ -142,9 +113,9 @@ namespace MathNet.Numerics.LinearAlgebra.Complex32.Solvers
 
             // create some temporary float variables that are needed
             // to hold values in between iterations
-            Numerics.Complex32 currentRho = 0;
-            Numerics.Complex32 alpha = 0;
-            Numerics.Complex32 omega = 0;
+            Maths.Complex32 currentRho = 0;
+            Maths.Complex32 alpha = 0;
+            Maths.Complex32 omega = 0;
 
             var iterationNumber = 0;
             while (iterator.DetermineStatus(iterationNumber, result, input, residuals) == IterationStatus.Continue)

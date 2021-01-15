@@ -1,4 +1,4 @@
-﻿namespace MathNet.Numerics.Optimization.TrustRegion
+﻿namespace Simula.Maths.Optimization.TrustRegion
 {
     public sealed class TrustRegionNewtonCGMinimizer : TrustRegionMinimizerBase
     {

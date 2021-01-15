@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Numerics;
 
-namespace MathNet.Numerics
+namespace Simula.Maths
 {
     /// <summary>
     /// This partial implementation of the SpecialFunctions class contains all methods related to the modified Bessel function.

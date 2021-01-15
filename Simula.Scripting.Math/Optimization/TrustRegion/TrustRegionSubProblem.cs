@@ -1,6 +1,6 @@
-﻿using MathNet.Numerics.Optimization.TrustRegion.Subproblems;
+﻿using Simula.Maths.Optimization.TrustRegion.Subproblems;
 
-namespace MathNet.Numerics.Optimization.TrustRegion
+namespace Simula.Maths.Optimization.TrustRegion
 {
     public static class TrustRegionSubproblem
     {

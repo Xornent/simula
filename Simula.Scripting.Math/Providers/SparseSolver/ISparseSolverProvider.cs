@@ -1,6 +1,6 @@
 ﻿using Complex = System.Numerics.Complex;
 
-namespace MathNet.Numerics.Providers.SparseSolver
+namespace Simula.Maths.Providers.SparseSolver
 {
     /// <summary>
     /// Structure option.

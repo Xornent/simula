@@ -1,6 +1,6 @@
 ﻿using Complex = System.Numerics.Complex;
 
-namespace MathNet.Numerics
+namespace Simula.Maths
 {
     /// <summary>
     /// This partial implementation of the SpecialFunctions class contains all methods related to the Airy functions.

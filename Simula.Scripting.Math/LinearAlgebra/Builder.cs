@@ -1,41 +1,12 @@
-﻿// <copyright file="Builder.cs" company="Math.NET">
-// Math.NET Numerics, part of the Math.NET Project
-// http://numerics.mathdotnet.com
-// http://github.com/mathnet/mathnet-numerics
-//
-// Copyright (c) 2009-2014 Math.NET
-//
-// Permission is hereby granted, free of charge, to any person
-// obtaining a copy of this software and associated documentation
-// files (the "Software"), to deal in the Software without
-// restriction, including without limitation the rights to use,
-// copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the
-// Software is furnished to do so, subject to the following
-// conditions:
-//
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-// OTHER DEALINGS IN THE SOFTWARE.
-// </copyright>
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using MathNet.Numerics.Distributions;
-using MathNet.Numerics.LinearAlgebra.Solvers;
-using MathNet.Numerics.LinearAlgebra.Storage;
-using MathNet.Numerics.Random;
+using Simula.Maths.Distributions;
+using Simula.Maths.LinearAlgebra.Solvers;
+using Simula.Maths.LinearAlgebra.Storage;
+using Simula.Maths.Random;
 
-namespace MathNet.Numerics.LinearAlgebra.Double
+namespace Simula.Maths.LinearAlgebra.Double
 {
     internal class MatrixBuilder : MatrixBuilder<double>
     {
@@ -103,7 +74,7 @@ namespace MathNet.Numerics.LinearAlgebra.Double
     }
 }
 
-namespace MathNet.Numerics.LinearAlgebra.Single
+namespace Simula.Maths.LinearAlgebra.Single
 {
     internal class MatrixBuilder : MatrixBuilder<float>
     {
@@ -171,7 +142,7 @@ namespace MathNet.Numerics.LinearAlgebra.Single
     }
 }
 
-namespace MathNet.Numerics.LinearAlgebra.Complex
+namespace Simula.Maths.LinearAlgebra.Complex
 {
     using Complex = System.Numerics.Complex;
 
@@ -241,75 +212,75 @@ namespace MathNet.Numerics.LinearAlgebra.Complex
     }
 }
 
-namespace MathNet.Numerics.LinearAlgebra.Complex32
+namespace Simula.Maths.LinearAlgebra.Complex32
 {
-    internal class MatrixBuilder : MatrixBuilder<Numerics.Complex32>
+    internal class MatrixBuilder : MatrixBuilder<Maths.Complex32>
     {
-        public override Numerics.Complex32 Zero => Numerics.Complex32.Zero;
+        public override Maths.Complex32 Zero => Maths.Complex32.Zero;
 
-        public override Numerics.Complex32 One => Numerics.Complex32.One;
+        public override Maths.Complex32 One => Maths.Complex32.One;
 
-        public override Matrix<Numerics.Complex32> Dense(DenseColumnMajorMatrixStorage<Numerics.Complex32> storage)
+        public override Matrix<Maths.Complex32> Dense(DenseColumnMajorMatrixStorage<Maths.Complex32> storage)
         {
             return new DenseMatrix(storage);
         }
 
-        public override Matrix<Numerics.Complex32> Sparse(SparseCompressedRowMatrixStorage<Numerics.Complex32> storage)
+        public override Matrix<Maths.Complex32> Sparse(SparseCompressedRowMatrixStorage<Maths.Complex32> storage)
         {
             return new SparseMatrix(storage);
         }
 
-        public override Matrix<Numerics.Complex32> Diagonal(DiagonalMatrixStorage<Numerics.Complex32> storage)
+        public override Matrix<Maths.Complex32> Diagonal(DiagonalMatrixStorage<Maths.Complex32> storage)
         {
             return new DiagonalMatrix(storage);
         }
 
-        public override Matrix<Numerics.Complex32> Random(int rows, int columns, IContinuousDistribution distribution)
+        public override Matrix<Maths.Complex32> Random(int rows, int columns, IContinuousDistribution distribution)
         {
             return Dense(rows, columns, Generate.RandomComplex32(rows*columns, distribution));
         }
 
-        public override IIterationStopCriterion<Numerics.Complex32>[] IterativeSolverStopCriteria(int maxIterations = 1000)
+        public override IIterationStopCriterion<Maths.Complex32>[] IterativeSolverStopCriteria(int maxIterations = 1000)
         {
-            return new IIterationStopCriterion<Numerics.Complex32>[]
+            return new IIterationStopCriterion<Maths.Complex32>[]
             {
-                new FailureStopCriterion<Numerics.Complex32>(),
-                new DivergenceStopCriterion<Numerics.Complex32>(),
-                new IterationCountStopCriterion<Numerics.Complex32>(maxIterations),
-                new ResidualStopCriterion<Numerics.Complex32>(1e-6)
+                new FailureStopCriterion<Maths.Complex32>(),
+                new DivergenceStopCriterion<Maths.Complex32>(),
+                new IterationCountStopCriterion<Maths.Complex32>(maxIterations),
+                new ResidualStopCriterion<Maths.Complex32>(1e-6)
             };
         }
 
-        internal override Numerics.Complex32 Add(Numerics.Complex32 x, Numerics.Complex32 y)
+        internal override Maths.Complex32 Add(Maths.Complex32 x, Maths.Complex32 y)
         {
             return x + y;
         }
     }
 
-    internal class VectorBuilder : VectorBuilder<Numerics.Complex32>
+    internal class VectorBuilder : VectorBuilder<Maths.Complex32>
     {
-        public override Numerics.Complex32 Zero => Numerics.Complex32.Zero;
+        public override Maths.Complex32 Zero => Maths.Complex32.Zero;
 
-        public override Numerics.Complex32 One => Numerics.Complex32.One;
+        public override Maths.Complex32 One => Maths.Complex32.One;
 
-        public override Vector<Numerics.Complex32> Dense(DenseVectorStorage<Numerics.Complex32> storage)
+        public override Vector<Maths.Complex32> Dense(DenseVectorStorage<Maths.Complex32> storage)
         {
             return new DenseVector(storage);
         }
 
-        public override Vector<Numerics.Complex32> Sparse(SparseVectorStorage<Numerics.Complex32> storage)
+        public override Vector<Maths.Complex32> Sparse(SparseVectorStorage<Maths.Complex32> storage)
         {
             return new SparseVector(storage);
         }
 
-        public override Vector<Numerics.Complex32> Random(int length, IContinuousDistribution distribution)
+        public override Vector<Maths.Complex32> Random(int length, IContinuousDistribution distribution)
         {
             return Dense(Generate.RandomComplex32(length, distribution));
         }
     }
 }
 
-namespace MathNet.Numerics.LinearAlgebra
+namespace Simula.Maths.LinearAlgebra
 {
     /// <summary>
     /// Generic linear algebra type builder, for situations where a matrix or vector
@@ -1626,7 +1597,7 @@ namespace MathNet.Numerics.LinearAlgebra
                     (VectorBuilder<T>)(object)new LinearAlgebra.Complex.VectorBuilder());
             }
 
-            if (typeof (T) == typeof (Numerics.Complex32))
+            if (typeof (T) == typeof (Maths.Complex32))
             {
                 return new Tuple<MatrixBuilder<T>, VectorBuilder<T>>(
                     (MatrixBuilder<T>)(object)new Complex32.MatrixBuilder(),

@@ -1,9 +1,9 @@
-﻿using MathNet.Numerics.LinearAlgebra;
+﻿using Simula.Maths.LinearAlgebra;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MathNet.Numerics.Optimization.ObjectiveFunctions
+namespace Simula.Maths.Optimization.ObjectiveFunctions
 {
     internal class NonlinearObjectiveFunction : IObjectiveModel
     {

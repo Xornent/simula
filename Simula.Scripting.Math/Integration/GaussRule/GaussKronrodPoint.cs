@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
-namespace MathNet.Numerics.Integration.GaussRule
+namespace Simula.Maths.Integration.GaussRule
 {
     /// <summary>
     /// Contains a method to compute the Gauss-Kronrod abscissas/weights and precomputed abscissas/weights for orders 15, 21, 31, 41, 51, 61.

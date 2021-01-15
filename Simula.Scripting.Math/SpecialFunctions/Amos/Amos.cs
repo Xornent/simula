@@ -1,7 +1,7 @@
 ﻿using System;
 using Complex = System.Numerics.Complex;
 
-namespace MathNet.Numerics
+namespace Simula.Maths
 {
     // References:
     // [1] https://github.com/scipy/scipy/blob/master/scipy/special/amos_wrappers.c

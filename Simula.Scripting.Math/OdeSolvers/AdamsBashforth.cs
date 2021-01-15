@@ -1,7 +1,7 @@
 ﻿// <copyright file="AdamsBashforth.cs" company="Math.NET">
-// Math.NET Numerics, part of the Math.NET Project
-// http://numerics.mathdotnet.com
-// http://github.com/mathnet/mathnet-numerics
+// Math.NET Maths. part of the Math.NET Project
+// http://Maths.mathdotnet.com
+// http://github.com/mathnet/Simula.Maths
 //
 // Copyright (c) 2009-2016 Math.NET
 //
@@ -28,7 +28,7 @@
 // </copyright>
 using System;
 
-namespace MathNet.Numerics.OdeSolvers
+namespace Simula.Maths.OdeSolvers
 {
     public static class AdamsBashforth
     {

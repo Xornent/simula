@@ -1,7 +1,7 @@
 ﻿// <copyright file="RunningStatistics.cs" company="Math.NET">
-// Math.NET Numerics, part of the Math.NET Project
-// http://numerics.mathdotnet.com
-// http://github.com/mathnet/mathnet-numerics
+// Math.NET Maths. part of the Math.NET Project
+// http://Maths.mathdotnet.com
+// http://github.com/mathnet/Simula.Maths
 //
 // Copyright (c) 2009-2015 Math.NET
 //
@@ -34,7 +34,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
-namespace MathNet.Numerics.Statistics
+namespace Simula.Maths.Statistics
 {
     /// <summary>
     /// Running statistics accumulator, allows updating by adding values
@@ -46,7 +46,7 @@ namespace MathNet.Numerics.Statistics
     /// but does not guarantee any compatibility between versions.
     /// It is not recommended to rely on this mechanism for durable persistence.
     /// </remarks>
-    [DataContract(Namespace = "urn:MathNet/Numerics")]
+    [DataContract(Namespace = "urn:Simula.Maths")]
     public class RunningStatistics
     {
         [DataMember(Order = 1)]

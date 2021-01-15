@@ -1,7 +1,7 @@
 ﻿// <copyright file="Adler32.cs" company="Math.NET">
 // Math.NET Numerics, part of the Math.NET Project
 // http://numerics.mathdotnet.com
-// http://github.com/mathnet/mathnet-numerics
+// http://github.com/mathnet/Simula.Maths
 // http://mathnetnumerics.codeplex.com
 //
 // Copyright (c) 2009-2013 Math.NET
@@ -55,7 +55,7 @@
 
 */
 
-namespace MathNet.Numerics.Data.Matlab
+namespace Simula.Maths.IO.Matlab
 {
     internal static class Adler32
     {

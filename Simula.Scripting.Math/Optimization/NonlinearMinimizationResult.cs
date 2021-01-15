@@ -1,6 +1,6 @@
-﻿using MathNet.Numerics.LinearAlgebra;
+﻿using Simula.Maths.LinearAlgebra;
 
-namespace MathNet.Numerics.Optimization
+namespace Simula.Maths.Optimization
 {
     public class NonlinearMinimizationResult
     {

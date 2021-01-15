@@ -1,7 +1,7 @@
-﻿using MathNet.Numerics.LinearAlgebra;
+﻿using Simula.Maths.LinearAlgebra;
 using System.Collections.Generic;
 
-namespace MathNet.Numerics.Optimization
+namespace Simula.Maths.Optimization
 {
     public interface IObjectiveModelEvaluation
     {

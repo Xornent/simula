@@ -1,36 +1,7 @@
-﻿// <copyright file="Interpolate.cs" company="Math.NET">
-// Math.NET Numerics, part of the Math.NET Project
-// http://numerics.mathdotnet.com
-// http://github.com/mathnet/mathnet-numerics
-//
-// Copyright (c) 2009-2014 Math.NET
-//
-// Permission is hereby granted, free of charge, to any person
-// obtaining a copy of this software and associated documentation
-// files (the "Software"), to deal in the Software without
-// restriction, including without limitation the rights to use,
-// copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the
-// Software is furnished to do so, subject to the following
-// conditions:
-//
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-// OTHER DEALINGS IN THE SOFTWARE.
-// </copyright>
+﻿using System.Collections.Generic;
+using Simula.Maths.Interpolation;
 
-using System.Collections.Generic;
-using MathNet.Numerics.Interpolation;
-
-namespace MathNet.Numerics
+namespace Simula.Maths
 {
     /// <summary>
     /// Interpolation Factory.
@@ -49,7 +20,7 @@ namespace MathNet.Numerics
         /// </returns>
         /// <remarks>
         /// if your data is already sorted in arrays, consider to use
-        /// MathNet.Numerics.Interpolation.Barycentric.InterpolateRationalFloaterHormannSorted
+        /// Simula.Maths.Interpolation.Barycentric.InterpolateRationalFloaterHormannSorted
         /// instead, which is more efficient.
         /// </remarks>
         public static IInterpolation Common(IEnumerable<double> points, IEnumerable<double> values)
@@ -69,7 +40,7 @@ namespace MathNet.Numerics
         /// </returns>
         /// <remarks>
         /// if your data is already sorted in arrays, consider to use
-        /// MathNet.Numerics.Interpolation.Barycentric.InterpolateRationalFloaterHormannSorted
+        /// Simula.Maths.Interpolation.Barycentric.InterpolateRationalFloaterHormannSorted
         /// instead, which is more efficient.
         /// </remarks>
         public static IInterpolation RationalWithoutPoles(IEnumerable<double> points, IEnumerable<double> values)
@@ -89,7 +60,7 @@ namespace MathNet.Numerics
         /// </returns>
         /// <remarks>
         /// if your data is already sorted in arrays, consider to use
-        /// MathNet.Numerics.Interpolation.BulirschStoerRationalInterpolation.InterpolateSorted
+        /// Simula.Maths.Interpolation.BulirschStoerRationalInterpolation.InterpolateSorted
         /// instead, which is more efficient.
         /// </remarks>
         public static IInterpolation RationalWithPoles(IEnumerable<double> points, IEnumerable<double> values)
@@ -109,7 +80,7 @@ namespace MathNet.Numerics
         /// </returns>
         /// <remarks>
         /// if your data is already sorted in arrays, consider to use
-        /// MathNet.Numerics.Interpolation.Barycentric.InterpolatePolynomialEquidistantSorted
+        /// Simula.Maths.Interpolation.Barycentric.InterpolatePolynomialEquidistantSorted
         /// instead, which is more efficient.
         /// </remarks>
         public static IInterpolation PolynomialEquidistant(IEnumerable<double> points, IEnumerable<double> values)
@@ -131,7 +102,7 @@ namespace MathNet.Numerics
         /// </returns>
         /// <remarks>
         /// if your data is already sorted in arrays, consider to use
-        /// MathNet.Numerics.Interpolation.NevillePolynomialInterpolation.InterpolateSorted
+        /// Simula.Maths.Interpolation.NevillePolynomialInterpolation.InterpolateSorted
         /// instead, which is more efficient.
         /// </remarks>
         public static IInterpolation Polynomial(IEnumerable<double> points, IEnumerable<double> values)
@@ -151,7 +122,7 @@ namespace MathNet.Numerics
         /// </returns>
         /// <remarks>
         /// if your data is already sorted in arrays, consider to use
-        /// MathNet.Numerics.Interpolation.LinearSpline.InterpolateSorted
+        /// Simula.Maths.Interpolation.LinearSpline.InterpolateSorted
         /// instead, which is more efficient.
         /// </remarks>
         public static IInterpolation Linear(IEnumerable<double> points, IEnumerable<double> values)
@@ -171,7 +142,7 @@ namespace MathNet.Numerics
         /// </returns>
         /// <remarks>
         /// if your data is already sorted in arrays, consider to use
-        /// MathNet.Numerics.Interpolation.LogLinear.InterpolateSorted
+        /// Simula.Maths.Interpolation.LogLinear.InterpolateSorted
         /// instead, which is more efficient.
         /// </remarks>
         public static IInterpolation LogLinear(IEnumerable<double> points, IEnumerable<double> values)
@@ -192,7 +163,7 @@ namespace MathNet.Numerics
         /// </returns>
         /// <remarks>
         /// if your data is already sorted in arrays, consider to use
-        /// MathNet.Numerics.Interpolation.CubicSpline.InterpolateNaturalSorted
+        /// Simula.Maths.Interpolation.CubicSpline.InterpolateNaturalSorted
         /// instead, which is more efficient.
         /// </remarks>
         public static IInterpolation CubicSpline(IEnumerable<double> points, IEnumerable<double> values)
@@ -213,7 +184,7 @@ namespace MathNet.Numerics
         /// </returns>
         /// <remarks>
         /// if your data is already sorted in arrays, consider to use
-        /// MathNet.Numerics.Interpolation.CubicSpline.InterpolateAkimaSorted
+        /// Simula.Maths.Interpolation.CubicSpline.InterpolateAkimaSorted
         /// instead, which is more efficient.
         /// </remarks>
         public static IInterpolation CubicSplineRobust(IEnumerable<double> points, IEnumerable<double> values)
@@ -234,7 +205,7 @@ namespace MathNet.Numerics
         /// </returns>
         /// <remarks>
         /// if your data is already sorted in arrays, consider to use
-        /// MathNet.Numerics.Interpolation.CubicSpline.InterpolatePchipSorted
+        /// Simula.Maths.Interpolation.CubicSpline.InterpolatePchipSorted
         /// instead, which is more efficient.
         /// </remarks>
         public static IInterpolation CubicSplineMonotone(IEnumerable<double> points, IEnumerable<double> values)
@@ -256,7 +227,7 @@ namespace MathNet.Numerics
         /// </returns>
         /// <remarks>
         /// if your data is already sorted in arrays, consider to use
-        /// MathNet.Numerics.Interpolation.CubicSpline.InterpolateHermiteSorted
+        /// Simula.Maths.Interpolation.CubicSpline.InterpolateHermiteSorted
         /// instead, which is more efficient.
         /// </remarks>
         public static IInterpolation CubicSplineWithDerivatives(IEnumerable<double> points, IEnumerable<double> values, IEnumerable<double> firstDerivatives)
@@ -276,7 +247,7 @@ namespace MathNet.Numerics
         /// </returns>
         /// <remarks>
         /// if your data is already sorted in arrays, consider to use
-        /// MathNet.Numerics.Interpolation.StepInterpolation.InterpolateSorted
+        /// Simula.Maths.Interpolation.StepInterpolation.InterpolateSorted
         /// instead, which is more efficient.
         /// </remarks>
         public static IInterpolation Step(IEnumerable<double> points, IEnumerable<double> values)
