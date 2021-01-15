@@ -31,7 +31,7 @@ namespace Simula.Scripting
             textMarkerService = new TextMarkerService(this);
             TextView textView = TextArea.TextView;
             SyntaxHighlighting = Simula.Editor.Highlighting.HighlightingManager.Instance.GetDefinition("Simula");
-            FontFamily = new System.Windows.Media.FontFamily("Consolas, Simsun");
+            FontFamily = new System.Windows.Media.FontFamily("Cascadia Code, Consolas, Simsun");
             FontSize = 13;
 
             textView.BackgroundRenderers.Add(textMarkerService);

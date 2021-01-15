@@ -4,6 +4,7 @@ using System.Dynamic;
 using Simula.Scripting.Types;
 using System;
 using System.Reflection;
+using System.IO;
 
 namespace Simula.Scripting.Contexts
 {
@@ -93,13 +94,30 @@ namespace Simula.Scripting.Contexts
             CacheFunction("sys.string", typeof(Simula.Scripting.Types.String));
             CacheFunction("sys.bool", typeof(Simula.Scripting.Types.Boolean));
             CacheFunction("sys.array", typeof(Simula.Scripting.Types.Array));
+
+            // the runtime context begins searching gor add-on units, the default add-ons
+            // should be in the same directory as the executable and with extensions ".sdl"
+
+            DirectoryInfo dir = new DirectoryInfo(Environment.CurrentDirectory + @"\libraries\");
+            foreach (var files in dir.GetFiles()) {
+                if (files.Extension.EndsWith("dll")) {
+                    Dom.Library lib = new Dom.Library(files.FullName);
+                    lib.LoadDefinition(this);
+                }
+            }
         }
 
         public dynamic Store = new ExpandoObject();
         public Dictionary<string, List<Function>> FunctionCache = new Dictionary<string, List<Function>>();
         public List<ScopeContext> Scopes = new List<ScopeContext>();
         public static Dictionary<string, Operator> Registry = new Dictionary<string, Operator>() {
+            {"_lincrement", new Operator("++", OperatorType.UnaryLeft) },
+            {"_ldecrement", new Operator("--", OperatorType.UnaryLeft) },
+            {"_inverse", new Operator("-", OperatorType.UnaryLeft) },
+            {"_rincrement", new Operator("++", OperatorType.UnaryRight) },
+            {"_rdecrement", new Operator("--", OperatorType.UnaryRight) },
             {"_multiply", new Operator("*")},
+            {"_pow", new Operator("^") },
             {"_divide", new Operator("/")},
             {"_mod", new Operator("%")},
             {"_add", new Operator("+")},
@@ -113,7 +131,12 @@ namespace Simula.Scripting.Contexts
             {"_or", new Operator("||")},
             {"_and", new Operator("&&")},
             {"_assign", new Operator("=")},
-            {"_addassign", new Operator("+=") }
+            {"_addassign", new Operator("+=") },
+            {"_substractassign", new Operator("-=") },
+            {"_powassign", new Operator("^=") },
+            {"_multiplyassign", new Operator("*=") },
+            {"_divideassign", new Operator("/=") },
+            {"_modassign", new Operator("%=") }
         };
 
         public Null typeNull = Null.NULL;

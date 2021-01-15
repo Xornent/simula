@@ -150,7 +150,7 @@ namespace Simula.Scripting.Token
                                         start = new Position(linenum, columnnum);
                                     }
                                 } else if (token.IsValidNumberBeginning()) {
-                                    if (column.IsAlphabet() || column == '\"' || new Token(new string(new char[] { column })).IsValidSymbolBeginning()) {
+                                    if (column.IsAlphabet() || column == '\"' || (new Token(new string(new char[] { column })).IsValidSymbolBeginning() && column != '.')) {
                                         end = new Position(linenum, columnnum - 1);
                                         token.Location = new Span(start, end);
                                         Tokens.Add(token);

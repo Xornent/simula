@@ -24,9 +24,9 @@ namespace Simula.Scripting.Syntax
                     string raw = member.Right.RawEvaluateToken[0];
                     dynamic eval = member.Left.Operate(ctx).Result;
                     if (eval is ExpandoObject exp) {
-                        ctx.SetMemberReferenceCheck(exp, raw, result, eval.fullName[0]);
+                        ctx.SetMemberReferenceCheck(exp, raw, result, eval.fullName.Count == 0 ? "" : eval.fullName[0]);
                     } else {
-                        ctx.SetMemberReferenceCheck(eval._fields, raw, result, eval.fullName[0]);
+                        ctx.SetMemberReferenceCheck(eval._fields, raw, result, eval.fullName.Count == 0 ? "" : eval.fullName[0]);
                     }
                 }
 

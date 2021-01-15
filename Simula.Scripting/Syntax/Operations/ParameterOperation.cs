@@ -138,6 +138,14 @@ namespace Simula.Scripting.Syntax
                     return new Execution(ctx, obj._call(caller, args));
                 }
 
+                // note that a member function (when called without 'this.' prefix will be 
+                // considered as a static function and passes 'null' to 'self'. however, this
+                // seems not to trigger any bugs in execution.
+
+                // a possible solution is to check if the current scope contains a 'this' 
+                // variable, which will always be added to a function scope if it is called 
+                // as a class member. then send that as 'self'.
+
                 return new Execution(ctx, obj._call(null, args));
             }
 

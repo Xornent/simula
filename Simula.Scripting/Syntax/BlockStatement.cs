@@ -101,8 +101,8 @@ namespace Simula.Scripting.Syntax
                             currentBlock.Push(w);
 
                             w.Parse(line);
-                        } else if (line[0] == "enum") {
-                            EnumerableBlock e = new EnumerableBlock();
+                        } else if (line[0] == "iter") {
+                            IterateBlock e = new IterateBlock();
                             currentBlock.Push(e);
 
                             e.Parse(line);
@@ -141,7 +141,7 @@ namespace Simula.Scripting.Syntax
         {
             Execution result = new Execution();
             foreach (var item in Children) {
-                if (item is DefinitionBlock) { } else {
+                if (item is DefinitionBlock || item is CommentBlock) { } else {
                     
                     if(item is ElseIfBlock || item is ElseBlock) {
                         if(result.Flag == ExecutionFlag.Else) {

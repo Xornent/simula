@@ -8,7 +8,7 @@ namespace Simula.Scripting.Types
 {
     public class Integer : Var
     {
-        private BigInteger raw = 0;
+        public BigInteger raw = 0;
         public Integer() : base() { }
         public Integer(BigInteger bigint) : base()
         {

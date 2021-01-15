@@ -6,7 +6,7 @@ namespace Simula.Scripting.Types
 {
     public class Boolean : Var
     {
-        private bool raw = false;
+        internal bool raw = false;
         public Boolean() : base() { }
         public Boolean(bool val) : base()
         {

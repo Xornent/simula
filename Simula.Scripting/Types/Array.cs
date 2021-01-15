@@ -8,7 +8,7 @@ namespace Simula.Scripting.Types
 {
     public class Array : Var
     {
-        private dynamic[] raw = new dynamic[] { };
+        public dynamic[] raw = new dynamic[] { };
         public Array() : base() { }
         public Array(dynamic[] arr) : base()
         {
@@ -24,7 +24,7 @@ namespace Simula.Scripting.Types
         }, new List<Pair>() { });
 
         public static Function get = new Function((self, args) => {
-            return self.raw[args[0]];
+            return self.raw[(int)args[0]];
         }, new List<Pair>() {
             new Pair(new Types.String("index"), new Types.String("sys.int"))
         });

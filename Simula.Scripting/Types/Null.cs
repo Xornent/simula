@@ -43,10 +43,10 @@ namespace Simula.Scripting.Types
             // this.fullName.Add(System.Guid.NewGuid().ToString());
         }
 
-        internal List<string> fullName = new List<string>();
+        internal List<string> fullName = new List<string>() { };
         internal string name = "";
-        internal string type = "";
-        internal Dictionary<string, dynamic> _fields = new Dictionary<string, dynamic>();
+        public string type = "";
+        public Dictionary<string, dynamic> _fields = new Dictionary<string, dynamic>();
     }
 
     public class Reference

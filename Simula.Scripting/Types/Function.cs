@@ -21,8 +21,8 @@ namespace Simula.Scripting.Types
     /// </summary>
     public class Function : Var
     {
-        private List<Func<dynamic, dynamic[], dynamic>> raw = new List<Func<dynamic, dynamic[], dynamic>> { };
-        private List<List<Pair>> param = new List<List<Pair>>();
+        internal List<Func<dynamic, dynamic[], dynamic>> raw = new List<Func<dynamic, dynamic[], dynamic>> { };
+        internal List<List<Pair>> param = new List<List<Pair>>();
         public Function() : base()
         {
             this._fields.Add("isMultiple", false);

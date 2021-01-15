@@ -15,7 +15,7 @@ namespace Simula.Scripting.Syntax
         public TokenCollection RawEvaluateToken = new TokenCollection();
         public List<OperatorStatement> EvaluateOperators = new List<OperatorStatement>();
         private bool cache = false;
-        private dynamic? cacheObject = null;
+        private Execution? cacheObject = null;
 
         public override Execution Execute(DynamicRuntime ctx)
         {
@@ -23,8 +23,8 @@ namespace Simula.Scripting.Syntax
                 if (cacheObject == null) {
                     var op = EvaluateOperators[0];
                     cacheObject = op.Operate(ctx);
-                    return cacheObject;
-                } else return cacheObject;
+                    return cacheObject ?? new Execution();
+                } else return cacheObject ?? new Execution();
             }
 
             if (EvaluateOperators.Count > 1) return new Execution();
@@ -62,30 +62,40 @@ namespace Simula.Scripting.Syntax
             // 8. 位左移运算符(<<), 位右移运算符(>>)
             // 9. 比较运算符(<, >, <=, >=, ==, !=)
             // 10. 布尔逻辑运算符 (||, &&)
-            // 11. 位逻辑运算符 (|, &, ^)
+            // 11. 位逻辑运算符 (|, &)
 
             Parse();
         }
 
         public void Parse()
         {
-            while (ParseBinocularOperator(".", EvaluateOperators)) { }
+            while (ParseBinaryOperator(".", EvaluateOperators)) { }
 
             while (ParseSealedOperator("{", "}", EvaluateOperators)) { }
 
             while (ParseSealedOperator("(", ")", EvaluateOperators)) { }
             while (ParseSealedOperator("[", "]", EvaluateOperators)) { }
 
-            while (ParseBinocularOperator(".", EvaluateOperators) ||
+            while (ParseBinaryOperator(".", EvaluateOperators) ||
                    ReplaceSmallBracketToFunctionCall() ||
-                   ParseBinocularOperator(".", EvaluateOperators) ||
+                   ParseBinaryOperator(".", EvaluateOperators) ||
                    ReplaceSquareBracketToIndex() ||
-                   ParseBinocularOperator(".", EvaluateOperators)) { }
+                   ParseBinaryOperator(".", EvaluateOperators)) { }
 
-            while (ParseBinocularOperatorForced(".", EvaluateOperators)) { }
+            while (ParseBinaryOperatorForced(".", EvaluateOperators)) { }
 
             foreach (var op in DynamicRuntime.Registry) {
-                while(ParseBinocularOperatorForced(op.Value.Symbol, EvaluateOperators));
+                switch (op.Value.Type) {
+                    case OperatorType.UnaryLeft:
+                        while (ParseUnaryOperatorForced(op.Value, EvaluateOperators)) ;
+                        break;
+                    case OperatorType.UnaryRight:
+                        while (ParseUnaryOperatorForced(op.Value, EvaluateOperators)) ;
+                        break;
+                    case OperatorType.Binary:
+                        while (ParseBinaryOperatorForced(op.Value.Symbol, EvaluateOperators)) ;
+                        break;
+                }
             }
         }
 
@@ -139,7 +149,7 @@ namespace Simula.Scripting.Syntax
             return false;
         }
 
-        private bool ParseBinocularOperator(string operation, List<OperatorStatement> token)
+        private bool ParseBinaryOperator(string operation, List<OperatorStatement> token)
         {
             Stack<Token.Token> cascader = new Stack<Token.Token>();
             int c = -1;
@@ -206,7 +216,7 @@ namespace Simula.Scripting.Syntax
             return false;
         }
 
-        private bool ParseBinocularOperatorForced(string operation, List<OperatorStatement> token)
+        private bool ParseBinaryOperatorForced(string operation, List<OperatorStatement> token)
         {
             Stack<Token.Token> cascader = new Stack<Token.Token>();
             int c = -1;
@@ -258,6 +268,84 @@ namespace Simula.Scripting.Syntax
                                         op.Left = token[c-1];
                                         op.Right = token[c+1];
                                         op.Operator = new Operator(operation);
+                                        goto case "final";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        private bool ParseUnaryOperatorForced(Operator operation, List<OperatorStatement> token)
+        {
+            Stack<Token.Token> cascader = new Stack<Token.Token>();
+            int c = -1;
+            foreach (var item in token) {
+                c++;
+                if (item is SelfOperation) {
+                    var self = item as SelfOperation;
+                    if (self.Self == "(" ||
+                        self.Self == "{" ||
+                        self.Self == "[") {
+                        cascader.Push(self.Self);
+                        break;
+                    } else if (self.Self == ")" ||
+                        self.Self == "}" ||
+                        self.Self == "]") {
+                        cascader.Pop();
+                        break;
+                    }
+
+                    if (cascader.Count == 0) {
+                        if (self.Self.IsValidSymbolBeginning()) {
+                            if (self.Self == operation.Symbol) {
+                                OperatorStatement? op = null;
+                                switch (operation.Symbol) {
+                                    case "final":
+                                        if (operation.Type == OperatorType.UnaryLeft) {
+                                            op.RawEvaluateToken.AddRange(token[c].RawEvaluateToken);
+                                            op.RawEvaluateToken.AddRange(token[c + 1].RawEvaluateToken);
+
+                                            token.RemoveRange(c, 2);
+                                            token.Insert(c, op ?? new OperatorStatement());
+                                        } else {
+                                            op.RawEvaluateToken.AddRange(token[c - 1].RawEvaluateToken);
+                                            op.RawEvaluateToken.AddRange(token[c].RawEvaluateToken);
+
+                                            token.RemoveRange(c - 1, 2);
+                                            token.Insert(c - 1, op ?? new OperatorStatement());
+                                        }
+                                        return true;
+                                    default:
+                                        op = new UnaryOperation();
+                                        if (operation.Type == OperatorType.UnaryLeft) {
+                                            if (token.Count < c + 2) {
+                                                self.Self.Error = new TokenizerException("SS0017");
+                                                continue;
+                                            }
+
+                                            if (token[c + 1] is SelfOperation) {
+                                                var s = token[c + 1] as SelfOperation;
+                                                if (s.Self.IsValidSymbolBeginning()) continue;
+                                            }
+
+                                            op.Right = token[c + 1];
+                                        } else {
+                                            if (c == 0) {
+                                                self.Self.Error = new TokenizerException("SS0017");
+                                                continue;
+                                            }
+
+                                            if (token[c - 1] is SelfOperation) {
+                                                var s = token[c - 1] as SelfOperation;
+                                                if (s.Self.IsValidSymbolBeginning()) continue;
+                                            }
+
+                                            op.Left = token[c - 1]; 
+                                        }
+                                        op.Operator = operation;
                                         goto case "final";
                                 }
                             }
