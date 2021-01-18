@@ -6,7 +6,8 @@ namespace Simula.Scripting.Utils
 {
     public static class Tex
     {
-        [FunctionExport("tex", "expression:sys.string", "util")]
+        [FunctionExport("tex", "expression:sys.string@sys.string", "util", 
+            "渲染输出指定 TeX 表达式")]
         public static Func<dynamic, dynamic[], dynamic> tex = (self, args) => {
             TeX.Controls.FormulaControl ctrl = new TeX.Controls.FormulaControl();
             ctrl.Formula = args[0].ToString();

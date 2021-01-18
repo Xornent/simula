@@ -46,11 +46,13 @@ namespace Simula.Scripting.Types
         internal List<string> fullName = new List<string>() { };
         internal string name = "";
         public string type = "";
+        public string desc = "";
         public Dictionary<string, dynamic> _fields = new Dictionary<string, dynamic>();
     }
 
     public class Reference
     {
+        public dynamic FullName = "";
         public dynamic Container;
         public string Token;
         private DynamicRuntime Runtime;
@@ -77,6 +79,8 @@ namespace Simula.Scripting.Types
                 this.Container = result.Container;
                 this.Token = fullName;
             }
+
+            this.FullName = fullName;
         }
 
         public dynamic GetDynamic()

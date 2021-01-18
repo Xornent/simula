@@ -3,12 +3,12 @@ using Simula.Scripting.Token;
 
 namespace Simula.Scripting.Syntax
 {
-
     public class ReturnStatement : Statement
     {
-        private EvaluationStatement? Evaluation = null;
+        public EvaluationStatement? Evaluation = null;
         public override void Parse(TokenCollection sentence)
         {
+            this.RawToken.AddRange(sentence);
             if (sentence.Count == 1) {
                 return;
             } else {

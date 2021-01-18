@@ -57,5 +57,62 @@ namespace Simula.Scripting.Syntax
             }
 
         }
+
+        public override TypeInference InferType(CompletionContext ctx)
+        {
+            if (this.Operator.Type == OperatorType.UnaryLeft) {
+                if (this.Right == null) return new TypeInference();
+                if (this.Right.RawEvaluateToken.Count == 0) return new TypeInference();
+                var right = this.Right.InferType(ctx);
+
+                HashSet<string> types = new HashSet<string>();
+
+                var pair = DynamicRuntime.Registry.FirstOrDefault(((arg) => {
+                    if (arg.Value.Symbol == this.Operator.Symbol &&
+                        arg.Value.Type == this.Operator.Type) return true;
+                    else return false;
+                }));
+
+                foreach (var item in right.Types) {
+                    if (ctx.ClassRecords.ContainsKey(item)) {
+                        var find = ctx.ClassRecords[item].Children.Find((rec) => {
+                            return rec.Name == pair.Key;
+                        });
+
+                        if (find != null)
+                            types.AddRange(find.ReturnTypes);
+                    }
+                }
+
+                return new TypeInference(types, null);
+
+            } else if (this.Operator.Type == OperatorType.UnaryRight) {
+                if (this.Left == null) return new TypeInference();
+                if (this.Left.RawEvaluateToken.Count == 0) return new TypeInference();
+                var left = this.Left.InferType(ctx);
+
+                HashSet<string> types = new HashSet<string>();
+
+                var pair = DynamicRuntime.Registry.FirstOrDefault(((arg) => {
+                    if (arg.Value.Symbol == this.Operator.Symbol &&
+                        arg.Value.Type == this.Operator.Type) return true;
+                    else return false;
+                }));
+
+                foreach (var item in left.Types) {
+                    if (ctx.ClassRecords.ContainsKey(item)) {
+                        var find = ctx.ClassRecords[item].Children.Find((rec) => {
+                            return rec.Name == pair.Key;
+                        });
+
+                        if (find != null)
+                            types.AddRange(find.ReturnTypes);
+                    }
+                }
+
+                return new TypeInference(types, null);
+
+            } else return new TypeInference();
+        }
     }
 }

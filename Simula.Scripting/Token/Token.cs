@@ -122,14 +122,21 @@ namespace Simula.Scripting.Token
             return t.Value;
         }
 
+        public static explicit operator Token(string t)
+        {
+            return new Token(t);
+        }
+
         public static Token LineBreak = new Token("<newline>", new Span());
         public static Token Continue = new Token("...", new Span());
 
         public override string ToString()
         {
-            if (HasError)
-                return Value + "  ' " + Error?.Message;
-            else return Value;
+            // if (HasError)
+            //     return Value + "  ' " + Error?.Message;
+            // else
+            
+            return Value;
         }
     }
 

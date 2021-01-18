@@ -28,6 +28,25 @@ namespace Simula.Scripting.Syntax
             else return new Execution();
         }
 
+        public override TypeInference InferType(CompletionContext ctx)
+        {
+            if (EvaluateOperators.Count == 0) return new TypeInference();
+            List<OperatorStatement?> ops = new List<OperatorStatement?>() { null };
+            foreach (var item in this.EvaluateOperators) {
+                if (item is SelfOperation) {
+                    if (((SelfOperation)item).Self == ",") {
+                        ops.Add(null);
+                        continue;
+                    }
+                }
+
+                ops[ops.Count - 1] = item;
+            }
+
+            if (ops.Count > 0) return ops[0].InferType(ctx);
+            else return new TypeInference();
+        }
+
         public List<Execution> FullExecution(DynamicRuntime ctx) {
             List<Execution> members = new List<Execution>();
             if (EvaluateOperators.Count == 0) return new List<Execution>();
@@ -113,6 +132,11 @@ namespace Simula.Scripting.Syntax
             arr = new Types.Array(members.ToArray());
             return new Execution(ctx, arr);
         }
+
+        public override TypeInference InferType(CompletionContext ctx)
+        {
+            return new TypeInference(new HashSet<string> { "sys.array" }, null);
+        }
     }
 
     public class IndexOperation : OperatorStatement
@@ -150,6 +174,25 @@ namespace Simula.Scripting.Syntax
             }
 
             return new Execution();
+        }
+
+        public override TypeInference InferType(CompletionContext ctx)
+        {
+            if (this.Left == null) return new TypeInference();
+            var left = this.Left.InferType(ctx);
+            HashSet<string> ret = new HashSet<string>();
+
+            if(left.Types.Contains("sys.func") || left.Types.Contains("sys.class") || left.Types.Contains("any") || left.Types.Contains("ref")) {
+                if(left.Object !=null) {
+                    if (left.Types.Contains("sys.func")) ret.AddRange(left.Object.ReturnTypes);
+                    else if (left.Types.Contains("sys.class")) ret.Add(left.Object.FullName);
+                    else ret.Add("any");
+                }
+            } else {
+                this.Left.RawEvaluateToken.Last().Error = new Token.TokenizerException("ss1001");
+            }
+
+            return new TypeInference(ret, null);
         }
     }
 }

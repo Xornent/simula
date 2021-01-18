@@ -101,7 +101,7 @@ namespace Simula.Scripting.Dom
                                 ctx.Scopes.Add(scope);
 
                                 BlockStatement block = new BlockStatement() { Children = def.Children };
-                                dynamic result = block.Execute(ctx);
+                                dynamic result = block.Execute(ctx).Result;
 
                                 ctx.Scopes.RemoveAt(ctx.Scopes.Count - 1);
                                 return result;

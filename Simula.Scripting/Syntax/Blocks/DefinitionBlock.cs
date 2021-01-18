@@ -42,6 +42,7 @@ namespace Simula.Scripting.Syntax
 
         public new void Parse(TokenCollection collection)
         {
+            RawToken.AddRange(collection);
             Token.Token[] store = new Token.Token[collection.Count];
             collection.CopyTo(store);
 
@@ -212,6 +213,10 @@ namespace Simula.Scripting.Syntax
                         ParseClassDefinition(collection);
                     }
                     break;
+            }
+
+            foreach (var item in this.Children) {
+                RawToken.AddRange(item.RawToken);
             }
         }
 

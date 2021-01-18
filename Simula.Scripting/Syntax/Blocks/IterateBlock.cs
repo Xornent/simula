@@ -13,6 +13,7 @@ namespace Simula.Scripting.Syntax
 
         public new void Parse(TokenCollection collection)
         {
+            this.RawToken.AddRange(collection);
             System.Dynamic.ExpandoObject expando = new System.Dynamic.ExpandoObject();
             expando.TryAdd("_init", (Func<dynamic[], dynamic>)(delegate (dynamic[] a) {
                 return "s";
@@ -52,6 +53,10 @@ namespace Simula.Scripting.Syntax
                 Enumerator.Parse(subitems[0]);
                 Collection = new EvaluationStatement();
                 Collection.Parse(subitems[1]);
+            }
+
+            foreach (var item in this.Children) {
+                this.RawToken.AddRange(item.RawToken);
             }
         }
 

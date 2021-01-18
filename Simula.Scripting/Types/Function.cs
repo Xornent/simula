@@ -6,45 +6,37 @@ using System.Text;
 
 namespace Simula.Scripting.Types
 {
-    /// <summary>
-    /// 对应一个内置类型 func 类. 提供对外接口:
-    /// 
-    /// addFunction        func (function addition)
-    /// removeFunction     func (array :: parameter flag)
-    /// select             func (array :: parameter flag)
-    /// given              func (array :: pair arguments)
-    /// isMultiple         bool
-    /// 
-    /// +                  operator :: binary (function addition)
-    /// -                  operator :: binary (array :: parameter flag)
-    /// call               ( ... )
-    /// </summary>
     public class Function : Var
     {
         internal List<Func<dynamic, dynamic[], dynamic>> raw = new List<Func<dynamic, dynamic[], dynamic>> { };
         internal List<List<Pair>> param = new List<List<Pair>>();
-        public Function() : base()
+        public HashSet<string> returntypes = new HashSet<string>();
+        public Function(string returns = "") : base()
         {
-            this._fields.Add("isMultiple", false);
+            this._fields.Add("isMultiple", new Boolean(false));
+            this.returntypes = returns.Contains("|") ? returns.Split("|").ToHashSet() : new HashSet<string>(){ returns };
         }
 
         public Function(Func<dynamic, dynamic[], dynamic> function,
-                        List<Pair> pairs) : this()
+                        List<Pair> pairs, string returns = "") : this()
         {
             this.raw.Add(function);
             param.Add(pairs);
+            this.returntypes = returns.Contains("|") ? returns.Split("|").ToHashSet() : new HashSet<string>() { returns };
         }
 
         public Function(List<Func<dynamic, dynamic[], dynamic>> functions,
-                        List<List<Pair>> pairs) : this()
+                        List<List<Pair>> pairs, string returns = "") : this()
         {
             raw.AddRange(functions);
             param.AddRange(pairs);
+            this.returntypes = returns.Contains("|") ? returns.Split("|").ToHashSet() : new HashSet<string>() { returns };
         }
 
-        public Function(Function function) : base()
+        public Function(Function function, string returns = "") : base()
         {
             this.raw = function.raw;
+            this.returntypes = returns.Contains("|") ? returns.Split("|").ToHashSet() : new HashSet<string>() { returns };
         }
 
         public void AddFunction(Func<dynamic, dynamic[], dynamic> function, List<Pair> pairs)
@@ -81,7 +73,7 @@ namespace Simula.Scripting.Types
                     paramList.Add(item.ToString());
                 }
 
-                expr += "func " + this.name + " (" + paramList.JoinString(", ") + ")\n";
+                expr += "def func " + this.name + " (" + paramList.JoinString(", ") + ")\n";
             }
             expr = expr.Trim('\n');
             return expr == "" ? "func" : expr;

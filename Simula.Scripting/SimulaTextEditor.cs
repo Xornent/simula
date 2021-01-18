@@ -26,12 +26,16 @@ namespace Simula.Scripting
         private readonly FoldingManager manager;
         private readonly SimulaFoldingStrategy folding = new SimulaFoldingStrategy();
 
+        public static readonly string fontFamily = "cascadia code, consolas, simsun";
+        public Contexts.DynamicRuntime runtime = new Contexts.DynamicRuntime();
+        public Contexts.CompletionContext completionCtx;
+
         public SimulaTextEditor() : base()
         {
             textMarkerService = new TextMarkerService(this);
             TextView textView = TextArea.TextView;
             SyntaxHighlighting = Simula.Editor.Highlighting.HighlightingManager.Instance.GetDefinition("Simula");
-            FontFamily = new System.Windows.Media.FontFamily("Cascadia Code, Consolas, Simsun");
+            FontFamily = new System.Windows.Media.FontFamily(fontFamily);
             FontSize = 13;
 
             textView.BackgroundRenderers.Add(textMarkerService);
@@ -50,11 +54,13 @@ namespace Simula.Scripting
             manager = FoldingManager.Install(TextArea);
             folding = new SimulaFoldingStrategy();
             folding.UpdateFoldings(manager, Document);
+            this.completionCtx = new Contexts.CompletionContext(runtime);
         }
 
         private void HandleTextChanged(object? sender, EventArgs e)
         {
             usingValidation = true;
+            // worker.RunWorkerAsync();
             Validate(null, null);
             folding.UpdateFoldings(manager, Document);
             usingValidation = false;
@@ -151,15 +157,15 @@ namespace Simula.Scripting
             IServiceProvider sp = this;
             var markerService = (TextMarkerService)sp.GetService(typeof(TextMarkerService));
             markerService.Clear();
-/*
-            //Compilation.RuntimeContext ctx = Scripting.Compilation.RuntimeContext.Create();
-            //Compilation.SourceCompilationUnit src = new Scripting.Compilation.SourceCompilationUnit(Text);
 
+            Token.TokenDocument doc = new Token.TokenDocument();
+            
             try {
-               // src.Register(ctx);
-               // src.Run(ctx);
+                doc.Tokenize(this.Text);
+                Syntax.BlockStatement block = new Syntax.BlockStatement();
+                block.Parse(doc.Tokens);
             } catch { } finally {
-                foreach (var item in src.Tokens?.Tokens ?? new Token.TokenCollection()) {
+                foreach (var item in doc.Tokens ?? new Token.TokenCollection()) {
                     if (item.HasError) {
                         StackPanel stack = new StackPanel();
                         stack.Margin = new Thickness(4);
@@ -167,7 +173,7 @@ namespace Simula.Scripting
                         stack.Orientation = Orientation.Vertical;
                         TextBlock textMessage = new TextBlock();
                         textMessage.Text = "[" + item.Error?.Id.ToUpper() + "] " + item.Error?.Message;
-                        textMessage.FontFamily = new FontFamily("consolas, simsun");
+                        textMessage.FontFamily = new FontFamily(fontFamily);
                         textMessage.FontWeight = FontWeights.Bold;
                         textMessage.TextWrapping = TextWrapping.Wrap;
                         stack.Children.Add(textMessage);
@@ -175,12 +181,12 @@ namespace Simula.Scripting
                         if (!string.IsNullOrEmpty(item.Error?.Help ?? "")) {
                             TextEditor editor = new TextEditor();
                             editor.SyntaxHighlighting = Simula.Editor.Highlighting.HighlightingManager.Instance.GetDefinition("Simula");
-                            editor.FontFamily = new System.Windows.Media.FontFamily("Consolas, Simsun");
+                            editor.FontFamily = new System.Windows.Media.FontFamily(fontFamily);
                             editor.FontSize = 13;
                             editor.Text = "";
 
                             TextBlock textHelp = new TextBlock();
-                            textHelp.FontFamily = new FontFamily("consolas, simsun");
+                            textHelp.FontFamily = new FontFamily(fontFamily);
                             textHelp.TextWrapping = TextWrapping.Wrap;
 
                             string[] lines = (item.Error?.Help ?? "").Split('\n');
@@ -193,7 +199,7 @@ namespace Simula.Scripting
                                         stack.Children.Add(editor);
                                         editor = new TextEditor();
                                         editor.SyntaxHighlighting = Simula.Editor.Highlighting.HighlightingManager.Instance.GetDefinition("Simula");
-                                        editor.FontFamily = new System.Windows.Media.FontFamily("Consolas, Simsun");
+                                        editor.FontFamily = new System.Windows.Media.FontFamily(fontFamily);
                                         editor.FontSize = 13;
                                         editor.Text = "";
                                     } else {
@@ -201,7 +207,7 @@ namespace Simula.Scripting
                                         stack.Children.Add(new Grid() { Height = 10 });
                                         stack.Children.Add(textHelp);
                                         textHelp = new TextBlock();
-                                        textHelp.FontFamily = new FontFamily("consolas, simsun");
+                                        textHelp.FontFamily = new FontFamily(fontFamily);
                                         textHelp.TextWrapping = TextWrapping.Wrap;
                                     }
                                     continue;
@@ -224,7 +230,6 @@ namespace Simula.Scripting
                     }
                 }
             }
-            */
         }
 
         private void DisplayValidationError(UIElement message, int linePosition, int lineNumber)
@@ -250,44 +255,46 @@ namespace Simula.Scripting
 
         }
 
+        bool closeCompletion = true;
         private void TextArea_TextEntering(object sender, System.Windows.Input.TextCompositionEventArgs e)
         {
-            /*
-            if (e.Text.Length > 0 && completionWindow != null) {
+            if (e.Text.Length > 0 && (completionWindow != null)) {
                 if (!char.IsLetterOrDigit(e.Text[0])) {
                     completionWindow.Close();
+
+                    // the commented command requested that every time user press whitespace,
+                    // the selected item is completed by autocompleter. this may cause great 
+                    // inconvinience since the completion engine is not so intelligent.
+
                     // completionWindow.CompletionList.RequestInsertion(e);
                 }
             } else if (char.IsLetter(e.Text[0]) || e.Text == "_") {
-                List<string> lines = new List<string>();
-                int linecount = TextArea.Caret.Line;
-                string curLine = "";
-                int l = 1;
-                foreach (var item in Text.Split('\n')) {
-                    if (l < linecount) lines.Add(item);
-                    else {
-                        curLine = item;
-                        break;
-                    }
-                    l++;
-                }
 
-                var availableKeys = Completion.CompletionProvider.AllowedKeywords(lines, curLine);
+                // call completion provider with TextArea.Caret locations, full source
+                // file and current dynamic runtime.
+
+                completionCtx.SetSource(this.Text);
+                Contexts.CompletionCaret caret = completionCtx.GetCaret(TextArea.Caret.Line, TextArea.Caret.Column);
+                Contexts.CompletionProvider provider = new Contexts.CompletionProvider(completionCtx, caret);
+                var availableKeys = provider.GetCompletionData();
 
                 if (availableKeys.Count > 0) {
-                    completionWindow = new CompletionWindow(TextArea);
+                    if (completionWindow == null)
+                        completionWindow = new CompletionWindow(TextArea);
                     IList<ICompletionData> data = completionWindow.CompletionList.CompletionData;
+                    data.Clear();
+
+                    availableKeys.Sort((a, b) => { return string.Compare(a.Text, b.Text); });
+                    availableKeys.Where((x, i) => availableKeys.FindIndex(z => z.Text == x.Text) == i);
+
                     foreach (var item in availableKeys) {
                         data.Add(item);
                     }
 
+                    completionWindow.Closed += (obj, e) => { completionWindow = null; };
                     completionWindow.Show();
-                    completionWindow.Closed += delegate {
-                        completionWindow = null;
-                    };
                 }
             }
-            */
         }
     }
 

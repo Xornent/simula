@@ -6,6 +6,7 @@ namespace Simula.Scripting.Syntax
     {
         public new void Parse(TokenCollection sentence)
         {
+            this.RawToken.AddRange(sentence);
             if (sentence.Count <= 1) {
                 sentence[0].Error = new Token.TokenizerException("SS0003");
             }

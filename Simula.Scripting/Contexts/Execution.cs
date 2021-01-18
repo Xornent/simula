@@ -2,10 +2,10 @@ namespace Simula.Scripting.Contexts
 {
     public struct Execution
     {
-        public Execution(DynamicRuntime runtime, dynamic result, ExecutionFlag flag = ExecutionFlag.Go)
+        public Execution(DynamicRuntime runtime, dynamic? result, ExecutionFlag flag = ExecutionFlag.Go)
         {
             Runtime = runtime;
-            Result = result;
+            Result = result ?? Types.Null.NULL;
             Flag = flag;
         }
 

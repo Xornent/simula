@@ -47,10 +47,7 @@ namespace Simula.Scripting.Token
         {
             string s = "";
             foreach (var item in this) {
-                if (item.HasError)
-                    s = s + item.Value + "  ' " + item.Error?.Id.ToUpper() + ": " + item.Error?.Message + "\n";
-                else
-                    s = s + item.Value + "\n";
+                s = s + item.Value;
             }
             return s;
         }
@@ -73,8 +70,8 @@ namespace Simula.Scripting.Token
                 columnnum = 0;
 
                 Token token = new Token("");
-                Position start = new Position(1, 1);
-                Position end = new Position(1, 1);
+                Position start = new Position(linenum, 1);
+                Position end = new Position(linenum, 1);
 
                 foreach (var column in line) {
                     columnnum++;
@@ -199,6 +196,7 @@ namespace Simula.Scripting.Token
                             token.Location = new Span(start, end);
                             Tokens.Add(token);
                             token = new Token("");
+                            start = new Position(linenum + 1, 1);
                         }
                     }
 

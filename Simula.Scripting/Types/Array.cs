@@ -17,17 +17,17 @@ namespace Simula.Scripting.Types
 
         public static Function last = new Function((self, args) => {
             return self.raw[self.raw.Length - 1];
-        }, new List<Pair>() { });
+        }, new List<Pair>() { }, "any");
 
         public static Function first = new Function((self, args) => {
             return self.raw[0];
-        }, new List<Pair>() { });
+        }, new List<Pair>() { }, "any");
 
         public static Function get = new Function((self, args) => {
             return self.raw[(int)args[0]];
         }, new List<Pair>() {
             new Pair(new Types.String("index"), new Types.String("sys.int"))
-        });
+        }, "any");
 
         public static Function set = new Function((self, args) => {
             self.raw[args[0]] = args[1];
@@ -35,7 +35,7 @@ namespace Simula.Scripting.Types
         }, new List<Pair>() { 
             new Pair(new String("index"), new String("sys.int")),
             new Pair(new String("value"), new String("any"))
-        });
+        }, "any");
 
         public static Function insert = new Function((self, args) => {
             var list = CreateList(self.raw);
@@ -45,7 +45,7 @@ namespace Simula.Scripting.Types
         }, new List<Pair>() {
             new Pair(new String("index"), new String("sys.int")),
             new Pair(new String("value"), new String("any"))
-        });
+        }, "sys.array");
 
         public static Function insertRange = new Function((self, args) => {
             var list = CreateList(self.raw);
@@ -55,7 +55,7 @@ namespace Simula.Scripting.Types
         }, new List<Pair>() {
             new Pair(new String("index"), new String("sys.int")),
             new Pair(new String("range"), new String("sys.array"))
-        });
+        }, "sys.array");
 
         public static Function add = new Function((self, args) => {
             var list = CreateList(self.raw);
@@ -65,7 +65,7 @@ namespace Simula.Scripting.Types
         }, new List<Pair>() {
             new Pair(new String("index"), new String("sys.int")),
             new Pair(new String("value"), new String("any"))
-        });
+        }, "sys.array");
 
         public static Function addRange = new Function((self, args) => {
             var list = CreateList(self.raw);
@@ -75,7 +75,7 @@ namespace Simula.Scripting.Types
         }, new List<Pair>() {
             new Pair(new String("index"), new String("sys.int")),
             new Pair(new String("range"), new String("sys.array"))
-        });
+        }, "sys.array");
 
         public static Function remove = new Function((self, args) => {
             var list = CreateList(self.raw);
@@ -84,7 +84,7 @@ namespace Simula.Scripting.Types
             return self;
         }, new List<Pair>() { 
             new Pair(new String("index"), new String("sys.int"))
-        });
+        }, "sys.array");
 
         public static Function removeRange = new Function((self, args) => {
             var list = CreateList(self.raw);
@@ -94,7 +94,7 @@ namespace Simula.Scripting.Types
         }, new List<Pair>() {
             new Pair(new String("start"), new String("sys.int")),
             new Pair(new String("length"), new String("sys.int"))
-        });
+        }, "sys.array");
 
         public static Function total = new Function((self, args) => {
             int counter = 0;
@@ -108,12 +108,12 @@ namespace Simula.Scripting.Types
                 counter += count(item);
             }
 
-            return (Integer)counter;
-        }, new List<Pair>() { });
+            return (Float)((double)counter);
+        }, new List<Pair>() { }, "sys.float");
 
         public static Function length = new Function((self, args) => {
-            return (Integer)self.raw.Length;
-        }, new List<Pair>() { });
+            return (Float)((double)self.raw.Length);
+        }, new List<Pair>() { }, "sys.float");
 
         internal new string type = "sys.array";
 

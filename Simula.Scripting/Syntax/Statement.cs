@@ -6,6 +6,8 @@ namespace Simula.Scripting.Syntax
 {
     public class Statement
     {
+        public Token.TokenCollection RawToken = new TokenCollection();
+
         public virtual void Parse(TokenCollection sentence)
         {
             return;

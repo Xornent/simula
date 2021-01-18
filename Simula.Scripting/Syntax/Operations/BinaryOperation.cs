@@ -43,7 +43,8 @@ namespace Simula.Scripting.Syntax
                 switch (this.Operator.Symbol) {
                     default:
                         var pair = DynamicRuntime.Registry.FirstOrDefault(((arg) => {
-                            if (arg.Value.Symbol == this.Operator.Symbol) return true;
+                            if (arg.Value.Symbol == this.Operator.Symbol &&
+                                arg.Value.Type == this.Operator.Type) return true;
                             else return false;
                         }));
 
@@ -55,6 +56,61 @@ namespace Simula.Scripting.Syntax
                                   return func.name == pair.Key;
                               })?._call(left, new dynamic[] { right }));
                 }
+            }
+        }
+
+        public override TypeInference InferType(CompletionContext ctx)
+        {
+            if (this.Left == null) return new TypeInference();
+            if (this.Right == null) return new TypeInference();
+            var left = this.Left.InferType(ctx);
+            var right = this.Right.InferType(ctx);
+
+            if(this.Operator.Symbol == "=") {
+                if(left.Object != null) {
+                    left.Object.Type.AddRange(right.Types);
+                    left.Object.Cache = new Contexts.Data.LocalData(left.Object.Name,
+                         "(local) [" + left.Object.Type.JoinString(", ") + "] " + left.Object.Name, "");
+                    return new TypeInference(left.Object);
+                } else {
+                    if (this.Left is SelfOperation self) {
+                        var record = new CompletionRecord();
+                        record.Type = right.Types;
+                        record.Name = self.Self;
+
+                        foreach (var item in record.Type) {
+                            record.Children.Add(new CompletionTypeRecord(item));
+                        }
+
+                        record.Cache = new Contexts.Data.LocalData(record.Name,
+                              "(local) [" + record.Type.JoinString(", ") + "] " + record.Name, "");
+                        ctx.AccessibleRoots.Add(record);
+
+                        return new TypeInference(record);
+                    } else return new TypeInference();
+                }
+
+            } else {
+                HashSet<string> types = new HashSet<string>();
+
+                var pair = DynamicRuntime.Registry.FirstOrDefault(((arg) => {
+                    if (arg.Value.Symbol == this.Operator.Symbol &&
+                        arg.Value.Type == this.Operator.Type) return true;
+                    else return false;
+                }));
+
+                foreach (var item in left.Types) {
+                    if (ctx.ClassRecords.ContainsKey(item)) {
+                        var find = ctx.ClassRecords[item].Children.Find((rec) => {
+                            return rec.Name == pair.Key;
+                        });
+
+                        if (find != null)
+                            types.AddRange(find.ReturnTypes);
+                    }
+                }
+
+                return new TypeInference(types, null);
             }
         }
     }
@@ -89,6 +145,47 @@ namespace Simula.Scripting.Syntax
                 if (function == null) return new Execution();
                 return new Execution(ctx, function);
             }
+        }
+
+        public override TypeInference InferType(CompletionContext ctx)
+        {
+            if (this.Right == null) return new TypeInference();
+            if (this.Left == null) return new TypeInference();
+            if (this.Left.RawEvaluateToken.Count == 0) return new TypeInference();
+            if (this.Right.RawEvaluateToken.Count == 0) return new TypeInference();
+            var left = this.Left.InferType(ctx);
+            bool existKey = false;
+            CompletionRecord? record = null;
+            foreach (var leftType in left.Types) {
+                if ( leftType == "module") {
+                    if (left.Object != null) {
+                        var find = left.Object.Children.Find((rec) => {
+                            return rec.Name == this.Right.RawEvaluateToken[0];
+                        });
+                        if (find != null) {
+                            record = find;
+                            existKey = true;
+                            break;
+                        }
+                    }
+                } else {
+                    if(ctx.ClassRecords.ContainsKey(leftType)) {
+                        var find = ctx.ClassRecords[leftType].Children.Find((rec) => {
+                            return rec.Name == this.Right.RawEvaluateToken[0];
+                        });
+                        if (find != null) {
+                            record = find;
+                            existKey = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!existKey && record == null) {
+                this.Right.RawEvaluateToken[0].Error = new Token.TokenizerException("ss1002");
+                return new TypeInference();
+            } else return new TypeInference(record);
         }
     }
 }

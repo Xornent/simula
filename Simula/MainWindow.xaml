@@ -367,9 +367,7 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="3*" MaxWidth="315"/>
                             <ColumnDefinition Width="2"/>
-                            <ColumnDefinition Width="4*"/>
-                            <ColumnDefinition Width="2"/>
-                            <ColumnDefinition Width="3*"/>
+                            <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <TabControl TabStripPlacement="Bottom" Grid.Column="0" MaxWidth="315">
                             <TabControl.Items>
@@ -398,22 +396,6 @@
                         </TabControl>
                         <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                         <TabControl TabStripPlacement="Bottom" Grid.Column="2">
-                            <TabControl.Items>
-                                <TabItem Header="即时命令行" x:Name="panelPrompt">
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="*"/>
-                                            <RowDefinition Height="auto"/>
-                                        </Grid.RowDefinitions>
-                                        <script:SimulaTextEditor x:Name="editor_console"  FontWeight="Regular" Grid.Row="0" Text="" SyntaxHighlighting="Simula" FontFamily="Consolas, Simsun" FontSize="13"/>
-                                        <script:SimulaTextEditor x:Name="editor_consoleInput"  FontWeight="Regular" Grid.Row="1" Text="" SyntaxHighlighting="Simula" FontFamily="Consolas, Simsun" FontSize="13" ShowLineNumbers="True" MaxHeight="200"/>
-                                    </Grid>
-                                </TabItem>
-                                <TabItem Header="版式"></TabItem>
-                            </TabControl.Items>
-                        </TabControl>
-                        <GridSplitter Grid.Column="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                        <TabControl TabStripPlacement="Bottom" Grid.Column="4">
                             <TabControl.Items>
                                 <TabItem Header="变量">
                                     <!--<script:SimulaTextEditor x:Name="editor_languageService" Grid.Row="0" Text="" SyntaxHighlighting="Simula" FontFamily="Consolas, Simsun" FontSize="13"/>-->

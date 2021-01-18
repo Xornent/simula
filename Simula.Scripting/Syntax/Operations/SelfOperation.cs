@@ -64,5 +64,34 @@ namespace Simula.Scripting.Syntax
             if (result is Reference r) return new Execution(ctx, r.GetDynamic());
             return new Execution(ctx, result);
         }
+
+        public override TypeInference InferType(CompletionContext ctx)
+        {
+            string raw = this.Self.ToString();
+            if (raw.StartsWith("\"") && raw.EndsWith("\"") && (!raw.EndsWith("\\\""))) {
+                return new TypeInference(new HashSet<string>() { "sys.string" }, null);
+            }
+
+            if (raw.ToLower() == "true") return new TypeInference(new HashSet<string>() { "sys.bool" }, null);
+            if (raw.ToLower() == "false") return new TypeInference(new HashSet<string>() { "sys.bool" }, null);
+
+            if (raw.EndsWith(".")) {
+                System.Numerics.BigInteger tempInt;
+                bool successInt = System.Numerics.BigInteger.TryParse(raw, out tempInt);
+                if (successInt) {
+                    return new TypeInference(new HashSet<string>() { "sys.int" }, null);
+                }
+            } else {
+                double d;
+                bool successDouble = double.TryParse(raw, out d);
+                if (successDouble) {
+                    return new TypeInference(new HashSet<string>() { "sys.float" }, null);
+                }
+            }
+
+            var result = ctx.AccessibleRoots.Find((rec) => { return rec.Name == raw; });
+            if (result == null) return new TypeInference(new HashSet<string>() { "null" }, null);
+            return new TypeInference(result);
+        }
     }
 }

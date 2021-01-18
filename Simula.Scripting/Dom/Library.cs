@@ -49,11 +49,13 @@ namespace Simula.Scripting.Dom
                     Types.Class cls = new Types.Class(types)
                     {
                         fullName = { classAttr.FullName },
-                        name = classAttr.Name
+                        name = classAttr.Name,
+                        desc = classAttr.Documentation
                     };
 
                     IDictionary<string, object> container = (IDictionary<string, object>)store;
                     container[classAttr.Name] = cls;
+                    ctx.CacheFunction(classAttr.FullName, types);
 
                 } else {
                     foreach (var function in types.GetFields()) {
@@ -73,10 +75,11 @@ namespace Simula.Scripting.Dom
                                 }
                             }
 
-                            Types.Function func = new Types.Function((Func<dynamic, dynamic[], dynamic>)(function.GetValue(null)), funcAttr.Pairs)
+                            Types.Function func = new Types.Function((Func<dynamic, dynamic[], dynamic>)(function.GetValue(null)), funcAttr.Pairs, funcAttr.Returns)
                             {
                                 fullName = { funcAttr.FullName },
-                                name = funcAttr.Name
+                                name = funcAttr.Name,
+                                desc = funcAttr.Description
                             };
 
                             IDictionary<string, object> container = (IDictionary<string, object>)store;

@@ -10,13 +10,15 @@ namespace Simula.Scripting.Dom
         public readonly string Module = "";
         public readonly string FullName = "";
         public readonly string Name = "";
+        public readonly string Documentation = "";
 
-        public ClassExportAttribute(string name, string module = "", string fullName = "")
+        public ClassExportAttribute(string name, string module = "", string doc = "", string fullName = "")
         {
             if (string.IsNullOrEmpty(fullName)) this.FullName =
                      string.IsNullOrEmpty(module) ? name : (module + "." + name);
             this.Module = module;
             this.Name = name;
+            this.Documentation = doc;
         }
     }
 }

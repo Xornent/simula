@@ -34,10 +34,11 @@ namespace Simula.Editor.CodeCompletion
             toolTip.AllowsTransparency = true;
             toolTip.UseLayoutRounding = true;
 
+            SizeToContent = SizeToContent.WidthAndHeight;
             WindowStyle = WindowStyle.None;
             AllowsTransparency = true;
             Background = Brushes.Transparent;
-            BorderThickness = new Thickness(4, 1, 4, 4);
+            BorderThickness = new Thickness(4, 1, 10, 4);
 
             DropShadowEffect effect = new DropShadowEffect();
             effect.Opacity = 0.25;
@@ -50,17 +51,16 @@ namespace Simula.Editor.CodeCompletion
             Border border = new Border();
             border.CornerRadius = new CornerRadius(4);
             border.Background = Brushes.White;
+            completionList.Width = double.NaN;
             border.Child = completionList;
             border.BorderThickness = new Thickness(1);
             border.BorderBrush = new SolidColorBrush(Color.FromArgb(230, 230, 230, 230));
 
             CloseAutomatically = true;
-            SizeToContent = SizeToContent.Height;
             MaxHeight = 300;
-            Width = 175;
             Content = border;
             MinHeight = 15;
-            MinWidth = 30;
+            MinWidth = 180;
             toolTip.PlacementTarget = this;
             toolTip.Placement = PlacementMode.Right;
             toolTip.Closed += toolTip_Closed;

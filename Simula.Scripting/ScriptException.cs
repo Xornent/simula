@@ -52,7 +52,9 @@ namespace Simula.Scripting
             {"ss0021", ("缺少声明类, 函数或变量的定义","") },
             {"ss0022", ("类型的声明必须附带相应的特化参数, 如果没有参数使用空大括号","期望合法的类型特化参数定义:\n```\ndef class a{}\ndef class a{int i1, int i2}\ndef class a{int i, float f} : base{}\ndef class a{int i} : base{1, 5, 3.12, \"value\"}\n```") },
             {"ss0023", ("函数的声明必须跟随一个完整的参数列表","期望合法的参数定义:\n```\ndef func foo()\ndef func foo_with_parameter(int i, float f)\n```") },
-            {"ss0024", ("不合法的函数语法", "") }
+            {"ss0024", ("不合法的函数语法", "") },
+
+            {"ss1001", ("调用小括号运算符的左侧不是函数或类型", "") }
         };
     }
 }

@@ -5,6 +5,7 @@ using Simula.Scripting.Types;
 using System;
 using System.Reflection;
 using System.IO;
+using System.Linq;
 
 namespace Simula.Scripting.Contexts
 {
@@ -46,7 +47,9 @@ namespace Simula.Scripting.Contexts
             })
             {
                 name = "alert",
-                fullName = { "alert" }
+                fullName = { "alert" },
+                returntypes = new HashSet<string>() { "any" },
+                desc = "弹出一个系统消息框, 显示其参数的字符串表达"
             };
 
             Store.dir = new Function((self, args) => {
@@ -73,7 +76,9 @@ namespace Simula.Scripting.Contexts
             })
             {
                 name = "dir",
-                fullName = { "dir" }
+                fullName = { "dir" },
+                returntypes = new HashSet<string>() { "null" },
+                desc = "弹出一个系统消息框, 显示一个容器中的所有可用对象"
             };
 
             Store.@ref = new Function((self, args) => {
@@ -83,7 +88,9 @@ namespace Simula.Scripting.Contexts
             })
             {
                 name = "ref",
-                fullName = { "ref" }
+                fullName = { "ref" },
+                returntypes = new HashSet<string>() { "ref" },
+                desc = "创建一个对象的按名称引用"
             };
 
             CacheFunction("sys.int", typeof(Integer));
@@ -111,32 +118,33 @@ namespace Simula.Scripting.Contexts
         public Dictionary<string, List<Function>> FunctionCache = new Dictionary<string, List<Function>>();
         public List<ScopeContext> Scopes = new List<ScopeContext>();
         public static Dictionary<string, Operator> Registry = new Dictionary<string, Operator>() {
-            {"_lincrement", new Operator("++", OperatorType.UnaryLeft) },
-            {"_ldecrement", new Operator("--", OperatorType.UnaryLeft) },
-            {"_inverse", new Operator("-", OperatorType.UnaryLeft) },
-            {"_rincrement", new Operator("++", OperatorType.UnaryRight) },
-            {"_rdecrement", new Operator("--", OperatorType.UnaryRight) },
-            {"_multiply", new Operator("*")},
-            {"_pow", new Operator("^") },
-            {"_divide", new Operator("/")},
-            {"_mod", new Operator("%")},
-            {"_add", new Operator("+")},
-            {"_substract", new Operator("-")},
-            {"_lt", new Operator("<")},
-            {"_lte", new Operator("<=")},
-            {"_gt", new Operator(">")},
-            {"_gte", new Operator(">=")},
-            {"_equals", new Operator("==")},
-            {"_notequals", new Operator("!=")},
-            {"_or", new Operator("||")},
-            {"_and", new Operator("&&")},
-            {"_assign", new Operator("=")},
-            {"_addassign", new Operator("+=") },
-            {"_substractassign", new Operator("-=") },
-            {"_powassign", new Operator("^=") },
-            {"_multiplyassign", new Operator("*=") },
-            {"_divideassign", new Operator("/=") },
-            {"_modassign", new Operator("%=") }
+            {"_lincrement", new Operator((Token.Token)"++", OperatorType.UnaryLeft) },
+            {"_ldecrement", new Operator((Token.Token)"--", OperatorType.UnaryLeft) },
+            {"_inverse", new Operator((Token.Token)"-", OperatorType.UnaryLeft) },
+            {"_not", new Operator((Token.Token)"!", OperatorType.UnaryLeft) },
+            {"_rincrement", new Operator((Token.Token)"++", OperatorType.UnaryRight) },
+            {"_rdecrement", new Operator((Token.Token)"--", OperatorType.UnaryRight) },
+            {"_multiply", new Operator((Token.Token)"*")},
+            {"_pow", new Operator((Token.Token)"^") },
+            {"_divide", new Operator((Token.Token)"/")},
+            {"_mod", new Operator((Token.Token)"%")},
+            {"_add", new Operator((Token.Token)"+")},
+            {"_substract", new Operator((Token.Token)"-")},
+            {"_lt", new Operator((Token.Token)"<")},
+            {"_lte", new Operator((Token.Token)"<=")},
+            {"_gt", new Operator((Token.Token)">")},
+            {"_gte", new Operator((Token.Token)">=")},
+            {"_equals", new Operator((Token.Token)"==")},
+            {"_notequals", new Operator((Token.Token)"!=")},
+            {"_or", new Operator((Token.Token)"||")},
+            {"_and", new Operator((Token.Token)"&&")},
+            {"_assign", new Operator((Token.Token)"=")},
+            {"_addassign", new Operator((Token.Token)"+=") },
+            {"_substractassign", new Operator((Token.Token)"-=") },
+            {"_powassign", new Operator((Token.Token)"^=") },
+            {"_multiplyassign", new Operator((Token.Token)"*=") },
+            {"_divideassign", new Operator((Token.Token)"/=") },
+            {"_modassign", new Operator((Token.Token)"%=") }
         };
 
         public Null typeNull = Null.NULL;
@@ -155,9 +163,20 @@ namespace Simula.Scripting.Contexts
             List<Function> functions = new List<Function>();
             foreach (var field in type.GetFields()) {
                 if (field.IsStatic) {
+
+                    // the member functions can have a function export attribute.
+                    // if it has, we should obtain the documentation etc... from it.
+
                     if (field.GetValue(null) is Function f) {
                         f.fullName.Insert(0, alias + "." + field.Name);
                         f.name = field.Name;
+                        var attr = field.GetCustomAttribute<Dom.FunctionExportAttribute>();
+                        if(attr != null) {
+                            f.desc = attr.Description;
+                            f.param = new List<List<Pair>> { attr.Pairs };
+                            f.returntypes = attr.Returns.Contains("|") ? attr.Returns.Split("|").ToHashSet() : new HashSet<string>() { attr.Returns };
+                        }
+
                         functions.Add(f);
                     }
                 }

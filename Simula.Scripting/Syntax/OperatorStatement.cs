@@ -1,8 +1,8 @@
 ﻿using Simula.Scripting.Contexts;
+using System.Collections.Generic;
 
 namespace Simula.Scripting.Syntax
 {
-
     public class OperatorStatement : EvaluationStatement
     {
         public OperatorStatement? Left { get; set; }
@@ -12,6 +12,11 @@ namespace Simula.Scripting.Syntax
         public virtual Execution Operate(DynamicRuntime ctx)
         {
             return new Execution();
+        }
+
+        public override TypeInference InferType(CompletionContext ctx)
+        {
+            return new TypeInference( new HashSet<string>() { "any" }, null);
         }
     }
 }

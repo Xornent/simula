@@ -7,7 +7,10 @@ namespace Simula.Scripting.Syntax
     {
         public override void Parse(TokenCollection sentence)
         {
-
+            this.RawToken.AddRange(sentence);
+            foreach (var item in this.Children) {
+                this.RawToken.AddRange(item.RawToken);
+            }
         }
 
         public override Execution Execute(DynamicRuntime ctx)

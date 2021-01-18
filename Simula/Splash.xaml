@@ -12,7 +12,7 @@
         
         <Grid Width="290" Canvas.Left="270" Canvas.Top="30" Height="250">
             <StackPanel Orientation="Vertical">
-                <TextBlock TextAlignment="Right" FontFamily="Century Gothic, Consolas" Canvas.Left="485" Canvas.Top="20" FontWeight="Black" Text="0.1.0 α - Build 87" Foreground="OrangeRed" FontSize="20"/>
+                <TextBlock TextAlignment="Right" FontFamily="Century Gothic, Consolas" Canvas.Left="485" Canvas.Top="20" FontWeight="Black" Text="0.1.0 α - Build 91" Foreground="OrangeRed" FontSize="20"/>
                 <Grid Height="16"/>
                 <TextBlock TextAlignment="Right" Canvas.Left="345" Canvas.Top="80" Text="Simula" FontWeight="Light" FontSize="70"/>
                 <TextBlock FontFamily="Consolas" TextAlignment="Right" FontSize="11"  TextOptions.TextFormattingMode="Display" Text="Loading Simula Scripting Base Classes ..."/>

@@ -10,7 +10,7 @@ using Simula.Scripting.Types;
 
 namespace Simula.Scripting.Utils
 {
-    [ClassExport("grid", "util")]
+    [ClassExport("grid", "util", "自由图形画布")]
     public class Grid : Types.Var
     {
         public Grid() { }
@@ -24,7 +24,8 @@ namespace Simula.Scripting.Utils
 
         private List<EllipseGeometry> points = new List<EllipseGeometry>();
 
-        [FunctionExport("_init", "scaleLeft:sys.float|scaleRight:sys.float")]
+        [FunctionExport("_init", "scaleLeft:sys.float|scaleRight:sys.float@util.grid", "", 
+            "使用横轴在屏幕最左侧的坐标值和在屏幕最右侧的坐标值初始化绘图坐标")]
         public static Function _init = new Function((self, args) => {
             self.scaleLeft = args[0];
             self.scaleRight = args[1];
@@ -71,7 +72,7 @@ namespace Simula.Scripting.Utils
             return self;
         }, new List<Pair>());
 
-        [FunctionExport("display", "")]
+        [FunctionExport("display", "@util.grid", "", "显示当前图形窗口")]
         public static Function display = new Function((self, args) => {
             Window wnd = new Window();
             wnd.Title = "Figure";
@@ -85,20 +86,8 @@ namespace Simula.Scripting.Utils
             return self;
         }, new List<Pair>());
 
-        [FunctionExport("addPoint", "point:array")]
+        [FunctionExport("addPoint", "point:array@util.grid", "", "添加一个点, 它是一个 { float, float } 型二维向量")]
         public static Function addPoint = new Function((self, args) => {
-            EllipseGeometry ellipse = new EllipseGeometry(new Point((args[0].raw[0]), (args[0].raw[1])), 0.2, 0.2);
-            self.points.Add(ellipse);
-            ellipse.Transform = self.transform;
-            Path path = new Path();
-            path.Data = ellipse;
-            path.Fill = new SolidColorBrush(Color.FromArgb(128, 0, 1, 0));
-            self.target.Children.Add(path);
-            return self;
-        }, new List<Pair>());
-
-        [FunctionExport("addPoints", "points:array")]
-        public static Function addPoints = new Function((self, args) => {
             EllipseGeometry ellipse = new EllipseGeometry(new Point((args[0].raw[0]), (args[0].raw[1])), 0.2, 0.2);
             self.points.Add(ellipse);
             ellipse.Transform = self.transform;

@@ -33,6 +33,13 @@ namespace Simula.Scripting.Syntax
             return operation.Operate(ctx);
         }
 
+        public virtual TypeInference InferType(CompletionContext ctx)
+        {
+            if (EvaluateOperators.Count == 1)
+                return EvaluateOperators[0].InferType(ctx);
+            else return new TypeInference(new HashSet<string>() { "any" }, null);
+        }
+
         public override string Generate(GenerationContext ctx)
         {
             string code = ctx.Indention() + EvaluateOperators[0].Generate(ctx);
@@ -42,6 +49,7 @@ namespace Simula.Scripting.Syntax
         private string EvalString = "";
         public override void Parse(TokenCollection collection)
         {
+            this.RawToken.AddRange(collection);
             EvalString = collection.ToString();
 
             RawEvaluateToken = collection;
@@ -205,7 +213,7 @@ namespace Simula.Scripting.Syntax
                                         else op = new BinaryOperation();
                                         op.Left = token[c-1];
                                         op.Right = token[c+1];
-                                        op.Operator = new Operator(operation);
+                                        op.Operator = new Operator(token[c].RawEvaluateToken[0]);
                                         goto case "final";
                                 }
                             }
@@ -267,7 +275,7 @@ namespace Simula.Scripting.Syntax
                                         else op = new BinaryOperation();
                                         op.Left = token[c-1];
                                         op.Right = token[c+1];
-                                        op.Operator = new Operator(operation);
+                                        op.Operator = new Operator(token[c].RawEvaluateToken[0]);
                                         goto case "final";
                                 }
                             }
