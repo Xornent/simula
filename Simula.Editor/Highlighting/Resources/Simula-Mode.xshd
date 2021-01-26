@@ -2,7 +2,7 @@
 <SyntaxDefinition name="Simula" extensions=".s;.sl" xmlns="http://Simula.net/sharpdevelop/syntaxdefinition/2008">
   <Color name="ProcessorKeys" foreground="#989419" fontWeight="bold"/>
   <Color name="BlockKeys" foreground="#009420"/>
-  <Color name="Comment" foreground="Green" fontWeight="bold"/>
+  <Color name="Comment" foreground="Green"/>
   <Color name="BasicKeys" foreground="#0076ca"/>
   <Color name="VisibilityKeys" foreground="#961998"/>
   <Color name="ContextKeys" foreground="#ff008d"/>
@@ -38,12 +38,15 @@
       <Word>class</Word>
       <Word>func</Word>
       <Word>var</Word>
-      <Word>selector</Word>
+      <Word>assertion</Word>
       <Word>null</Word>
+      <Word>true</Word>
+      <Word>false</Word>
     </Keywords>
     <Keywords color="VisibilityKeys">
       <Word>expose</Word>
       <Word>hidden</Word>
+      <Word>readonly</Word>
     </Keywords>
     <Keywords color="ContextKeys">
       <Word>continue</Word>
@@ -55,9 +58,10 @@
     </Keywords>
     <Keywords color="BuiltinTypeKeys">
       <Word>object</Word>
-      <Word>int</Word>
+      <Word>byte</Word>
+      <Word>char</Word>
       <Word>float</Word>
-      <Word>array</Word>
+      <Word>matrix</Word>
       <Word>bool</Word>
       <Word>string</Word>
       <Word>pair</Word>

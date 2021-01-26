@@ -43,20 +43,11 @@ namespace Simula.Scripting.Syntax
             if (raw.ToLower() == "true") return new Execution(ctx, new Boolean(true));
             if (raw.ToLower() == "false") return new Execution(ctx, new Boolean(false));
 
-            if (raw.EndsWith(".")) {
-                System.Numerics.BigInteger tempInt;
-                bool successInt = System.Numerics.BigInteger.TryParse(raw, out tempInt);
-                if (successInt) {
-                    Types.Integer i = tempInt;
-                    return new Execution(ctx, i);
-                }
-            } else {
-                double d;
-                bool successDouble = double.TryParse(raw, out d);
-                if (successDouble) {
-                    Types.Float f = new Float(d);
-                    return new Execution(ctx, f);
-                }
+            double d;
+            bool successDouble = double.TryParse(raw, out d);
+            if (successDouble) {
+                Types.Float f = new Float(d);
+                return new Execution(ctx, f);
             }
 
             var result = ctx.GetMember(raw);
@@ -92,6 +83,21 @@ namespace Simula.Scripting.Syntax
             var result = ctx.AccessibleRoots.Find((rec) => { return rec.Name == raw; });
             if (result == null) return new TypeInference(new HashSet<string>() { "null" }, null);
             return new TypeInference(result);
+        }
+    }
+
+    public class ObjectTransferOperation : OperatorStatement
+    {
+        public ObjectTransferOperation(dynamic obj)
+        {
+            this.Transfer = obj;
+        }
+
+        private dynamic Transfer;
+
+        public override Execution Operate(DynamicRuntime ctx)
+        {
+            return new Execution(ctx, this.Transfer);
         }
     }
 }

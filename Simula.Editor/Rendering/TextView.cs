@@ -1185,7 +1185,7 @@ namespace Simula.Editor.Rendering
                             }
                             offset += span.Length;
                         }
-                        pos.Y += textLine.Height;
+                        pos.Y += textLine.Height * TextView.LineHeightScale;
                     }
                 }
             }
@@ -1548,17 +1548,20 @@ namespace Simula.Editor.Rendering
                     null)) {
                     wideSpaceWidth = Math.Max(1, line.WidthIncludingTrailingWhitespace);
                     defaultBaseline = Math.Max(1, line.Baseline);
-                    defaultLineHeight = Math.Max(1, line.Height);
+                    defaultLineHeight = Math.Max(1, line.Height * TextView.LineHeightScale);
                 }
             } else {
                 wideSpaceWidth = FontSize / 2;
                 defaultBaseline = FontSize;
-                defaultLineHeight = FontSize + 3;
+                defaultLineHeight = (FontSize + 3) * TextView.LineHeightScale;
             }
+
             // Update heightTree.DefaultLineHeight, if a document is loaded.
             if (heightTree != null)
                 heightTree.DefaultLineHeight = defaultLineHeight;
         }
+
+        public static double LineHeightScale { get; set; } = 1.00;
 
         private static double ValidateVisualOffset(double offset)
         {

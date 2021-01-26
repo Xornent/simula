@@ -21,6 +21,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Simula.Scripting.Utils", ".
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Simula.Scripting.Math", "..\Simula.Scripting.Math\Simula.Scripting.Math.csproj", "{63DD049E-4C62-4231-AEED-C695F1ADE433}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Windows Installer", "Windows Installer", "{97426D51-D2AA-4F10-96DF-425FB53A36CF}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "simula.windows.x64", "..\Windows Installer\windows.x64\simula.windows.x64\simula.windows.x64.vdproj", "{45854D36-0B33-453F-9BB0-60051F06B1FB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simula.Controls", "..\Simula.Controls\Simula.Controls.csproj", "{F1A197F6-92A3-4ACE-B093-68BA5D970F52}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -253,9 +259,48 @@ Global
 		{63DD049E-4C62-4231-AEED-C695F1ADE433}.Release|x64.Build.0 = Release|Any CPU
 		{63DD049E-4C62-4231-AEED-C695F1ADE433}.Release|x86.ActiveCfg = Release|Any CPU
 		{63DD049E-4C62-4231-AEED-C695F1ADE433}.Release|x86.Build.0 = Release|Any CPU
+		{45854D36-0B33-453F-9BB0-60051F06B1FB}.Debug|Any CPU.ActiveCfg = Debug
+		{45854D36-0B33-453F-9BB0-60051F06B1FB}.Debug|Net35.ActiveCfg = Debug
+		{45854D36-0B33-453F-9BB0-60051F06B1FB}.Debug|Net40.ActiveCfg = Debug
+		{45854D36-0B33-453F-9BB0-60051F06B1FB}.Debug|WithNRefactory.ActiveCfg = Debug
+		{45854D36-0B33-453F-9BB0-60051F06B1FB}.Debug|x64.ActiveCfg = Debug
+		{45854D36-0B33-453F-9BB0-60051F06B1FB}.Debug|x86.ActiveCfg = Debug
+		{45854D36-0B33-453F-9BB0-60051F06B1FB}.Release|Any CPU.ActiveCfg = Release
+		{45854D36-0B33-453F-9BB0-60051F06B1FB}.Release|Net35.ActiveCfg = Release
+		{45854D36-0B33-453F-9BB0-60051F06B1FB}.Release|Net40.ActiveCfg = Release
+		{45854D36-0B33-453F-9BB0-60051F06B1FB}.Release|WithNRefactory.ActiveCfg = Release
+		{45854D36-0B33-453F-9BB0-60051F06B1FB}.Release|x64.ActiveCfg = Release
+		{45854D36-0B33-453F-9BB0-60051F06B1FB}.Release|x86.ActiveCfg = Release
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Debug|Net35.ActiveCfg = Debug|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Debug|Net35.Build.0 = Debug|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Debug|Net40.ActiveCfg = Debug|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Debug|Net40.Build.0 = Debug|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Debug|WithNRefactory.ActiveCfg = Debug|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Debug|WithNRefactory.Build.0 = Debug|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Debug|x64.Build.0 = Debug|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Debug|x86.Build.0 = Debug|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Release|Net35.ActiveCfg = Release|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Release|Net35.Build.0 = Release|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Release|Net40.ActiveCfg = Release|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Release|Net40.Build.0 = Release|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Release|WithNRefactory.ActiveCfg = Release|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Release|WithNRefactory.Build.0 = Release|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Release|x64.ActiveCfg = Release|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Release|x64.Build.0 = Release|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Release|x86.ActiveCfg = Release|Any CPU
+		{F1A197F6-92A3-4ACE-B093-68BA5D970F52}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{45854D36-0B33-453F-9BB0-60051F06B1FB} = {97426D51-D2AA-4F10-96DF-425FB53A36CF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {670AD371-23DA-44F0-9655-04B7063DBD34}

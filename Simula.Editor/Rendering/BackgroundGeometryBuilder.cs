@@ -206,7 +206,7 @@ namespace Simula.Editor.Rendering
                         continue;
                     if (segmentStartVCInLine == visualStartCol && i > 0 && segmentStartVC < segmentStartVCInLine && visualLine.TextLines[i - 1].TrailingWhitespaceLength == 0)
                         continue;
-                    lastRect = new Rect(pos, y, textView.EmptyLineSelectionWidth, line.Height);
+                    lastRect = new Rect(pos, y, textView.EmptyLineSelectionWidth, line.Height * TextView.LineHeightScale);
                 } else {
                     if (segmentStartVCInLine <= visualEndCol) {
                         foreach (TextBounds b in line.GetTextBounds(segmentStartVCInLine, segmentEndVCInLine - segmentStartVCInLine)) {
@@ -215,7 +215,7 @@ namespace Simula.Editor.Rendering
                             if (!lastRect.IsEmpty)
                                 yield return lastRect;
                             // left>right is possible in RTL languages
-                            lastRect = new Rect(Math.Min(left, right), y, Math.Abs(right - left), line.Height);
+                            lastRect = new Rect(Math.Min(left, right), y, Math.Abs(right - left), line.Height * TextView.LineHeightScale);
                         }
                     }
                 }
@@ -243,7 +243,7 @@ namespace Simula.Editor.Rendering
                     } else {
                         right = visualLine.GetTextLineVisualXPosition(lastTextLine, segmentEndVC);
                     }
-                    Rect extendSelection = new Rect(Math.Min(left, right), y, Math.Abs(right - left), line.Height);
+                    Rect extendSelection = new Rect(Math.Min(left, right), y, Math.Abs(right - left), line.Height * TextView.LineHeightScale);
                     if (!lastRect.IsEmpty) {
                         if (extendSelection.IntersectsWith(lastRect)) {
                             lastRect.Union(extendSelection);

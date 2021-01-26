@@ -195,13 +195,13 @@ namespace Simula.Editor.Rendering
             public override TextEmbeddedObjectMetrics Format(double remainingParagraphWidth)
             {
                 double width = Math.Min(0, element.text.WidthIncludingTrailingWhitespace - 1);
-                return new TextEmbeddedObjectMetrics(width, element.text.Height, element.text.Baseline);
+                return new TextEmbeddedObjectMetrics(width, element.text.Height * TextView.LineHeightScale, element.text.Baseline);
             }
 
             public override Rect ComputeBoundingBox(bool rightToLeft, bool sideways)
             {
                 double width = Math.Min(0, element.text.WidthIncludingTrailingWhitespace - 1);
-                return new Rect(0, 0, width, element.text.Height);
+                return new Rect(0, 0, width, element.text.Height * TextView.LineHeightScale);
             }
 
             public override void Draw(DrawingContext drawingContext, Point origin, bool rightToLeft, bool sideways)

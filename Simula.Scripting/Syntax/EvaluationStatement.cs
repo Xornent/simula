@@ -37,7 +37,7 @@ namespace Simula.Scripting.Syntax
         {
             if (EvaluateOperators.Count == 1)
                 return EvaluateOperators[0].InferType(ctx);
-            else return new TypeInference(new HashSet<string>() { "any" }, null);
+            else return new TypeInference(new HashSet<string>() { "null" }, null);
         }
 
         public override string Generate(GenerationContext ctx)
@@ -57,20 +57,6 @@ namespace Simula.Scripting.Syntax
             foreach (var item in RawEvaluateToken) {
                 EvaluateOperators.Add(new SelfOperation() { Self = item, RawEvaluateToken = new TokenCollection() { item } });
             }
-
-            // 运算符次序
-
-            // 1. 类型成员运算符(.)
-            // 2. 子函数运算符((...))
-            // 3. 括号表达式运算符(()), 索引表达式运算符([])
-            // 4. 指数运算符(**)
-            // 5. 乘运算符(*), 除运算符(/)
-            // 6. 取余运算符(%)
-            // 7. 加运算符(+), 减运算符(-)
-            // 8. 位左移运算符(<<), 位右移运算符(>>)
-            // 9. 比较运算符(<, >, <=, >=, ==, !=)
-            // 10. 布尔逻辑运算符 (||, &&)
-            // 11. 位逻辑运算符 (|, &)
 
             Parse();
         }

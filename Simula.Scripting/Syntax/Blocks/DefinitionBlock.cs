@@ -40,6 +40,8 @@ namespace Simula.Scripting.Syntax
         public Token.Token? ConstantName;
         public EvaluationStatement? ConstantValue;
 
+        public CommentBlock? Documentation;
+
         public new void Parse(TokenCollection collection)
         {
             RawToken.AddRange(collection);

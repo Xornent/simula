@@ -124,4 +124,32 @@ namespace Simula.Scripting.Types
             return "<reference> " + this.Container.fullName[0] + "." + this.Token;
         }
     }
+
+    public static class Serializer
+    {
+        public static int GetSize(dynamic obj)
+        {
+            if (obj is Boolean) return 1;
+            else if (obj is Float) return 8;
+            else if (obj is Byte) return 1;
+            else if (obj is Char) return 2;
+            else if (obj is Matrix mtx) return mtx.elementSize * mtx.total;
+            else if (obj is Var v) {
+                int size = 0;
+                foreach (var item in v._fields) {
+                    int elementSize = GetSize(item);
+                    if (elementSize == -1) return -1;
+                    else size += elementSize;
+                }
+                return size;
+            } else
+
+                // arrays (mixed-type sequence), classes, functions, selectors,
+                // and strings are not serializable, because the size of them are
+                // not fixed. and any objects containing fields of these types
+                // are also not serializable.
+
+                return -1;
+        }
+    }
 }

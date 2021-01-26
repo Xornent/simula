@@ -106,7 +106,18 @@ namespace Simula.Scripting.Contexts
         {
             foreach (var item in block.Children) {
                 if (item is Syntax.DefinitionBlock def) {
-                    
+
+                    // here, we parse the documentation comment for the definition block.
+
+                    string doc = "";
+                    if(def.Documentation != null) {
+                        foreach (string line in def.Documentation.Lines) {
+                            string eval = line.Remove(0, 1).Replace("\r", "").Trim();
+                            if (string.IsNullOrWhiteSpace(eval)) doc += "\n\n";
+                            else doc += eval + " ";
+                        }
+                    }
+
                     switch (def.Type) {
                         case Syntax.DefinitionType.Constant:
                             if (def.ConstantName != null) {
@@ -114,7 +125,7 @@ namespace Simula.Scripting.Contexts
                                 if (rec != null) {
                                     rec.Type.AddRange(def.ConstantValue?.InferType(this).Types ?? new HashSet<string>() { "null" });
                                     rec.Cache = new Data.LocalData(def.ConstantName,
-                                       "(local) [" + rec.Type.JoinString(", ") + "] " + def.ConstantName, "");
+                                       "(local) [" + rec.Type.JoinString(", ") + "] " + def.ConstantName, doc);
                                 }
                             }
                             break;
@@ -136,7 +147,7 @@ namespace Simula.Scripting.Contexts
 
                                     rec.Comments = "def func " + def.FunctionName + " (" + param.JoinString(", ") + ")";
                                     rec.Cache = new Data.FunctionData(def.FunctionName,
-                                        "def func " + def.FunctionName + " (" + param.JoinString(", ") + ")\n\nreturn [" + type.JoinString(", ") + "]", "");
+                                        "def func " + def.FunctionName + " (" + param.JoinString(", ") + ")\n\nreturn [" + type.JoinString(", ") + "]", doc);
                                 }
                             }
                             break;
@@ -153,9 +164,9 @@ namespace Simula.Scripting.Contexts
 
                                     var ctor = rec.Children.Find((rec) => { return rec.Name == "_init"; });
                                     if(ctor == null)
-                                        rec.Cache = new Data.ClassData(rec.Name, "class " + rec.Name + " ()" , "");
+                                        rec.Cache = new Data.ClassData(rec.Name, "class " + rec.Name + " ()" , doc);
                                     else
-                                        rec.Cache = new Data.ClassData(rec.Name, "class " + rec.Name + ctor.Comments.Replace("def func _init",""), "");
+                                        rec.Cache = new Data.ClassData(rec.Name, "class " + rec.Name + ctor.Comments.Replace("def func _init",""), doc);
                                 }
                             }
                             break;
@@ -222,6 +233,7 @@ namespace Simula.Scripting.Contexts
                     if(item.Key != "global")
                         this.Children.Add(new CompletionRecord(runtime, item.Key, item.Value, dict, item.Value.ToString(), item.Value is Types.Var v ? v.desc : "", this.FullName));
                 }
+
             } else if(container is Types.Var variable) {
                 if (!dict.ContainsKey(container.type)) {
                     CompletionRecord rec = new CompletionRecord();
@@ -232,7 +244,7 @@ namespace Simula.Scripting.Contexts
                     }
 
                     foreach (var item in container._fields) {
-                        rec.Children.Add(new CompletionRecord(runtime, item.Key, item.Value, dict, item.Value.ToString(), item.Value.desc, container.type));
+                        rec.Children.Add(new CompletionRecord(runtime, item.Key, item.Value, dict, "(local) ["+item.Value.type+"] " + item.Key, item.Value.desc, container.type));
                     }
                 } else {
                     this.Children.Add(new CompletionTypeRecord(container.type) { 

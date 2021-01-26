@@ -263,7 +263,7 @@ namespace Simula.Editor.Rendering
             this.textLines = textLines.AsReadOnly();
             Height = 0;
             foreach (TextLine line in textLines)
-                Height += line.Height;
+                Height += line.Height * TextView.LineHeightScale;
         }
 
         /// <summary>
@@ -340,9 +340,9 @@ namespace Simula.Editor.Rendering
                         case VisualYPosition.LineTop:
                             return pos;
                         case VisualYPosition.LineMiddle:
-                            return pos + tl.Height / 2;
+                            return pos + tl.Height * TextView.LineHeightScale / 2;
                         case VisualYPosition.LineBottom:
-                            return pos + tl.Height;
+                            return pos + tl.Height * TextView.LineHeightScale;
                         case VisualYPosition.TextTop:
                             return pos + tl.Baseline - textView.DefaultBaseline;
                         case VisualYPosition.TextBottom:
@@ -355,7 +355,7 @@ namespace Simula.Editor.Rendering
                             throw new ArgumentException("Invalid yPositionMode:" + yPositionMode);
                     }
                 } else {
-                    pos += tl.Height;
+                    pos += tl.Height * TextView.LineHeightScale;
                 }
             }
             throw new ArgumentException("textLine is not a line in this VisualLine");
@@ -386,7 +386,7 @@ namespace Simula.Editor.Rendering
             const double epsilon = 0.0001;
             double pos = VisualTop;
             foreach (TextLine tl in TextLines) {
-                pos += tl.Height;
+                pos += tl.Height * TextView.LineHeightScale;
                 if (visualTop + epsilon < pos)
                     return tl;
             }
@@ -733,7 +733,7 @@ namespace Simula.Editor.Rendering
             double pos = 0;
             foreach (TextLine textLine in visualLine.TextLines) {
                 textLine.Draw(drawingContext, new Point(0, pos), InvertAxes.None);
-                pos += textLine.Height;
+                pos += textLine.Height * TextView.LineHeightScale;
             }
             Height = pos;
             drawingContext.Close();

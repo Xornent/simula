@@ -10,6 +10,9 @@
     <Compile Update="Pages\About.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Pages\SaveConfirmationDialog.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Pages\SourceEditor.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -31,6 +34,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Pages\About.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Pages\SaveConfirmationDialog.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Pages\SourceEditor.xaml">

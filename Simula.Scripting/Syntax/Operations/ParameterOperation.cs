@@ -104,44 +104,135 @@ namespace Simula.Scripting.Syntax
     }
 
     public class ParenthesisOperation : ParameterOperation { }
-    public class BracketOperation : ParameterOperation { }
-    public class BraceOperation : ParameterOperation 
+
+    public class BracketOperation : ParameterOperation 
     {
+        // brackets [] are used to indicate a location 1-dimensional matrix.
+        // and the operation is called indexing.
+
         public override Execution Operate(DynamicRuntime ctx)
         {
-            Types.Array arr = new Types.Array();
+            BraceOperation brace = new BraceOperation();
+            brace.EvaluateOperators = this.EvaluateOperators;
+            return brace.Operate(ctx);
+        }
+
+        public override TypeInference InferType(CompletionContext ctx)
+        {
+            return new TypeInference(new HashSet<string> { "sys.matrix" }, null);
+        }
+    }
+
+    public class BraceOperation : ParameterOperation 
+    {
+        // change log: braces {} are used to declare matrixes. but not arrays.
+        //             arrays are excluded from the basic types of the language because all
+        //             of its functions can be replaced by a matrix version.
+
+        public override Execution Operate(DynamicRuntime ctx)
+        {
+            Types.Matrix arr = new Types.Matrix();
             List<dynamic> members = new List<dynamic>();
             if (EvaluateOperators.Count == 0) return new Execution(ctx, arr);
-            List<OperatorStatement?> ops = new List<OperatorStatement?>() { null };
+            if(this.EvaluateOperators.Last() is SelfOperation so) {
+                if (so.Self == ";") this.EvaluateOperators.RemoveAt(this.EvaluateOperators.Count - 1);
+            }
+
+            // in the parsing procedures, newline charactor will be parsed back to the charactor
+            // ';' and all explicit ';' will be preserved. ';' is the separator of matrix's rows.
+            // one can declare a 2-dimensional matrix (the most common ones) using ',' and ';'
+
+            //     mat = [ 0, 1, 2; 3, 4, 5; 6, 7, 8 ]
+
+            //     mat = [ 
+            //     0, 1, 2
+            //     3, 4, 5
+            //     6, 7, 8 ]
+
+            // the ',' can be ommited. when the expression contains at least 1 comma, the parser
+            // will assume that ','s are the separate values, otherwise, it percieve the list of
+            // evaluating operators as elements.
+
+            //    mat = [ 0 1 2 3 4 5 6 7 8 ]
+            //    mat = [
+            //    0 1 2
+            //    3 4 5
+            //    6 7 8 + 10 ]
+
+            // note that the '+' operation is parsed first, and the '8 + 10' together is an operator.
+
+            // checking if row lengths are uniform.
+
+            bool uniform = true;
+            int row = 0;
+            int rowCount = 1;
+            int counter = 0;
             foreach (var item in this.EvaluateOperators) {
-                if (item is SelfOperation) {
-                    if (((SelfOperation)item).Self == ",") {
-                        ops.Add(null);
+                if(item is SelfOperation self) {
+                    if (self.Self == ";") {
+                        if (counter != 0) {
+                            if (row == 0) {
+                                row = counter;
+                                rowCount++;
+                            } else if (row != counter) {
+                                uniform = false;
+                                break;
+                            } else {
+                                rowCount++;
+                            }
+                        } 
+
+                        counter = 0;
                         continue;
-                    }
+                    } else if (self.Self == ",") { continue; }
                 }
 
-                ops[ops.Count - 1] = item;
+                counter++;
             }
 
-            foreach (var item in ops) {
-                if (item == null) members.Add(Types.Null.NULL);
-                else members.Add(item.Operate(ctx).Result);
+            if (uniform && row >= 0) {
+                foreach (var item in this.EvaluateOperators) {
+                    if (item is SelfOperation self) {
+                        if (self.Self == ";") { continue; }
+                        else if (self.Self == ",") { continue; }
+                    }
+
+                    if (item == null) members.Add(Types.Null.NULL);
+                    else members.Add(item.Operate(ctx).Result);
+                }
+            } else ctx.PostRuntimeError("ss0000", "matrix are not uniform or with 0 column count.");
+
+            arr = new Types.Matrix(members.ToArray());
+            if (rowCount > 1) {
+                Matrix.Reshape(arr, new dynamic[1] { new Matrix(new double[2] { rowCount, row }) });
             }
 
-            arr = new Types.Array(members.ToArray());
             return new Execution(ctx, arr);
         }
 
         public override TypeInference InferType(CompletionContext ctx)
         {
-            return new TypeInference(new HashSet<string> { "sys.array" }, null);
+            return new TypeInference(new HashSet<string> { "sys.matrix" }, null);
         }
     }
 
     public class IndexOperation : OperatorStatement
     {
+        public override Execution Operate(DynamicRuntime ctx)
+        {
+            if (this.Left == null) return new Execution();
+            if (this.Right == null) return new Execution();
+            dynamic left = this.Left.Operate(ctx).Result;
+            dynamic right = this.Right.Operate(ctx).Result;
 
+            if(left is Matrix mleft) {
+                if(right is Matrix mright) {
+                    return new Execution(ctx, Matrix.Get(mleft, new dynamic[] { mright }));
+                }
+            }
+
+            return new Execution();
+        }
     }
 
     public class FunctionCallOperation : OperatorStatement

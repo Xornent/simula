@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Odyssey.Controls;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
@@ -30,6 +32,8 @@ namespace Simula
             SizeChangeEnquiry.Interval = TimeSpan.FromMilliseconds(500);
             SizeChangeEnquiry.Tick += SizeChangeEnquiry_Tick;
             SizeChangeEnquiry.Start();
+            popDialogHost.Closed += PopDialogHost_Closed;
+            popDialogHost.Opened += PopDialogHost_Opened;
 
             // this application supports only left-handed operation. otherwise, it will 
             // naturally occur many layout problems
@@ -40,6 +44,10 @@ namespace Simula
                 var alignment = sys.GetField("_menuDropAlignment", BindingFlags.NonPublic | BindingFlags.Static);
                 alignment.SetValue(null, false);
             }
+
+            DialogCloseCallback += (sender, args) => {
+                popDialogHost.IsOpen = false;
+            };
         }
 
         private void Window_StateChanged(object sender, EventArgs e)
@@ -212,7 +220,7 @@ namespace Simula
             TabIndices.RemoveAt(removeId);
             TabPages.RemoveAt(removeId);
 
-            double totalWidths = ((ActualWidth - Margin.Left - Margin.Right - 60) / TabWindows.Count) - 2;
+            double totalWidths = ((ActualWidth - Margin.Left - Margin.Right - 60 - 300) / TabWindows.Count) - 2;
             for (int c = 0; c < TabWindows.Count; c++) {
                 string i = TabIndices[c].ToString();
                 Storyboard story = new Storyboard();
@@ -278,7 +286,7 @@ namespace Simula
             TabWindows.Add(newtab);
 
             // the extra 2 represents the additional border thickness. 1 on each side.
-            double totalWidths = ((ActualWidth - Margin.Left - Margin.Right - 60) / TabWindows.Count) - 2;
+            double totalWidths = ((ActualWidth - Margin.Left - Margin.Right - 60 - 300) / TabWindows.Count) - 2;
             for (int c = 0; c < TabWindows.Count; c++) {
                 string i = TabIndices[c].ToString();
                 Storyboard story = new Storyboard();
@@ -315,7 +323,7 @@ namespace Simula
         private void SizeChangeEnquiry_Tick(object sender, EventArgs e)
         {
             if (requireSizeChange) {
-                double totalWidths = ((ActualWidth - Margin.Left - Margin.Right - 60) / TabWindows.Count) - 2;
+                double totalWidths = ((ActualWidth - Margin.Left - Margin.Right - 60 - 300) / TabWindows.Count) - 2;
                 for (int c = 0; c < TabWindows.Count; c++) {
                     string i = TabIndices[c].ToString();
                     Storyboard story = new Storyboard();
@@ -343,26 +351,32 @@ namespace Simula
             }
         }
 
-        private void DisplayPopup(UserControl control, int width, int height, bool stayOpen = false)
+        private void DisplayPopup(UserControl control, int width, int height, bool stayOpen = false, bool dialog = false)
         {
-            if (!stayOpen) {
+            if (!dialog) {
                 popDialogGrid.Width = width + 40;
                 popDialogGrid.Height = height + 20;
                 popRectangle.Margin = new Thickness(20, 0, 20, 20);
                 popRectangle.Width = width;
                 popRectangle.Height = height;
+                popDialogHost.Width = width + 40;
+                popDialogHost.Height = height + 20;
                 if (popDialogGrid.Children.Count > 1)
                     popDialogGrid.Children.RemoveRange(1, popDialogGrid.Children.Count - 1);
                 popDialogGrid.Children.Add(control);
+
                 if (WindowState != WindowState.Maximized)
-                    popDialogHost.VerticalOffset = Top + Margin.Top + 65;
+                    popDialogHost.VerticalOffset = Top + Margin.Top + 32;
                 else
-                    popDialogHost.VerticalOffset = 65;
+                    popDialogHost.VerticalOffset = 32;
+
                 if (WindowState != WindowState.Maximized)
                     popDialogHost.HorizontalOffset = Left + Margin.Left + (ActualWidth - width) / 2 - 20;
                 else
                     popDialogHost.HorizontalOffset = (ActualWidth - width) / 2 - 20;
+                popDialogHost.StaysOpen = stayOpen;
                 popDialogHost.IsOpen = true;
+                
             } else {
                 Window window = new Window();
                 window.Icon = new BitmapImage(new Uri("pack://siteoforigin:,,,/app.icon.ico"));
@@ -381,9 +395,30 @@ namespace Simula
             }
         }
 
+        private void PopDialogHost_Opened(object sender, EventArgs e)
+        {
+            body.IsHitTestVisible = false;
+        }
+
+        private void PopDialogHost_Closed(object sender, EventArgs e)
+        {
+            body.IsHitTestVisible = true;
+        }
+
         private void Menu_About(object sender, EventArgs e)
         {
-            new Pages.About().ShowDialog();
+            var startup = new Pages.Startup();
+            startup.Width = 500;
+            startup.Height = 500;
+            DisplayPopup(startup, 500, 500, false);
+        }
+
+        private void CallSaveFileDialog(object sender, EventArgs e)
+        {
+            var startup = new Pages.SaveConfirmationDialog();
+            startup.Width = 450;
+            startup.Height = 183;
+            DisplayPopup(startup, 450, 183, true);
         }
 
         private void Menu_ManageExtensions(object sender, EventArgs e)
@@ -401,6 +436,95 @@ namespace Simula
         {
             InstallMainGrid.Visibility = Visibility.Hidden;
             MainGrid.Visibility = Visibility.Visible;
+        }
+
+        
+        // A BreadcrumbItem needs to populate it's Items. This can be due to the fact that a new BreadcrumbItem is selected, and thus
+        // it's Items must be populated to determine whether this BreadcrumbItem show a dropdown button,
+        // or when the Path property of the BreadcrumbBar is changed and therefore the Breadcrumbs must be populated from the new path.
+      
+        private void BreadcrumbBar_PopulateItems(object sender, Odyssey.Controls.BreadcrumbItemEventArgs e)
+        {
+            BreadcrumbItem item = e.Item;
+            if (item.Items.Count == 0) {
+                PopulateFolders(item);
+                e.Handled = true;
+            }
+        }
+
+        // Populate the Items of the specified BreadcrumbItem with the sub folders if necassary.
+
+        private static void PopulateFolders(BreadcrumbItem item)
+        {
+            BreadcrumbBar bar = item.BreadcrumbBar;
+            string path = bar.PathFromBreadcrumbItem(item);
+            string trace = item.TraceValue;
+            if (trace.Equals("工作区资源管理器")) {
+                string[] dirs = System.IO.Directory.GetLogicalDrives();
+                foreach (string s in dirs) {
+                    string dir = s;
+                    if (s.EndsWith(bar.SeparatorString)) dir = s.Remove(s.Length - bar.SeparatorString.Length, bar.SeparatorString.Length);
+                    FolderItem fi = new FolderItem();
+                    fi.Folder = dir;
+
+                    item.Items.Add(fi);
+                }
+            } else {
+                try {
+                    string[] paths = System.IO.Directory.GetDirectories(path + "\\");
+                    foreach (string s in paths) {
+                        DirectoryInfo info = new DirectoryInfo(s);
+                        if (!info.Attributes.HasFlag(FileAttributes.Hidden)) {
+                            string file = System.IO.Path.GetFileName(s);
+                            FolderItem fi = new FolderItem();
+                            fi.Folder = file;
+                            item.Items.Add(fi);
+                        }
+                    }
+                } catch { }
+            }
+        }
+
+        private void BreadcrumbBar_PathConversion(object sender, PathConversionEventArgs e)
+        {
+            if (e.Mode == PathConversionEventArgs.ConversionMode.DisplayToEdit) {
+                if (e.DisplayPath.StartsWith(@"工作区资源管理器\", StringComparison.OrdinalIgnoreCase)) {
+                    e.EditPath = e.DisplayPath.Remove(0, 9);
+                } 
+            } else {
+                if (e.EditPath.StartsWith("c:", StringComparison.OrdinalIgnoreCase)) {
+                    e.DisplayPath = @"Desktop\Computer\" + e.EditPath;
+                } else if (e.EditPath.StartsWith(@"\\")) {
+                    e.DisplayPath = @"Desktop\Network\" + e.EditPath.Remove(0, 2).Replace('/', '\\');
+                }
+            }
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            DoubleAnimation da = new DoubleAnimation(100, new Duration(new TimeSpan(0, 0, 2)));
+            da.FillBehavior = FillBehavior.Stop;
+            bar.BeginAnimation(BreadcrumbBar.ProgressValueProperty, da);
+        }
+
+        // The dropdown menu of a BreadcrumbItem was pressed, so delete the current folders, and repopulate the folders
+        // to ensure actual data.
+
+        private void bar_BreadcrumbItemDropDownOpened(object sender, BreadcrumbItemEventArgs e)
+        {
+            BreadcrumbItem item = e.Item;
+
+            // only repopulate, if the BreadcrumbItem is dynamically generated which means, item.Data is a  pointer to itself:
+            if (!(item.Data is BreadcrumbItem)) {
+                item.Items.Clear();
+                PopulateFolders(item);
+            }
+        }
+
+        public static event EventHandler DialogCloseCallback;
+        public static void InvokeDialogCloseCallback()
+        {
+            DialogCloseCallback?.Invoke(null, null);
         }
     }
 }

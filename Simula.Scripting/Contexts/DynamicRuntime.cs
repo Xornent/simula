@@ -15,25 +15,26 @@ namespace Simula.Scripting.Contexts
         {
             dynamic sys = new ExpandoObject();
             sys.fullName = new List<string> { "sys" };
-            sys.@int = this.typeInt;
             sys.@float = this.typeFloat;
             sys.func = this.typeFunc;
             sys.@class = this.typeClass;
-            sys.selector = this.typeSelector;
             sys.@string = this.typeString;
             sys.@bool = this.typeBool;
-            sys.@array = this.typeArr;
+            sys.@matrix = this.typeMat;
+            sys.@byte = this.typeByte;
+            sys.@char = this.typeChar;
+
             Store.sys = sys;
             Store.@null = Null.NULL;
 
-            Store.@int = new Reference(this, "sys.int");
             Store.@float = new Reference(this, "sys.float");
             Store.func = new Reference(this, "sys.func");
             Store.@class = new Reference(this, "sys.class");
-            Store.selector = new Reference(this, "sys.selector");
             Store.@string = new Reference(this, "sys.string");
             Store.@bool = new Reference(this, "sys.bool");
-            Store.@array = new Reference(this, "sys.array");
+            Store.@byte = new Reference(this, "sys.byte");
+            Store.@char = new Reference(this, "sys.char");
+            Store.matrix = new Reference(this, "sys.matrix");
 
             Store.global = Store;
             Store.fullName = new List<string> { "" };
@@ -93,7 +94,6 @@ namespace Simula.Scripting.Contexts
                 desc = "创建一个对象的按名称引用"
             };
 
-            CacheFunction("sys.int", typeof(Integer));
             CacheFunction("sys.float", typeof(Float));
             CacheFunction("sys.func", typeof(Function));
             CacheFunction("sys.class", typeof(Class));
@@ -101,6 +101,9 @@ namespace Simula.Scripting.Contexts
             CacheFunction("sys.string", typeof(Simula.Scripting.Types.String));
             CacheFunction("sys.bool", typeof(Simula.Scripting.Types.Boolean));
             CacheFunction("sys.array", typeof(Simula.Scripting.Types.Array));
+            CacheFunction("sys.matrix", typeof(Simula.Scripting.Types.Matrix));
+            CacheFunction("sys.char", typeof(Simula.Scripting.Types.Char));
+            CacheFunction("sys.byte", typeof(Simula.Scripting.Types.Byte));
 
             // the runtime context begins searching gor add-on units, the default add-ons
             // should be in the same directory as the executable and with extensions ".sdl"
@@ -151,11 +154,13 @@ namespace Simula.Scripting.Contexts
         public Class typeClass = new Class(typeof(Class)) { fullName = { "sys.class" }, name = "class" };
         public Class typeFunc = new Class(typeof(Function)) { fullName = { "sys.func" }, name = "func" };
         public Class typeSelector = new Class(typeof(Selector)) { fullName = { "sys.selector" }, name = "selector" };
-        public Class typeInt = new Class(typeof(Integer)) { fullName = { "sys.int" }, name = "int" };
         public Class typeFloat = new Class(typeof(Float)) { fullName = { "sys.float" }, name = "float" };
         public Class typeBool = new Class(typeof(Types.Boolean)) { fullName = { "sys.bool" }, name = "bool" };
         public Class typeString = new Class(typeof(Types.String)) { fullName = { "sys.string" }, name = "string" };
         public Class typeArr = new Class(typeof(Types.Array)) { fullName = { "sys.array" }, name = "array" };
+        public Class typeMat = new Class(typeof(Types.Matrix)) { fullName = { "sys.matrix" }, name = "matrix" };
+        public Class typeChar = new Class(typeof(Types.Char)) { fullName = { "sys.char" }, name = "char" };
+        public Class typeByte = new Class(typeof(Types.Byte)) { fullName = { "sys.byte" }, name = "byte" };
 
         public void CacheFunction(string alias, Type type)
         {
@@ -400,6 +405,11 @@ namespace Simula.Scripting.Contexts
             }
 
             return value;
+        }
+
+        public void PostRuntimeError(string code = "ss0000", string message = "", Exception? inner = null)
+        {
+            System.Windows.MessageBox.Show(message);
         }
     }
 }

@@ -26,7 +26,7 @@ namespace Simula.Scripting
         private readonly FoldingManager manager;
         private readonly SimulaFoldingStrategy folding = new SimulaFoldingStrategy();
 
-        public static readonly string fontFamily = "cascadia code, consolas, simsun";
+        public static readonly string fontFamily = "consolas, simsun";
         public Contexts.DynamicRuntime runtime = new Contexts.DynamicRuntime();
         public Contexts.CompletionContext completionCtx;
 
@@ -36,8 +36,9 @@ namespace Simula.Scripting
             TextView textView = TextArea.TextView;
             SyntaxHighlighting = Simula.Editor.Highlighting.HighlightingManager.Instance.GetDefinition("Simula");
             FontFamily = new System.Windows.Media.FontFamily(fontFamily);
-            FontSize = 13;
-
+            FontSize = 13.5;
+            TextView.LineHeightScale = 1.1;
+            
             textView.BackgroundRenderers.Add(textMarkerService);
             textView.LineTransformers.Add(textMarkerService);
             textView.Services.AddService(typeof(TextMarkerService), textMarkerService);
@@ -256,8 +257,10 @@ namespace Simula.Scripting
         }
 
         bool closeCompletion = true;
-        private void TextArea_TextEntering(object sender, System.Windows.Input.TextCompositionEventArgs e)
+        private async void TextArea_TextEntering(object sender, System.Windows.Input.TextCompositionEventArgs e)
         {
+            ScrollToLine(TextArea.Caret.Line);
+            
             if (e.Text.Length > 0 && (completionWindow != null)) {
                 if (!char.IsLetterOrDigit(e.Text[0])) {
                     completionWindow.Close();
@@ -441,18 +444,21 @@ namespace Simula.Scripting
                     position += (ln.Length - ln.TrimStart().Length);
                     if (s.StartsWith("while")) context.Push(new NewFolding() { StartOffset = position, Name = ln.Trim() });
                     if (s.StartsWith("expose")) {
-                        if (s.Remove(0, 6).Trim().StartsWith("def")) s = s.Remove(0, 6).Trim();
-                        if (s.Remove(0, 6).Trim().StartsWith("func")) context.Push(new NewFolding() { StartOffset = position, Name = ln.Trim() }); ;
-                        if (s.Remove(0, 6).Trim().StartsWith("class")) context.Push(new NewFolding() { StartOffset = position, Name = ln.Trim() }); ;
+                        string str = s.Remove(0, 6).Trim();
+                        if (str.StartsWith("def")) s = s.Remove(0, 6).Trim();
+                        if (str.StartsWith("func")) context.Push(new NewFolding() { StartOffset = position, Name = ln.Trim() }); ;
+                        if (str.StartsWith("class")) context.Push(new NewFolding() { StartOffset = position, Name = ln.Trim() }); ;
                     }
                     if (s.StartsWith("hidden")) {
-                        if (s.Remove(0, 6).Trim().StartsWith("def")) s = s.Remove(0, 6).Trim();
-                        if (s.Remove(0, 6).Trim().StartsWith("func")) context.Push(new NewFolding() { StartOffset = position, Name = ln.Trim() }); ;
-                        if (s.Remove(0, 6).Trim().StartsWith("class")) context.Push(new NewFolding() { StartOffset = position, Name = ln.Trim() }); ;
+                        string str = s.Remove(0, 6).Trim();
+                        if (str.StartsWith("def")) s = s.Remove(0, 6).Trim();
+                        if (str.StartsWith("func")) context.Push(new NewFolding() { StartOffset = position, Name = ln.Trim() }); ;
+                        if (str.StartsWith("class")) context.Push(new NewFolding() { StartOffset = position, Name = ln.Trim() }); ;
                     }
                     if (s.StartsWith("def")) {
-                        if (s.Remove(0, 3).Trim().StartsWith("func")) context.Push(new NewFolding() { StartOffset = position, Name = ln.Trim() }); ;
-                        if (s.Remove(0, 3).Trim().StartsWith("class")) context.Push(new NewFolding() { StartOffset = position, Name = ln.Trim() }); ;
+                        string str = s.Remove(0, 3).Trim();
+                        if (str.StartsWith("func")) context.Push(new NewFolding() { StartOffset = position, Name = ln.Trim() }); ;
+                        if (str.StartsWith("class")) context.Push(new NewFolding() { StartOffset = position, Name = ln.Trim() }); ;
                     }
 
                     if (s.StartsWith("if")) context.Push(new NewFolding() { StartOffset = position, Name = ln.Trim() }); ;

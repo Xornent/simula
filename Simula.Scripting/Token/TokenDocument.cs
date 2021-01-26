@@ -108,13 +108,13 @@ namespace Simula.Scripting.Token
                                 Location = new Span(new Position(linenum, columnnum), new Position(linenum, columnnum))
                             });
 
-                            if (column == '{') insideBracket++;
-                            else if (column == '}') insideBracket--;
+                            if (column == '{' || column == '[' || column == '(') insideBracket++;
+                            else if (column == '}' || column == ']' || column == ')') insideBracket--;
 
                             token = new Token("");
                             start = new Position(linenum, columnnum + 1);
                             continue;
-                        } else if (token == ";") {
+                        } else if (token == ";" && insideBracket == 0) {
                             end = new Position(linenum, columnnum - 1);
                             token.Location = new Span(start, end);
                             token = new Token("");
@@ -188,6 +188,8 @@ namespace Simula.Scripting.Token
                         if (insideBracket == 0)
                             Tokens.Add(new Token("<newline>", new Span(
                                 new Position(linenum, columnnum), new Position(linenum, columnnum))));
+                        else Tokens.Add(new Token(";", new Span(
+                           new Position(linenum, columnnum), new Position(linenum, columnnum))));
                     }
                 } else {
                     if (token != "") {
@@ -202,6 +204,8 @@ namespace Simula.Scripting.Token
 
                     if (insideBracket == 0)
                         Tokens.Add(new Token("<newline>", new Span(
+                           new Position(linenum, columnnum), new Position(linenum, columnnum))));
+                    else Tokens.Add(new Token(";", new Span(
                            new Position(linenum, columnnum), new Position(linenum, columnnum))));
                 }
             }

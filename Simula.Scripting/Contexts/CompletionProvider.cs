@@ -23,6 +23,10 @@ namespace Simula.Scripting.Contexts
             List<ICompletionData> data = new List<ICompletionData>();
             List<Syntax.Statement> cascadeList = Caret.Cascade.ToList();
 
+            if (cascadeList.Count > 0)
+                if (cascadeList[0] is CommentBlock)
+                    return data;
+
             // keyword data
 
             if (cascadeList.Find((stmt) => { return (stmt is IfBlock || stmt is ElseIfBlock); }) != null)

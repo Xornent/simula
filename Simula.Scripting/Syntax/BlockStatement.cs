@@ -21,14 +21,17 @@ namespace Simula.Scripting.Syntax
             foreach (var line in lines) {
                 if (line.Count > 0 && currentBlock.Count > 0) {
                     if (((string)line[0]).StartsWith("'")) {
-                        if (currentBlock.Peek() is CommentBlock) {
-                            (currentBlock.Peek() as CommentBlock)?.Lines.Add(line[0]);
+                        if (currentBlock.Peek() is CommentBlock comm) {
+                            comm.Lines.Add(line[0]);
+                            comm.RawToken.Add(line[0]);
                         } else {
                             CommentBlock c = new CommentBlock();
                             c.Lines.Add(line[0]);
+                            c.RawToken.Add(line[0]);
                             currentBlock.Push(c);
                         }
                     } else {
+                        if (line.Last().ToString().StartsWith("'")) line.RemoveLast();
                         if (currentBlock.Peek() is CommentBlock) {
                             var c = currentBlock.Pop();
                             currentBlock.Peek().Children.Add(c);
@@ -143,8 +146,10 @@ namespace Simula.Scripting.Syntax
                     }
                 }
 
-                int _l = currentBlock.Peek().RawToken.Last().Location.End.Line;
-                currentBlock.Peek().RawToken.Add(new Token.Token("<newline>") { Location = new Span(new Position(_l, int.MaxValue - 1000), new Position(_l, int.MaxValue - 1000)) });
+                if (currentBlock.Peek().RawToken.Count > 0) {
+                    int _l = currentBlock.Peek().RawToken.Last().Location.End.Line;
+                    currentBlock.Peek().RawToken.Add(new Token.Token("<newline>") { Location = new Span(new Position(_l, int.MaxValue - 1000), new Position(_l, int.MaxValue - 1000)) });
+                }
             }
 
             // if the block statement is closed without enough 'end's,
@@ -153,8 +158,28 @@ namespace Simula.Scripting.Syntax
 
             while (currentBlock.Count > 1 && collection.Count > 0) {
                 var block = currentBlock.Pop();
-                block.RawToken.Add(new Token.Token("end", new Span(collection.Last().Location.Start, collection.Last().Location.End)));
+                if (!(block is CommentBlock))
+                    block.RawToken.Add(new Token.Token("end", new Span(collection.Last().Location.Start, collection.Last().Location.End)));
+
                 currentBlock.Peek().Children.Add(block);
+            }
+
+            // when a comment block is right above a definition block, we assume that the comment
+            // is the documentation of the definition.
+
+            var doc = currentBlock.Peek();
+            ParseDocument(doc);
+        }
+
+        public void ParseDocument(BlockStatement block)
+        {
+            for (int i = 0; i < block.Children.Count - 1; i++) {
+                if (block.Children[i] is CommentBlock comment &&
+                    block.Children[i + 1] is DefinitionBlock def) {
+                    def.Documentation = comment;
+                    if (def.Type == DefinitionType.Class)
+                        ParseDocument(def);
+                }
             }
         }
 

@@ -28,6 +28,47 @@ namespace Simula.Scripting.Syntax
                     } else {
                         ctx.SetMemberReferenceCheck(eval._fields, raw, result, eval.fullName.Count == 0 ? "" : eval.fullName[0]);
                     }
+                } else if(this.Left is IndexOperation index) {
+                    if (index.Left == null) return new Execution();
+                    if (index.Right == null) return new Execution();
+                    dynamic left = index.Left.Operate(ctx).Result;
+                    dynamic right = index.Right.Operate(ctx).Result;
+
+                    if (left is Matrix mleft) {
+                        if (right is Matrix mright) {
+                            Matrix.Set(mleft, new dynamic[] { mright });
+                        }
+                    }
+
+                } else if(this.Left is BraceOperation matrixRaw) {
+
+                    // a syntax sugar. that the following syntax is allowed:
+                    //     { a, b, c } = { expr1, expr2, expr3 }
+
+                    // and it is equivalent as writing
+                    //     a = expr1
+                    //     b = expr2
+                    //     c = expr3
+
+                    List<OperatorStatement?> ops = new List<OperatorStatement?>();
+                    foreach (var item in matrixRaw.EvaluateOperators) {
+                        if(item is SelfOperation so)
+                            if(so.Self == ";" || so.Self == ",") { continue; }
+                        ops.Add(item);
+                    }
+
+                    if(result is Matrix mat) {
+                        if(mat.total >= ops.Count && mat.dimension == 1) {
+                            for (int i = 0; i < ops.Count; i++) {
+                                BinaryOperation bin = new BinaryOperation();
+                                bin.Operator = this.Operator;
+                                bin.Left = ops[i];
+                                bin.Right = new ObjectTransferOperation(Matrix.Get(mat, new dynamic[1] { new Matrix(new double[1] { i + 1 }) }));
+
+                                bin.Operate(ctx);
+                            }
+                        }
+                    }
                 }
 
                 return new Execution(ctx, result);
@@ -68,6 +109,7 @@ namespace Simula.Scripting.Syntax
 
             if(this.Operator.Symbol == "=") {
                 if(left.Object != null) {
+                    left.Object.IsPublic = false;
                     left.Object.Type.AddRange(right.Types);
                     left.Object.Cache = new Contexts.Data.LocalData(left.Object.Name,
                          "(local) [" + left.Object.Type.JoinString(", ") + "] " + left.Object.Name, "");
@@ -75,6 +117,7 @@ namespace Simula.Scripting.Syntax
                 } else {
                     if (this.Left is SelfOperation self) {
                         var record = new CompletionRecord();
+                        record.IsPublic = false;
                         record.Type = right.Types;
                         record.Name = self.Self;
 

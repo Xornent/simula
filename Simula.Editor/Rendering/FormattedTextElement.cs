@@ -174,7 +174,7 @@ namespace Simula.Editor.Rendering
             } else {
                 var text = element.textLine;
                 return new TextEmbeddedObjectMetrics(text.WidthIncludingTrailingWhitespace,
-                                                     text.Height,
+                                                     text.Height * TextView.LineHeightScale,
                                                      text.Baseline);
             }
         }
@@ -187,7 +187,7 @@ namespace Simula.Editor.Rendering
                 return new Rect(0, 0, formattedText.WidthIncludingTrailingWhitespace, formattedText.Height);
             } else {
                 var text = element.textLine;
-                return new Rect(0, 0, text.WidthIncludingTrailingWhitespace, text.Height);
+                return new Rect(0, 0, text.WidthIncludingTrailingWhitespace, text.Height * TextView.LineHeightScale);
             }
         }
 
