@@ -131,7 +131,7 @@ namespace Simula.Scripting.Syntax
 
         public override Execution Operate(DynamicRuntime ctx)
         {
-            Types.Matrix arr = new Types.Matrix();
+            Types.Matrix arr = new NumericalMatrix<double>(new double[0]);
             List<dynamic> members = new List<dynamic>();
             if (EvaluateOperators.Count == 0) return new Execution(ctx, arr);
             if(this.EvaluateOperators.Last() is SelfOperation so) {
@@ -202,9 +202,34 @@ namespace Simula.Scripting.Syntax
                 }
             } else ctx.PostRuntimeError("ss0000", "matrix are not uniform or with 0 column count.");
 
-            arr = new Types.Matrix(members.ToArray());
+            bool uniformType = true;
+            Type t = members[0].GetType();
+            foreach (var item in members) {
+                if (item.GetType() != t) uniformType = false;
+            }
+
+            if (uniformType) {
+                var obj = members[0];
+                if (obj is Types.Boolean) arr = new Types.NumericalMatrix<bool>(members.ToArray());
+
+                else if (obj is Types.Double) arr = new Types.NumericalMatrix<double>(members.ToArray());
+
+                else if (obj is Types.Byte) arr = new Types.NumericalMatrix<byte>(members.ToArray());
+                else if (obj is Types.Char) arr = new Types.NumericalMatrix<ushort>(members.ToArray());
+                else if (obj is Types.UInt32) arr = new Types.NumericalMatrix<uint>(members.ToArray());
+                else if (obj is Types.UInt64) arr = new Types.NumericalMatrix<ulong>(members.ToArray());
+
+                else if (obj is Int8) arr = new Types.NumericalMatrix<sbyte>(members.ToArray());
+                else if (obj is Types.Int16) arr = new Types.NumericalMatrix<short>(members.ToArray());
+                else if (obj is Types.Int32) arr = new Types.NumericalMatrix<int>(members.ToArray());
+                else if (obj is Types.Int64) arr = new Types.NumericalMatrix<long>(members.ToArray());
+
+                else arr = new Types.ObjectMatrix(members.ToArray());
+            } else arr = new Types.ObjectMatrix(members.ToArray());
+
+            
             if (rowCount > 1) {
-                Matrix.Reshape(arr, new dynamic[1] { new Matrix(new double[2] { rowCount, row }) });
+                arr.Reshape(new NumericalMatrix<int>(new int[2]{ rowCount, row }));
             }
 
             return new Execution(ctx, arr);
@@ -226,8 +251,8 @@ namespace Simula.Scripting.Syntax
             dynamic right = this.Right.Operate(ctx).Result;
 
             if(left is Matrix mleft) {
-                if(right is Matrix mright) {
-                    return new Execution(ctx, Matrix.Get(mleft, new dynamic[] { mright }));
+                if(right is INumericalMatrix mright) {
+                    return new Execution(ctx, mleft.Get( mright.ToIntegerMatrix() ));
                 }
             }
 

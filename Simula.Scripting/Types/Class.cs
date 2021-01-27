@@ -136,11 +136,15 @@ namespace Simula.Scripting.Types
 
                                     dict["this"] = self;
 
-                                    foreach (var item in self._fields) {
-                                        dict[item.Key] = item.Value;
-                                    }
-
                                     args[0].Scopes.Add(scope);
+
+                                    // note that merely adding the _fields elements to the context can provide read functions,
+                                    // but setting them will change the reference and set as a copy, the original value will
+                                    // not change. by giving a reference to 'this' works.
+
+                                    foreach (var item in self._fields) {
+                                        dict[item.Key] = new Reference(args[0], "this." + item.Key);
+                                    }
 
                                     BlockStatement block = new BlockStatement() { Children = def.Children };
                                     dynamic result = block.Execute(args[0]);

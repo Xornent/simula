@@ -15,25 +15,29 @@ namespace Simula.Scripting.Contexts
         {
             dynamic sys = new ExpandoObject();
             sys.fullName = new List<string> { "sys" };
-            sys.@float = this.typeFloat;
+            sys.@double = this.typeFloat;
             sys.func = this.typeFunc;
             sys.@class = this.typeClass;
             sys.@string = this.typeString;
             sys.@bool = this.typeBool;
             sys.@matrix = this.typeMat;
-            sys.@byte = this.typeByte;
-            sys.@char = this.typeChar;
+            sys.@uint8 = this.typeByte;
+            sys.@uint16 = this.typeChar;
+            sys.@uint32 = this.typeUint32;
+            sys.@uint64 = this.typeUint64;
+            sys.@int8 = this.typeInt8;
+            sys.@int16 = this.typeInt16;
+            sys.@int32 = this.typeInt32;
+            sys.@int64 = this.typeInt64;
 
             Store.sys = sys;
             Store.@null = Null.NULL;
 
-            Store.@float = new Reference(this, "sys.float");
+            Store.@double = new Reference(this, "sys.double");
             Store.func = new Reference(this, "sys.func");
             Store.@class = new Reference(this, "sys.class");
             Store.@string = new Reference(this, "sys.string");
             Store.@bool = new Reference(this, "sys.bool");
-            Store.@byte = new Reference(this, "sys.byte");
-            Store.@char = new Reference(this, "sys.char");
             Store.matrix = new Reference(this, "sys.matrix");
 
             Store.global = Store;
@@ -94,16 +98,41 @@ namespace Simula.Scripting.Contexts
                 desc = "创建一个对象的按名称引用"
             };
 
-            CacheFunction("sys.float", typeof(Float));
+            Store.@uint8 = new Function((self, args) => {
+                try {
+                    if (args[0] is INumericalMatrix inum) {
+                        return inum.ToByteMatrix();
+                    } else return new Types.Byte(Convert.ToByte(args[0].raw));
+                } catch (InvalidCastException invalidCast) {
+                    this.PostRuntimeError("ss0000", "the value " + args[0].raw + " is either too large or too small for the cast", invalidCast);
+                    return new Types.Byte(0);
+                }
+            }, new List<Pair>() {
+                new Pair(new Types.String("numeric"), new Types.String("any"))
+            })
+            {
+                name = "uint8",
+                fullName = { "uint8" },
+                returntypes = new HashSet<string>() { "sys.uint8" },
+                desc = "将一个数据类型（的矩阵）转化成八位无符号整数（的矩阵）"
+            };
+
+            CacheFunction("sys.double", typeof(Types.Double));
             CacheFunction("sys.func", typeof(Function));
             CacheFunction("sys.class", typeof(Class));
-            CacheFunction("sys.selector", typeof(Selector));
             CacheFunction("sys.string", typeof(Simula.Scripting.Types.String));
             CacheFunction("sys.bool", typeof(Simula.Scripting.Types.Boolean));
             CacheFunction("sys.array", typeof(Simula.Scripting.Types.Array));
             CacheFunction("sys.matrix", typeof(Simula.Scripting.Types.Matrix));
-            CacheFunction("sys.char", typeof(Simula.Scripting.Types.Char));
-            CacheFunction("sys.byte", typeof(Simula.Scripting.Types.Byte));
+
+            CacheFunction("sys.uint16", typeof(Simula.Scripting.Types.Char));
+            CacheFunction("sys.uint8", typeof(Simula.Scripting.Types.Byte));
+            CacheFunction("sys.uint32", typeof(Simula.Scripting.Types.UInt32));
+            CacheFunction("sys.uint64", typeof(Simula.Scripting.Types.UInt64));
+            CacheFunction("sys.int8", typeof(Simula.Scripting.Types.Int8));
+            CacheFunction("sys.int16", typeof(Simula.Scripting.Types.Int16));
+            CacheFunction("sys.int32", typeof(Simula.Scripting.Types.Int32));
+            CacheFunction("sys.int64", typeof(Simula.Scripting.Types.Int64));
 
             // the runtime context begins searching gor add-on units, the default add-ons
             // should be in the same directory as the executable and with extensions ".sdl"
@@ -124,6 +153,7 @@ namespace Simula.Scripting.Contexts
             {"_lincrement", new Operator((Token.Token)"++", OperatorType.UnaryLeft) },
             {"_ldecrement", new Operator((Token.Token)"--", OperatorType.UnaryLeft) },
             {"_inverse", new Operator((Token.Token)"-", OperatorType.UnaryLeft) },
+            {"_transpos", new Operator((Token.Token)"^", OperatorType.UnaryRight) },
             {"_not", new Operator((Token.Token)"!", OperatorType.UnaryLeft) },
             {"_rincrement", new Operator((Token.Token)"++", OperatorType.UnaryRight) },
             {"_rdecrement", new Operator((Token.Token)"--", OperatorType.UnaryRight) },
@@ -133,6 +163,7 @@ namespace Simula.Scripting.Contexts
             {"_mod", new Operator((Token.Token)"%")},
             {"_add", new Operator((Token.Token)"+")},
             {"_substract", new Operator((Token.Token)"-")},
+
             {"_lt", new Operator((Token.Token)"<")},
             {"_lte", new Operator((Token.Token)"<=")},
             {"_gt", new Operator((Token.Token)">")},
@@ -141,6 +172,7 @@ namespace Simula.Scripting.Contexts
             {"_notequals", new Operator((Token.Token)"!=")},
             {"_or", new Operator((Token.Token)"||")},
             {"_and", new Operator((Token.Token)"&&")},
+
             {"_assign", new Operator((Token.Token)"=")},
             {"_addassign", new Operator((Token.Token)"+=") },
             {"_substractassign", new Operator((Token.Token)"-=") },
@@ -153,14 +185,20 @@ namespace Simula.Scripting.Contexts
         public Null typeNull = Null.NULL;
         public Class typeClass = new Class(typeof(Class)) { fullName = { "sys.class" }, name = "class" };
         public Class typeFunc = new Class(typeof(Function)) { fullName = { "sys.func" }, name = "func" };
-        public Class typeSelector = new Class(typeof(Selector)) { fullName = { "sys.selector" }, name = "selector" };
-        public Class typeFloat = new Class(typeof(Float)) { fullName = { "sys.float" }, name = "float" };
+        public Class typeFloat = new Class(typeof(Types.Double)) { fullName = { "sys.double" }, name = "double" };
         public Class typeBool = new Class(typeof(Types.Boolean)) { fullName = { "sys.bool" }, name = "bool" };
         public Class typeString = new Class(typeof(Types.String)) { fullName = { "sys.string" }, name = "string" };
         public Class typeArr = new Class(typeof(Types.Array)) { fullName = { "sys.array" }, name = "array" };
         public Class typeMat = new Class(typeof(Types.Matrix)) { fullName = { "sys.matrix" }, name = "matrix" };
-        public Class typeChar = new Class(typeof(Types.Char)) { fullName = { "sys.char" }, name = "char" };
-        public Class typeByte = new Class(typeof(Types.Byte)) { fullName = { "sys.byte" }, name = "byte" };
+
+        public Class typeByte = new Class(typeof(Types.Byte)) { fullName = { "sys.uint8" }, name = "uint8" };
+        public Class typeChar = new Class(typeof(Types.Char)) { fullName = { "sys.uint16" }, name = "uint16" };
+        public Class typeUint32 = new Class(typeof(Types.UInt32)) { fullName = { "sys.uint32" }, name = "uint32" };
+        public Class typeUint64 = new Class(typeof(Types.UInt64)) { fullName = { "sys.uint64" }, name = "uint64" };
+        public Class typeInt8 = new Class(typeof(Types.Int8)) { fullName = { "sys.int8" }, name = "int8" };
+        public Class typeInt16 = new Class(typeof(Types.Int16)) { fullName = { "sys.int16" }, name = "int16" };
+        public Class typeInt32 = new Class(typeof(Types.Int32)) { fullName = { "sys.int32" }, name = "int32" };
+        public Class typeInt64 = new Class(typeof(Types.Int64)) { fullName = { "sys.int64" }, name = "int64" };
 
         public void CacheFunction(string alias, Type type)
         {

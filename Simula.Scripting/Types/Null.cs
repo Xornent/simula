@@ -130,9 +130,19 @@ namespace Simula.Scripting.Types
         public static int GetSize(dynamic obj)
         {
             if (obj is Boolean) return 1;
-            else if (obj is Float) return 8;
+
+            else if (obj is Double) return 8;
+
             else if (obj is Byte) return 1;
             else if (obj is Char) return 2;
+            else if (obj is UInt32) return 4;
+            else if (obj is UInt64) return 8;
+
+            else if (obj is Int8) return 1;
+            else if (obj is Int16) return 2;
+            else if (obj is Int32) return 4;
+            else if (obj is Int64) return 8;
+
             else if (obj is Matrix mtx) return mtx.elementSize * mtx.total;
             else if (obj is Var v) {
                 int size = 0;
@@ -150,6 +160,45 @@ namespace Simula.Scripting.Types
                 // are also not serializable.
 
                 return -1;
+        }
+
+        public static bool IsUnmanaged(dynamic obj)
+        {
+            if (obj is Boolean) return true;
+
+            if (obj is Double) return true;
+
+            if (obj is Byte) return true;
+            if (obj is Char) return true;
+            if (obj is UInt32) return true;
+            if (obj is UInt64) return true;
+
+            if (obj is Int8) return true;
+            if (obj is Int16) return true;
+            if (obj is Int32) return true;
+            if (obj is Int64) return true;
+            
+            return false;
+        }
+
+
+        public static Var WrapUnmanaged(dynamic obj)
+        {
+            if (obj is bool) return new Boolean(obj);
+
+            if (obj is double) return new Double(obj);
+
+            if (obj is byte) return new Byte(obj);
+            if (obj is ushort) return new Char(obj);
+            if (obj is uint) return new UInt32(obj);
+            if (obj is ulong) return new UInt64(obj);
+
+            if (obj is sbyte) return new Int8(obj);
+            if (obj is short) return new Int16(obj);
+            if (obj is int) return new Int32(obj);
+            if (obj is long) return new Int64(obj);
+
+            return obj;
         }
     }
 }

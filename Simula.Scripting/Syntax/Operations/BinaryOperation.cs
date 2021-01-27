@@ -35,8 +35,8 @@ namespace Simula.Scripting.Syntax
                     dynamic right = index.Right.Operate(ctx).Result;
 
                     if (left is Matrix mleft) {
-                        if (right is Matrix mright) {
-                            Matrix.Set(mleft, new dynamic[] { mright });
+                        if (right is INumericalMatrix mright) {
+                            mleft.Set(mright.ToIntegerMatrix(), result);
                         }
                     }
 
@@ -63,7 +63,7 @@ namespace Simula.Scripting.Syntax
                                 BinaryOperation bin = new BinaryOperation();
                                 bin.Operator = this.Operator;
                                 bin.Left = ops[i];
-                                bin.Right = new ObjectTransferOperation(Matrix.Get(mat, new dynamic[1] { new Matrix(new double[1] { i + 1 }) }));
+                                bin.Right = new ObjectTransferOperation( mat.Get(new NumericalMatrix<int>(new int[1] { i + 1 }) ) );
 
                                 bin.Operate(ctx);
                             }

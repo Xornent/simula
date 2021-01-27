@@ -46,7 +46,7 @@ namespace Simula.Scripting.Syntax
             double d;
             bool successDouble = double.TryParse(raw, out d);
             if (successDouble) {
-                Types.Float f = new Float(d);
+                Types.Double f = new Double(d);
                 return new Execution(ctx, f);
             }
 
@@ -76,7 +76,7 @@ namespace Simula.Scripting.Syntax
                 double d;
                 bool successDouble = double.TryParse(raw, out d);
                 if (successDouble) {
-                    return new TypeInference(new HashSet<string>() { "sys.float" }, null);
+                    return new TypeInference(new HashSet<string>() { "sys.double" }, null);
                 }
             }
 

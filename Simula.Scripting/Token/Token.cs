@@ -148,5 +148,12 @@ namespace Simula.Scripting.Token
             Regex reg = new Regex("[a-z_]");
             return reg.IsMatch(lower);
         }
+
+        public static bool IsDigit(this char c)
+        {
+            string lower = new string(new char[1] { c }).ToLower();
+            Regex reg = new Regex("[0-9]");
+            return reg.IsMatch(lower);
+        }
     }
 }

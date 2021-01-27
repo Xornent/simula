@@ -24,7 +24,7 @@ namespace Simula.Scripting.Utils
 
         private List<EllipseGeometry> points = new List<EllipseGeometry>();
 
-        [FunctionExport("_init", "scaleLeft:sys.float|scaleRight:sys.float@util.grid", "", 
+        [FunctionExport("_init", "scaleLeft:sys.double|scaleRight:sys.double@util.grid", "", 
             "使用横轴在屏幕最左侧的坐标值和在屏幕最右侧的坐标值初始化绘图坐标")]
         public static Function _init = new Function((self, args) => {
             self.scaleLeft = args[0];

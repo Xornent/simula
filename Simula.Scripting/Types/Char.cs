@@ -19,93 +19,93 @@ namespace Simula.Scripting.Types
         }
 
         public static Function _add = new Function((self, args) => {
-            return new Char(self.raw + args[0].raw);
-        }, new List<Pair>() { new Pair(new String("right"), new string("sys.byte")) }, "sys.byte");
+            return new Char((self.raw + args[0].raw) < ushort.MaxValue ? ushort.MaxValue : (ushort)(self.raw + args[0].raw));
+        }, new List<Pair>() { new Pair(new String("right"), new string("sys.uint16")) }, "sys.uint16");
 
         public static Function _substract = new Function((self, args) => {
-            return new Byte(self.raw - args[0].raw);
-        }, new List<Pair>() { new Pair(new String("right"), new string("sys.byte")) }, "sys.byte");
+            return new Char((self.raw - args[0].raw) < ushort.MinValue ? ushort.MinValue: (ushort)(self.raw - args[0].raw));
+        }, new List<Pair>() { new Pair(new String("right"), new string("sys.uint16")) }, "sys.uint16");
 
         public static Function _multiply = new Function((self, args) => {
-            return new Byte(self.raw * args[0].raw);
-        }, new List<Pair>() { new Pair(new String("right"), new string("sys.byte")) }, "sys.byte");
+            return new Char((self.raw * args[0].raw) > ushort.MaxValue ? ushort.MaxValue : (ushort)(self.raw * args[0].raw));
+        }, new List<Pair>() { new Pair(new String("right"), new string("sys.uint16")) }, "sys.uint16");
 
         public static Function _divide = new Function((self, args) => {
-            return new Byte((self.raw / args[0].raw) >= 256 ? (byte)255 : (byte)(self.raw / args[0].raw));
-        }, new List<Pair>() { new Pair(new String("right"), new string("sys.byte")) }, "sys.byte");
+            return new Char((self.raw / args[0].raw) > ushort.MaxValue ? (ushort)ushort.MaxValue : (ushort)(self.raw / args[0].raw));
+        }, new List<Pair>() { new Pair(new String("right"), new string("sys.uint16")) }, "sys.uint16");
 
         public static Function _mod = new Function((self, args) => {
-            return new Float((byte)(Convert.ToInt32(self) % Convert.ToInt32(args[0])));
-        }, new List<Pair>() { new Pair(new String("right"), new string("sys.byte")) }, "sys.byte");
+            return new Char((ushort)(Convert.ToInt32(self) % Convert.ToInt32(args[0])));
+        }, new List<Pair>() { new Pair(new String("right"), new string("sys.uint16")) }, "sys.uint16");
 
         public static Function _gt = new Function((self, args) => {
             return new Boolean(self.raw > args[0].raw);
-        }, new List<Pair>() { new Pair(new String("right"), new string("sys.byte")) }, "sys.bool");
+        }, new List<Pair>() { new Pair(new String("right"), new string("sys.uint16")) }, "sys.bool");
 
         public static Function _gte = new Function((self, args) => {
             return new Boolean(self.raw >= args[0].raw);
-        }, new List<Pair>() { new Pair(new String("right"), new string("sys.byte")) }, "sys.bool");
+        }, new List<Pair>() { new Pair(new String("right"), new string("sys.uint16")) }, "sys.bool");
 
         public static Function _lt = new Function((self, args) => {
             return new Boolean(self.raw < args[0].raw);
-        }, new List<Pair>() { new Pair(new String("right"), new string("sys.byte")) }, "sys.bool");
+        }, new List<Pair>() { new Pair(new String("right"), new string("sys.uint16")) }, "sys.bool");
 
         public static Function _lte = new Function((self, args) => {
             return new Boolean(self.raw <= args[0].raw);
-        }, new List<Pair>() { new Pair(new String("right"), new string("sys.byte")) }, "sys.bool");
+        }, new List<Pair>() { new Pair(new String("right"), new string("sys.uint16")) }, "sys.bool");
 
         public static Function _equals = new Function((self, args) => {
             return new Boolean(self.raw == args[0].raw);
-        }, new List<Pair>() { new Pair(new String("right"), new string("sys.byte")) }, "sys.bool");
+        }, new List<Pair>() { new Pair(new String("right"), new string("sys.uint16")) }, "sys.bool");
 
         public static Function _notequals = new Function((self, args) => {
             return new Boolean(self.raw != args[0].raw);
-        }, new List<Pair>() { new Pair(new String("right"), new string("sys.byte")) }, "sys.bool");
+        }, new List<Pair>() { new Pair(new String("right"), new string("sys.uint16")) }, "sys.bool");
 
         public static Function _addassign = new Function((self, args) => {
-            self.raw = (args[0] + self.raw >= 256) ? (byte)255 : (byte)(args[0] + self.raw);
+            self.raw = (args[0] + self.raw > ushort.MaxValue) ? ushort.MaxValue : (ushort)(args[0] + self.raw);
             return self;
-        }, new List<Pair>() { new Pair(new String("right"), new string("sys.byte")) }, "sys.byte");
+        }, new List<Pair>() { new Pair(new String("right"), new string("sys.uint16")) }, "sys.uint16");
 
         public static Function _substractassign = new Function((self, args) => {
-            self.raw = (self.raw - args[0] < 0) ? (byte)0 : (byte)(self.raw - args[0]);
+            self.raw = (self.raw - args[0] < ushort.MinValue) ? ushort.MinValue : (ushort)(self.raw - args[0]);
             return self;
-        }, new List<Pair>() { new Pair(new String("right"), new string("sys.byte")) }, "sys.byte");
+        }, new List<Pair>() { new Pair(new String("right"), new string("sys.uint16")) }, "sys.uint16");
 
         public static Function _multiplyassign = new Function((self, args) => {
-            self.raw = (args[0] * self.raw >= 256) ? (byte)255 : (byte)(args[0] * self.raw);
+            self.raw = (args[0] * self.raw > ushort.MaxValue) ? ushort.MaxValue : (ushort)(args[0] * self.raw);
             return self;
-        }, new List<Pair>() { new Pair(new String("right"), new string("sys.byte")) }, "sys.byte");
+        }, new List<Pair>() { new Pair(new String("right"), new string("sys.uint16")) }, "sys.uint16");
 
         public static Function _divideassign = new Function((self, args) => {
-            self.raw = (args[0] / self.raw >= 256) ? (byte)255 : (byte)(args[0] / self.raw);
+            self.raw = (args[0] / self.raw > ushort.MaxValue) ? ushort.MaxValue : (ushort)(args[0] / self.raw);
             return self;
-        }, new List<Pair>() { new Pair(new String("right"), new string("sys.byte")) }, "sys.byte");
+        }, new List<Pair>() { new Pair(new String("right"), new string("sys.uint16")) }, "sys.uint16");
 
         public static Function _modassign = new Function((self, args) => {
-            self.raw = (byte)(Convert.ToInt32(self) % Convert.ToInt32(args[0]));
+            self.raw = (ushort)(Convert.ToInt32(self) % Convert.ToInt32(args[0]));
             return self;
-        }, new List<Pair>() { new Pair(new String("right"), new string("sys.byte")) }, "sys.byte");
+        }, new List<Pair>() { new Pair(new String("right"), new string("sys.uint16")) }, "sys.uint16");
 
         public static Function _lincrement = new Function((self, args) => {
-            self.raw = (byte)(self.raw + 1);
+            self.raw = (ushort)(self.raw + 1);
             return self;
-        }, new List<Pair>(), "sys.byte");
+        }, new List<Pair>(), "sys.uint16");
 
         public static Function _ldecrement = new Function((self, args) => {
-            self.raw = (byte)(self.raw - 1);
+            self.raw = (ushort)(self.raw - 1);
             return self;
-        }, new List<Pair>(), "sys.byte");
+        }, new List<Pair>(), "sys.uint16");
 
         public static Function _rincrement = new Function((self, args) => {
-            self.raw = (byte)(self.raw + 1);
-            return new Byte((byte)(self.raw - 1));
-        }, new List<Pair>(), "sys.byte");
+            self.raw = (ushort)(self.raw + 1);
+            return new Char((ushort)(self.raw - 1));
+        }, new List<Pair>(), "sys.uint16");
 
         public static Function _rdecrement = new Function((self, args) => {
-            self.raw = (byte)(self.raw - 1);
-            return new Byte((byte)(self.raw + 1));
-        }, new List<Pair>(), "sys.byte");
+            self.raw = (ushort)(self.raw - 1);
+            return new Char((ushort)(self.raw + 1));
+        }, new List<Pair>(), "sys.uint16");
 
         public static implicit operator ushort(Char f)
         {
@@ -127,7 +127,7 @@ namespace Simula.Scripting.Types
             return new Char(d);
         }
 
-        internal new string type = "sys.char";
+        internal new string type = "sys.uint16";
 
         public override string ToString()
         {

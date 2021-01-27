@@ -137,7 +137,7 @@ namespace Simula.Scripting.Token
                         } else {
                             if (token != "") {
                                 if (token.IsValidNameBeginning()) {
-                                    if (column.IsAlphabet())
+                                    if (column.IsAlphabet() || column.IsDigit())
                                         token.Value += column;
                                     else {
                                         end = new Position(linenum, columnnum - 1);

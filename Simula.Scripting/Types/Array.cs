@@ -108,12 +108,12 @@ namespace Simula.Scripting.Types
                 counter += count(item);
             }
 
-            return (Float)((double)counter);
-        }, new List<Pair>() { }, "sys.float");
+            return (Double)((double)counter);
+        }, new List<Pair>() { }, "sys.double");
 
         public static Function length = new Function((self, args) => {
-            return (Float)((double)self.raw.Length);
-        }, new List<Pair>() { }, "sys.float");
+            return (Double)((double)self.raw.Length);
+        }, new List<Pair>() { }, "sys.double");
 
         internal new string type = "sys.array";
 

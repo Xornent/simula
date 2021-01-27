@@ -34,8 +34,8 @@ namespace Simula.Scripting.Types
         }, new List<Pair>() { }, "sys.string");
 
         public static Function length = new Function((self, args) => {
-            return new Float(self.raw.Length);
-        }, new List<Pair>() { }, "sys.float");
+            return new Double(self.raw.Length);
+        }, new List<Pair>() { }, "sys.double");
 
         public static Function trim = new Function((self, args) => {
             return new String(self.raw.Trim());
