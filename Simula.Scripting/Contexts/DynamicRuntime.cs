@@ -7,6 +7,8 @@ using System.Reflection;
 using System.IO;
 using System.Linq;
 
+using static Simula.Scripting.Resources;
+
 namespace Simula.Scripting.Contexts
 {
     public class DynamicRuntime
@@ -29,6 +31,7 @@ namespace Simula.Scripting.Contexts
             sys.@int16 = this.typeInt16;
             sys.@int32 = this.typeInt32;
             sys.@int64 = this.typeInt64;
+            sys.addr = this.typeAddr;
 
             Store.sys = sys;
             Store.@null = Null.NULL;
@@ -54,7 +57,7 @@ namespace Simula.Scripting.Contexts
                 name = "alert",
                 fullName = { "alert" },
                 returntypes = new HashSet<string>() { "any" },
-                desc = "弹出一个系统消息框, 显示其参数的字符串表达"
+                desc = Loc(StringTableIndex.Doc_Sys_Alert)
             };
 
             Store.dir = new Function((self, args) => {
@@ -83,11 +86,16 @@ namespace Simula.Scripting.Contexts
                 name = "dir",
                 fullName = { "dir" },
                 returntypes = new HashSet<string>() { "null" },
-                desc = "弹出一个系统消息框, 显示一个容器中的所有可用对象"
+                desc = Loc(StringTableIndex.Doc_Sys_Dir)
             };
 
             Store.@ref = new Function((self, args) => {
-                return new Reference(this, args[0].fullName[0]);
+                if (args[0].fullName.Count != 0) {
+                    return new Reference(this, args[0].fullName[0]);
+                } else {
+                    this.PostRuntimeError(StringTableIndex.AnnonymousTypeNameReferenceFail);
+                    return Null.NULL;
+                }
             }, new List<Pair>() {
                 new Pair(new Types.String("referencePath"), new Types.String("sys.string"))
             })
@@ -95,7 +103,7 @@ namespace Simula.Scripting.Contexts
                 name = "ref",
                 fullName = { "ref" },
                 returntypes = new HashSet<string>() { "ref" },
-                desc = "创建一个对象的按名称引用"
+                desc = Loc(StringTableIndex.Doc_Sys_Ref)
             };
 
             Store.@uint8 = new Function((self, args) => {
@@ -104,7 +112,7 @@ namespace Simula.Scripting.Contexts
                         return inum.ToByteMatrix();
                     } else return new Types.Byte(Convert.ToByte(args[0].raw));
                 } catch (InvalidCastException invalidCast) {
-                    this.PostRuntimeError("ss0000", "the value " + args[0].raw + " is either too large or too small for the cast", invalidCast);
+                    this.PostRuntimeError(StringTableIndex.IntegralCastOutOfRange);
                     return new Types.Byte(0);
                 }
             }, new List<Pair>() {
@@ -114,7 +122,24 @@ namespace Simula.Scripting.Contexts
                 name = "uint8",
                 fullName = { "uint8" },
                 returntypes = new HashSet<string>() { "sys.uint8" },
-                desc = "将一个数据类型（的矩阵）转化成八位无符号整数（的矩阵）"
+                desc = Loc(StringTableIndex.Doc_Sys_Uint8)
+            };
+
+            Store.addr = new Function((self, args) => {
+                try {
+                    return new Addr(args[0]);
+                } catch (ArgumentException argEx) {
+                    this.PostRuntimeError(StringTableIndex.NovolatileMemberGetAddrFail);
+                    return new Addr();
+                }
+            }, new List<Pair>() {
+                new Pair(new Types.String("obj"), new Types.String("any"))
+            })
+            {
+                name = "addr",
+                fullName = { "addr" },
+                returntypes = new HashSet<string>() { "any" },
+                desc = Loc(StringTableIndex.Doc_Sys_Addr)
             };
 
             CacheFunction("sys.double", typeof(Types.Double));
@@ -134,6 +159,8 @@ namespace Simula.Scripting.Contexts
             CacheFunction("sys.int32", typeof(Simula.Scripting.Types.Int32));
             CacheFunction("sys.int64", typeof(Simula.Scripting.Types.Int64));
 
+            CacheFunction("sys.addr", typeof(Simula.Scripting.Types.Addr));
+
             // the runtime context begins searching gor add-on units, the default add-ons
             // should be in the same directory as the executable and with extensions ".sdl"
 
@@ -150,6 +177,7 @@ namespace Simula.Scripting.Contexts
         public Dictionary<string, List<Function>> FunctionCache = new Dictionary<string, List<Function>>();
         public List<ScopeContext> Scopes = new List<ScopeContext>();
         public static Dictionary<string, Operator> Registry = new Dictionary<string, Operator>() {
+            {"_deref", new Operator((Token.Token)"*", OperatorType.UnaryLeft) },
             {"_lincrement", new Operator((Token.Token)"++", OperatorType.UnaryLeft) },
             {"_ldecrement", new Operator((Token.Token)"--", OperatorType.UnaryLeft) },
             {"_inverse", new Operator((Token.Token)"-", OperatorType.UnaryLeft) },
@@ -199,6 +227,8 @@ namespace Simula.Scripting.Contexts
         public Class typeInt16 = new Class(typeof(Types.Int16)) { fullName = { "sys.int16" }, name = "int16" };
         public Class typeInt32 = new Class(typeof(Types.Int32)) { fullName = { "sys.int32" }, name = "int32" };
         public Class typeInt64 = new Class(typeof(Types.Int64)) { fullName = { "sys.int64" }, name = "int64" };
+
+        public Class typeAddr = new Class(typeof(Types.Addr)) { fullName = { "sys.addr" }, name = "addr" };
 
         public void CacheFunction(string alias, Type type)
         {
@@ -294,22 +324,53 @@ namespace Simula.Scripting.Contexts
                         while (container is Reference containerRef)
                             container = containerRef.Container;
 
-                        string positioner = ((container.fullName[0] == "") ? "" : (container.fullName[0] + ".")) + re.Token;
-                        value.fullName.Insert(0, positioner);
+                        if (container != null) {
+                            if (container.fullName.Count != 0) {
+                                string positioner = ((container.fullName[0] == "") ? "" : (container.fullName[0] + ".")) + re.Token;
+                                value.fullName.Insert(0, positioner);
 
-                        if (container is ExpandoObject obj) {
-                            var dictionary = (IDictionary<string, object>)obj;
-                            dynamic original = dictionary[re.Token];
-                            original.fullName.Remove(positioner);
-                            dictionary[re.Token] = value;
+                                if (container is ExpandoObject obj) {
+                                    var dictionary = (IDictionary<string, object>)obj;
+                                    dynamic original = dictionary[re.Token];
+                                    original.fullName.Remove(positioner);
+                                    dictionary[re.Token] = value;
+                                } else {
+                                    if (container._fields.ContainsKey(re.Token)) {
+                                        dynamic original = container._fields[re.Token];
+                                        original.fullName.Remove(positioner);
+                                        container._fields[re.Token] = value;
+                                    } else container._fields.Add(re.Token, value);
+                                }
+                            } else {
+
+                                // the container is nameless. this is common when executing annonymous objects 
+                                // of user-defined types. the following code produced a circumstance:
+
+                                //     cls().value = 1
+                                // where cls is an user-defined class.
+
+                                if (container is ExpandoObject obj) {
+                                    var dictionary = (IDictionary<string, object>)obj;
+                                    dynamic original = dictionary[re.Token];
+                                    dictionary[re.Token] = value;
+                                } else {
+                                    if (container._fields.ContainsKey(re.Token)) {
+                                        dynamic original = container._fields[re.Token];
+                                        container._fields[re.Token] = value;
+                                    } else container._fields.Add(re.Token, value);
+                                }
+                            }
+
                         } else {
-                            if (container._fields.ContainsKey(re.Token)) {
-                                dynamic original = container._fields[re.Token];
-                                original.fullName.Remove(positioner);
-                                container._fields[re.Token] = value;
-                            } else container._fields.Add(re.Token, value);
+                            this.PostRuntimeError(StringTableIndex.NullContainer);
+                            return value;
                         }
+
                     } else {
+
+                        // if the scope has no items of its name, we should set the object
+                        // directly to the parent scope. a scope contains a default fullName as "".
+
                         dynamic original = dict[name];
                         string positioner = ((current.Store.fullName[0] == "") ? "" : (current.Store.fullName[0] + ".")) + name;
                         original.fullName.Remove(positioner);
@@ -332,21 +393,41 @@ namespace Simula.Scripting.Contexts
                         while (container is Reference containerRef)
                             container = containerRef.Container;
 
-                        string positioner = ((container.fullName[0] == "") ? "" : (container.fullName[0] + ".")) + re.Token;
-                        value.fullName.Insert(0, positioner);
+                        if (container != null) {
+                            if (container.fullName.Count > 0) {
+                                string positioner = ((container.fullName[0] == "") ? "" : (container.fullName[0] + ".")) + re.Token;
+                                value.fullName.Insert(0, positioner);
 
-                        if (container is ExpandoObject obj) {
-                            var dictionary = (IDictionary<string, object>)obj;
-                            dynamic original = dictionary[re.Token];
-                            original.fullName.Remove(positioner);
-                            dictionary[re.Token] = value;
+                                if (container is ExpandoObject obj) {
+                                    var dictionary = (IDictionary<string, object>)obj;
+                                    dynamic original = dictionary[re.Token];
+                                    original.fullName.Remove(positioner);
+                                    dictionary[re.Token] = value;
+                                } else {
+                                    if (container._fields.ContainsKey(re.Token)) {
+                                        dynamic original = container._fields[re.Token];
+                                        original.fullName.Remove(positioner);
+                                        container._fields[re.Token] = value;
+                                    } else container._fields.Add(re.Token, value);
+                                }
+                            } else {
+                                if (container is ExpandoObject obj) {
+                                    var dictionary = (IDictionary<string, object>)obj;
+                                    dynamic original = dictionary[re.Token];
+                                    dictionary[re.Token] = value;
+                                } else {
+                                    if (container._fields.ContainsKey(re.Token)) {
+                                        dynamic original = container._fields[re.Token];
+                                        container._fields[re.Token] = value;
+                                    } else container._fields.Add(re.Token, value);
+                                }
+                            }
+
                         } else {
-                            if (container._fields.ContainsKey(re.Token)) {
-                                dynamic original = container._fields[re.Token];
-                                original.fullName.Remove(positioner);
-                                container._fields[re.Token] = value;
-                            } else container._fields.Add(re.Token, value);
+                            this.PostRuntimeError(StringTableIndex.NullContainer);
+                            return value;
                         }
+
                     } else {
                         dynamic original = dict[name];
                         string positioner = ((Store.fullName[0] == "") ? "" : (Store.fullName[0] + ".")) + name;
@@ -376,21 +457,42 @@ namespace Simula.Scripting.Contexts
                         while (container is Reference containerRef)
                             container = containerRef.Container;
 
-                        string positioner = ((container.fullName[0] == "") ? "" : (container.fullName[0] + ".")) + re.Token;
-                        value.fullName.Insert(0, positioner);
+                        if (container != null) {
+                            if (container.fullName.Count > 0) {
+                                string positioner = ((container.fullName[0] == "") ? "" : (container.fullName[0] + ".")) + re.Token;
+                                value.fullName.Insert(0, positioner);
 
-                        if (container is ExpandoObject obj) {
-                            var dictionary = (IDictionary<string, object>)obj;
-                            dynamic original = dictionary[re.Token];
-                            original.fullName.Remove(positioner);
-                            dictionary[re.Token] = value;
+                                if (container is ExpandoObject obj) {
+                                    var dictionary = (IDictionary<string, object>)obj;
+                                    dynamic original = dictionary[re.Token];
+                                    original.fullName.Remove(positioner);
+                                    dictionary[re.Token] = value;
+                                } else {
+                                    if (container._fields.ContainsKey(re.Token)) {
+                                        dynamic original = container._fields[re.Token];
+                                        original.fullName.Remove(positioner);
+                                        container._fields[re.Token] = value;
+                                    } else container._fields.Add(re.Token, value);
+                                }
+
+                            } else {
+                                if (container is ExpandoObject obj) {
+                                    var dictionary = (IDictionary<string, object>)obj;
+                                    dynamic original = dictionary[re.Token];
+                                    dictionary[re.Token] = value;
+                                } else {
+                                    if (container._fields.ContainsKey(re.Token)) {
+                                        dynamic original = container._fields[re.Token];
+                                        container._fields[re.Token] = value;
+                                    } else container._fields.Add(re.Token, value);
+                                }
+                            }
+
                         } else {
-                            if (container._fields.ContainsKey(re.Token)) {
-                                dynamic original = container._fields[re.Token];
-                                original.fullName.Remove(positioner);
-                                container._fields[re.Token] = value;
-                            } else container._fields.Add(re.Token, value);
+                            this.PostRuntimeError(StringTableIndex.NullContainer);
+                            return value;
                         }
+
                     } else {
                         dynamic original = dict[name];
                         string positioner = ((expando.fullName[0] == "") ? "" : (expando.fullName[0] + ".")) + name;
@@ -412,21 +514,41 @@ namespace Simula.Scripting.Contexts
                         while (container is Reference containerRef)
                             container = containerRef.Container;
 
-                        string positioner = ((container.fullName[0] == "") ? "" : (container.fullName[0] + ".")) + re.Token;
-                        value.fullName.Insert(0, positioner);
+                        if (container != null) {
+                            if (container.fullName.Count > 0) {
+                                string positioner = ((container.fullName[0] == "") ? "" : (container.fullName[0] + ".")) + re.Token;
+                                value.fullName.Insert(0, positioner);
 
-                        if (container is ExpandoObject obj) {
-                            var dictionary = (IDictionary<string, object>)obj;
-                            dynamic original = dictionary[re.Token];
-                            original.fullName.Remove(positioner);
-                            dictionary[re.Token] = value;
+                                if (container is ExpandoObject obj) {
+                                    var dictionary = (IDictionary<string, object>)obj;
+                                    dynamic original = dictionary[re.Token];
+                                    original.fullName.Remove(positioner);
+                                    dictionary[re.Token] = value;
+                                } else {
+                                    if (container._fields.ContainsKey(re.Token)) {
+                                        dynamic original = container._fields[re.Token];
+                                        original.fullName.Remove(positioner);
+                                        container._fields[re.Token] = value;
+                                    } else container._fields.Add(re.Token, value);
+                                }
+                            } else {
+                                if (container is ExpandoObject obj) {
+                                    var dictionary = (IDictionary<string, object>)obj;
+                                    dynamic original = dictionary[re.Token];
+                                    dictionary[re.Token] = value;
+                                } else {
+                                    if (container._fields.ContainsKey(re.Token)) {
+                                        dynamic original = container._fields[re.Token];
+                                        container._fields[re.Token] = value;
+                                    } else container._fields.Add(re.Token, value);
+                                }
+                            }
+
                         } else {
-                            if (container._fields.ContainsKey(re.Token)) {
-                                dynamic original = container._fields[re.Token];
-                                original.fullName.Remove(positioner);
-                                container._fields[re.Token] = value;
-                            } else container._fields.Add(re.Token, value);
+                            this.PostRuntimeError(StringTableIndex.NullContainer);
+                            return value;
                         }
+
                     } else {
                         dynamic original = dict[name];
                         string positioner = ((space == "") ? "" : (space + ".")) + name;
@@ -448,6 +570,11 @@ namespace Simula.Scripting.Contexts
         public void PostRuntimeError(string code = "ss0000", string message = "", Exception? inner = null)
         {
             System.Windows.MessageBox.Show(message);
+        }
+
+        public void PostRuntimeError(StringTableIndex index)
+        {
+            System.Windows.MessageBox.Show(Resources.StringTable[index]);
         }
     }
 }

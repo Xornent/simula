@@ -11,7 +11,7 @@ namespace Simula.Scripting.Syntax
 
         public override void Parse(Token.TokenCollection collection)
         {
-            RawToken = collection;
+            this.RawToken.AddRange(collection);
             List<TokenCollection> lines = collection.Split(Token.Token.LineBreak);
             Stack<BlockStatement> currentBlock = new Stack<BlockStatement>();
             currentBlock.Push(this);
@@ -40,12 +40,10 @@ namespace Simula.Scripting.Syntax
                         if (line[0] == "use") {
                             UseStatement use = new UseStatement();
                             use.Parse(line);
-                            currentBlock.Peek().RawToken.AddRange(use.RawToken);
                             currentBlock.Peek().Children.Add(use);
                         } else if (line[0] == "module") {
                             ModuleStatement module = new ModuleStatement();
                             module.Parse(line);
-                            currentBlock.Peek().RawToken.AddRange(module.RawToken);
                             currentBlock.Peek().Children.Add(module);
                         } else if (line[0] == "expose" ||
                                    line[0] == "hidden" ||

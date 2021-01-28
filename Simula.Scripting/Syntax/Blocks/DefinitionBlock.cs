@@ -190,30 +190,10 @@ namespace Simula.Scripting.Syntax
                     } else collection[0].Error = new TokenizerException("SS0014");
                     break;
                 case DefinitionType.Function:
-                    if (collection.Contains(new Token.Token("="))) {
-                        var l = collection.Split(new Token.Token("="));
-                        if (l.Count == 2) {
-                            ParseAbsoluteFunctionDefinition(l[0]);
-                            EvaluationStatement eval = new EvaluationStatement(true);
-                            eval.Parse(l[1]);
-                            FunctionAlias = eval;
-                        } else collection[0].Error = new TokenizerException("SS0002");
-                    } else {
-                        ParseAbsoluteFunctionDefinition(collection);
-                    }
+                    ParseAbsoluteFunctionDefinition(collection);
                     break;
                 case DefinitionType.Class:
-                    if (collection.Contains(new Token.Token("="))) {
-                        var l = collection.Split(new Token.Token("="));
-                        if (l.Count == 2) {
-                            ParseClassDefinition(l[0]);
-                            EvaluationStatement eval = new EvaluationStatement(true);
-                            eval.Parse(l[1]);
-                            ClassAlias = eval;
-                        } else collection[0].Error = new TokenizerException("SS0002");
-                    } else {
-                        ParseClassDefinition(collection);
-                    }
+                    ParseClassDefinition(collection);
                     break;
             }
 

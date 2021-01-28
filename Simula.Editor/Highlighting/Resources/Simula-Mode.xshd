@@ -31,7 +31,7 @@
       <Word>use</Word>
       <Word>module</Word>
       <Word>def</Word>
-      <Word>derives</Word>
+      <Word>assert</Word>
       <Word>conditional</Word>
     </Keywords>
     <Keywords color="BasicKeys">
@@ -58,10 +58,22 @@
     </Keywords>
     <Keywords color="BuiltinTypeKeys">
       <Word>object</Word>
-      <Word>byte</Word>
-      <Word>char</Word>
-      <Word>float</Word>
+      <Word>uint8</Word>
+      <Word>uint16</Word>
+      <Word>uint32</Word>
+      <Word>uint64</Word>
+      <Word>int8</Word>
+      <Word>int16</Word>
+      <Word>int32</Word>
+      <Word>int64</Word>
+      
+      <Word>single</Word>
+      <Word>double</Word>
+      
       <Word>matrix</Word>
+      <Word>addr</Word>
+      <Word>ref</Word>
+      
       <Word>bool</Word>
       <Word>string</Word>
       <Word>pair</Word>
@@ -74,7 +86,7 @@
       <Word>in</Word>
       <Word>at</Word>
       <Word>while</Word>
-      <Word>enum</Word>
+      <Word>iter</Word>
     </Keywords>
 
     <Rule color="Function">

@@ -23,9 +23,17 @@ namespace Simula.Scripting.Contexts
             List<ICompletionData> data = new List<ICompletionData>();
             List<Syntax.Statement> cascadeList = Caret.Cascade.ToList();
 
-            if (cascadeList.Count > 0)
+            if (cascadeList.Count > 0) {
                 if (cascadeList[0] is CommentBlock)
                     return data;
+                else if (cascadeList[0] is EvaluationStatement eval) {
+                    if (eval.RawToken.Last().ToString() == ";") eval.RawToken.RemoveLast();
+                    if (eval.RawToken.Last().ToString().StartsWith("\"") && 
+                        !(eval.RawToken.Last().Value.Length>=2 && eval.RawToken.Last().Value.EndsWith("\"")))
+                        return data;
+                }
+            }
+                
 
             // keyword data
 

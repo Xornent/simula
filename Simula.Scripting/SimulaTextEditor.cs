@@ -276,10 +276,15 @@ namespace Simula.Scripting
                 // call completion provider with TextArea.Caret locations, full source
                 // file and current dynamic runtime.
 
-                completionCtx.SetSource(this.Text);
-                Contexts.CompletionCaret caret = completionCtx.GetCaret(TextArea.Caret.Line, TextArea.Caret.Column);
-                Contexts.CompletionProvider provider = new Contexts.CompletionProvider(completionCtx, caret);
-                var availableKeys = provider.GetCompletionData();
+                List<ICompletionData> availableKeys = new List<ICompletionData>();
+                try {
+                    completionCtx.SetSource(this.Text);
+                    Contexts.CompletionCaret caret = completionCtx.GetCaret(TextArea.Caret.Line, TextArea.Caret.Column);
+                    Contexts.CompletionProvider provider = new Contexts.CompletionProvider(completionCtx, caret);
+                    availableKeys = provider.GetCompletionData();
+                } catch {
+                    availableKeys = new List<ICompletionData>();
+                }
 
                 if (availableKeys.Count > 0) {
                     if (completionWindow == null)
