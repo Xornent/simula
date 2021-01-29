@@ -1,6 +1,6 @@
 
-using System;
 using Simula.Scripting.Json.Utilities;
+using System;
 
 #nullable disable
 

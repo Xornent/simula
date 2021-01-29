@@ -72,8 +72,7 @@ namespace Simula.Scripting.Json.Converters
 
             object[] cases = (object[])FSharpUtils.Instance.GetUnionCases(null, t, null)!;
 
-            foreach (object unionCaseInfo in cases)
-            {
+            foreach (object unionCaseInfo in cases) {
                 UnionCase unionCase = new UnionCase(
                     (int)FSharpUtils.Instance.GetUnionCaseInfoTag(unionCaseInfo),
                     (string)FSharpUtils.Instance.GetUnionCaseInfoName(unionCaseInfo),
@@ -88,8 +87,7 @@ namespace Simula.Scripting.Json.Converters
         }
         public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 writer.WriteNull();
                 return;
             }
@@ -105,14 +103,12 @@ namespace Simula.Scripting.Json.Converters
             writer.WriteStartObject();
             writer.WritePropertyName((resolver != null) ? resolver.GetResolvedPropertyName(CasePropertyName) : CasePropertyName);
             writer.WriteValue(caseInfo.Name);
-            if (caseInfo.Fields != null && caseInfo.Fields.Length > 0)
-            {
+            if (caseInfo.Fields != null && caseInfo.Fields.Length > 0) {
                 object[] fields = (object[])caseInfo.FieldReader.Invoke(value)!;
 
                 writer.WritePropertyName((resolver != null) ? resolver.GetResolvedPropertyName(FieldsPropertyName) : FieldsPropertyName);
                 writer.WriteStartArray();
-                foreach (object field in fields)
-                {
+                foreach (object field in fields) {
                     serializer.Serialize(writer, field);
                 }
                 writer.WriteEndArray();
@@ -121,8 +117,7 @@ namespace Simula.Scripting.Json.Converters
         }
         public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
-            if (reader.TokenType == JsonToken.Null)
-            {
+            if (reader.TokenType == JsonToken.Null) {
                 return null;
             }
 
@@ -131,11 +126,9 @@ namespace Simula.Scripting.Json.Converters
             JArray? fields = null;
             reader.ReadAndAssert();
 
-            while (reader.TokenType == JsonToken.PropertyName)
-            {
+            while (reader.TokenType == JsonToken.PropertyName) {
                 string propertyName = reader.Value!.ToString();
-                if (string.Equals(propertyName, CasePropertyName, StringComparison.OrdinalIgnoreCase))
-                {
+                if (string.Equals(propertyName, CasePropertyName, StringComparison.OrdinalIgnoreCase)) {
                     reader.ReadAndAssert();
 
                     Union union = UnionCache.Get(objectType);
@@ -144,50 +137,39 @@ namespace Simula.Scripting.Json.Converters
 
                     caseInfo = union.Cases.SingleOrDefault(c => c.Name == caseName);
 
-                    if (caseInfo == null)
-                    {
+                    if (caseInfo == null) {
                         throw JsonSerializationException.Create(reader, "No union type found with the name '{0}'.".FormatWith(CultureInfo.InvariantCulture, caseName));
                     }
-                }
-                else if (string.Equals(propertyName, FieldsPropertyName, StringComparison.OrdinalIgnoreCase))
-                {
+                } else if (string.Equals(propertyName, FieldsPropertyName, StringComparison.OrdinalIgnoreCase)) {
                     reader.ReadAndAssert();
-                    if (reader.TokenType != JsonToken.StartArray)
-                    {
+                    if (reader.TokenType != JsonToken.StartArray) {
                         throw JsonSerializationException.Create(reader, "Union fields must been an array.");
                     }
 
                     fields = (JArray)JToken.ReadFrom(reader);
-                }
-                else
-                {
+                } else {
                     throw JsonSerializationException.Create(reader, "Unexpected property '{0}' found when reading union.".FormatWith(CultureInfo.InvariantCulture, propertyName));
                 }
 
                 reader.ReadAndAssert();
             }
 
-            if (caseInfo == null)
-            {
+            if (caseInfo == null) {
                 throw JsonSerializationException.Create(reader, "No '{0}' property with union name found.".FormatWith(CultureInfo.InvariantCulture, CasePropertyName));
             }
 
             object?[] typedFieldValues = new object?[caseInfo.Fields.Length];
 
-            if (caseInfo.Fields.Length > 0 && fields == null)
-            {
+            if (caseInfo.Fields.Length > 0 && fields == null) {
                 throw JsonSerializationException.Create(reader, "No '{0}' property with union fields found.".FormatWith(CultureInfo.InvariantCulture, FieldsPropertyName));
             }
 
-            if (fields != null)
-            {
-                if (caseInfo.Fields.Length != fields.Count)
-                {
+            if (fields != null) {
+                if (caseInfo.Fields.Length != fields.Count) {
                     throw JsonSerializationException.Create(reader, "The number of field values does not match the number of properties defined by union '{0}'.".FormatWith(CultureInfo.InvariantCulture, caseName));
                 }
 
-                for (int i = 0; i < fields.Count; i++)
-                {
+                for (int i = 0; i < fields.Count; i++) {
                     JToken t = fields[i];
                     PropertyInfo fieldProperty = caseInfo.Fields[i];
 
@@ -201,8 +183,7 @@ namespace Simula.Scripting.Json.Converters
         }
         public override bool CanConvert(Type objectType)
         {
-            if (typeof(IEnumerable).IsAssignableFrom(objectType))
-            {
+            if (typeof(IEnumerable).IsAssignableFrom(objectType)) {
                 return false;
             }
             object[] attributes;
@@ -213,11 +194,9 @@ namespace Simula.Scripting.Json.Converters
 #endif
 
             bool isFSharpType = false;
-            foreach (object attribute in attributes)
-            {
+            foreach (object attribute in attributes) {
                 Type attributeType = attribute.GetType();
-                if (attributeType.FullName == "Microsoft.FSharp.Core.CompilationMappingAttribute")
-                {
+                if (attributeType.FullName == "Microsoft.FSharp.Core.CompilationMappingAttribute") {
                     FSharpUtils.EnsureInitialized(attributeType.Assembly());
 
                     isFSharpType = true;
@@ -225,8 +204,7 @@ namespace Simula.Scripting.Json.Converters
                 }
             }
 
-            if (!isFSharpType)
-            {
+            if (!isFSharpType) {
                 return false;
             }
 

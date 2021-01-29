@@ -8,14 +8,14 @@ namespace Simula.TeX.Atoms
         public VerticalCenteredAtom(SourceSpan? source, Atom? atom)
             : base(source)
         {
-            this.Atom = atom;
+            Atom = atom;
         }
 
         public Atom? Atom { get; }
 
         protected override Box CreateBoxCore(TexEnvironment environment)
         {
-            var box = this.Atom!.CreateBox(environment); // Nullable TODO: This probably needs null checking
+            var box = Atom!.CreateBox(environment); // Nullable TODO: This probably needs null checking
 
             // Centre box relative to horizontal axis.
             var totalHeight = box.Height + box.Depth;

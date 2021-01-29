@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace Simula.Scripting.Syntax
+{
 
-namespace Simula.Scripting.Syntax {
-
-    public class ModuleStatement : Statement {
-        public new void Parse(Token.TokenCollection sentence) {
+    public class ModuleStatement : Statement
+    {
+        public new void Parse(Token.TokenCollection sentence)
+        {
+            this.RawToken.AddRange(sentence);
             if (sentence.Count <= 1) {
                 sentence[0].Error = new Token.TokenizerException("SS0005");
             }
@@ -22,11 +22,11 @@ namespace Simula.Scripting.Syntax {
                 }
             }
 
-            if(sentence.Count%2 != 0) {
+            if (sentence.Count % 2 != 0) {
                 sentence.Last().Error = new Token.TokenizerException("SS0006");
             }
 
-            this.FullName = fullName;
+            FullName = fullName;
         }
 
         public string FullName = "";

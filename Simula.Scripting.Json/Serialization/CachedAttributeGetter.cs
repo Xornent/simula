@@ -1,7 +1,6 @@
 ﻿
-using System;
-using System.Reflection;
 using Simula.Scripting.Json.Utilities;
+using System;
 
 namespace Simula.Scripting.Json.Serialization
 {

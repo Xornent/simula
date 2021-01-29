@@ -1,12 +1,11 @@
 ﻿using Simula.Scripting.Json;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Simula.Scripting.Packaging {
+namespace Simula.Scripting.Packaging
+{
 
     [JsonObject]
-    public class PackageMetadataVersion {
+    public class PackageMetadataVersion
+    {
 
         [JsonProperty("@id")]
         public string Id { get; set; }

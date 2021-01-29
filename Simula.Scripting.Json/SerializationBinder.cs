@@ -1,7 +1,6 @@
 ﻿
 #if (DOTNET || PORTABLE40 || PORTABLE)
 using System;
-using System.Reflection;
 
 namespace Simula.Scripting.Json
 {

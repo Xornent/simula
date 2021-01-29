@@ -1,8 +1,5 @@
 
 using System;
-using System.Globalization;
-using System.Runtime.Serialization;
-using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json
 {
@@ -56,13 +53,10 @@ namespace Simula.Scripting.Json
 
             int lineNumber;
             int linePosition;
-            if (lineInfo != null && lineInfo.HasLineInfo())
-            {
+            if (lineInfo != null && lineInfo.HasLineInfo()) {
                 lineNumber = lineInfo.LineNumber;
                 linePosition = lineInfo.LinePosition;
-            }
-            else
-            {
+            } else {
                 lineNumber = 0;
                 linePosition = 0;
             }

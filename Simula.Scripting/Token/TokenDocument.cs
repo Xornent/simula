@@ -1,17 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
-namespace Simula.Scripting.Token {
-
-    public class TokenCollection : List<Token> {
-
-        public List<TokenCollection> Split(Token token) {
+namespace Simula.Scripting.Token
+{
+    public class TokenCollection : List<Token>
+    {
+        public List<TokenCollection> Split(Token token)
+        {
             List<TokenCollection> result = new List<TokenCollection>();
             TokenCollection collection = new TokenCollection();
 
             foreach (var item in this) {
-                if(item.ContentEquals(token)) {
+                if (item.ContentEquals(token)) {
                     result.Add(collection);
                     collection = new TokenCollection();
                 } else {
@@ -23,7 +22,8 @@ namespace Simula.Scripting.Token {
             return result;
         }
 
-        public bool Contains(Token token) {
+        public bool Contains(Token token)
+        {
             bool flag = false;
             foreach (var item in this) {
                 if (item.ContentEquals(token)) {
@@ -33,32 +33,35 @@ namespace Simula.Scripting.Token {
             return flag;
         }
 
-        public Token Last() {
-            return this[this.Count - 1];
+        public Token Last()
+        {
+            return this[Count - 1];
         }
 
-        public void RemoveLast() {
-            this.RemoveAt(this.Count - 1);
+        public void RemoveLast()
+        {
+            RemoveAt(Count - 1);
         }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             string s = "";
             foreach (var item in this) {
-                if (item.HasError)
-                    s = s + item.Value  + "  ' " + item.Error?.Id.ToUpper() + ": " + item.Error?.Message + "\n";
-                else
-                    s = s + item.Value + "\n";
+                s = s + item.Value;
             }
             return s;
         }
     }
 
-    public class TokenDocument {
+    public class TokenDocument
+    {
         public TokenCollection Tokens { get; set; } = new TokenCollection();
 
-        public void Tokenize(string source) {
+        public void Tokenize(string source)
+        {
             Tokens.Clear();
 
+            int insideBracket = 0;
             int linenum = 0;
             int columnnum = 0;
             string[] lines = source.Split('\n');
@@ -67,21 +70,21 @@ namespace Simula.Scripting.Token {
                 columnnum = 0;
 
                 Token token = new Token("");
-                Position start = new Position(1,1);
-                Position end = new Position(1,1);
+                Position start = new Position(linenum, 1);
+                Position end = new Position(linenum, 1);
 
                 foreach (var column in line) {
                     columnnum++;
 
                     if (token.Value.StartsWith("\"")) {
                         if (token.Value[token.Value.Length - 1] != '\\') {
-                            if(column == '\"') {
+                            if (column == '\"') {
                                 token.Value += '\"';
                                 end = new Position(linenum, columnnum);
                                 token.Location = new Span(start, end);
                                 Tokens.Add(token);
                                 token = new Token("");
-                                start = new Position(linenum, columnnum+1);
+                                start = new Position(linenum, columnnum + 1);
                             } else {
                                 token.Value += column;
                             }
@@ -92,326 +95,36 @@ namespace Simula.Scripting.Token {
                         token.Value += column;
                     } else {
 
-                        if (token == "(" ||
-                            token == ")" ||
-                            token == "[" ||
-                            token == "]" ||
-                            token == "{" ||
-                            token == "}") {
+                        if (column == '(' ||
+                            column == ')' ||
+                            column == '[' ||
+                            column == ']' ||
+                            column == '{' ||
+                            column == '}') {
                             end = new Position(linenum, columnnum - 1);
                             token.Location = new Span(start, end);
-                            Tokens.Add(token);
+                            if(token!="") Tokens.Add(token);
+                            Tokens.Add(new Token(new string(new char[] { column })) { 
+                                Location = new Span(new Position(linenum, columnnum), new Position(linenum, columnnum))
+                            });
+
+                            if (column == '{' || column == '[' || column == '(') insideBracket++;
+                            else if (column == '}' || column == ']' || column == ')') insideBracket--;
+
                             token = new Token("");
-                            start = new Position(linenum, columnnum);
+                            start = new Position(linenum, columnnum + 1);
+                            continue;
+                        } else if (token == ";" && insideBracket == 0) {
+                            end = new Position(linenum, columnnum - 1);
+                            token.Location = new Span(start, end);
+                            token = new Token("");
+                            start = new Position(linenum, columnnum + 1);
+                            Tokens.Add(new Token("<newline>", new Span(
+                                new Position(linenum, columnnum), new Position(linenum, columnnum))));
+                            continue;
                         }
 
-                        if (column == '.') {
-                            if (token.IsValidSymbolBeginning()) {
-                                if (token == ".." ||
-                                    token == "?" ||
-                                    token == "") token.Value += ".";
-                                else {
-                                    token.Value += ".";
-                                    token.Error = new TokenizerException("SS0001");
-                                }
-                            } else if (token.IsValidNumberBeginning()) {
-                                token.Value += ".";
-                            } else {
-                                if (token != "") {
-                                    end = new Position(linenum, columnnum - 1);
-                                    token.Location = new Span(start, end);
-                                    Tokens.Add(token);
-                                }
-                                token = new Token(".");
-                                start = new Position(linenum, columnnum);
-                            }
-                        } else if (column == ',') {
-                            if (token.IsValidSymbolBeginning()) {
-                                if (token == "") token.Value += ",";
-                                else {
-                                    token.Value += ",";
-                                    token.Error = new TokenizerException("SS0001");
-                                }
-                            } else {
-                                if (token != "") {
-                                    end = new Position(linenum, columnnum - 1);
-                                    token.Location = new Span(start, end);
-                                    Tokens.Add(token);
-                                }
-                                token = new Token(",");
-                                start = new Position(linenum, columnnum);
-                            }
-                        } else if (column == '[') {
-                            if (token != "") {
-                                end = new Position(linenum, columnnum - 1);
-                                token.Location = new Span(start, end);
-                                Tokens.Add(token);
-                            }
-                            token = new Token("[");
-                            start = new Position(linenum, columnnum);
-                        } else if (column == ']') {
-                            if (token != "") {
-                                end = new Position(linenum, columnnum - 1);
-                                token.Location = new Span(start, end);
-                                Tokens.Add(token);
-                            }
-                            token = new Token("]");
-                            start = new Position(linenum, columnnum);
-                        } else if (column == '<') {
-                            if (token.IsValidSymbolBeginning()) {
-                                if (token == "<" || token == "") token.Value += "<";
-                                else {
-                                    token.Value += "<";
-                                    token.Error = new TokenizerException("SS0001");
-                                }
-                            } else {
-                                if (token != "") {
-                                    end = new Position(linenum, columnnum - 1);
-                                    token.Location = new Span(start, end);
-                                    Tokens.Add(token);
-                                }
-                                token = new Token("<");
-                                start = new Position(linenum, columnnum);
-                            }
-                        } else if (column == '>') {
-                            if (token.IsValidSymbolBeginning()) {
-                                if (token == ">" || token == "<" || token == "") token.Value += ">";
-                                else {
-                                    token.Value += ">";
-                                    token.Error = new TokenizerException("SS0001");
-                                }
-                            } else {
-                                if (token != "") {
-                                    end = new Position(linenum, columnnum - 1);
-                                    token.Location = new Span(start, end);
-                                    Tokens.Add(token);
-                                }
-                                token = new Token(">");
-                                start = new Position(linenum, columnnum);
-                            }
-                        } else if (column == '{') {
-                            if (token != "") {
-                                end = new Position(linenum, columnnum - 1);
-                                token.Location = new Span(start, end);
-                                Tokens.Add(token);
-                            }
-                            token = new Token("{");
-                            start = new Position(linenum, columnnum);
-                        } else if (column == '}') {
-                            if (token != "") {
-                                end = new Position(linenum, columnnum - 1);
-                                token.Location = new Span(start, end);
-                                Tokens.Add(token);
-                            }
-                            token = new Token("}");
-                            start = new Position(linenum, columnnum);
-
-                        } else if (column == '[') {
-                            if (token != "") {
-                                end = new Position(linenum, columnnum - 1);
-                                token.Location = new Span(start, end);
-                                Tokens.Add(token);
-                            }
-                            token = new Token("[");
-                            start = new Position(linenum, columnnum);
-                        } else if (column == ']') {
-                            if (token != "") {
-                                end = new Position(linenum, columnnum - 1);
-                                token.Location = new Span(start, end);
-                                Tokens.Add(token);
-                            }
-                            token = new Token("]");
-                            start = new Position(linenum, columnnum);
-                        } else if (column == '|') {
-                            if (token.IsValidSymbolBeginning()) {
-                                if (token == "|" || token == "") token.Value += "|";
-                                else {
-                                    token.Value += "|";
-                                    token.Error = new TokenizerException("SS0001");
-                                }
-                            } else {
-                                if (token != "") {
-                                    end = new Position(linenum, columnnum - 1);
-                                    token.Location = new Span(start, end);
-                                    Tokens.Add(token);
-                                }
-                                token = new Token("|");
-                                start = new Position(linenum, columnnum);
-                            }
-                        } else if (column == '&') {
-                            if (token.IsValidSymbolBeginning()) {
-                                if (token == "&" || token == "") token.Value += "&";
-                                else {
-                                    token.Value += "&";
-                                    token.Error = new TokenizerException("SS0001");
-                                }
-                            } else {
-                                if (token != "") {
-                                    end = new Position(linenum, columnnum - 1);
-                                    token.Location = new Span(start, end);
-                                    Tokens.Add(token);
-                                }
-                                token = new Token("&");
-                                start = new Position(linenum, columnnum);
-                            }
-                        } else if (column == '<') {
-                            if (token.IsValidSymbolBeginning()) {
-                                if (token == "<" || token == "") token.Value += "<";
-                                else {
-                                    token.Value += "<";
-                                    token.Error = new TokenizerException("SS0001");
-                                }
-                            } else {
-                                if (token != "") {
-                                    end = new Position(linenum, columnnum - 1);
-                                    token.Location = new Span(start, end);
-                                    Tokens.Add(token);
-                                }
-                                token = new Token("<");
-                                start = new Position(linenum, columnnum);
-                            }
-                        } else if (column == ':') {
-                            if (token.IsValidSymbolBeginning()) {
-                                if (token == ":" || token == "") token.Value += ":";
-                                else {
-                                    token.Value += ":";
-                                    token.Error = new TokenizerException("SS0001");
-                                }
-                            } else {
-                                if (token != "") {
-                                    end = new Position(linenum, columnnum - 1);
-                                    token.Location = new Span(start, end);
-                                    Tokens.Add(token);
-                                }
-                                token = new Token(":");
-                                start = new Position(linenum, columnnum);
-                            }
-                        } else if (column == '<') {
-                            if (token.IsValidSymbolBeginning()) {
-                                if (token == "<" || token == "") token.Value += "<";
-                                else {
-                                    token.Value += "<";
-                                    token.Error = new TokenizerException("SS0001");
-                                }
-                            } else {
-                                if (token != "") {
-                                    end = new Position(linenum, columnnum - 1);
-                                    token.Location = new Span(start, end);
-                                    Tokens.Add(token);
-                                }
-                                token = new Token("<");
-                                start = new Position(linenum, columnnum);
-                            }
-                        } else if (column == '*') {
-                            if (token.IsValidSymbolBeginning()) {
-                                if (token == "*" || token == "") token.Value += "*";
-                                else {
-                                    token.Value += "*";
-                                    token.Error = new TokenizerException("SS0001");
-                                }
-                            } else {
-                                if (token != "") {
-                                    end = new Position(linenum, columnnum - 1);
-                                    token.Location = new Span(start, end);
-                                    Tokens.Add(token);
-                                }
-                                token = new Token("*");
-                                start = new Position(linenum, columnnum);
-                            }
-                        } else if (column == '<') {
-                            if (token.IsValidSymbolBeginning()) {
-                                if (token == "<" || token == "") token.Value += "<";
-                                else {
-                                    token.Value += "<";
-                                    token.Error = new TokenizerException("SS0001");
-                                }
-                            } else {
-                                if (token != "") {
-                                    end = new Position(linenum, columnnum - 1);
-                                    token.Location = new Span(start, end);
-                                    Tokens.Add(token);
-                                }
-                                token = new Token("<");
-                                start = new Position(linenum, columnnum);
-                            }
-                        } else if (column == '=') {
-                            if (token.IsValidSymbolBeginning()) {
-                                if (token == ">" ||
-                                    token == "<" ||
-                                    token == "!" ||
-                                    token == "=" ||
-                                    token == "?" ||
-                                    token == "") token.Value += "=";
-                                else {
-                                    token.Value += "=";
-                                    token.Error = new TokenizerException("SS0001");
-                                }
-                            } else {
-                                if (token != "") {
-                                    end = new Position(linenum, columnnum - 1);
-                                    token.Location = new Span(start, end);
-                                    Tokens.Add(token);
-                                }
-                                token = new Token("=");
-                                start = new Position(linenum, columnnum);
-                            }
-                        } else if (column == '!') {
-                            if (token != "") {
-                                end = new Position(linenum, columnnum - 1);
-                                token.Location = new Span(start, end);
-                                Tokens.Add(token);
-                            }
-                            token = new Token("!");
-                            start = new Position(linenum, columnnum);
-                        } else if (column == '+') {
-                            if (token != "") {
-                                end = new Position(linenum, columnnum - 1);
-                                token.Location = new Span(start, end);
-                                Tokens.Add(token);
-                            }
-                            token = new Token("+");
-                            start = new Position(linenum, columnnum);
-                        } else if (column == '-') {
-                            if (token != "") {
-                                end = new Position(linenum, columnnum - 1);
-                                token.Location = new Span(start, end);
-                                Tokens.Add(token);
-                            }
-                            token = new Token("-");
-                            start = new Position(linenum, columnnum);
-                        } else if (column == '/') {
-                            if (token != "") {
-                                end = new Position(linenum, columnnum - 1);
-                                token.Location = new Span(start, end);
-                                Tokens.Add(token);
-                            }
-                            token = new Token("/");
-                            start = new Position(linenum, columnnum);
-                        } else if (column == '(') {
-                            if (token != "") {
-                                end = new Position(linenum, columnnum - 1);
-                                token.Location = new Span(start, end);
-                                Tokens.Add(token);
-                            }
-                            token = new Token("(");
-                            start = new Position(linenum, columnnum);
-                        } else if (column == ')') {
-                            if (token != "") {
-                                end = new Position(linenum, columnnum - 1);
-                                token.Location = new Span(start, end);
-                                Tokens.Add(token);
-                            }
-                            token = new Token(")");
-                            start = new Position(linenum, columnnum);
-                        } else if (column == '%') {
-                            if (token != "") {
-                                end = new Position(linenum, columnnum - 1);
-                                token.Location = new Span(start, end);
-                                Tokens.Add(token);
-                            }
-                            token = new Token("%");
-                            start = new Position(linenum, columnnum);
-                        } else if (column == ' ') {
+                        if (column == ' ') {
                             if (token != "") {
                                 end = new Position(linenum, columnnum - 1);
                                 token.Location = new Span(start, end);
@@ -424,7 +137,7 @@ namespace Simula.Scripting.Token {
                         } else {
                             if (token != "") {
                                 if (token.IsValidNameBeginning()) {
-                                    if (column.IsAlphabet())
+                                    if (column.IsAlphabet() || column.IsDigit())
                                         token.Value += column;
                                     else {
                                         end = new Position(linenum, columnnum - 1);
@@ -434,7 +147,7 @@ namespace Simula.Scripting.Token {
                                         start = new Position(linenum, columnnum);
                                     }
                                 } else if (token.IsValidNumberBeginning()) {
-                                    if (column.IsAlphabet() || column == '\"') {
+                                    if (column.IsAlphabet() || column == '\"' || (new Token(new string(new char[] { column })).IsValidSymbolBeginning() && column != '.')) {
                                         end = new Position(linenum, columnnum - 1);
                                         token.Location = new Span(start, end);
                                         Tokens.Add(token);
@@ -444,11 +157,15 @@ namespace Simula.Scripting.Token {
                                         token.Value += column;
                                     }
                                 } else if (token.IsValidSymbolBeginning() || column == '\"') {
-                                    end = new Position(linenum, columnnum - 1);
-                                    token.Location = new Span(start, end);
-                                    Tokens.Add(token);
-                                    token = new Token(new string(new char[1] { column }));
-                                    start = new Position(linenum, columnnum);
+                                    if (new Token(new string(new char[1] { column })).IsValidSymbolBeginning()) {
+                                        token.Value += column;
+                                    } else {
+                                        end = new Position(linenum, columnnum - 1);
+                                        token.Location = new Span(start, end);
+                                        Tokens.Add(token);
+                                        token = new Token(new string(new char[1] { column }));
+                                        start = new Position(linenum, columnnum);
+                                    }
                                 } else {
                                     token.Value += column;
                                 }
@@ -468,28 +185,34 @@ namespace Simula.Scripting.Token {
                         }
                         token = new Token("");
                         start = new Position(linenum + 1, 1);
-                        Tokens.Add(new Token("<newline>", new Span(
-                            new Position(linenum, columnnum), new Position(linenum, columnnum))));
+                        if (insideBracket == 0)
+                            Tokens.Add(new Token("<newline>", new Span(
+                                new Position(linenum, columnnum), new Position(linenum, columnnum))));
+                        else Tokens.Add(new Token(";", new Span(
+                           new Position(linenum, columnnum), new Position(linenum, columnnum))));
                     }
                 } else {
-                    if(token!="") {
-                        if(token.ContentEquals(Token.Continue)) { continue; }
-                        else {
+                    if (token != "") {
+                        if (token.ContentEquals(Token.Continue)) { continue; } else {
                             end = new Position(linenum, columnnum - 1);
                             token.Location = new Span(start, end);
                             Tokens.Add(token);
                             token = new Token("");
+                            start = new Position(linenum + 1, 1);
                         }
                     }
 
-                    Tokens.Add(new Token("<newline>", new Span(
-                       new Position(linenum, columnnum), new Position(linenum, columnnum))));
+                    if (insideBracket == 0)
+                        Tokens.Add(new Token("<newline>", new Span(
+                           new Position(linenum, columnnum), new Position(linenum, columnnum))));
+                    else Tokens.Add(new Token(";", new Span(
+                           new Position(linenum, columnnum), new Position(linenum, columnnum))));
                 }
             }
 
             for (int i = 0; i < Tokens.Count; i++) {
-                if (Tokens[i] == ""   ||
-                    Tokens[i] == "\n" || 
+                if (Tokens[i] == "" ||
+                    Tokens[i] == "\n" ||
                     Tokens[i] == "\r") {
                     Tokens.RemoveAt(i);
                     i--;

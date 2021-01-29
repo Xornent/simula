@@ -53,8 +53,7 @@ namespace Simula.Scripting.Json.Utilities
 
         public override DynamicMetaObject BindInvokeMember(InvokeMemberBinder binder, DynamicMetaObject[] args)
         {
-            if (!IsOverridden(nameof(DynamicProxy<T>.TryInvokeMember)))
-            {
+            if (!IsOverridden(nameof(DynamicProxy<T>.TryInvokeMember))) {
                 return base.BindInvokeMember(binder, args);
             }
             Fallback fallback = e => binder.FallbackInvokeMember(this, args, e);
@@ -129,8 +128,7 @@ namespace Simula.Scripting.Json.Utilities
 
         private static IEnumerable<Expression> GetArgs(params DynamicMetaObject[] args)
         {
-            return args.Select(arg =>
-            {
+            return args.Select(arg => {
                 Expression exp = arg.Expression;
                 return exp.Type.IsValueType() ? Expression.Convert(exp, typeof(object)) : exp;
             });
@@ -154,8 +152,7 @@ namespace Simula.Scripting.Json.Utilities
         private static ConstantExpression Constant(DynamicMetaObjectBinder binder)
         {
             Type t = binder.GetType();
-            while (!t.IsVisible())
-            {
+            while (!t.IsVisible()) {
                 t = t.BaseType();
             }
             return Expression.Constant(binder, t);
@@ -178,15 +175,13 @@ namespace Simula.Scripting.Json.Utilities
             callArgs.Add(result);
 
             DynamicMetaObject resultMetaObject = new DynamicMetaObject(result, BindingRestrictions.Empty);
-            if (binder.ReturnType != typeof(object))
-            {
+            if (binder.ReturnType != typeof(object)) {
                 UnaryExpression convert = Expression.Convert(resultMetaObject.Expression, binder.ReturnType);
 
                 resultMetaObject = new DynamicMetaObject(convert, resultMetaObject.Restrictions);
             }
 
-            if (fallbackInvoke != null)
-            {
+            if (fallbackInvoke != null) {
                 resultMetaObject = fallbackInvoke(resultMetaObject);
             }
 

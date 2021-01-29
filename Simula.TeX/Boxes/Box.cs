@@ -1,15 +1,15 @@
+using Simula.TeX.Rendering;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Media;
-using Simula.TeX.Rendering;
 
 namespace Simula.TeX.Boxes
 {
     // Represents graphical box that is part of math expression, and can itself contain child boxes.
     public abstract class Box
     {
-        private List<Box> children;
-        private ReadOnlyCollection<Box> childrenReadOnly;
+        private readonly List<Box> children;
+        private readonly ReadOnlyCollection<Box> childrenReadOnly;
 
         internal Box(TexEnvironment environment)
             : this(environment.Foreground, environment.Background)
@@ -23,31 +23,27 @@ namespace Simula.TeX.Boxes
 
         protected Box(Brush? foreground, Brush? background)
         {
-            this.children = new List<Box>();
-            this.childrenReadOnly = new ReadOnlyCollection<Box>(this.children);
-            this.Foreground = foreground;
-            this.Background = background;
+            children = new List<Box>();
+            childrenReadOnly = new ReadOnlyCollection<Box>(children);
+            Foreground = foreground;
+            Background = background;
         }
 
-        public ReadOnlyCollection<Box> Children
-        {
-            get { return this.childrenReadOnly; }
+        public ReadOnlyCollection<Box> Children {
+            get { return childrenReadOnly; }
         }
 
-        public SourceSpan? Source
-        {
+        public SourceSpan? Source {
             get;
             set;
         }
 
-        public Brush? Foreground
-        {
+        public Brush? Foreground {
             get;
             set;
         }
 
-        public Brush? Background
-        {
+        public Brush? Background {
             get;
             set;
         }
@@ -86,12 +82,12 @@ namespace Simula.TeX.Boxes
 
         public virtual void Add(Box box)
         {
-            this.children.Add(box);
+            children.Add(box);
         }
 
         public virtual void Add(int position, Box box)
         {
-            this.children.Insert(position, box);
+            children.Insert(position, box);
         }
 
         public abstract int GetLastFontId();

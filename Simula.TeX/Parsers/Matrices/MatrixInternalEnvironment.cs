@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using Simula.TeX.Atoms;
+using System.Collections.Generic;
 
 namespace Simula.TeX.Parsers.Matrices
 {
@@ -26,8 +26,7 @@ namespace Simula.TeX.Parsers.Matrices
 
         public override bool ProcessUnknownCharacter(TexFormula formula, char character)
         {
-            if (character == '&')
-            {
+            if (character == '&') {
                 NextRowCommand.NextCell(_rows, formula);
                 return true;
             }

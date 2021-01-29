@@ -1,23 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
-namespace Simula.Scripting.Token {
-
-    // expose def class string<> : dimension<1> 
+namespace Simula.Scripting.Token
+{
+    // expose def class string : dimension
     //
     // [1]   : expose
     // [2]   : def
     // [3]   : class
     // [4]   : string
-    // [5]   : <
-    // [6]   : >
-    // [7]   : :
-    // [8]   : dimension
-    // [9]   : <
-    // [10]  : 1
-    // [11]  : >
+    // [5]   : :
+    // [6]   : dimension
 
     // module simula.interop
     // def func has_member(string name, bool exposed)
@@ -52,14 +44,17 @@ namespace Simula.Scripting.Token {
     // [26]  : <newline>
     // [27]  : end
 
-    public class Token {
-        public Token(string val) {
-            this.Value = val;
+    public class Token
+    {
+        public Token(string val)
+        {
+            Value = val;
         }
 
-        public Token(string val, Span loc) {
-            this.Value = val;
-            this.Location = loc;
+        public Token(string val, Span loc)
+        {
+            Value = val;
+            Location = loc;
         }
 
         public string Value { get; set; }
@@ -69,28 +64,32 @@ namespace Simula.Scripting.Token {
                 return Error != null;
             }
         }
-        public TokenizerException? Error { get; set; } 
+        public TokenizerException? Error { get; set; }
 
-        public bool ContentEquals(Token t) {
-            return this.Value == t.Value;
+        public bool ContentEquals(Token t)
+        {
+            return Value == t.Value;
         }
 
-        public bool IsValidNumberBeginning() {
-            string lower = this.Value.ToLower();
+        public bool IsValidNumberBeginning()
+        {
+            string lower = Value.ToLower();
             Regex reg = new Regex(@"^[0-9]+\.?[0-9]*$");
             return reg.IsMatch(lower);
         }
 
-        public bool IsValidNameBeginning() {
-            string lower = this.Value.ToLower();
+        public bool IsValidNameBeginning()
+        {
+            string lower = Value.ToLower();
             Regex reg = new Regex("^[a-z_]+[a-z0-9_]*$");
             return reg.IsMatch(lower);
         }
 
-        public bool IsValidSymbolBeginning() {
-            string lower = this.Value.ToLower();
+        public bool IsValidSymbolBeginning()
+        {
+            string lower = Value.ToLower();
             bool flag = true;
-            foreach (var item in this.Value) {
+            foreach (var item in Value) {
                 if (item != '.' &&
                     item != '[' &&
                     item != ']' &&
@@ -118,24 +117,42 @@ namespace Simula.Scripting.Token {
             return flag;
         }
 
-        public static implicit operator string(Token t) {
+        public static implicit operator string(Token t)
+        {
             return t.Value;
+        }
+
+        public static explicit operator Token(string t)
+        {
+            return new Token(t);
         }
 
         public static Token LineBreak = new Token("<newline>", new Span());
         public static Token Continue = new Token("...", new Span());
 
-        public override string ToString() {
-            if (HasError)
-                return this.Value + "  ' " + this.Error?.Message;
-            else return this.Value;
+        public override string ToString()
+        {
+            // if (HasError)
+            //     return Value + "  ' " + Error?.Message;
+            // else
+            
+            return Value;
         }
     }
 
-    public static class CharExtension {
-        public static bool IsAlphabet(this char c) {
+    public static class CharExtension
+    {
+        public static bool IsAlphabet(this char c)
+        {
             string lower = new string(new char[1] { c }).ToLower();
             Regex reg = new Regex("[a-z_]");
+            return reg.IsMatch(lower);
+        }
+
+        public static bool IsDigit(this char c)
+        {
+            string lower = new string(new char[1] { c }).ToLower();
+            Regex reg = new Regex("[0-9]");
             return reg.IsMatch(lower);
         }
     }

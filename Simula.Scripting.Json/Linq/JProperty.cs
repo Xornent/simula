@@ -1,8 +1,8 @@
 ﻿
+using Simula.Scripting.Json.Utilities;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Simula.Scripting.Json.Utilities;
 using System.Diagnostics;
 using System.Globalization;
 
@@ -17,8 +17,7 @@ namespace Simula.Scripting.Json.Linq
 
             public IEnumerator<JToken> GetEnumerator()
             {
-                if (_token != null)
-                {
+                if (_token != null) {
                     yield return _token;
                 }
             }
@@ -45,16 +44,14 @@ namespace Simula.Scripting.Json.Linq
 
             public void CopyTo(JToken[] array, int arrayIndex)
             {
-                if (_token != null)
-                {
+                if (_token != null) {
                     array[arrayIndex] = _token;
                 }
             }
 
             public bool Remove(JToken item)
             {
-                if (_token == item)
-                {
+                if (_token == item) {
                     _token = null;
                     return true;
                 }
@@ -72,36 +69,29 @@ namespace Simula.Scripting.Json.Linq
 
             public void Insert(int index, JToken item)
             {
-                if (index == 0)
-                {
+                if (index == 0) {
                     _token = item;
                 }
             }
 
             public void RemoveAt(int index)
             {
-                if (index == 0)
-                {
+                if (index == 0) {
                     _token = null;
                 }
             }
 
-            public JToken this[int index]
-            {
-                get
-                {
-                    if (index != 0)
-                    {
+            public JToken this[int index] {
+                get {
+                    if (index != 0) {
                         throw new IndexOutOfRangeException();
                     }
 
                     MiscellaneousUtils.Assert(_token != null);
                     return _token;
                 }
-                set
-                {
-                    if (index != 0)
-                    {
+                set {
+                    if (index != 0) {
                         throw new IndexOutOfRangeException();
                     }
 
@@ -114,27 +104,21 @@ namespace Simula.Scripting.Json.Linq
         private readonly JPropertyList _content = new JPropertyList();
         private readonly string _name;
         protected override IList<JToken> ChildrenTokens => _content;
-        public string Name
-        {
+        public string Name {
             [DebuggerStepThrough]
             get { return _name; }
         }
-        public JToken Value
-        {
+        public JToken Value {
             [DebuggerStepThrough]
             get { return _content._token!; }
-            set
-            {
+            set {
                 CheckReentrancy();
 
                 JToken newValue = value ?? JValue.CreateNull();
 
-                if (_content._token == null)
-                {
+                if (_content._token == null) {
                     InsertItem(0, newValue, false);
-                }
-                else
-                {
+                } else {
                     SetItem(0, newValue);
                 }
             }
@@ -147,8 +131,7 @@ namespace Simula.Scripting.Json.Linq
 
         internal override JToken GetItem(int index)
         {
-            if (index != 0)
-            {
+            if (index != 0) {
                 throw new ArgumentOutOfRangeException();
             }
 
@@ -157,13 +140,11 @@ namespace Simula.Scripting.Json.Linq
 
         internal override void SetItem(int index, JToken? item)
         {
-            if (index != 0)
-            {
+            if (index != 0) {
                 throw new ArgumentOutOfRangeException();
             }
 
-            if (IsTokenUnchanged(Value, item))
-            {
+            if (IsTokenUnchanged(Value, item)) {
                 return;
             }
 
@@ -186,8 +167,7 @@ namespace Simula.Scripting.Json.Linq
 
         internal override int IndexOfItem(JToken? item)
         {
-            if (item == null)
-            {
+            if (item == null) {
                 return -1;
             }
 
@@ -196,13 +176,11 @@ namespace Simula.Scripting.Json.Linq
 
         internal override void InsertItem(int index, JToken? item, bool skipParentCheck)
         {
-            if (item != null && item.Type == JTokenType.Comment)
-            {
+            if (item != null && item.Type == JTokenType.Comment) {
                 return;
             }
 
-            if (Value != null)
-            {
+            if (Value != null) {
                 throw new JsonException("{0} cannot have multiple values.".FormatWith(CultureInfo.InvariantCulture, typeof(JProperty)));
             }
 
@@ -218,8 +196,7 @@ namespace Simula.Scripting.Json.Linq
         {
             JToken? value = (content as JProperty)?.Value;
 
-            if (value != null && value.Type != JTokenType.Null)
-            {
+            if (value != null && value.Type != JTokenType.Null) {
                 Value = value;
             }
         }
@@ -238,8 +215,7 @@ namespace Simula.Scripting.Json.Linq
         {
             return new JProperty(this);
         }
-        public override JTokenType Type
-        {
+        public override JTokenType Type {
             [DebuggerStepThrough]
             get { return JTokenType.Property; }
         }
@@ -269,12 +245,9 @@ namespace Simula.Scripting.Json.Linq
             writer.WritePropertyName(_name);
 
             JToken value = Value;
-            if (value != null)
-            {
+            if (value != null) {
                 value.WriteTo(writer, converters);
-            }
-            else
-            {
+            } else {
                 writer.WriteNull();
             }
         }
@@ -289,18 +262,15 @@ namespace Simula.Scripting.Json.Linq
         }
         public new static JProperty Load(JsonReader reader, JsonLoadSettings? settings)
         {
-            if (reader.TokenType == JsonToken.None)
-            {
-                if (!reader.Read())
-                {
+            if (reader.TokenType == JsonToken.None) {
+                if (!reader.Read()) {
                     throw JsonReaderException.Create(reader, "Error reading JProperty from JsonReader.");
                 }
             }
 
             reader.MoveToContent();
 
-            if (reader.TokenType != JsonToken.PropertyName)
-            {
+            if (reader.TokenType != JsonToken.PropertyName) {
                 throw JsonReaderException.Create(reader, "Error reading JProperty from JsonReader. Current JsonReader item is not a property: {0}".FormatWith(CultureInfo.InvariantCulture, reader.TokenType));
             }
 

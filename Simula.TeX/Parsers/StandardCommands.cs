@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using Simula.TeX.Atoms;
 using Simula.TeX.Parsers.Matrices;
+using System.Collections.Generic;
 
 namespace Simula.TeX.Parsers
 {
@@ -75,15 +75,12 @@ namespace Simula.TeX.Parsers
                     ? m
                     : null;
 
-                var topRow = new[] {prevFormulaAtom};
-                var rows = new List<IEnumerable<Atom?>> {topRow};
-                if (newMatrix != null)
-                {
+                var topRow = new[] { prevFormulaAtom };
+                var rows = new List<IEnumerable<Atom?>> { topRow };
+                if (newMatrix != null) {
                     rows.AddRange(newMatrix.MatrixCells);
-                }
-                else
-                {
-                    var bottomRow = new[] {nextLineAtom};
+                } else {
+                    var bottomRow = new[] { nextLineAtom };
                     rows.Add(bottomRow);
                 }
 

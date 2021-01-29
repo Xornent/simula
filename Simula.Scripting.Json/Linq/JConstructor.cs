@@ -1,8 +1,7 @@
 ﻿
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using Simula.Scripting.Json.Utilities;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 
 namespace Simula.Scripting.Json.Linq
@@ -15,8 +14,7 @@ namespace Simula.Scripting.Json.Linq
 
         internal override int IndexOfItem(JToken? item)
         {
-            if (item == null)
-            {
+            if (item == null) {
                 return -1;
             }
 
@@ -25,19 +23,16 @@ namespace Simula.Scripting.Json.Linq
 
         internal override void MergeItem(object content, JsonMergeSettings? settings)
         {
-            if (!(content is JConstructor c))
-            {
+            if (!(content is JConstructor c)) {
                 return;
             }
 
-            if (c.Name != null)
-            {
+            if (c.Name != null) {
                 Name = c.Name;
             }
             MergeEnumerableContent(this, c, settings);
         }
-        public string? Name
-        {
+        public string? Name {
             get => _name;
             set => _name = value;
         }
@@ -61,13 +56,11 @@ namespace Simula.Scripting.Json.Linq
         }
         public JConstructor(string name)
         {
-            if (name == null)
-            {
+            if (name == null) {
                 throw new ArgumentNullException(nameof(name));
             }
 
-            if (name.Length == 0)
-            {
+            if (name.Length == 0) {
                 throw new ArgumentException("Constructor name cannot be empty.", nameof(name));
             }
 
@@ -88,32 +81,26 @@ namespace Simula.Scripting.Json.Linq
             writer.WriteStartConstructor(_name!);
 
             int count = _values.Count;
-            for (int i = 0; i < count; i++)
-            {
+            for (int i = 0; i < count; i++) {
                 _values[i].WriteTo(writer, converters);
             }
 
             writer.WriteEndConstructor();
         }
-        public override JToken? this[object key]
-        {
-            get
-            {
+        public override JToken? this[object key] {
+            get {
                 ValidationUtils.ArgumentNotNull(key, nameof(key));
 
-                if (!(key is int i))
-                {
+                if (!(key is int i)) {
                     throw new ArgumentException("Accessed JConstructor values with invalid key value: {0}. Argument position index expected.".FormatWith(CultureInfo.InvariantCulture, MiscellaneousUtils.ToString(key)));
                 }
 
                 return GetItem(i);
             }
-            set
-            {
+            set {
                 ValidationUtils.ArgumentNotNull(key, nameof(key));
 
-                if (!(key is int i))
-                {
+                if (!(key is int i)) {
                     throw new ArgumentException("Set JConstructor values with invalid key value: {0}. Argument position index expected.".FormatWith(CultureInfo.InvariantCulture, MiscellaneousUtils.ToString(key)));
                 }
 
@@ -131,18 +118,15 @@ namespace Simula.Scripting.Json.Linq
         }
         public new static JConstructor Load(JsonReader reader, JsonLoadSettings? settings)
         {
-            if (reader.TokenType == JsonToken.None)
-            {
-                if (!reader.Read())
-                {
+            if (reader.TokenType == JsonToken.None) {
+                if (!reader.Read()) {
                     throw JsonReaderException.Create(reader, "Error reading JConstructor from JsonReader.");
                 }
             }
 
             reader.MoveToContent();
 
-            if (reader.TokenType != JsonToken.StartConstructor)
-            {
+            if (reader.TokenType != JsonToken.StartConstructor) {
                 throw JsonReaderException.Create(reader, "Error reading JConstructor from JsonReader. Current JsonReader item is not a constructor: {0}".FormatWith(CultureInfo.InvariantCulture, reader.TokenType));
             }
 

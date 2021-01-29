@@ -1,6 +1,5 @@
 ﻿
 using System;
-using System.ComponentModel;
 
 namespace Simula.Scripting.Json
 {

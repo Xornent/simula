@@ -27,27 +27,21 @@ namespace Simula.Scripting.Json.Utilities
         };
         private static bool CanConvertPrimitive(Type from, Type to)
         {
-            if (from == to)
-            {
+            if (from == to) {
                 return true;
             }
 
             int fromMask = 0;
             int toMask = 0;
 
-            for (int i = 0; i < PrimitiveTypes.Length; i++)
-            {
-                if (PrimitiveTypes[i] == from)
-                {
+            for (int i = 0; i < PrimitiveTypes.Length; i++) {
+                if (PrimitiveTypes[i] == from) {
                     fromMask = WideningMasks[i];
-                }
-                else if (PrimitiveTypes[i] == to)
-                {
+                } else if (PrimitiveTypes[i] == to) {
                     toMask = 1 << i;
                 }
 
-                if (fromMask != 0 && toMask != 0)
-                {
+                if (fromMask != 0 && toMask != 0) {
                     break;
                 }
             }
@@ -59,55 +53,42 @@ namespace Simula.Scripting.Json.Utilities
             ValidationUtils.ArgumentNotNull(parameters, nameof(parameters));
             ValidationUtils.ArgumentNotNull(types, nameof(types));
 
-            if (parameters.Length == 0)
-            {
+            if (parameters.Length == 0) {
                 return types.Count == 0;
             }
-            if (parameters.Length > types.Count)
-            {
+            if (parameters.Length > types.Count) {
                 return false;
             }
             Type? paramArrayType = null;
 
-            if (enableParamArray)
-            {
+            if (enableParamArray) {
                 ParameterInfo lastParam = parameters[parameters.Length - 1];
-                if (lastParam.ParameterType.IsArray && lastParam.IsDefined(typeof(ParamArrayAttribute)))
-                {
+                if (lastParam.ParameterType.IsArray && lastParam.IsDefined(typeof(ParamArrayAttribute))) {
                     paramArrayType = lastParam.ParameterType.GetElementType();
                 }
             }
 
-            if (paramArrayType == null && parameters.Length != types.Count)
-            {
+            if (paramArrayType == null && parameters.Length != types.Count) {
                 return false;
             }
 
-            for (int i = 0; i < types.Count; i++)
-            {
+            for (int i = 0; i < types.Count; i++) {
                 Type paramType = (paramArrayType != null && i >= parameters.Length - 1) ? paramArrayType : parameters[i].ParameterType;
 
-                if (paramType == types[i])
-                {
+                if (paramType == types[i]) {
                     continue;
                 }
 
-                if (paramType == typeof(object))
-                {
+                if (paramType == typeof(object)) {
                     continue;
                 }
 
-                if (paramType.IsPrimitive())
-                {
-                    if (!types[i].IsPrimitive() || !CanConvertPrimitive(types[i], paramType))
-                    {
+                if (paramType.IsPrimitive()) {
+                    if (!types[i].IsPrimitive() || !CanConvertPrimitive(types[i], paramType)) {
                         return false;
                     }
-                }
-                else
-                {
-                    if (!paramType.IsAssignableFrom(types[i]))
-                    {
+                } else {
+                    if (!paramType.IsAssignableFrom(types[i])) {
                         return false;
                     }
                 }
@@ -132,61 +113,49 @@ namespace Simula.Scripting.Json.Utilities
             {
                 ValidationUtils.ArgumentNotNull(parameters1, nameof(parameters1));
                 ValidationUtils.ArgumentNotNull(parameters2, nameof(parameters2));
-                if (parameters1.Length == 0)
-                {
+                if (parameters1.Length == 0) {
                     return -1;
                 }
-                if (parameters2.Length == 0)
-                {
+                if (parameters2.Length == 0) {
                     return 1;
                 }
 
                 Type? paramArrayType1 = null, paramArrayType2 = null;
 
-                if (_enableParamArray)
-                {
+                if (_enableParamArray) {
                     ParameterInfo lastParam1 = parameters1[parameters1.Length - 1];
-                    if (lastParam1.ParameterType.IsArray && lastParam1.IsDefined(typeof(ParamArrayAttribute)))
-                    {
+                    if (lastParam1.ParameterType.IsArray && lastParam1.IsDefined(typeof(ParamArrayAttribute))) {
                         paramArrayType1 = lastParam1.ParameterType.GetElementType();
                     }
 
                     ParameterInfo lastParam2 = parameters2[parameters2.Length - 1];
-                    if (lastParam2.ParameterType.IsArray && lastParam2.IsDefined(typeof(ParamArrayAttribute)))
-                    {
+                    if (lastParam2.ParameterType.IsArray && lastParam2.IsDefined(typeof(ParamArrayAttribute))) {
                         paramArrayType2 = lastParam2.ParameterType.GetElementType();
                     }
-                    if (paramArrayType1 != null && paramArrayType2 == null)
-                    {
+                    if (paramArrayType1 != null && paramArrayType2 == null) {
                         return 1;
                     }
-                    if (paramArrayType2 != null && paramArrayType1 == null)
-                    {
+                    if (paramArrayType2 != null && paramArrayType1 == null) {
                         return -1;
                     }
                 }
 
-                for (int i = 0; i < _types.Count; i++)
-                {
+                for (int i = 0; i < _types.Count; i++) {
                     Type type1 = (paramArrayType1 != null && i >= parameters1.Length - 1) ? paramArrayType1 : parameters1[i].ParameterType;
                     Type type2 = (paramArrayType2 != null && i >= parameters2.Length - 1) ? paramArrayType2 : parameters2[i].ParameterType;
 
-                    if (type1 == type2)
-                    {
+                    if (type1 == type2) {
                         continue;
                     }
-                    if (type1 == _types[i])
-                    {
+                    if (type1 == _types[i]) {
                         return -1;
                     }
-                    if (type2 == _types[i])
-                    {
+                    if (type2 == _types[i]) {
                         return 1;
                     }
 
                     int r = ChooseMorePreciseType(type1, type2);
-                    if (r != 0)
-                    {
+                    if (r != 0) {
                         return r;
                     }
                 }
@@ -196,26 +165,18 @@ namespace Simula.Scripting.Json.Utilities
 
             private static int ChooseMorePreciseType(Type type1, Type type2)
             {
-                if (type1.IsByRef || type2.IsByRef)
-                {
-                    if (type1.IsByRef && type2.IsByRef)
-                    {
+                if (type1.IsByRef || type2.IsByRef) {
+                    if (type1.IsByRef && type2.IsByRef) {
                         type1 = type1.GetElementType();
                         type2 = type2.GetElementType();
-                    }
-                    else if (type1.IsByRef)
-                    {
+                    } else if (type1.IsByRef) {
                         type1 = type1.GetElementType();
-                        if (type1 == type2)
-                        {
+                        if (type1 == type2) {
                             return 1;
                         }
-                    }
-                    else
-                    {
+                    } else {
                         type2 = type2.GetElementType();
-                        if (type2 == type1)
-                        {
+                        if (type2 == type1) {
                             return -1;
                         }
                     }
@@ -223,19 +184,15 @@ namespace Simula.Scripting.Json.Utilities
 
                 bool c1FromC2, c2FromC1;
 
-                if (type1.IsPrimitive() && type2.IsPrimitive())
-                {
+                if (type1.IsPrimitive() && type2.IsPrimitive()) {
                     c1FromC2 = CanConvertPrimitive(type2, type1);
                     c2FromC1 = CanConvertPrimitive(type1, type2);
-                }
-                else
-                {
+                } else {
                     c1FromC2 = type1.IsAssignableFrom(type2);
                     c2FromC1 = type2.IsAssignableFrom(type1);
                 }
 
-                if (c1FromC2 == c2FromC1)
-                {
+                if (c1FromC2 == c2FromC1) {
                     return 0;
                 }
 

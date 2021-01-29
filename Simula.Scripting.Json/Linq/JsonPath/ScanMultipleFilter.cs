@@ -4,7 +4,7 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 {
     internal class ScanMultipleFilter : PathFilter
     {
-        private List<string> _names;
+        private readonly List<string> _names;
 
         public ScanMultipleFilter(List<string> names)
         {
@@ -13,26 +13,20 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 
         public override IEnumerable<JToken> ExecuteFilter(JToken root, IEnumerable<JToken> current, bool errorWhenNoMatch)
         {
-            foreach (JToken c in current)
-            {
+            foreach (JToken c in current) {
                 JToken? value = c;
 
-                while (true)
-                {
+                while (true) {
                     JContainer? container = value as JContainer;
 
                     value = GetNextScanValue(c, container, value);
-                    if (value == null)
-                    {
+                    if (value == null) {
                         break;
                     }
 
-                    if (value is JProperty property)
-                    {
-                        foreach (string name in _names)
-                        {
-                            if (property.Name == name)
-                            {
+                    if (value is JProperty property) {
+                        foreach (string name in _names) {
+                            if (property.Name == name) {
                                 yield return property.Value;
                             }
                         }

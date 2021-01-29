@@ -1,12 +1,12 @@
 ﻿
+using Simula.Scripting.Json.Serialization;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.Serialization.Formatters;
-using Simula.Scripting.Json.Serialization;
-using System.Runtime.Serialization;
 using System.Diagnostics;
+using System.Globalization;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters;
 
 namespace Simula.Scripting.Json
 {
@@ -59,71 +59,58 @@ namespace Simula.Scripting.Json
         internal ConstructorHandling? _constructorHandling;
         internal TypeNameHandling? _typeNameHandling;
         internal MetadataPropertyHandling? _metadataPropertyHandling;
-        public ReferenceLoopHandling ReferenceLoopHandling
-        {
+        public ReferenceLoopHandling ReferenceLoopHandling {
             get => _referenceLoopHandling ?? DefaultReferenceLoopHandling;
             set => _referenceLoopHandling = value;
         }
-        public MissingMemberHandling MissingMemberHandling
-        {
+        public MissingMemberHandling MissingMemberHandling {
             get => _missingMemberHandling ?? DefaultMissingMemberHandling;
             set => _missingMemberHandling = value;
         }
-        public ObjectCreationHandling ObjectCreationHandling
-        {
+        public ObjectCreationHandling ObjectCreationHandling {
             get => _objectCreationHandling ?? DefaultObjectCreationHandling;
             set => _objectCreationHandling = value;
         }
-        public NullValueHandling NullValueHandling
-        {
+        public NullValueHandling NullValueHandling {
             get => _nullValueHandling ?? DefaultNullValueHandling;
             set => _nullValueHandling = value;
         }
-        public DefaultValueHandling DefaultValueHandling
-        {
+        public DefaultValueHandling DefaultValueHandling {
             get => _defaultValueHandling ?? DefaultDefaultValueHandling;
             set => _defaultValueHandling = value;
         }
         public IList<JsonConverter> Converters { get; set; }
-        public PreserveReferencesHandling PreserveReferencesHandling
-        {
+        public PreserveReferencesHandling PreserveReferencesHandling {
             get => _preserveReferencesHandling ?? DefaultPreserveReferencesHandling;
             set => _preserveReferencesHandling = value;
         }
-        public TypeNameHandling TypeNameHandling
-        {
+        public TypeNameHandling TypeNameHandling {
             get => _typeNameHandling ?? DefaultTypeNameHandling;
             set => _typeNameHandling = value;
         }
-        public MetadataPropertyHandling MetadataPropertyHandling
-        {
+        public MetadataPropertyHandling MetadataPropertyHandling {
             get => _metadataPropertyHandling ?? DefaultMetadataPropertyHandling;
             set => _metadataPropertyHandling = value;
         }
         [Obsolete("TypeNameAssemblyFormat is obsolete. Use TypeNameAssemblyFormatHandling instead.")]
-        public FormatterAssemblyStyle TypeNameAssemblyFormat
-        {
+        public FormatterAssemblyStyle TypeNameAssemblyFormat {
             get => (FormatterAssemblyStyle)TypeNameAssemblyFormatHandling;
             set => TypeNameAssemblyFormatHandling = (TypeNameAssemblyFormatHandling)value;
         }
-        public TypeNameAssemblyFormatHandling TypeNameAssemblyFormatHandling
-        {
+        public TypeNameAssemblyFormatHandling TypeNameAssemblyFormatHandling {
             get => _typeNameAssemblyFormatHandling ?? DefaultTypeNameAssemblyFormatHandling;
             set => _typeNameAssemblyFormatHandling = value;
         }
-        public ConstructorHandling ConstructorHandling
-        {
+        public ConstructorHandling ConstructorHandling {
             get => _constructorHandling ?? DefaultConstructorHandling;
             set => _constructorHandling = value;
         }
         public IContractResolver? ContractResolver { get; set; }
         public IEqualityComparer? EqualityComparer { get; set; }
         [Obsolete("ReferenceResolver property is obsolete. Use the ReferenceResolverProvider property to set the IReferenceResolver: settings.ReferenceResolverProvider = () => resolver")]
-        public IReferenceResolver? ReferenceResolver
-        {
+        public IReferenceResolver? ReferenceResolver {
             get => ReferenceResolverProvider?.Invoke();
-            set
-            {
+            set {
                 ReferenceResolverProvider = (value != null)
                     ? () => value
                     : (Func<IReferenceResolver?>?)null;
@@ -132,17 +119,13 @@ namespace Simula.Scripting.Json
         public Func<IReferenceResolver?>? ReferenceResolverProvider { get; set; }
         public ITraceWriter? TraceWriter { get; set; }
         [Obsolete("Binder is obsolete. Use SerializationBinder instead.")]
-        public SerializationBinder? Binder
-        {
-            get
-            {
-                if (SerializationBinder == null)
-                {
+        public SerializationBinder? Binder {
+            get {
+                if (SerializationBinder == null) {
                     return null;
                 }
 
-                if (SerializationBinder is SerializationBinderAdapter adapter)
-                {
+                if (SerializationBinder is SerializationBinderAdapter adapter) {
                     return adapter.SerializationBinder;
                 }
 
@@ -152,27 +135,21 @@ namespace Simula.Scripting.Json
         }
         public ISerializationBinder? SerializationBinder { get; set; }
         public EventHandler<ErrorEventArgs>? Error { get; set; }
-        public StreamingContext Context
-        {
+        public StreamingContext Context {
             get => _context ?? DefaultContext;
             set => _context = value;
         }
-        public string DateFormatString
-        {
+        public string DateFormatString {
             get => _dateFormatString ?? DefaultDateFormatString;
-            set
-            {
+            set {
                 _dateFormatString = value;
                 _dateFormatStringSet = true;
             }
         }
-        public int? MaxDepth
-        {
+        public int? MaxDepth {
             get => _maxDepth;
-            set
-            {
-                if (value <= 0)
-                {
+            set {
+                if (value <= 0) {
                     throw new ArgumentException("Value must be positive.", nameof(value));
                 }
 
@@ -180,48 +157,39 @@ namespace Simula.Scripting.Json
                 _maxDepthSet = true;
             }
         }
-        public Formatting Formatting
-        {
+        public Formatting Formatting {
             get => _formatting ?? DefaultFormatting;
             set => _formatting = value;
         }
-        public DateFormatHandling DateFormatHandling
-        {
+        public DateFormatHandling DateFormatHandling {
             get => _dateFormatHandling ?? DefaultDateFormatHandling;
             set => _dateFormatHandling = value;
         }
-        public DateTimeZoneHandling DateTimeZoneHandling
-        {
+        public DateTimeZoneHandling DateTimeZoneHandling {
             get => _dateTimeZoneHandling ?? DefaultDateTimeZoneHandling;
             set => _dateTimeZoneHandling = value;
         }
-        public DateParseHandling DateParseHandling
-        {
+        public DateParseHandling DateParseHandling {
             get => _dateParseHandling ?? DefaultDateParseHandling;
             set => _dateParseHandling = value;
         }
-        public FloatFormatHandling FloatFormatHandling
-        {
+        public FloatFormatHandling FloatFormatHandling {
             get => _floatFormatHandling ?? DefaultFloatFormatHandling;
             set => _floatFormatHandling = value;
         }
-        public FloatParseHandling FloatParseHandling
-        {
+        public FloatParseHandling FloatParseHandling {
             get => _floatParseHandling ?? DefaultFloatParseHandling;
             set => _floatParseHandling = value;
         }
-        public StringEscapeHandling StringEscapeHandling
-        {
+        public StringEscapeHandling StringEscapeHandling {
             get => _stringEscapeHandling ?? DefaultStringEscapeHandling;
             set => _stringEscapeHandling = value;
         }
-        public CultureInfo Culture
-        {
+        public CultureInfo Culture {
             get => _culture ?? DefaultCulture;
             set => _culture = value;
         }
-        public bool CheckAdditionalContent
-        {
+        public bool CheckAdditionalContent {
             get => _checkAdditionalContent ?? DefaultCheckAdditionalContent;
             set => _checkAdditionalContent = value;
         }

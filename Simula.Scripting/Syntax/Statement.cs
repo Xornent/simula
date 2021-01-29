@@ -1,31 +1,23 @@
-﻿using Simula.Scripting.Debugging;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Simula.Scripting.Contexts;
+using Simula.Scripting.Token;
+using Simula.Scripting.Build;
 
-namespace Simula.Scripting.Syntax {
+namespace Simula.Scripting.Syntax
+{
+    public class Statement
+    {
+        public Token.TokenCollection RawToken = new TokenCollection();
 
-    // 以下是 Simula.Scripting.Syntax 空间内的继承关系表:
-
-    // Statement |- BlockStatement |- IfBlock
-    //           |                 |- ElseIfBlock
-    //           |                 |- ElseBlock
-    //           |                 |- WhileBlock
-    //           |                 |- CommentBlock *
-    //           |                 |- EnumerableBlock
-    //           |                 |- DefinitionBlock
-    //           |- AssignStatement
-    //           |- EvaluationStatement |- OperatorStatement |- *Operation
-    //           |- UseStatement
-    //           |- ModuleStatement
-
-    public class Statement {
-        public virtual void Parse(Token.TokenCollection sentence) {
+        public virtual void Parse(TokenCollection sentence)
+        {
             return;
         }
 
-        public virtual ExecutionResult Execute(Compilation.RuntimeContext ctx) {
-            return new ExecutionResult();
+        public virtual Execution Execute(DynamicRuntime ctx)
+        {
+            return new Execution() { Flag = ExecutionFlag.Go };
         }
+
+        public virtual string Generate(GenerationContext ctx) { return ""; }
     }
 }

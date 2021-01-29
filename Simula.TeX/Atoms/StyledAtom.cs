@@ -1,5 +1,5 @@
-using System.Windows.Media;
 using Simula.TeX.Boxes;
+using System.Windows.Media;
 
 namespace Simula.TeX.Atoms
 {
@@ -9,9 +9,9 @@ namespace Simula.TeX.Atoms
         public StyledAtom(SourceSpan? source, Atom? atom, Brush? backgroundColor, Brush? foregroundColor)
             : base(source)
         {
-            this.RowAtom = new RowAtom(source, atom);
-            this.Background = backgroundColor;
-            this.Foreground = foregroundColor;
+            RowAtom = new RowAtom(source, atom);
+            Background = backgroundColor;
+            Foreground = foregroundColor;
         }
 
         // RowAtom to which colors are applied.
@@ -23,16 +23,16 @@ namespace Simula.TeX.Atoms
 
         public Atom WithPreviousAtom(DummyAtom? previousAtom)
         {
-            var rowAtom = this.RowAtom.WithPreviousAtom(previousAtom);
-            return new StyledAtom(this.Source, rowAtom, this.Background, this.Foreground);
+            var rowAtom = RowAtom.WithPreviousAtom(previousAtom);
+            return new StyledAtom(Source, rowAtom, Background, Foreground);
         }
 
         protected override Box CreateBoxCore(TexEnvironment environment)
         {
             var newEnvironment = environment.Clone();
-            if (this.Foreground != null)
-                newEnvironment.Foreground = this.Foreground;
-            var childBox = this.RowAtom.CreateBox(newEnvironment);
+            if (Foreground != null)
+                newEnvironment.Foreground = Foreground;
+            var childBox = RowAtom.CreateBox(newEnvironment);
             if (Background != null)
                 childBox.Background = Background;
             return childBox;
@@ -40,12 +40,12 @@ namespace Simula.TeX.Atoms
 
         public override TexAtomType GetLeftType()
         {
-            return this.RowAtom.GetLeftType();
+            return RowAtom.GetLeftType();
         }
 
         public override TexAtomType GetRightType()
         {
-            return this.RowAtom.GetRightType();
+            return RowAtom.GetRightType();
         }
 
         public StyledAtom Clone(
@@ -54,10 +54,10 @@ namespace Simula.TeX.Atoms
             Brush? foreground = null)
         {
             return new StyledAtom(
-                this.Source,
-                rowAtom ?? this.RowAtom,
-                background ?? this.Background,
-                foreground ?? this.Foreground);
+                Source,
+                rowAtom ?? RowAtom,
+                background ?? Background,
+                foreground ?? Foreground);
         }
     }
 }

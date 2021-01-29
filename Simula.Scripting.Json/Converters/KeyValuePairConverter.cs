@@ -1,9 +1,8 @@
 ﻿
-using System;
-using System.Collections.Generic;
 using Simula.Scripting.Json.Serialization;
 using Simula.Scripting.Json.Utilities;
-using System.Reflection;
+using System;
+using System.Collections.Generic;
 
 namespace Simula.Scripting.Json.Converters
 {
@@ -24,8 +23,7 @@ namespace Simula.Scripting.Json.Converters
         }
         public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 writer.WriteNull();
                 return;
             }
@@ -43,10 +41,8 @@ namespace Simula.Scripting.Json.Converters
         }
         public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
-            if (reader.TokenType == JsonToken.Null)
-            {
-                if (!ReflectionUtils.IsNullableType(objectType))
-                {
+            if (reader.TokenType == JsonToken.Null) {
+                if (!ReflectionUtils.IsNullableType(objectType)) {
                     throw JsonSerializationException.Create(reader, "Cannot convert null value to KeyValuePair.");
                 }
 
@@ -66,23 +62,17 @@ namespace Simula.Scripting.Json.Converters
             JsonContract keyContract = serializer.ContractResolver.ResolveContract(reflectionObject.GetType(KeyName));
             JsonContract valueContract = serializer.ContractResolver.ResolveContract(reflectionObject.GetType(ValueName));
 
-            while (reader.TokenType == JsonToken.PropertyName)
-            {
+            while (reader.TokenType == JsonToken.PropertyName) {
                 string propertyName = reader.Value!.ToString();
-                if (string.Equals(propertyName, KeyName, StringComparison.OrdinalIgnoreCase))
-                {
+                if (string.Equals(propertyName, KeyName, StringComparison.OrdinalIgnoreCase)) {
                     reader.ReadForTypeAndAssert(keyContract, false);
 
                     key = serializer.Deserialize(reader, keyContract.UnderlyingType);
-                }
-                else if (string.Equals(propertyName, ValueName, StringComparison.OrdinalIgnoreCase))
-                {
+                } else if (string.Equals(propertyName, ValueName, StringComparison.OrdinalIgnoreCase)) {
                     reader.ReadForTypeAndAssert(valueContract, false);
 
                     value = serializer.Deserialize(reader, valueContract.UnderlyingType);
-                }
-                else
-                {
+                } else {
                     reader.Skip();
                 }
 
@@ -97,8 +87,7 @@ namespace Simula.Scripting.Json.Converters
                 ? Nullable.GetUnderlyingType(objectType)
                 : objectType;
 
-            if (t.IsValueType() && t.IsGenericType())
-            {
+            if (t.IsValueType() && t.IsGenericType()) {
                 return (t.GetGenericTypeDefinition() == typeof(KeyValuePair<,>));
             }
 

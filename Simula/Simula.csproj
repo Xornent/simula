@@ -4,8 +4,9 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
-	<UseWindowsForms>true</UseWindowsForms>
+  	<UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>app.icon.ico</ApplicationIcon>
+    <SatelliteResourceLanguages>zh-Hans</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -14,6 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Simula.Controls\Simula.Controls.csproj" />
     <ProjectReference Include="..\Simula.Editor\Simula.Editor.csproj" />
     <ProjectReference Include="..\Simula.Scripting.Packaging\Simula.Scripting.Packaging.csproj" />
     <ProjectReference Include="..\Simula.Scripting\Simula.Scripting.csproj" />

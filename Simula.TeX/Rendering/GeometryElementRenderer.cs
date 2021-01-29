@@ -1,10 +1,10 @@
+using Simula.TeX.Boxes;
+using Simula.TeX.Rendering.Transformations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
-using Simula.TeX.Boxes;
-using Simula.TeX.Rendering.Transformations;
 
 namespace Simula.TeX.Rendering
 {
@@ -45,20 +45,18 @@ namespace Simula.TeX.Rendering
             _geometry.Children.Add(group);
         }
 
-        public void FinishRendering() {}
+        public void FinishRendering() { }
 
         private static void ApplyTransformations(IEnumerable<Transformation> transformations, GeometryGroup geometry)
         {
-            foreach (var transformation in transformations)
-            {
-                switch (transformation.Kind)
-                {
+            foreach (var transformation in transformations) {
+                switch (transformation.Kind) {
                     case TransformationKind.Translate:
-                        var tt = (Transformation.Translate) transformation;
+                        var tt = (Transformation.Translate)transformation;
                         geometry.Transform.Value.Translate(tt.X, tt.Y);
                         break;
                     case TransformationKind.Rotate:
-                        var rt = (Transformation.Rotate) transformation;
+                        var rt = (Transformation.Rotate)transformation;
                         geometry.Transform.Value.Rotate(rt.RotationDegrees);
                         break;
                     default:

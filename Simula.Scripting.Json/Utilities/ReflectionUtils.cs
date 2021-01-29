@@ -8,7 +8,6 @@ using System.Reflection;
 using System.Collections;
 using System.Globalization;
 using System.Text;
-using System.Runtime.CompilerServices;
 using System.Diagnostics.CodeAnalysis;
 #if !HAVE_LINQ
 using Simula.Scripting.Json.Utilities.LinqBridge;
@@ -75,14 +74,12 @@ namespace Simula.Scripting.Json.Utilities
             ValidationUtils.ArgumentNotNull(propertyInfo, nameof(propertyInfo));
 
             MethodInfo? m = propertyInfo.GetGetMethod(true);
-            if (m != null && m.IsVirtual)
-            {
+            if (m != null && m.IsVirtual) {
                 return true;
             }
 
             m = propertyInfo.GetSetMethod(true);
-            if (m != null && m.IsVirtual)
-            {
+            if (m != null && m.IsVirtual) {
                 return true;
             }
 
@@ -94,8 +91,7 @@ namespace Simula.Scripting.Json.Utilities
             ValidationUtils.ArgumentNotNull(propertyInfo, nameof(propertyInfo));
 
             MethodInfo? m = propertyInfo.GetGetMethod(true);
-            if (m != null)
-            {
+            if (m != null) {
                 return m.GetBaseDefinition();
             }
 
@@ -105,13 +101,11 @@ namespace Simula.Scripting.Json.Utilities
         public static bool IsPublic(PropertyInfo property)
         {
             var getMethod = property.GetGetMethod();
-            if (getMethod != null && getMethod.IsPublic)
-            {
+            if (getMethod != null && getMethod.IsPublic) {
                 return true;
             }
             var setMethod = property.GetSetMethod();
-            if (setMethod != null && setMethod.IsPublic)
-            {
+            if (setMethod != null && setMethod.IsPublic) {
                 return true;
             }
 
@@ -127,8 +121,7 @@ namespace Simula.Scripting.Json.Utilities
         {
             string fullyQualifiedTypeName = GetFullyQualifiedTypeName(t, binder);
 
-            switch (assemblyFormat)
-            {
+            switch (assemblyFormat) {
                 case TypeNameAssemblyFormatHandling.Simple:
                     return RemoveAssemblyDetails(fullyQualifiedTypeName);
                 case TypeNameAssemblyFormatHandling.Full:
@@ -140,8 +133,7 @@ namespace Simula.Scripting.Json.Utilities
 
         private static string GetFullyQualifiedTypeName(Type t, ISerializationBinder? binder)
         {
-            if (binder != null)
-            {
+            if (binder != null) {
                 binder.BindToName(t, out string? assemblyName, out string? typeName);
 #if (NET20 || NET35)
                 if (assemblyName == null & typeName == null)
@@ -160,11 +152,9 @@ namespace Simula.Scripting.Json.Utilities
             StringBuilder builder = new StringBuilder();
             bool writingAssemblyName = false;
             bool skippingAssemblyDetails = false;
-            for (int i = 0; i < fullyQualifiedTypeName.Length; i++)
-            {
+            for (int i = 0; i < fullyQualifiedTypeName.Length; i++) {
                 char current = fullyQualifiedTypeName[i];
-                switch (current)
-                {
+                switch (current) {
                     case '[':
                     case ']':
                         writingAssemblyName = false;
@@ -172,19 +162,15 @@ namespace Simula.Scripting.Json.Utilities
                         builder.Append(current);
                         break;
                     case ',':
-                        if (!writingAssemblyName)
-                        {
+                        if (!writingAssemblyName) {
                             writingAssemblyName = true;
                             builder.Append(current);
-                        }
-                        else
-                        {
+                        } else {
                             skippingAssemblyDetails = true;
                         }
                         break;
                     default:
-                        if (!skippingAssemblyDetails)
-                        {
+                        if (!skippingAssemblyDetails) {
                             builder.Append(current);
                         }
                         break;
@@ -198,8 +184,7 @@ namespace Simula.Scripting.Json.Utilities
         {
             ValidationUtils.ArgumentNotNull(t, nameof(t));
 
-            if (t.IsValueType())
-            {
+            if (t.IsValueType()) {
                 return true;
             }
 
@@ -214,8 +199,7 @@ namespace Simula.Scripting.Json.Utilities
         public static ConstructorInfo GetDefaultConstructor(Type t, bool nonPublic)
         {
             BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.Public;
-            if (nonPublic)
-            {
+            if (nonPublic) {
                 bindingFlags = bindingFlags | BindingFlags.NonPublic;
             }
 
@@ -226,8 +210,7 @@ namespace Simula.Scripting.Json.Utilities
         {
             ValidationUtils.ArgumentNotNull(t, nameof(t));
 
-            if (t.IsValueType())
-            {
+            if (t.IsValueType()) {
                 return IsNullableType(t);
             }
 
@@ -257,8 +240,7 @@ namespace Simula.Scripting.Json.Utilities
 
         public static bool IsGenericDefinition(Type type, Type genericInterfaceDefinition)
         {
-            if (!type.IsGenericType())
-            {
+            if (!type.IsGenericType()) {
                 return false;
             }
 
@@ -271,38 +253,31 @@ namespace Simula.Scripting.Json.Utilities
             return ImplementsGenericDefinition(type, genericInterfaceDefinition, out _);
         }
 
-        public static bool ImplementsGenericDefinition(Type type, Type genericInterfaceDefinition, [NotNullWhen(true)]out Type? implementingType)
+        public static bool ImplementsGenericDefinition(Type type, Type genericInterfaceDefinition, [NotNullWhen(true)] out Type? implementingType)
         {
             ValidationUtils.ArgumentNotNull(type, nameof(type));
             ValidationUtils.ArgumentNotNull(genericInterfaceDefinition, nameof(genericInterfaceDefinition));
 
-            if (!genericInterfaceDefinition.IsInterface() || !genericInterfaceDefinition.IsGenericTypeDefinition())
-            {
+            if (!genericInterfaceDefinition.IsInterface() || !genericInterfaceDefinition.IsGenericTypeDefinition()) {
                 throw new ArgumentNullException("'{0}' is not a generic interface definition.".FormatWith(CultureInfo.InvariantCulture, genericInterfaceDefinition));
             }
 
-            if (type.IsInterface())
-            {
-                if (type.IsGenericType())
-                {
+            if (type.IsInterface()) {
+                if (type.IsGenericType()) {
                     Type interfaceDefinition = type.GetGenericTypeDefinition();
 
-                    if (genericInterfaceDefinition == interfaceDefinition)
-                    {
+                    if (genericInterfaceDefinition == interfaceDefinition) {
                         implementingType = type;
                         return true;
                     }
                 }
             }
 
-            foreach (Type i in type.GetInterfaces())
-            {
-                if (i.IsGenericType())
-                {
+            foreach (Type i in type.GetInterfaces()) {
+                if (i.IsGenericType()) {
                     Type interfaceDefinition = i.GetGenericTypeDefinition();
 
-                    if (genericInterfaceDefinition == interfaceDefinition)
-                    {
+                    if (genericInterfaceDefinition == interfaceDefinition) {
                         implementingType = i;
                         return true;
                     }
@@ -323,8 +298,7 @@ namespace Simula.Scripting.Json.Utilities
             ValidationUtils.ArgumentNotNull(type, nameof(type));
             ValidationUtils.ArgumentNotNull(genericClassDefinition, nameof(genericClassDefinition));
 
-            if (!genericClassDefinition.IsClass() || !genericClassDefinition.IsGenericTypeDefinition())
-            {
+            if (!genericClassDefinition.IsClass() || !genericClassDefinition.IsGenericTypeDefinition()) {
                 throw new ArgumentNullException("'{0}' is not a generic class definition.".FormatWith(CultureInfo.InvariantCulture, genericClassDefinition));
             }
 
@@ -333,10 +307,8 @@ namespace Simula.Scripting.Json.Utilities
 
         private static bool InheritsGenericDefinitionInternal(Type currentType, Type genericClassDefinition, out Type? implementingType)
         {
-            do
-            {
-                if (currentType.IsGenericType() && genericClassDefinition == currentType.GetGenericTypeDefinition())
-                {
+            do {
+                if (currentType.IsGenericType() && genericClassDefinition == currentType.GetGenericTypeDefinition()) {
                     implementingType = currentType;
                     return true;
                 }
@@ -352,21 +324,17 @@ namespace Simula.Scripting.Json.Utilities
         {
             ValidationUtils.ArgumentNotNull(type, nameof(type));
 
-            if (type.IsArray)
-            {
+            if (type.IsArray) {
                 return type.GetElementType();
             }
-            if (ImplementsGenericDefinition(type, typeof(IEnumerable<>), out Type? genericListType))
-            {
-                if (genericListType!.IsGenericTypeDefinition())
-                {
+            if (ImplementsGenericDefinition(type, typeof(IEnumerable<>), out Type? genericListType)) {
+                if (genericListType!.IsGenericTypeDefinition()) {
                     throw new Exception("Type {0} is not a collection.".FormatWith(CultureInfo.InvariantCulture, type));
                 }
 
                 return genericListType!.GetGenericArguments()[0];
             }
-            if (typeof(IEnumerable).IsAssignableFrom(type))
-            {
+            if (typeof(IEnumerable).IsAssignableFrom(type)) {
                 return null;
             }
 
@@ -377,10 +345,8 @@ namespace Simula.Scripting.Json.Utilities
         {
             ValidationUtils.ArgumentNotNull(dictionaryType, nameof(dictionaryType));
 
-            if (ImplementsGenericDefinition(dictionaryType, typeof(IDictionary<,>), out Type? genericDictionaryType))
-            {
-                if (genericDictionaryType!.IsGenericTypeDefinition())
-                {
+            if (ImplementsGenericDefinition(dictionaryType, typeof(IDictionary<,>), out Type? genericDictionaryType)) {
+                if (genericDictionaryType!.IsGenericTypeDefinition()) {
                     throw new Exception("Type {0} is not a dictionary.".FormatWith(CultureInfo.InvariantCulture, dictionaryType));
                 }
 
@@ -390,8 +356,7 @@ namespace Simula.Scripting.Json.Utilities
                 valueType = dictionaryGenericArguments[1];
                 return;
             }
-            if (typeof(IDictionary).IsAssignableFrom(dictionaryType))
-            {
+            if (typeof(IDictionary).IsAssignableFrom(dictionaryType)) {
                 keyType = null;
                 valueType = null;
                 return;
@@ -403,8 +368,7 @@ namespace Simula.Scripting.Json.Utilities
         {
             ValidationUtils.ArgumentNotNull(member, nameof(member));
 
-            switch (member.MemberType())
-            {
+            switch (member.MemberType()) {
                 case MemberTypes.Field:
                     return ((FieldInfo)member).FieldType;
                 case MemberTypes.Property:
@@ -420,15 +384,12 @@ namespace Simula.Scripting.Json.Utilities
 
         public static bool IsByRefLikeType(Type type)
         {
-            if (!type.IsValueType())
-            {
+            if (!type.IsValueType()) {
                 return false;
             }
             Attribute[] attributes = GetAttributes(type, null, false);
-            for (int i = 0; i < attributes.Length; i++)
-            {
-                if (string.Equals(attributes[i].GetType().FullName, "System.Runtime.CompilerServices.IsByRefLikeAttribute", StringComparison.Ordinal))
-                {
+            for (int i = 0; i < attributes.Length; i++) {
+                if (string.Equals(attributes[i].GetType().FullName, "System.Runtime.CompilerServices.IsByRefLikeAttribute", StringComparison.Ordinal)) {
                     return true;
                 }
             }
@@ -446,17 +407,13 @@ namespace Simula.Scripting.Json.Utilities
             ValidationUtils.ArgumentNotNull(member, nameof(member));
             ValidationUtils.ArgumentNotNull(target, nameof(target));
 
-            switch (member.MemberType())
-            {
+            switch (member.MemberType()) {
                 case MemberTypes.Field:
                     return ((FieldInfo)member).GetValue(target);
                 case MemberTypes.Property:
-                    try
-                    {
+                    try {
                         return ((PropertyInfo)member).GetValue(target, null);
-                    }
-                    catch (TargetParameterCountException e)
-                    {
+                    } catch (TargetParameterCountException e) {
                         throw new ArgumentException("MemberInfo '{0}' has index parameters".FormatWith(CultureInfo.InvariantCulture, member.Name), e);
                     }
                 default:
@@ -468,8 +425,7 @@ namespace Simula.Scripting.Json.Utilities
             ValidationUtils.ArgumentNotNull(member, nameof(member));
             ValidationUtils.ArgumentNotNull(target, nameof(target));
 
-            switch (member.MemberType())
-            {
+            switch (member.MemberType()) {
                 case MemberTypes.Field:
                     ((FieldInfo)member).SetValue(target, value);
                     break;
@@ -482,29 +438,23 @@ namespace Simula.Scripting.Json.Utilities
         }
         public static bool CanReadMemberValue(MemberInfo member, bool nonPublic)
         {
-            switch (member.MemberType())
-            {
+            switch (member.MemberType()) {
                 case MemberTypes.Field:
                     FieldInfo fieldInfo = (FieldInfo)member;
 
-                    if (nonPublic)
-                    {
+                    if (nonPublic) {
                         return true;
-                    }
-                    else if (fieldInfo.IsPublic)
-                    {
+                    } else if (fieldInfo.IsPublic) {
                         return true;
                     }
                     return false;
                 case MemberTypes.Property:
                     PropertyInfo propertyInfo = (PropertyInfo)member;
 
-                    if (!propertyInfo.CanRead)
-                    {
+                    if (!propertyInfo.CanRead) {
                         return false;
                     }
-                    if (nonPublic)
-                    {
+                    if (nonPublic) {
                         return true;
                     }
                     return (propertyInfo.GetGetMethod(nonPublic) != null);
@@ -514,37 +464,30 @@ namespace Simula.Scripting.Json.Utilities
         }
         public static bool CanSetMemberValue(MemberInfo member, bool nonPublic, bool canSetReadOnly)
         {
-            switch (member.MemberType())
-            {
+            switch (member.MemberType()) {
                 case MemberTypes.Field:
                     FieldInfo fieldInfo = (FieldInfo)member;
 
-                    if (fieldInfo.IsLiteral)
-                    {
+                    if (fieldInfo.IsLiteral) {
                         return false;
                     }
-                    if (fieldInfo.IsInitOnly && !canSetReadOnly)
-                    {
+                    if (fieldInfo.IsInitOnly && !canSetReadOnly) {
                         return false;
                     }
-                    if (nonPublic)
-                    {
+                    if (nonPublic) {
                         return true;
                     }
-                    if (fieldInfo.IsPublic)
-                    {
+                    if (fieldInfo.IsPublic) {
                         return true;
                     }
                     return false;
                 case MemberTypes.Property:
                     PropertyInfo propertyInfo = (PropertyInfo)member;
 
-                    if (!propertyInfo.CanWrite)
-                    {
+                    if (!propertyInfo.CanWrite) {
                         return false;
                     }
-                    if (nonPublic)
-                    {
+                    if (nonPublic) {
                         return true;
                     }
                     return (propertyInfo.GetSetMethod(nonPublic) != null);
@@ -561,27 +504,18 @@ namespace Simula.Scripting.Json.Utilities
             targetMembers.AddRange(GetProperties(type, bindingAttr));
             List<MemberInfo> distinctMembers = new List<MemberInfo>(targetMembers.Count);
 
-            foreach (IGrouping<string, MemberInfo> groupedMember in targetMembers.GroupBy(m => m.Name))
-            {
+            foreach (IGrouping<string, MemberInfo> groupedMember in targetMembers.GroupBy(m => m.Name)) {
                 int count = groupedMember.Count();
 
-                if (count == 1)
-                {
+                if (count == 1) {
                     distinctMembers.Add(groupedMember.First());
-                }
-                else
-                {
+                } else {
                     List<MemberInfo> resolvedMembers = new List<MemberInfo>();
-                    foreach (MemberInfo memberInfo in groupedMember)
-                    {
-                        if (resolvedMembers.Count == 0)
-                        {
+                    foreach (MemberInfo memberInfo in groupedMember) {
+                        if (resolvedMembers.Count == 0) {
                             resolvedMembers.Add(memberInfo);
-                        }
-                        else if (!IsOverridenGenericMember(memberInfo, bindingAttr) || memberInfo.Name == "Item")
-                        {
-                            if (resolvedMembers.Any(m => m.DeclaringType == memberInfo.DeclaringType))
-                            {
+                        } else if (!IsOverridenGenericMember(memberInfo, bindingAttr) || memberInfo.Name == "Item") {
+                            if (resolvedMembers.Any(m => m.DeclaringType == memberInfo.DeclaringType)) {
                                 continue;
                             }
 
@@ -598,35 +532,29 @@ namespace Simula.Scripting.Json.Utilities
 
         private static bool IsOverridenGenericMember(MemberInfo memberInfo, BindingFlags bindingAttr)
         {
-            if (memberInfo.MemberType() != MemberTypes.Property)
-            {
+            if (memberInfo.MemberType() != MemberTypes.Property) {
                 return false;
             }
 
             PropertyInfo propertyInfo = (PropertyInfo)memberInfo;
-            if (!IsVirtual(propertyInfo))
-            {
+            if (!IsVirtual(propertyInfo)) {
                 return false;
             }
 
             Type declaringType = propertyInfo.DeclaringType;
-            if (!declaringType.IsGenericType())
-            {
+            if (!declaringType.IsGenericType()) {
                 return false;
             }
             Type genericTypeDefinition = declaringType.GetGenericTypeDefinition();
-            if (genericTypeDefinition == null)
-            {
+            if (genericTypeDefinition == null) {
                 return false;
             }
             MemberInfo[] members = genericTypeDefinition.GetMember(propertyInfo.Name, bindingAttr);
-            if (members.Length == 0)
-            {
+            if (members.Length == 0) {
                 return false;
             }
             Type memberUnderlyingType = GetMemberUnderlyingType(members[0]);
-            if (!memberUnderlyingType.IsGenericParameter)
-            {
+            if (!memberUnderlyingType.IsGenericParameter) {
                 return false;
             }
 
@@ -650,8 +578,7 @@ namespace Simula.Scripting.Json.Utilities
         {
             Attribute[] a = GetAttributes(attributeProvider, typeof(T), inherit);
 
-            if (a is T[] attributes)
-            {
+            if (a is T[] attributes) {
                 return attributes;
             }
 
@@ -664,8 +591,7 @@ namespace Simula.Scripting.Json.Utilities
 
             object provider = attributeProvider;
 
-            switch (provider)
-            {
+            switch (provider) {
                 case Type t:
                     object[] array = attributeType != null ? t.GetCustomAttributes(attributeType, inherit) : t.GetCustomAttributes(inherit);
                     Attribute[] attributes = array.Cast<Attribute>().ToArray();
@@ -734,13 +660,10 @@ namespace Simula.Scripting.Json.Utilities
             string typeName;
             string? assemblyName;
 
-            if (assemblyDelimiterIndex != null)
-            {
+            if (assemblyDelimiterIndex != null) {
                 typeName = fullyQualifiedTypeName.Trim(0, assemblyDelimiterIndex.GetValueOrDefault());
                 assemblyName = fullyQualifiedTypeName.Trim(assemblyDelimiterIndex.GetValueOrDefault() + 1, fullyQualifiedTypeName.Length - assemblyDelimiterIndex.GetValueOrDefault() - 1);
-            }
-            else
-            {
+            } else {
                 typeName = fullyQualifiedTypeName;
                 assemblyName = null;
             }
@@ -751,11 +674,9 @@ namespace Simula.Scripting.Json.Utilities
         private static int? GetAssemblyDelimiterIndex(string fullyQualifiedTypeName)
         {
             int scope = 0;
-            for (int i = 0; i < fullyQualifiedTypeName.Length; i++)
-            {
+            for (int i = 0; i < fullyQualifiedTypeName.Length; i++) {
                 char current = fullyQualifiedTypeName[i];
-                switch (current)
-                {
+                switch (current) {
                     case '[':
                         scope++;
                         break;
@@ -763,8 +684,7 @@ namespace Simula.Scripting.Json.Utilities
                         scope--;
                         break;
                     case ',':
-                        if (scope == 0)
-                        {
+                        if (scope == 0) {
                             return i;
                         }
                         break;
@@ -778,8 +698,7 @@ namespace Simula.Scripting.Json.Utilities
         {
             const BindingFlags bindingAttr = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
 
-            switch (memberInfo.MemberType())
-            {
+            switch (memberInfo.MemberType()) {
                 case MemberTypes.Property:
                     PropertyInfo propertyInfo = (PropertyInfo)memberInfo;
 
@@ -826,20 +745,16 @@ namespace Simula.Scripting.Json.Utilities
             ValidationUtils.ArgumentNotNull(targetType, nameof(targetType));
 
             List<PropertyInfo> propertyInfos = new List<PropertyInfo>(targetType.GetProperties(bindingAttr));
-            if (targetType.IsInterface())
-            {
-                foreach (Type i in targetType.GetInterfaces())
-                {
+            if (targetType.IsInterface()) {
+                foreach (Type i in targetType.GetInterfaces()) {
                     propertyInfos.AddRange(i.GetProperties(bindingAttr));
                 }
             }
 
             GetChildPrivateProperties(propertyInfos, targetType, bindingAttr);
-            for (int i = 0; i < propertyInfos.Count; i++)
-            {
+            for (int i = 0; i < propertyInfos.Count; i++) {
                 PropertyInfo member = propertyInfos[i];
-                if (member.DeclaringType != targetType)
-                {
+                if (member.DeclaringType != targetType) {
                     PropertyInfo declaredMember = (PropertyInfo)GetMemberInfoFromType(member.DeclaringType, member);
                     propertyInfos[i] = declaredMember;
                 }
@@ -858,50 +773,36 @@ namespace Simula.Scripting.Json.Utilities
         private static void GetChildPrivateProperties(IList<PropertyInfo> initialProperties, Type targetType, BindingFlags bindingAttr)
         {
 
-            while ((targetType = targetType.BaseType()) != null)
-            {
-                foreach (PropertyInfo propertyInfo in targetType.GetProperties(bindingAttr))
-                {
+            while ((targetType = targetType.BaseType()) != null) {
+                foreach (PropertyInfo propertyInfo in targetType.GetProperties(bindingAttr)) {
                     PropertyInfo subTypeProperty = propertyInfo;
 
-                    if (!subTypeProperty.IsVirtual())
-                    {
-                        if (!IsPublic(subTypeProperty))
-                        {
+                    if (!subTypeProperty.IsVirtual()) {
+                        if (!IsPublic(subTypeProperty)) {
                             int index = initialProperties.IndexOf(p => p.Name == subTypeProperty.Name);
-                            if (index == -1)
-                            {
+                            if (index == -1) {
                                 initialProperties.Add(subTypeProperty);
-                            }
-                            else
-                            {
+                            } else {
                                 PropertyInfo childProperty = initialProperties[index];
-                                if (!IsPublic(childProperty))
-                                {
+                                if (!IsPublic(childProperty)) {
                                     initialProperties[index] = subTypeProperty;
                                 }
                             }
-                        }
-                        else
-                        {
+                        } else {
                             int index = initialProperties.IndexOf(p => p.Name == subTypeProperty.Name
                                                                        && p.DeclaringType == subTypeProperty.DeclaringType);
 
-                            if (index == -1)
-                            {
+                            if (index == -1) {
                                 initialProperties.Add(subTypeProperty);
                             }
                         }
-                    }
-                    else
-                    {
+                    } else {
                         Type subTypePropertyDeclaringType = subTypeProperty.GetBaseDefinition()?.DeclaringType ?? subTypeProperty.DeclaringType;
 
                         int index = initialProperties.IndexOf(p => p.Name == subTypeProperty.Name
                                                                    && p.IsVirtual()
                                                                    && (p.GetBaseDefinition()?.DeclaringType ?? p.DeclaringType).IsAssignableFrom(subTypePropertyDeclaringType));
-                        if (index == -1)
-                        {
+                        if (index == -1) {
                             initialProperties.Add(subTypeProperty);
                         }
                     }
@@ -923,13 +824,11 @@ namespace Simula.Scripting.Json.Utilities
 
         public static object? GetDefaultValue(Type type)
         {
-            if (!type.IsValueType())
-            {
+            if (!type.IsValueType()) {
                 return null;
             }
 
-            switch (ConvertUtils.GetTypeCode(type))
-            {
+            switch (ConvertUtils.GetTypeCode(type)) {
                 case PrimitiveTypeCode.Boolean:
                     return false;
                 case PrimitiveTypeCode.Char:
@@ -963,8 +862,7 @@ namespace Simula.Scripting.Json.Utilities
 #endif
             }
 
-            if (IsNullable(type))
-            {
+            if (IsNullable(type)) {
                 return null;
             }
             return Activator.CreateInstance(type);

@@ -70,58 +70,44 @@ namespace Simula.Scripting.Json.Schema
 
         private JsonSchema ResolveReferences(JsonSchema schema)
         {
-            if (schema.DeferredReference != null)
-            {
+            if (schema.DeferredReference != null) {
                 string reference = schema.DeferredReference;
 
                 bool locationReference = (reference.StartsWith("#", StringComparison.Ordinal));
-                if (locationReference)
-                {
+                if (locationReference) {
                     reference = UnescapeReference(reference);
                 }
 
                 JsonSchema resolvedSchema = _resolver.GetSchema(reference);
 
-                if (resolvedSchema == null)
-                {
-                    if (locationReference)
-                    {
+                if (resolvedSchema == null) {
+                    if (locationReference) {
                         string[] escapedParts = schema.DeferredReference.TrimStart('#').Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
                         JToken currentToken = _rootSchema;
-                        foreach (string escapedPart in escapedParts)
-                        {
+                        foreach (string escapedPart in escapedParts) {
                             string part = UnescapeReference(escapedPart);
 
-                            if (currentToken.Type == JTokenType.Object)
-                            {
+                            if (currentToken.Type == JTokenType.Object) {
                                 currentToken = currentToken[part];
-                            }
-                            else if (currentToken.Type == JTokenType.Array || currentToken.Type == JTokenType.Constructor)
-                            {
-                                if (int.TryParse(part, out int index) && index >= 0 && index < currentToken.Count())
-                                {
+                            } else if (currentToken.Type == JTokenType.Array || currentToken.Type == JTokenType.Constructor) {
+                                if (int.TryParse(part, out int index) && index >= 0 && index < currentToken.Count()) {
                                     currentToken = currentToken[index];
-                                }
-                                else
-                                {
+                                } else {
                                     currentToken = null;
                                 }
                             }
 
-                            if (currentToken == null)
-                            {
+                            if (currentToken == null) {
                                 break;
                             }
                         }
 
-                        if (currentToken != null)
-                        {
+                        if (currentToken != null) {
                             resolvedSchema = BuildSchema(currentToken);
                         }
                     }
 
-                    if (resolvedSchema == null)
-                    {
+                    if (resolvedSchema == null) {
                         throw new JsonException("Could not resolve schema reference '{0}'.".FormatWith(CultureInfo.InvariantCulture, schema.DeferredReference));
                     }
                 }
@@ -129,52 +115,41 @@ namespace Simula.Scripting.Json.Schema
                 schema = resolvedSchema;
             }
 
-            if (schema.ReferencesResolved)
-            {
+            if (schema.ReferencesResolved) {
                 return schema;
             }
 
             schema.ReferencesResolved = true;
 
-            if (schema.Extends != null)
-            {
-                for (int i = 0; i < schema.Extends.Count; i++)
-                {
+            if (schema.Extends != null) {
+                for (int i = 0; i < schema.Extends.Count; i++) {
                     schema.Extends[i] = ResolveReferences(schema.Extends[i]);
                 }
             }
 
-            if (schema.Items != null)
-            {
-                for (int i = 0; i < schema.Items.Count; i++)
-                {
+            if (schema.Items != null) {
+                for (int i = 0; i < schema.Items.Count; i++) {
                     schema.Items[i] = ResolveReferences(schema.Items[i]);
                 }
             }
 
-            if (schema.AdditionalItems != null)
-            {
+            if (schema.AdditionalItems != null) {
                 schema.AdditionalItems = ResolveReferences(schema.AdditionalItems);
             }
 
-            if (schema.PatternProperties != null)
-            {
-                foreach (KeyValuePair<string, JsonSchema> patternProperty in schema.PatternProperties.ToList())
-                {
+            if (schema.PatternProperties != null) {
+                foreach (KeyValuePair<string, JsonSchema> patternProperty in schema.PatternProperties.ToList()) {
                     schema.PatternProperties[patternProperty.Key] = ResolveReferences(patternProperty.Value);
                 }
             }
 
-            if (schema.Properties != null)
-            {
-                foreach (KeyValuePair<string, JsonSchema> property in schema.Properties.ToList())
-                {
+            if (schema.Properties != null) {
+                foreach (KeyValuePair<string, JsonSchema> property in schema.Properties.ToList()) {
                     schema.Properties[property.Key] = ResolveReferences(property.Value);
                 }
             }
 
-            if (schema.AdditionalProperties != null)
-            {
+            if (schema.AdditionalProperties != null) {
                 schema.AdditionalProperties = ResolveReferences(schema.AdditionalProperties);
             }
 
@@ -183,13 +158,11 @@ namespace Simula.Scripting.Json.Schema
 
         private JsonSchema BuildSchema(JToken token)
         {
-            if (!(token is JObject schemaObject))
-            {
+            if (!(token is JObject schemaObject)) {
                 throw JsonException.Create(token, token.Path, "Expected object while parsing schema object, got {0}.".FormatWith(CultureInfo.InvariantCulture, token.Type));
             }
 
-            if (schemaObject.TryGetValue(JsonTypeReflector.RefPropertyName, out JToken referenceToken))
-            {
+            if (schemaObject.TryGetValue(JsonTypeReflector.RefPropertyName, out JToken referenceToken)) {
                 JsonSchema deferredSchema = new JsonSchema();
                 deferredSchema.DeferredReference = (string)referenceToken;
 
@@ -197,14 +170,12 @@ namespace Simula.Scripting.Json.Schema
             }
 
             string location = token.Path.Replace(".", "/").Replace("[", "/").Replace("]", string.Empty);
-            if (!StringUtils.IsNullOrEmpty(location))
-            {
+            if (!StringUtils.IsNullOrEmpty(location)) {
                 location = "/" + location;
             }
             location = "#" + location;
 
-            if (_documentSchemas.TryGetValue(location, out JsonSchema existingSchema))
-            {
+            if (_documentSchemas.TryGetValue(location, out JsonSchema existingSchema)) {
                 return existingSchema;
             }
 
@@ -217,10 +188,8 @@ namespace Simula.Scripting.Json.Schema
 
         private void ProcessSchemaProperties(JObject schemaObject)
         {
-            foreach (KeyValuePair<string, JToken> property in schemaObject)
-            {
-                switch (property.Key)
-                {
+            foreach (KeyValuePair<string, JToken> property in schemaObject) {
+                switch (property.Key) {
                     case JsonSchemaConstants.TypePropertyName:
                         CurrentSchema.Type = ProcessType(property.Value);
                         break;
@@ -316,63 +285,49 @@ namespace Simula.Scripting.Json.Schema
         {
             IList<JsonSchema> schemas = new List<JsonSchema>();
 
-            if (token.Type == JTokenType.Array)
-            {
-                foreach (JToken schemaObject in token)
-                {
+            if (token.Type == JTokenType.Array) {
+                foreach (JToken schemaObject in token) {
                     schemas.Add(BuildSchema(schemaObject));
                 }
-            }
-            else
-            {
+            } else {
                 JsonSchema schema = BuildSchema(token);
-                if (schema != null)
-                {
+                if (schema != null) {
                     schemas.Add(schema);
                 }
             }
 
-            if (schemas.Count > 0)
-            {
+            if (schemas.Count > 0) {
                 CurrentSchema.Extends = schemas;
             }
         }
 
         private void ProcessEnum(JToken token)
         {
-            if (token.Type != JTokenType.Array)
-            {
+            if (token.Type != JTokenType.Array) {
                 throw JsonException.Create(token, token.Path, "Expected Array token while parsing enum values, got {0}.".FormatWith(CultureInfo.InvariantCulture, token.Type));
             }
 
             CurrentSchema.Enum = new List<JToken>();
 
-            foreach (JToken enumValue in token)
-            {
+            foreach (JToken enumValue in token) {
                 CurrentSchema.Enum.Add(enumValue.DeepClone());
             }
         }
 
         private void ProcessAdditionalProperties(JToken token)
         {
-            if (token.Type == JTokenType.Boolean)
-            {
+            if (token.Type == JTokenType.Boolean) {
                 CurrentSchema.AllowAdditionalProperties = (bool)token;
-            }
-            else
-            {
+            } else {
                 CurrentSchema.AdditionalProperties = BuildSchema(token);
             }
         }
 
         private void ProcessAdditionalItems(JToken token)
         {
-            if (token.Type == JTokenType.Boolean)
-            {
+            if (token.Type == JTokenType.Boolean) {
                 CurrentSchema.AllowAdditionalItems = (bool)token;
-            }
-            else
-            {
+            } else {
                 CurrentSchema.AdditionalItems = BuildSchema(token);
             }
         }
@@ -381,15 +336,12 @@ namespace Simula.Scripting.Json.Schema
         {
             IDictionary<string, JsonSchema> properties = new Dictionary<string, JsonSchema>();
 
-            if (token.Type != JTokenType.Object)
-            {
+            if (token.Type != JTokenType.Object) {
                 throw JsonException.Create(token, token.Path, "Expected Object token while parsing schema properties, got {0}.".FormatWith(CultureInfo.InvariantCulture, token.Type));
             }
 
-            foreach (JProperty propertyToken in token)
-            {
-                if (properties.ContainsKey(propertyToken.Name))
-                {
+            foreach (JProperty propertyToken in token) {
+                if (properties.ContainsKey(propertyToken.Name)) {
                     throw new JsonException("Property {0} has already been defined in schema.".FormatWith(CultureInfo.InvariantCulture, propertyToken.Name));
                 }
 
@@ -403,16 +355,14 @@ namespace Simula.Scripting.Json.Schema
         {
             CurrentSchema.Items = new List<JsonSchema>();
 
-            switch (token.Type)
-            {
+            switch (token.Type) {
                 case JTokenType.Object:
                     CurrentSchema.Items.Add(BuildSchema(token));
                     CurrentSchema.PositionalItemsValidation = false;
                     break;
                 case JTokenType.Array:
                     CurrentSchema.PositionalItemsValidation = true;
-                    foreach (JToken schemaToken in token)
-                    {
+                    foreach (JToken schemaToken in token) {
                         CurrentSchema.Items.Add(BuildSchema(schemaToken));
                     }
                     break;
@@ -423,15 +373,12 @@ namespace Simula.Scripting.Json.Schema
 
         private JsonSchemaType? ProcessType(JToken token)
         {
-            switch (token.Type)
-            {
+            switch (token.Type) {
                 case JTokenType.Array:
                     JsonSchemaType? type = JsonSchemaType.None;
 
-                    foreach (JToken typeToken in token)
-                    {
-                        if (typeToken.Type != JTokenType.String)
-                        {
+                    foreach (JToken typeToken in token) {
+                        if (typeToken.Type != JTokenType.String) {
                             throw JsonException.Create(typeToken, typeToken.Path, "Expected JSON schema type string token, got {0}.".FormatWith(CultureInfo.InvariantCulture, token.Type));
                         }
 
@@ -448,8 +395,7 @@ namespace Simula.Scripting.Json.Schema
 
         internal static JsonSchemaType MapType(string type)
         {
-            if (!JsonSchemaConstants.JsonSchemaTypeMapping.TryGetValue(type, out JsonSchemaType mappedType))
-            {
+            if (!JsonSchemaConstants.JsonSchemaTypeMapping.TryGetValue(type, out JsonSchemaType mappedType)) {
                 throw new JsonException("Invalid JSON schema type: {0}".FormatWith(CultureInfo.InvariantCulture, type));
             }
 

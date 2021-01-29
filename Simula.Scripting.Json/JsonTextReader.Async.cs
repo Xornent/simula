@@ -10,7 +10,6 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Simula.Scripting.Json.Serialization;
 using Simula.Scripting.Json.Utilities;
-using System.Diagnostics;
 
 namespace Simula.Scripting.Json
 {
@@ -28,10 +27,8 @@ namespace Simula.Scripting.Json
         {
             EnsureBuffer();
 
-            while (true)
-            {
-                switch (_currentState)
-                {
+            while (true) {
+                switch (_currentState) {
                     case State.Start:
                     case State.Property:
                     case State.Array:
@@ -44,15 +41,11 @@ namespace Simula.Scripting.Json
                         return ParseObjectAsync(cancellationToken);
                     case State.PostValue:
                         Task<bool> task = ParsePostValueAsync(false, cancellationToken);
-                        if (task.IsCompletedSucessfully())
-                        {
-                            if (task.Result)
-                            {
+                        if (task.IsCompletedSucessfully()) {
+                            if (task.Result) {
                                 return AsyncUtils.True;
                             }
-                        }
-                        else
-                        {
+                        } else {
                             return DoReadAsync(task, cancellationToken);
                         }
                         break;
@@ -67,8 +60,7 @@ namespace Simula.Scripting.Json
         private async Task<bool> DoReadAsync(Task<bool> task, CancellationToken cancellationToken)
         {
             bool result = await task.ConfigureAwait(false);
-            if (result)
-            {
+            if (result) {
                 return true;
             }
             return await DoReadAsync(cancellationToken).ConfigureAwait(false);
@@ -78,23 +70,17 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            while (true)
-            {
+            while (true) {
                 char currentChar = _chars[_charPos];
 
-                switch (currentChar)
-                {
+                switch (currentChar) {
                     case '\0':
-                        if (_charsUsed == _charPos)
-                        {
-                            if (await ReadDataAsync(false, cancellationToken).ConfigureAwait(false) == 0)
-                            {
+                        if (_charsUsed == _charPos) {
+                            if (await ReadDataAsync(false, cancellationToken).ConfigureAwait(false) == 0) {
                                 _currentState = State.Finished;
                                 return false;
                             }
-                        }
-                        else
-                        {
+                        } else {
                             _charPos++;
                         }
 
@@ -113,8 +99,7 @@ namespace Simula.Scripting.Json
                         return true;
                     case '/':
                         await ParseCommentAsync(!ignoreComments, cancellationToken).ConfigureAwait(false);
-                        if (!ignoreComments)
-                        {
+                        if (!ignoreComments) {
                             return true;
                         }
                         break;
@@ -133,14 +118,10 @@ namespace Simula.Scripting.Json
                         ProcessLineFeed();
                         break;
                     default:
-                        if (char.IsWhiteSpace(currentChar))
-                        {
+                        if (char.IsWhiteSpace(currentChar)) {
                             _charPos++;
-                        }
-                        else
-                        {
-                            if (SupportMultipleContent && Depth == 0)
-                            {
+                        } else {
+                            if (SupportMultipleContent && Depth == 0) {
                                 SetStateBasedOnCurrent();
                                 return false;
                             }
@@ -157,17 +138,14 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            if (await EnsureCharsAsync(0, false, cancellationToken).ConfigureAwait(false))
-            {
+            if (await EnsureCharsAsync(0, false, cancellationToken).ConfigureAwait(false)) {
                 await EatWhitespaceAsync(cancellationToken).ConfigureAwait(false);
-                if (_isEndOfFile)
-                {
+                if (_isEndOfFile) {
                     SetToken(JsonToken.None);
                     return false;
                 }
 
-                if (_chars[_charPos] == '/')
-                {
+                if (_chars[_charPos] == '/') {
                     await ParseCommentAsync(true, cancellationToken).ConfigureAwait(false);
                     return true;
                 }
@@ -188,8 +166,7 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            if (_isEndOfFile)
-            {
+            if (_isEndOfFile) {
                 return 0;
             }
 
@@ -199,8 +176,7 @@ namespace Simula.Scripting.Json
 
             _charsUsed += charsRead;
 
-            if (charsRead == 0)
-            {
+            if (charsRead == 0) {
                 _isEndOfFile = true;
             }
 
@@ -212,22 +188,16 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            while (true)
-            {
+            while (true) {
                 char currentChar = _chars[_charPos];
 
-                switch (currentChar)
-                {
+                switch (currentChar) {
                     case '\0':
-                        if (_charsUsed == _charPos)
-                        {
-                            if (await ReadDataAsync(false, cancellationToken).ConfigureAwait(false) == 0)
-                            {
+                        if (_charsUsed == _charPos) {
+                            if (await ReadDataAsync(false, cancellationToken).ConfigureAwait(false) == 0) {
                                 return false;
                             }
-                        }
-                        else
-                        {
+                        } else {
                             _charPos++;
                         }
 
@@ -243,10 +213,8 @@ namespace Simula.Scripting.Json
                         await ParseFalseAsync(cancellationToken).ConfigureAwait(false);
                         return true;
                     case 'n':
-                        if (await EnsureCharsAsync(1, true, cancellationToken).ConfigureAwait(false))
-                        {
-                            switch (_chars[_charPos + 1])
-                            {
+                        if (await EnsureCharsAsync(1, true, cancellationToken).ConfigureAwait(false)) {
+                            switch (_chars[_charPos + 1]) {
                                 case 'u':
                                     await ParseNullAsync(cancellationToken).ConfigureAwait(false);
                                     break;
@@ -256,9 +224,7 @@ namespace Simula.Scripting.Json
                                 default:
                                     throw CreateUnexpectedCharacterException(_chars[_charPos]);
                             }
-                        }
-                        else
-                        {
+                        } else {
                             _charPos++;
                             throw CreateUnexpectedEndException();
                         }
@@ -271,12 +237,9 @@ namespace Simula.Scripting.Json
                         await ParseNumberPositiveInfinityAsync(ReadType.Read, cancellationToken).ConfigureAwait(false);
                         return true;
                     case '-':
-                        if (await EnsureCharsAsync(1, true, cancellationToken).ConfigureAwait(false) && _chars[_charPos + 1] == 'I')
-                        {
+                        if (await EnsureCharsAsync(1, true, cancellationToken).ConfigureAwait(false) && _chars[_charPos + 1] == 'I') {
                             await ParseNumberNegativeInfinityAsync(ReadType.Read, cancellationToken).ConfigureAwait(false);
-                        }
-                        else
-                        {
+                        } else {
                             await ParseNumberAsync(ReadType.Read, cancellationToken).ConfigureAwait(false);
                         }
                         return true;
@@ -316,14 +279,12 @@ namespace Simula.Scripting.Json
                         _charPos++;
                         break;
                     default:
-                        if (char.IsWhiteSpace(currentChar))
-                        {
+                        if (char.IsWhiteSpace(currentChar)) {
                             _charPos++;
                             break;
                         }
 
-                        if (char.IsNumber(currentChar) || currentChar == '-' || currentChar == '.')
-                        {
+                        if (char.IsNumber(currentChar) || currentChar == '-' || currentChar == '.') {
                             await ParseNumberAsync(ReadType.Read, cancellationToken).ConfigureAwait(false);
                             return true;
                         }
@@ -342,17 +303,13 @@ namespace Simula.Scripting.Json
             int lastWritePosition = _charPos;
             _stringBuffer.Position = 0;
 
-            while (true)
-            {
-                switch (_chars[charPos++])
-                {
+            while (true) {
+                switch (_chars[charPos++]) {
                     case '\0':
-                        if (_charsUsed == charPos - 1)
-                        {
+                        if (_charsUsed == charPos - 1) {
                             charPos--;
 
-                            if (await ReadDataAsync(true, cancellationToken).ConfigureAwait(false) == 0)
-                            {
+                            if (await ReadDataAsync(true, cancellationToken).ConfigureAwait(false) == 0) {
                                 _charPos = charPos;
                                 throw JsonReaderException.Create(this, "Unterminated string. Expected delimiter: {0}.".FormatWith(CultureInfo.InvariantCulture, quote));
                             }
@@ -361,8 +318,7 @@ namespace Simula.Scripting.Json
                         break;
                     case '\\':
                         _charPos = charPos;
-                        if (!await EnsureCharsAsync(0, true, cancellationToken).ConfigureAwait(false))
-                        {
+                        if (!await EnsureCharsAsync(0, true, cancellationToken).ConfigureAwait(false)) {
                             throw JsonReaderException.Create(this, "Unterminated string. Expected delimiter: {0}.".FormatWith(CultureInfo.InvariantCulture, quote));
                         }
                         int escapeStartPos = charPos - 1;
@@ -372,8 +328,7 @@ namespace Simula.Scripting.Json
 
                         char writeChar;
 
-                        switch (currentChar)
-                        {
+                        switch (currentChar) {
                             case 'b':
                                 writeChar = '\b';
                                 break;
@@ -401,33 +356,23 @@ namespace Simula.Scripting.Json
                                 _charPos = charPos;
                                 writeChar = await ParseUnicodeAsync(cancellationToken).ConfigureAwait(false);
 
-                                if (StringUtils.IsLowSurrogate(writeChar))
-                                {
+                                if (StringUtils.IsLowSurrogate(writeChar)) {
                                     writeChar = UnicodeReplacementChar;
-                                }
-                                else if (StringUtils.IsHighSurrogate(writeChar))
-                                {
+                                } else if (StringUtils.IsHighSurrogate(writeChar)) {
                                     bool anotherHighSurrogate;
-                                    do
-                                    {
+                                    do {
                                         anotherHighSurrogate = false;
-                                        if (await EnsureCharsAsync(2, true, cancellationToken).ConfigureAwait(false) && _chars[_charPos] == '\\' && _chars[_charPos + 1] == 'u')
-                                        {
+                                        if (await EnsureCharsAsync(2, true, cancellationToken).ConfigureAwait(false) && _chars[_charPos] == '\\' && _chars[_charPos + 1] == 'u') {
                                             char highSurrogate = writeChar;
 
                                             _charPos += 2;
                                             writeChar = await ParseUnicodeAsync(cancellationToken).ConfigureAwait(false);
 
-                                            if (StringUtils.IsLowSurrogate(writeChar))
-                                            {
-                                            }
-                                            else if (StringUtils.IsHighSurrogate(writeChar))
-                                            {
+                                            if (StringUtils.IsLowSurrogate(writeChar)) {
+                                            } else if (StringUtils.IsHighSurrogate(writeChar)) {
                                                 highSurrogate = UnicodeReplacementChar;
                                                 anotherHighSurrogate = true;
-                                            }
-                                            else
-                                            {
+                                            } else {
                                                 highSurrogate = UnicodeReplacementChar;
                                             }
 
@@ -435,9 +380,7 @@ namespace Simula.Scripting.Json
 
                                             WriteCharToBuffer(highSurrogate, lastWritePosition, escapeStartPos);
                                             lastWritePosition = _charPos;
-                                        }
-                                        else
-                                        {
+                                        } else {
                                             writeChar = UnicodeReplacementChar;
                                         }
                                     } while (anotherHighSurrogate);
@@ -467,8 +410,7 @@ namespace Simula.Scripting.Json
                         break;
                     case '"':
                     case '\'':
-                        if (_chars[charPos - 1] == quote)
-                        {
+                        if (_chars[charPos - 1] == quote) {
                             FinishReadStringIntoBuffer(charPos - 1, initialPosition, lastWritePosition);
                             return;
                         }
@@ -483,8 +425,7 @@ namespace Simula.Scripting.Json
             _charPos++;
 
             Task<bool> task = EnsureCharsAsync(1, append, cancellationToken);
-            if (task.IsCompletedSucessfully())
-            {
+            if (task.IsCompletedSucessfully()) {
                 SetNewLine(task.Result);
                 return AsyncUtils.CompletedTask;
             }
@@ -504,13 +445,11 @@ namespace Simula.Scripting.Json
 
         private Task<bool> EnsureCharsAsync(int relativePosition, bool append, CancellationToken cancellationToken)
         {
-            if (_charPos + relativePosition < _charsUsed)
-            {
+            if (_charPos + relativePosition < _charsUsed) {
                 return AsyncUtils.True;
             }
 
-            if (_isEndOfFile)
-            {
+            if (_isEndOfFile) {
                 return AsyncUtils.False;
             }
 
@@ -520,11 +459,9 @@ namespace Simula.Scripting.Json
         private async Task<bool> ReadCharsAsync(int relativePosition, bool append, CancellationToken cancellationToken)
         {
             int charsRequired = _charPos + relativePosition - _charsUsed + 1;
-            do
-            {
+            do {
                 int charsRead = await ReadDataAsync(append, charsRequired, cancellationToken).ConfigureAwait(false);
-                if (charsRead == 0)
-                {
+                if (charsRead == 0) {
                     return false;
                 }
 
@@ -538,22 +475,16 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            while (true)
-            {
+            while (true) {
                 char currentChar = _chars[_charPos];
 
-                switch (currentChar)
-                {
+                switch (currentChar) {
                     case '\0':
-                        if (_charsUsed == _charPos)
-                        {
-                            if (await ReadDataAsync(false, cancellationToken).ConfigureAwait(false) == 0)
-                            {
+                        if (_charsUsed == _charPos) {
+                            if (await ReadDataAsync(false, cancellationToken).ConfigureAwait(false) == 0) {
                                 return false;
                             }
-                        }
-                        else
-                        {
+                        } else {
                             _charPos++;
                         }
 
@@ -576,12 +507,9 @@ namespace Simula.Scripting.Json
                         _charPos++;
                         break;
                     default:
-                        if (char.IsWhiteSpace(currentChar))
-                        {
+                        if (char.IsWhiteSpace(currentChar)) {
                             _charPos++;
-                        }
-                        else
-                        {
+                        } else {
                             return await ParsePropertyAsync(cancellationToken).ConfigureAwait(false);
                         }
 
@@ -595,23 +523,17 @@ namespace Simula.Scripting.Json
             MiscellaneousUtils.Assert(_chars != null);
             _charPos++;
 
-            if (!await EnsureCharsAsync(1, false, cancellationToken).ConfigureAwait(false))
-            {
+            if (!await EnsureCharsAsync(1, false, cancellationToken).ConfigureAwait(false)) {
                 throw JsonReaderException.Create(this, "Unexpected end while parsing comment.");
             }
 
             bool singlelineComment;
 
-            if (_chars[_charPos] == '*')
-            {
+            if (_chars[_charPos] == '*') {
                 singlelineComment = false;
-            }
-            else if (_chars[_charPos] == '/')
-            {
+            } else if (_chars[_charPos] == '/') {
                 singlelineComment = true;
-            }
-            else
-            {
+            } else {
                 throw JsonReaderException.Create(this, "Error parsing comment. Expected: *, got {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
             }
 
@@ -619,26 +541,19 @@ namespace Simula.Scripting.Json
 
             int initialPosition = _charPos;
 
-            while (true)
-            {
-                switch (_chars[_charPos])
-                {
+            while (true) {
+                switch (_chars[_charPos]) {
                     case '\0':
-                        if (_charsUsed == _charPos)
-                        {
-                            if (await ReadDataAsync(true, cancellationToken).ConfigureAwait(false) == 0)
-                            {
-                                if (!singlelineComment)
-                                {
+                        if (_charsUsed == _charPos) {
+                            if (await ReadDataAsync(true, cancellationToken).ConfigureAwait(false) == 0) {
+                                if (!singlelineComment) {
                                     throw JsonReaderException.Create(this, "Unexpected end while parsing comment.");
                                 }
 
                                 EndComment(setToken, initialPosition, _charPos);
                                 return;
                             }
-                        }
-                        else
-                        {
+                        } else {
                             _charPos++;
                         }
 
@@ -646,12 +561,9 @@ namespace Simula.Scripting.Json
                     case '*':
                         _charPos++;
 
-                        if (!singlelineComment)
-                        {
-                            if (await EnsureCharsAsync(0, true, cancellationToken).ConfigureAwait(false))
-                            {
-                                if (_chars[_charPos] == '/')
-                                {
+                        if (!singlelineComment) {
+                            if (await EnsureCharsAsync(0, true, cancellationToken).ConfigureAwait(false)) {
+                                if (_chars[_charPos] == '/') {
                                     EndComment(setToken, initialPosition, _charPos - 1);
 
                                     _charPos++;
@@ -662,8 +574,7 @@ namespace Simula.Scripting.Json
 
                         break;
                     case StringUtils.CarriageReturn:
-                        if (singlelineComment)
-                        {
+                        if (singlelineComment) {
                             EndComment(setToken, initialPosition, _charPos);
                             return;
                         }
@@ -671,8 +582,7 @@ namespace Simula.Scripting.Json
                         await ProcessCarriageReturnAsync(true, cancellationToken).ConfigureAwait(false);
                         break;
                     case StringUtils.LineFeed:
-                        if (singlelineComment)
-                        {
+                        if (singlelineComment) {
                             EndComment(setToken, initialPosition, _charPos);
                             return;
                         }
@@ -690,22 +600,16 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            while (true)
-            {
+            while (true) {
                 char currentChar = _chars[_charPos];
 
-                switch (currentChar)
-                {
+                switch (currentChar) {
                     case '\0':
-                        if (_charsUsed == _charPos)
-                        {
-                            if (await ReadDataAsync(false, cancellationToken).ConfigureAwait(false) == 0)
-                            {
+                        if (_charsUsed == _charPos) {
+                            if (await ReadDataAsync(false, cancellationToken).ConfigureAwait(false) == 0) {
                                 return;
                             }
-                        }
-                        else
-                        {
+                        } else {
                             _charPos++;
                         }
                         break;
@@ -716,12 +620,9 @@ namespace Simula.Scripting.Json
                         ProcessLineFeed();
                         break;
                     default:
-                        if (currentChar == ' ' || char.IsWhiteSpace(currentChar))
-                        {
+                        if (currentChar == ' ' || char.IsWhiteSpace(currentChar)) {
                             _charPos++;
-                        }
-                        else
-                        {
+                        } else {
                             return;
                         }
                         break;
@@ -747,13 +648,11 @@ namespace Simula.Scripting.Json
         private async Task<bool> MatchValueWithTrailingSeparatorAsync(string value, CancellationToken cancellationToken)
         {
             MiscellaneousUtils.Assert(_chars != null);
-            if (!await MatchValueAsync(value, cancellationToken).ConfigureAwait(false))
-            {
+            if (!await MatchValueAsync(value, cancellationToken).ConfigureAwait(false)) {
                 return false;
             }
 
-            if (!await EnsureCharsAsync(0, false, cancellationToken).ConfigureAwait(false))
-            {
+            if (!await EnsureCharsAsync(0, false, cancellationToken).ConfigureAwait(false)) {
                 return true;
             }
 
@@ -762,12 +661,9 @@ namespace Simula.Scripting.Json
 
         private async Task MatchAndSetAsync(string value, JsonToken newToken, object? tokenValue, CancellationToken cancellationToken)
         {
-            if (await MatchValueWithTrailingSeparatorAsync(value, cancellationToken).ConfigureAwait(false))
-            {
+            if (await MatchValueWithTrailingSeparatorAsync(value, cancellationToken).ConfigureAwait(false)) {
                 SetToken(newToken, tokenValue);
-            }
-            else
-            {
+            } else {
                 throw JsonReaderException.Create(this, "Error parsing " + newToken.ToString().ToLowerInvariant() + " value.");
             }
         }
@@ -791,61 +687,42 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            if (await MatchValueWithTrailingSeparatorAsync("new", cancellationToken).ConfigureAwait(false))
-            {
+            if (await MatchValueWithTrailingSeparatorAsync("new", cancellationToken).ConfigureAwait(false)) {
                 await EatWhitespaceAsync(cancellationToken).ConfigureAwait(false);
 
                 int initialPosition = _charPos;
                 int endPosition;
 
-                while (true)
-                {
+                while (true) {
                     char currentChar = _chars[_charPos];
-                    if (currentChar == '\0')
-                    {
-                        if (_charsUsed == _charPos)
-                        {
-                            if (await ReadDataAsync(true, cancellationToken).ConfigureAwait(false) == 0)
-                            {
+                    if (currentChar == '\0') {
+                        if (_charsUsed == _charPos) {
+                            if (await ReadDataAsync(true, cancellationToken).ConfigureAwait(false) == 0) {
                                 throw JsonReaderException.Create(this, "Unexpected end while parsing constructor.");
                             }
-                        }
-                        else
-                        {
+                        } else {
                             endPosition = _charPos;
                             _charPos++;
                             break;
                         }
-                    }
-                    else if (char.IsLetterOrDigit(currentChar))
-                    {
+                    } else if (char.IsLetterOrDigit(currentChar)) {
                         _charPos++;
-                    }
-                    else if (currentChar == StringUtils.CarriageReturn)
-                    {
+                    } else if (currentChar == StringUtils.CarriageReturn) {
                         endPosition = _charPos;
                         await ProcessCarriageReturnAsync(true, cancellationToken).ConfigureAwait(false);
                         break;
-                    }
-                    else if (currentChar == StringUtils.LineFeed)
-                    {
+                    } else if (currentChar == StringUtils.LineFeed) {
                         endPosition = _charPos;
                         ProcessLineFeed();
                         break;
-                    }
-                    else if (char.IsWhiteSpace(currentChar))
-                    {
+                    } else if (char.IsWhiteSpace(currentChar)) {
                         endPosition = _charPos;
                         _charPos++;
                         break;
-                    }
-                    else if (currentChar == '(')
-                    {
+                    } else if (currentChar == '(') {
                         endPosition = _charPos;
                         break;
-                    }
-                    else
-                    {
+                    } else {
                         throw JsonReaderException.Create(this, "Unexpected character while parsing constructor: {0}.".FormatWith(CultureInfo.InvariantCulture, currentChar));
                     }
                 }
@@ -855,8 +732,7 @@ namespace Simula.Scripting.Json
 
                 await EatWhitespaceAsync(cancellationToken).ConfigureAwait(false);
 
-                if (_chars[_charPos] != '(')
-                {
+                if (_chars[_charPos] != '(') {
                     throw JsonReaderException.Create(this, "Unexpected character while parsing constructor: {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
                 }
 
@@ -865,9 +741,7 @@ namespace Simula.Scripting.Json
                 ClearRecentString();
 
                 SetToken(JsonToken.StartConstructor, constructorName);
-            }
-            else
-            {
+            } else {
                 throw JsonReaderException.Create(this, "Unexpected content while parsing JSON.");
             }
         }
@@ -913,40 +787,31 @@ namespace Simula.Scripting.Json
             char firstChar = _chars[_charPos];
             char quoteChar;
 
-            if (firstChar == '"' || firstChar == '\'')
-            {
+            if (firstChar == '"' || firstChar == '\'') {
                 _charPos++;
                 quoteChar = firstChar;
                 ShiftBufferIfNeeded();
                 await ReadStringIntoBufferAsync(quoteChar, cancellationToken).ConfigureAwait(false);
-            }
-            else if (ValidIdentifierChar(firstChar))
-            {
+            } else if (ValidIdentifierChar(firstChar)) {
                 quoteChar = '\0';
                 ShiftBufferIfNeeded();
                 await ParseUnquotedPropertyAsync(cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
+            } else {
                 throw JsonReaderException.Create(this, "Invalid property identifier character: {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
             }
 
             string propertyName;
 
-            if (PropertyNameTable != null)
-            {
+            if (PropertyNameTable != null) {
                 propertyName = PropertyNameTable.Get(_stringReference.Chars, _stringReference.StartIndex, _stringReference.Length)
                     ?? _stringReference.ToString();
-            }
-            else
-            {
+            } else {
                 propertyName = _stringReference.ToString();
             }
 
             await EatWhitespaceAsync(cancellationToken).ConfigureAwait(false);
 
-            if (_chars[_charPos] != ':')
-            {
+            if (_chars[_charPos] != ':') {
                 throw JsonReaderException.Create(this, "Invalid character after parsing property name. Expected ':' but got: {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
             }
 
@@ -965,31 +830,21 @@ namespace Simula.Scripting.Json
 
             int charPos = _charPos;
 
-            while (true)
-            {
+            while (true) {
                 char currentChar = _chars[charPos];
-                if (currentChar == '\0')
-                {
+                if (currentChar == '\0') {
                     _charPos = charPos;
 
-                    if (_charsUsed == charPos)
-                    {
-                        if (await ReadDataAsync(true, cancellationToken).ConfigureAwait(false) == 0)
-                        {
+                    if (_charsUsed == charPos) {
+                        if (await ReadDataAsync(true, cancellationToken).ConfigureAwait(false) == 0) {
                             return;
                         }
-                    }
-                    else
-                    {
+                    } else {
                         return;
                     }
-                }
-                else if (ReadNumberCharIntoBuffer(currentChar, charPos))
-                {
+                } else if (ReadNumberCharIntoBuffer(currentChar, charPos)) {
                     return;
-                }
-                else
-                {
+                } else {
                     charPos++;
                 }
             }
@@ -1000,15 +855,11 @@ namespace Simula.Scripting.Json
             MiscellaneousUtils.Assert(_chars != null);
 
             int initialPosition = _charPos;
-            while (true)
-            {
+            while (true) {
                 char currentChar = _chars[_charPos];
-                if (currentChar == '\0')
-                {
-                    if (_charsUsed == _charPos)
-                    {
-                        if (await ReadDataAsync(true, cancellationToken).ConfigureAwait(false) == 0)
-                        {
+                if (currentChar == '\0') {
+                    if (_charsUsed == _charPos) {
+                        if (await ReadDataAsync(true, cancellationToken).ConfigureAwait(false) == 0) {
                             throw JsonReaderException.Create(this, "Unexpected end while parsing unquoted property name.");
                         }
 
@@ -1019,8 +870,7 @@ namespace Simula.Scripting.Json
                     return;
                 }
 
-                if (ReadUnquotedPropertyReportIfDone(currentChar, initialPosition))
-                {
+                if (ReadUnquotedPropertyReportIfDone(currentChar, initialPosition)) {
                     return;
                 }
             }
@@ -1028,16 +878,12 @@ namespace Simula.Scripting.Json
 
         private async Task<bool> ReadNullCharAsync(CancellationToken cancellationToken)
         {
-            if (_charsUsed == _charPos)
-            {
-                if (await ReadDataAsync(false, cancellationToken).ConfigureAwait(false) == 0)
-                {
+            if (_charsUsed == _charPos) {
+                if (await ReadDataAsync(false, cancellationToken).ConfigureAwait(false) == 0) {
                     _isEndOfFile = true;
                     return true;
                 }
-            }
-            else
-            {
+            } else {
                 _charPos++;
             }
 
@@ -1048,10 +894,8 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            if (await EnsureCharsAsync(1, true, cancellationToken).ConfigureAwait(false))
-            {
-                if (_chars[_charPos + 1] == 'u')
-                {
+            if (await EnsureCharsAsync(1, true, cancellationToken).ConfigureAwait(false)) {
+                if (_chars[_charPos + 1] == 'u') {
                     await ParseNullAsync(cancellationToken).ConfigureAwait(false);
                     return;
                 }
@@ -1068,21 +912,16 @@ namespace Simula.Scripting.Json
         {
             MiscellaneousUtils.Assert(_chars != null);
 
-            if (await EnsureCharsAsync(0, false, cancellationToken).ConfigureAwait(false))
-            {
+            if (await EnsureCharsAsync(0, false, cancellationToken).ConfigureAwait(false)) {
                 await EatWhitespaceAsync(cancellationToken).ConfigureAwait(false);
-                if (_isEndOfFile)
-                {
+                if (_isEndOfFile) {
                     SetToken(JsonToken.None);
                     return;
                 }
 
-                if (_chars[_charPos] == '/')
-                {
+                if (_chars[_charPos] == '/') {
                     await ParseCommentAsync(false, cancellationToken).ConfigureAwait(false);
-                }
-                else
-                {
+                } else {
                     throw JsonReaderException.Create(this, "Additional text encountered after finished reading JSON content: {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
                 }
             }
@@ -1095,11 +934,9 @@ namespace Simula.Scripting.Json
             EnsureBuffer();
             MiscellaneousUtils.Assert(_chars != null);
 
-            switch (_currentState)
-            {
+            switch (_currentState) {
                 case State.PostValue:
-                    if (await ParsePostValueAsync(true, cancellationToken).ConfigureAwait(false))
-                    {
+                    if (await ParsePostValueAsync(true, cancellationToken).ConfigureAwait(false)) {
                         return null;
                     }
                     goto case State.Start;
@@ -1109,15 +946,12 @@ namespace Simula.Scripting.Json
                 case State.ArrayStart:
                 case State.Constructor:
                 case State.ConstructorStart:
-                    while (true)
-                    {
+                    while (true) {
                         char currentChar = _chars[_charPos];
 
-                        switch (currentChar)
-                        {
+                        switch (currentChar) {
                             case '\0':
-                                if (await ReadNullCharAsync(cancellationToken).ConfigureAwait(false))
-                                {
+                                if (await ReadNullCharAsync(cancellationToken).ConfigureAwait(false)) {
                                     SetToken(JsonToken.None, null, false);
                                     return null;
                                 }
@@ -1128,12 +962,9 @@ namespace Simula.Scripting.Json
                                 await ParseStringAsync(currentChar, readType, cancellationToken).ConfigureAwait(false);
                                 return FinishReadQuotedStringValue(readType);
                             case '-':
-                                if (await EnsureCharsAsync(1, true, cancellationToken).ConfigureAwait(false) && _chars[_charPos + 1] == 'I')
-                                {
+                                if (await EnsureCharsAsync(1, true, cancellationToken).ConfigureAwait(false) && _chars[_charPos + 1] == 'I') {
                                     return ParseNumberNegativeInfinity(readType);
-                                }
-                                else
-                                {
+                                } else {
                                     await ParseNumberAsync(readType, cancellationToken).ConfigureAwait(false);
                                     return Value;
                                 }
@@ -1148,8 +979,7 @@ namespace Simula.Scripting.Json
                             case '7':
                             case '8':
                             case '9':
-                                if (readType != ReadType.ReadAsString)
-                                {
+                                if (readType != ReadType.ReadAsString) {
                                     _charPos++;
                                     throw CreateUnexpectedCharacterException(currentChar);
                                 }
@@ -1158,15 +988,13 @@ namespace Simula.Scripting.Json
                                 return Value;
                             case 't':
                             case 'f':
-                                if (readType != ReadType.ReadAsString)
-                                {
+                                if (readType != ReadType.ReadAsString) {
                                     _charPos++;
                                     throw CreateUnexpectedCharacterException(currentChar);
                                 }
 
                                 string expected = currentChar == 't' ? JsonConvert.True : JsonConvert.False;
-                                if (!await MatchValueWithTrailingSeparatorAsync(expected, cancellationToken).ConfigureAwait(false))
-                                {
+                                if (!await MatchValueWithTrailingSeparatorAsync(expected, cancellationToken).ConfigureAwait(false)) {
                                     throw CreateUnexpectedCharacterException(_chars[_charPos]);
                                 }
 
@@ -1187,8 +1015,7 @@ namespace Simula.Scripting.Json
                                 break;
                             case ']':
                                 _charPos++;
-                                if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue)
-                                {
+                                if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue) {
                                     SetToken(JsonToken.EndArray);
                                     return null;
                                 }
@@ -1207,8 +1034,7 @@ namespace Simula.Scripting.Json
                             default:
                                 _charPos++;
 
-                                if (!char.IsWhiteSpace(currentChar))
-                                {
+                                if (!char.IsWhiteSpace(currentChar)) {
                                     throw CreateUnexpectedCharacterException(currentChar);
                                 }
                                 break;
@@ -1227,11 +1053,9 @@ namespace Simula.Scripting.Json
             EnsureBuffer();
             MiscellaneousUtils.Assert(_chars != null);
 
-            switch (_currentState)
-            {
+            switch (_currentState) {
                 case State.PostValue:
-                    if (await ParsePostValueAsync(true, cancellationToken).ConfigureAwait(false))
-                    {
+                    if (await ParsePostValueAsync(true, cancellationToken).ConfigureAwait(false)) {
                         return null;
                     }
                     goto case State.Start;
@@ -1241,15 +1065,12 @@ namespace Simula.Scripting.Json
                 case State.ArrayStart:
                 case State.Constructor:
                 case State.ConstructorStart:
-                    while (true)
-                    {
+                    while (true) {
                         char currentChar = _chars[_charPos];
 
-                        switch (currentChar)
-                        {
+                        switch (currentChar) {
                             case '\0':
-                                if (await ReadNullCharAsync(cancellationToken).ConfigureAwait(false))
-                                {
+                                if (await ReadNullCharAsync(cancellationToken).ConfigureAwait(false)) {
                                     SetToken(JsonToken.None, null, false);
                                     return null;
                                 }
@@ -1267,12 +1088,9 @@ namespace Simula.Scripting.Json
                             case 'I':
                                 return await ParseNumberPositiveInfinityAsync(readType, cancellationToken).ConfigureAwait(false);
                             case '-':
-                                if (await EnsureCharsAsync(1, true, cancellationToken).ConfigureAwait(false) && _chars[_charPos + 1] == 'I')
-                                {
+                                if (await EnsureCharsAsync(1, true, cancellationToken).ConfigureAwait(false) && _chars[_charPos + 1] == 'I') {
                                     return await ParseNumberNegativeInfinityAsync(readType, cancellationToken).ConfigureAwait(false);
-                                }
-                                else
-                                {
+                                } else {
                                     await ParseNumberAsync(readType, cancellationToken).ConfigureAwait(false);
                                     return Value;
                                 }
@@ -1297,8 +1115,7 @@ namespace Simula.Scripting.Json
                                 break;
                             case ']':
                                 _charPos++;
-                                if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue)
-                                {
+                                if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue) {
                                     SetToken(JsonToken.EndArray);
                                     return null;
                                 }
@@ -1317,8 +1134,7 @@ namespace Simula.Scripting.Json
                             default:
                                 _charPos++;
 
-                                if (!char.IsWhiteSpace(currentChar))
-                                {
+                                if (!char.IsWhiteSpace(currentChar)) {
                                     throw CreateUnexpectedCharacterException(currentChar);
                                 }
                                 break;
@@ -1341,11 +1157,9 @@ namespace Simula.Scripting.Json
             EnsureBuffer();
             MiscellaneousUtils.Assert(_chars != null);
 
-            switch (_currentState)
-            {
+            switch (_currentState) {
                 case State.PostValue:
-                    if (await ParsePostValueAsync(true, cancellationToken).ConfigureAwait(false))
-                    {
+                    if (await ParsePostValueAsync(true, cancellationToken).ConfigureAwait(false)) {
                         return null;
                     }
                     goto case State.Start;
@@ -1355,15 +1169,12 @@ namespace Simula.Scripting.Json
                 case State.ArrayStart:
                 case State.Constructor:
                 case State.ConstructorStart:
-                    while (true)
-                    {
+                    while (true) {
                         char currentChar = _chars[_charPos];
 
-                        switch (currentChar)
-                        {
+                        switch (currentChar) {
                             case '\0':
-                                if (await ReadNullCharAsync(cancellationToken).ConfigureAwait(false))
-                                {
+                                if (await ReadNullCharAsync(cancellationToken).ConfigureAwait(false)) {
                                     SetToken(JsonToken.None, null, false);
                                     return null;
                                 }
@@ -1405,8 +1216,7 @@ namespace Simula.Scripting.Json
                             case 't':
                             case 'f':
                                 bool isTrue = currentChar == 't';
-                                if (!await MatchValueWithTrailingSeparatorAsync(isTrue ? JsonConvert.True : JsonConvert.False, cancellationToken).ConfigureAwait(false))
-                                {
+                                if (!await MatchValueWithTrailingSeparatorAsync(isTrue ? JsonConvert.True : JsonConvert.False, cancellationToken).ConfigureAwait(false)) {
                                     throw CreateUnexpectedCharacterException(_chars[_charPos]);
                                 }
 
@@ -1420,8 +1230,7 @@ namespace Simula.Scripting.Json
                                 break;
                             case ']':
                                 _charPos++;
-                                if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue)
-                                {
+                                if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue) {
                                     SetToken(JsonToken.EndArray);
                                     return null;
                                 }
@@ -1440,8 +1249,7 @@ namespace Simula.Scripting.Json
                             default:
                                 _charPos++;
 
-                                if (!char.IsWhiteSpace(currentChar))
-                                {
+                                if (!char.IsWhiteSpace(currentChar)) {
                                     throw CreateUnexpectedCharacterException(currentChar);
                                 }
                                 break;
@@ -1466,11 +1274,9 @@ namespace Simula.Scripting.Json
 
             bool isWrapped = false;
 
-            switch (_currentState)
-            {
+            switch (_currentState) {
                 case State.PostValue:
-                    if (await ParsePostValueAsync(true, cancellationToken).ConfigureAwait(false))
-                    {
+                    if (await ParsePostValueAsync(true, cancellationToken).ConfigureAwait(false)) {
                         return null;
                     }
                     goto case State.Start;
@@ -1480,15 +1286,12 @@ namespace Simula.Scripting.Json
                 case State.ArrayStart:
                 case State.Constructor:
                 case State.ConstructorStart:
-                    while (true)
-                    {
+                    while (true) {
                         char currentChar = _chars[_charPos];
 
-                        switch (currentChar)
-                        {
+                        switch (currentChar) {
                             case '\0':
-                                if (await ReadNullCharAsync(cancellationToken).ConfigureAwait(false))
-                                {
+                                if (await ReadNullCharAsync(cancellationToken).ConfigureAwait(false)) {
                                     SetToken(JsonToken.None, null, false);
                                     return null;
                                 }
@@ -1498,11 +1301,9 @@ namespace Simula.Scripting.Json
                             case '\'':
                                 await ParseStringAsync(currentChar, ReadType.ReadAsBytes, cancellationToken).ConfigureAwait(false);
                                 byte[]? data = (byte[]?)Value;
-                                if (isWrapped)
-                                {
+                                if (isWrapped) {
                                     await ReaderReadAndAssertAsync(cancellationToken).ConfigureAwait(false);
-                                    if (TokenType != JsonToken.EndObject)
-                                    {
+                                    if (TokenType != JsonToken.EndObject) {
                                         throw JsonReaderException.Create(this, "Error reading bytes. Unexpected token: {0}.".FormatWith(CultureInfo.InvariantCulture, TokenType));
                                     }
 
@@ -1531,8 +1332,7 @@ namespace Simula.Scripting.Json
                                 break;
                             case ']':
                                 _charPos++;
-                                if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue)
-                                {
+                                if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue) {
                                     SetToken(JsonToken.EndArray);
                                     return null;
                                 }
@@ -1551,8 +1351,7 @@ namespace Simula.Scripting.Json
                             default:
                                 _charPos++;
 
-                                if (!char.IsWhiteSpace(currentChar))
-                                {
+                                if (!char.IsWhiteSpace(currentChar)) {
                                     throw CreateUnexpectedCharacterException(currentChar);
                                 }
                                 break;
@@ -1569,14 +1368,11 @@ namespace Simula.Scripting.Json
         private async Task ReadIntoWrappedTypeObjectAsync(CancellationToken cancellationToken)
         {
             await ReaderReadAndAssertAsync(cancellationToken).ConfigureAwait(false);
-            if (Value != null && Value.ToString() == JsonTypeReflector.TypePropertyName)
-            {
+            if (Value != null && Value.ToString() == JsonTypeReflector.TypePropertyName) {
                 await ReaderReadAndAssertAsync(cancellationToken).ConfigureAwait(false);
-                if (Value != null && Value.ToString().StartsWith("System.Byte[]", StringComparison.Ordinal))
-                {
+                if (Value != null && Value.ToString().StartsWith("System.Byte[]", StringComparison.Ordinal)) {
                     await ReaderReadAndAssertAsync(cancellationToken).ConfigureAwait(false);
-                    if (Value.ToString() == JsonTypeReflector.ValuePropertyName)
-                    {
+                    if (Value.ToString() == JsonTypeReflector.ValuePropertyName) {
                         return;
                     }
                 }

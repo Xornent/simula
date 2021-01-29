@@ -5,14 +5,10 @@ using System.Globalization;
 #if HAVE_BIG_INTEGER
 using System.Numerics;
 #endif
-using Simula.Scripting.Json.Linq;
 using Simula.Scripting.Json.Utilities;
-using System.Xml;
 using Simula.Scripting.Json.Converters;
-using Simula.Scripting.Json.Serialization;
 using System.Text;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Diagnostics.CodeAnalysis;
 #if HAVE_XLINQ
 using System.Xml.Linq;
@@ -38,8 +34,7 @@ namespace Simula.Scripting.Json
         {
             DateTime updatedDateTime = DateTimeUtils.EnsureDateTime(value, timeZoneHandling);
 
-            using (StringWriter writer = StringUtils.CreateStringWriter(64))
-            {
+            using (StringWriter writer = StringUtils.CreateStringWriter(64)) {
                 writer.Write('"');
                 DateTimeUtils.WriteDateTimeString(writer, updatedDateTime, format, null, CultureInfo.InvariantCulture);
                 writer.Write('"');
@@ -54,8 +49,7 @@ namespace Simula.Scripting.Json
         }
         public static string ToString(DateTimeOffset value, DateFormatHandling format)
         {
-            using (StringWriter writer = StringUtils.CreateStringWriter(64))
-            {
+            using (StringWriter writer = StringUtils.CreateStringWriter(64)) {
                 writer.Write('"');
                 DateTimeUtils.WriteDateTimeOffsetString(writer, value, format, null, CultureInfo.InvariantCulture);
                 writer.Write('"');
@@ -121,13 +115,11 @@ namespace Simula.Scripting.Json
 
         private static string EnsureFloatFormat(double value, string text, FloatFormatHandling floatFormatHandling, char quoteChar, bool nullable)
         {
-            if (floatFormatHandling == FloatFormatHandling.Symbol || !(double.IsInfinity(value) || double.IsNaN(value)))
-            {
+            if (floatFormatHandling == FloatFormatHandling.Symbol || !(double.IsInfinity(value) || double.IsNaN(value))) {
                 return text;
             }
 
-            if (floatFormatHandling == FloatFormatHandling.DefaultValue)
-            {
+            if (floatFormatHandling == FloatFormatHandling.DefaultValue) {
                 return (!nullable) ? "0.0" : Null;
             }
 
@@ -145,8 +137,7 @@ namespace Simula.Scripting.Json
 
         private static string EnsureDecimalPlace(double value, string text)
         {
-            if (double.IsNaN(value) || double.IsInfinity(value) || text.IndexOf('.') != -1 || text.IndexOf('E') != -1 || text.IndexOf('e') != -1)
-            {
+            if (double.IsNaN(value) || double.IsInfinity(value) || text.IndexOf('.') != -1 || text.IndexOf('E') != -1 || text.IndexOf('e') != -1) {
                 return text;
             }
 
@@ -155,8 +146,7 @@ namespace Simula.Scripting.Json
 
         private static string EnsureDecimalPlace(string text)
         {
-            if (text.IndexOf('.') != -1)
-            {
+            if (text.IndexOf('.') != -1) {
                 return text;
             }
 
@@ -205,8 +195,7 @@ namespace Simula.Scripting.Json
         }
         public static string ToString(Uri? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return Null;
             }
 
@@ -227,8 +216,7 @@ namespace Simula.Scripting.Json
         }
         public static string ToString(string? value, char delimiter, StringEscapeHandling stringEscapeHandling)
         {
-            if (delimiter != '"' && delimiter != '\'')
-            {
+            if (delimiter != '"' && delimiter != '\'') {
                 throw new ArgumentException("Delimiter must be a single or double quote.", nameof(delimiter));
             }
 
@@ -236,15 +224,13 @@ namespace Simula.Scripting.Json
         }
         public static string ToString(object? value)
         {
-            if (value == null)
-            {
+            if (value == null) {
                 return Null;
             }
 
             PrimitiveTypeCode typeCode = ConvertUtils.GetTypeCode(value.GetType());
 
-            switch (typeCode)
-            {
+            switch (typeCode) {
                 case PrimitiveTypeCode.String:
                     return ToString((string)value);
                 case PrimitiveTypeCode.Char:
@@ -357,8 +343,7 @@ namespace Simula.Scripting.Json
         {
             StringBuilder sb = new StringBuilder(256);
             StringWriter sw = new StringWriter(sb, CultureInfo.InvariantCulture);
-            using (JsonTextWriter jsonWriter = new JsonTextWriter(sw))
-            {
+            using (JsonTextWriter jsonWriter = new JsonTextWriter(sw)) {
                 jsonWriter.Formatting = jsonSerializer.Formatting;
 
                 jsonSerializer.Serialize(jsonWriter, value, type);
@@ -429,13 +414,11 @@ namespace Simula.Scripting.Json
             ValidationUtils.ArgumentNotNull(value, nameof(value));
 
             JsonSerializer jsonSerializer = JsonSerializer.CreateDefault(settings);
-            if (!jsonSerializer.IsCheckAdditionalContentSet())
-            {
+            if (!jsonSerializer.IsCheckAdditionalContentSet()) {
                 jsonSerializer.CheckAdditionalContent = true;
             }
 
-            using (JsonTextReader reader = new JsonTextReader(new StringReader(value)))
-            {
+            using (JsonTextReader reader = new JsonTextReader(new StringReader(value))) {
                 return jsonSerializer.Deserialize(reader, type);
             }
         }
@@ -451,16 +434,12 @@ namespace Simula.Scripting.Json
         {
             JsonSerializer jsonSerializer = JsonSerializer.CreateDefault(settings);
 
-            using (JsonReader jsonReader = new JsonTextReader(new StringReader(value)))
-            {
+            using (JsonReader jsonReader = new JsonTextReader(new StringReader(value))) {
                 jsonSerializer.Populate(jsonReader, target);
 
-                if (settings != null && settings.CheckAdditionalContent)
-                {
-                    while (jsonReader.Read())
-                    {
-                        if (jsonReader.TokenType != JsonToken.Comment)
-                        {
+                if (settings != null && settings.CheckAdditionalContent) {
+                    while (jsonReader.Read()) {
+                        if (jsonReader.TokenType != JsonToken.Comment) {
                             throw JsonSerializationException.Create(jsonReader, "Additional text found in JSON string after finishing deserializing object.");
                         }
                     }

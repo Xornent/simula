@@ -1,9 +1,7 @@
 ﻿
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Text;
 
 namespace Simula.Scripting.Json.Serialization
 {
@@ -103,8 +101,7 @@ namespace Simula.Scripting.Json.Serialization
 
         public override string Path => _innerReader.Path;
 
-        public override char QuoteChar
-        {
+        public override char QuoteChar {
             get => _innerReader.QuoteChar;
             protected internal set => _innerReader.QuoteChar = value;
         }
@@ -113,7 +110,7 @@ namespace Simula.Scripting.Json.Serialization
 
         public override object? Value => _innerReader.Value;
 
-        public override Type ?ValueType => _innerReader.ValueType;
+        public override Type? ValueType => _innerReader.ValueType;
 
         public override void Close()
         {

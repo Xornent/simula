@@ -1,13 +1,9 @@
 
-using System;
-using System.Collections.Generic;
-using System.Reflection;
 using Simula.Scripting.Json.Utilities;
-using System.Collections;
+using System;
 #if !HAVE_LINQ
 using Simula.Scripting.Json.Utilities.LinqBridge;
 #else
-using System.Linq;
 
 #endif
 
@@ -17,18 +13,13 @@ namespace Simula.Scripting.Json.Serialization
     {
         private JsonContract? _itemContract;
         private JsonContract? _finalItemContract;
-        internal JsonContract? ItemContract
-        {
+        internal JsonContract? ItemContract {
             get => _itemContract;
-            set
-            {
+            set {
                 _itemContract = value;
-                if (_itemContract != null)
-                {
+                if (_itemContract != null) {
                     _finalItemContract = (_itemContract.UnderlyingType.IsSealed()) ? _itemContract : null;
-                }
-                else
-                {
+                } else {
                     _finalItemContract = null;
                 }
             }
@@ -43,10 +34,8 @@ namespace Simula.Scripting.Json.Serialization
         {
             JsonContainerAttribute? jsonContainerAttribute = JsonTypeReflector.GetCachedAttribute<JsonContainerAttribute>(underlyingType);
 
-            if (jsonContainerAttribute != null)
-            {
-                if (jsonContainerAttribute.ItemConverterType != null)
-                {
+            if (jsonContainerAttribute != null) {
+                if (jsonContainerAttribute.ItemConverterType != null) {
                     ItemConverter = JsonTypeReflector.CreateJsonConverterInstance(
                         jsonContainerAttribute.ItemConverterType,
                         jsonContainerAttribute.ItemConverterParameters);

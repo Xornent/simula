@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <SatelliteResourceLanguages>zh-Hans</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Simula.Scripting.Math\Simula.Scripting.Math.csproj" />
+    <ProjectReference Include="..\Simula.Scripting\Simula.Scripting.csproj" />
+    <ProjectReference Include="..\Simula.TeX\Simula.TeX.csproj" />
+  </ItemGroup>
+
+</Project>

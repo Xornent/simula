@@ -1,11 +1,11 @@
 ﻿
 #if HAVE_ASYNC
 
+using Simula.Scripting.Json.Utilities;
 using System;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
-using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json.Linq
 {
@@ -27,18 +27,15 @@ namespace Simula.Scripting.Json.Linq
         {
             ValidationUtils.ArgumentNotNull(reader, nameof(reader));
 
-            if (reader.TokenType == JsonToken.None)
-            {
-                if (!await (settings != null && settings.CommentHandling == CommentHandling.Ignore ? reader.ReadAndMoveToContentAsync(cancellationToken) : reader.ReadAsync(cancellationToken)).ConfigureAwait(false))
-                {
+            if (reader.TokenType == JsonToken.None) {
+                if (!await (settings != null && settings.CommentHandling == CommentHandling.Ignore ? reader.ReadAndMoveToContentAsync(cancellationToken) : reader.ReadAsync(cancellationToken)).ConfigureAwait(false)) {
                     throw JsonReaderException.Create(reader, "Error reading JToken from JsonReader.");
                 }
             }
 
             IJsonLineInfo? lineInfo = reader as IJsonLineInfo;
 
-            switch (reader.TokenType)
-            {
+            switch (reader.TokenType) {
                 case JsonToken.StartObject:
                     return await JObject.LoadAsync(reader, settings, cancellationToken).ConfigureAwait(false);
                 case JsonToken.StartArray:

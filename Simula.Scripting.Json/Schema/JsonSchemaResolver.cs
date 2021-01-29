@@ -24,8 +24,7 @@ namespace Simula.Scripting.Json.Schema
         {
             JsonSchema schema = LoadedSchemas.SingleOrDefault(s => string.Equals(s.Id, reference, StringComparison.Ordinal));
 
-            if (schema == null)
-            {
+            if (schema == null) {
                 schema = LoadedSchemas.SingleOrDefault(s => string.Equals(s.Location, reference, StringComparison.Ordinal));
             }
 

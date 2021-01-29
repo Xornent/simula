@@ -8,8 +8,7 @@ namespace Simula.Scripting.Json.Serialization
         public bool OverrideSpecifiedNames { get; set; }
         public virtual string GetPropertyName(string name, bool hasSpecifiedName)
         {
-            if (hasSpecifiedName && !OverrideSpecifiedNames)
-            {
+            if (hasSpecifiedName && !OverrideSpecifiedNames) {
                 return name;
             }
 
@@ -17,8 +16,7 @@ namespace Simula.Scripting.Json.Serialization
         }
         public virtual string GetExtensionDataName(string name)
         {
-            if (!ProcessExtensionDataNames)
-            {
+            if (!ProcessExtensionDataNames) {
                 return name;
             }
 
@@ -26,8 +24,7 @@ namespace Simula.Scripting.Json.Serialization
         }
         public virtual string GetDictionaryKey(string key)
         {
-            if (!ProcessDictionaryKeys)
-            {
+            if (!ProcessDictionaryKeys) {
                 return key;
             }
 
@@ -36,8 +33,7 @@ namespace Simula.Scripting.Json.Serialization
         protected abstract string ResolvePropertyName(string name);
         public override int GetHashCode()
         {
-            unchecked
-            {
+            unchecked {
                 var hashCode = GetType().GetHashCode();     // make sure different types do not result in equal values
                 hashCode = (hashCode * 397) ^ ProcessDictionaryKeys.GetHashCode();
                 hashCode = (hashCode * 397) ^ ProcessExtensionDataNames.GetHashCode();
@@ -48,8 +44,7 @@ namespace Simula.Scripting.Json.Serialization
         public override bool Equals(object obj) => Equals(obj as NamingStrategy);
         protected bool Equals(NamingStrategy? other)
         {
-            if (other == null)
-            {
+            if (other == null) {
                 return false;
             }
 

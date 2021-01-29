@@ -1,5 +1,5 @@
-using System;
 using Simula.TeX.Boxes;
+using System;
 
 namespace Simula.TeX.Atoms
 {
@@ -9,10 +9,10 @@ namespace Simula.TeX.Atoms
         public AccentedAtom(SourceSpan? source, Atom? baseAtom, string accentName)
             : base(source)
         {
-            this.BaseAtom = baseAtom;
-            this.AccentAtom = SymbolAtom.GetAtom(accentName, null);
+            BaseAtom = baseAtom;
+            AccentAtom = SymbolAtom.GetAtom(accentName, null);
 
-            if (this.AccentAtom.Type != TexAtomType.Accent)
+            if (AccentAtom.Type != TexAtomType.Accent)
                 throw new ArgumentException("The specified symbol name is not an accent.", "accent");
         }
 
@@ -22,10 +22,10 @@ namespace Simula.TeX.Atoms
             if (!(accent.RootAtom is SymbolAtom rootSymbol))
                 throw new ArgumentException("The formula for the accent is not a single symbol.", nameof(accent));
 
-            this.BaseAtom = baseAtom;
-            this.AccentAtom = rootSymbol;
+            BaseAtom = baseAtom;
+            AccentAtom = rootSymbol;
 
-            if (this.AccentAtom.Type != TexAtomType.Accent)
+            if (AccentAtom.Type != TexAtomType.Accent)
                 throw new ArgumentException("The specified symbol name is not an accent.", "accent");
         }
 
@@ -39,9 +39,8 @@ namespace Simula.TeX.Atoms
         {
             CharSymbol? GetBaseChar()
             {
-                var baseAtom = this.BaseAtom;
-                while (baseAtom is AccentedAtom a)
-                {
+                var baseAtom = BaseAtom;
+                while (baseAtom is AccentedAtom a) {
                     baseAtom = a.BaseAtom;
                 }
 
@@ -52,14 +51,13 @@ namespace Simula.TeX.Atoms
             var style = environment.Style;
 
             // Create box for base atom.
-            var baseBox = this.BaseAtom == null ? StrutBox.Empty : this.BaseAtom.CreateBox(environment.GetCrampedStyle());
+            var baseBox = BaseAtom == null ? StrutBox.Empty : BaseAtom.CreateBox(environment.GetCrampedStyle());
             var baseCharFont = GetBaseChar()?.GetCharFont(texFont).Value;
             var skew = baseCharFont == null ? 0.0 : texFont.GetSkew(baseCharFont, style);
 
             // Find character of best scale for accent symbol.
-            var accentChar = texFont.GetCharInfo(this.AccentAtom.Name, style).Value;
-            while (texFont.HasNextLarger(accentChar))
-            {
+            var accentChar = texFont.GetCharInfo(AccentAtom.Name, style).Value;
+            while (texFont.HasNextLarger(accentChar)) {
                 var nextLargerChar = texFont.GetNextLargerCharInfo(accentChar, style);
                 if (nextLargerChar.Metrics.Width > baseBox.Width)
                     break;
@@ -71,13 +69,10 @@ namespace Simula.TeX.Atoms
             // Create and add box for accent symbol.
             Box accentBox;
             var accentItalicWidth = accentChar.Metrics.Italic;
-            if (accentItalicWidth > TexUtilities.FloatPrecision)
-            {
+            if (accentItalicWidth > TexUtilities.FloatPrecision) {
                 accentBox = new HorizontalBox(new CharBox(environment, accentChar));
                 accentBox.Add(new StrutBox(accentItalicWidth, 0, 0, 0));
-            }
-            else
-            {
+            } else {
                 accentBox = new CharBox(environment, accentChar);
             }
             resultBox.Add(accentBox);

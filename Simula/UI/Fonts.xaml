@@ -3,6 +3,6 @@
                     xmlns:local="clr-namespace:Simula.UI">
 
     <FontFamily x:Key="default">
-        Adobe Clean Han SC
+        PingFang SC
     </FontFamily>
 </ResourceDictionary>

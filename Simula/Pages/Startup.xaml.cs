@@ -1,30 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
-namespace Simula.Pages {
+namespace Simula.Pages
+{
 
-    public partial class Startup : UserControl, IBrowserPage {
-        public Startup() {
+    public partial class Startup : UserControl, IBrowserPage
+    {
+        public Startup()
+        {
             InitializeComponent();
+            Scripting.Contexts.DynamicRuntime dy = new Scripting.Contexts.DynamicRuntime();
         }
 
         public void WindowDispose() { }
         public void Signal(string prop, object value) { }
     }
 
-    public class DrawingCanvas : Canvas {
-        private List<Visual> visuals = new List<Visual>();
+    public class DrawingCanvas : Canvas
+    {
+        private readonly List<Visual> visuals = new List<Visual>();
 
         //获取Visual的个数
         protected override int VisualChildrenCount {
@@ -32,12 +28,14 @@ namespace Simula.Pages {
         }
 
         //获取Visual
-        protected override Visual GetVisualChild(int index) {
+        protected override Visual GetVisualChild(int index)
+        {
             return visuals[index];
         }
 
         //添加Visual
-        public void AddVisual(Visual visual) {
+        public void AddVisual(Visual visual)
+        {
             visuals.Add(visual);
 
             base.AddVisualChild(visual);
@@ -45,7 +43,8 @@ namespace Simula.Pages {
         }
 
         //删除Visual
-        public void RemoveVisual(Visual visual) {
+        public void RemoveVisual(Visual visual)
+        {
             visuals.Remove(visual);
 
             base.RemoveVisualChild(visual);
@@ -53,13 +52,15 @@ namespace Simula.Pages {
         }
 
         //命中测试
-        public DrawingVisual GetVisual(Point point) {
+        public DrawingVisual GetVisual(Point point)
+        {
             HitTestResult hitResult = VisualTreeHelper.HitTest(this, point);
             return hitResult.VisualHit as DrawingVisual;
         }
 
         //使用DrawVisual画Polyline
-        public Visual Polyline(PointCollection points, Brush color, double thinkness) {
+        public Visual Polyline(PointCollection points, Brush color, double thinkness)
+        {
             DrawingVisual visual = new DrawingVisual();
             DrawingContext dc = visual.RenderOpen();
             Pen pen = new Pen(Brushes.Red, 3);
@@ -74,7 +75,8 @@ namespace Simula.Pages {
         }
     }
 
-    interface IBrowserPage {
+    internal interface IBrowserPage
+    {
         void WindowDispose();
         void Signal(string props, object value);
     }

@@ -16,18 +16,15 @@ namespace Simula.Scripting.Json.Linq
     {
         public override Task WriteToAsync(JsonWriter writer, CancellationToken cancellationToken, params JsonConverter[] converters)
         {
-            if (converters != null && converters.Length > 0 && _value != null)
-            {
+            if (converters != null && converters.Length > 0 && _value != null) {
                 JsonConverter? matchingConverter = JsonSerializer.GetMatchingConverter(converters, _value.GetType());
-                if (matchingConverter != null && matchingConverter.CanWrite)
-                {
+                if (matchingConverter != null && matchingConverter.CanWrite) {
                     matchingConverter.WriteJson(writer, _value, JsonSerializer.CreateDefault());
                     return AsyncUtils.CompletedTask;
                 }
             }
 
-            switch (_valueType)
-            {
+            switch (_valueType) {
                 case JTokenType.Comment:
                     return writer.WriteCommentAsync(_value?.ToString(), cancellationToken);
                 case JTokenType.Raw:
@@ -37,18 +34,15 @@ namespace Simula.Scripting.Json.Linq
                 case JTokenType.Undefined:
                     return writer.WriteUndefinedAsync(cancellationToken);
                 case JTokenType.Integer:
-                    if (_value is int i)
-                    {
+                    if (_value is int i) {
                         return writer.WriteValueAsync(i, cancellationToken);
                     }
 
-                    if (_value is long l)
-                    {
+                    if (_value is long l) {
                         return writer.WriteValueAsync(l, cancellationToken);
                     }
 
-                    if (_value is ulong ul)
-                    {
+                    if (_value is ulong ul) {
                         return writer.WriteValueAsync(ul, cancellationToken);
                     }
 
@@ -61,18 +55,15 @@ namespace Simula.Scripting.Json.Linq
 
                     return writer.WriteValueAsync(Convert.ToInt64(_value, CultureInfo.InvariantCulture), cancellationToken);
                 case JTokenType.Float:
-                    if (_value is decimal dec)
-                    {
+                    if (_value is decimal dec) {
                         return writer.WriteValueAsync(dec, cancellationToken);
                     }
 
-                    if (_value is double d)
-                    {
+                    if (_value is double d) {
                         return writer.WriteValueAsync(d, cancellationToken);
                     }
 
-                    if (_value is float f)
-                    {
+                    if (_value is float f) {
                         return writer.WriteValueAsync(f, cancellationToken);
                     }
 
@@ -82,8 +73,7 @@ namespace Simula.Scripting.Json.Linq
                 case JTokenType.Boolean:
                     return writer.WriteValueAsync(Convert.ToBoolean(_value, CultureInfo.InvariantCulture), cancellationToken);
                 case JTokenType.Date:
-                    if (_value is DateTimeOffset offset)
-                    {
+                    if (_value is DateTimeOffset offset) {
                         return writer.WriteValueAsync(offset, cancellationToken);
                     }
 

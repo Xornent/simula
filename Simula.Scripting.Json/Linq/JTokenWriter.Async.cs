@@ -1,9 +1,9 @@
 ﻿
 #if HAVE_ASYNC
 
+using Simula.Scripting.Json.Utilities;
 using System.Threading;
 using System.Threading.Tasks;
-using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json.Linq
 {
@@ -11,8 +11,7 @@ namespace Simula.Scripting.Json.Linq
     {
         internal override Task WriteTokenAsync(JsonReader reader, bool writeChildren, bool writeDateConstructorAsDate, bool writeComments, CancellationToken cancellationToken)
         {
-            if (reader is JTokenReader)
-            {
+            if (reader is JTokenReader) {
                 WriteToken(reader, writeChildren, writeDateConstructorAsDate, writeComments);
                 return AsyncUtils.CompletedTask;
             }

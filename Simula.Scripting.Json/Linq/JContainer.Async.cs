@@ -1,12 +1,11 @@
 ﻿
 #if HAVE_ASYNC
 
+using Simula.Scripting.Json.Utilities;
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
-using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json.Linq
 {
@@ -17,15 +16,13 @@ namespace Simula.Scripting.Json.Linq
             ValidationUtils.ArgumentNotNull(reader, nameof(reader));
             int startDepth = reader.Depth;
 
-            if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-            {
+            if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) {
                 throw JsonReaderException.Create(reader, "Error reading {0} from JsonReader.".FormatWith(CultureInfo.InvariantCulture, GetType().Name));
             }
 
             await ReadContentFromAsync(reader, options, cancellationToken).ConfigureAwait(false);
 
-            if (reader.Depth > startDepth)
-            {
+            if (reader.Depth > startDepth) {
                 throw JsonReaderException.Create(reader, "Unexpected end of content while loading {0}.".FormatWith(CultureInfo.InvariantCulture, GetType().Name));
             }
         }
@@ -36,12 +33,9 @@ namespace Simula.Scripting.Json.Linq
 
             JContainer? parent = this;
 
-            do
-            {
-                if (parent is JProperty p && p.Value != null)
-                {
-                    if (parent == this)
-                    {
+            do {
+                if (parent is JProperty p && p.Value != null) {
+                    if (parent == this) {
                         return;
                     }
 
@@ -50,8 +44,7 @@ namespace Simula.Scripting.Json.Linq
 
                 MiscellaneousUtils.Assert(parent != null);
 
-                switch (reader.TokenType)
-                {
+                switch (reader.TokenType) {
                     case JsonToken.None:
                         break;
                     case JsonToken.StartArray:
@@ -62,8 +55,7 @@ namespace Simula.Scripting.Json.Linq
                         break;
 
                     case JsonToken.EndArray:
-                        if (parent == this)
-                        {
+                        if (parent == this) {
                             return;
                         }
 
@@ -76,8 +68,7 @@ namespace Simula.Scripting.Json.Linq
                         parent = o;
                         break;
                     case JsonToken.EndObject:
-                        if (parent == this)
-                        {
+                        if (parent == this) {
                             return;
                         }
 
@@ -90,8 +81,7 @@ namespace Simula.Scripting.Json.Linq
                         parent = constructor;
                         break;
                     case JsonToken.EndConstructor:
-                        if (parent == this)
-                        {
+                        if (parent == this) {
                             return;
                         }
 
@@ -108,8 +98,7 @@ namespace Simula.Scripting.Json.Linq
                         parent.Add(v);
                         break;
                     case JsonToken.Comment:
-                        if (settings != null && settings.CommentHandling == CommentHandling.Load)
-                        {
+                        if (settings != null && settings.CommentHandling == CommentHandling.Load) {
                             v = JValue.CreateComment(reader.Value!.ToString());
                             v.SetLineInfo(lineInfo, settings);
                             parent.Add(v);
@@ -127,12 +116,9 @@ namespace Simula.Scripting.Json.Linq
                         break;
                     case JsonToken.PropertyName:
                         JProperty? property = ReadProperty(reader, settings, lineInfo, parent);
-                        if (property != null)
-                        {
+                        if (property != null) {
                             parent = property;
-                        }
-                        else
-                        {
+                        } else {
                             await reader.SkipAsync().ConfigureAwait(false);
                         }
                         break;

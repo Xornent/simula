@@ -1,12 +1,11 @@
 ﻿
+using Simula.Scripting.Json.Serialization;
+using Simula.Scripting.Json.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
 using System.IO;
-using Simula.Scripting.Json.Serialization;
-using Simula.Scripting.Json.Utilities;
-using Simula.Scripting.Json.Linq;
+using System.Text;
 
 #nullable disable
 
@@ -60,18 +59,15 @@ namespace Simula.Scripting.Json.Bson
             }
         }
         [Obsolete("JsonNet35BinaryCompatibility will be removed in a future version of Json.NET.")]
-        public bool JsonNet35BinaryCompatibility
-        {
+        public bool JsonNet35BinaryCompatibility {
             get => _jsonNet35BinaryCompatibility;
             set => _jsonNet35BinaryCompatibility = value;
         }
-        public bool ReadRootValueAsArray
-        {
+        public bool ReadRootValueAsArray {
             get => _readRootValueAsArray;
             set => _readRootValueAsArray = value;
         }
-        public DateTimeKind DateTimeKindHandling
-        {
+        public DateTimeKind DateTimeKindHandling {
             get => _dateTimeKindHandling;
             set => _dateTimeKindHandling = value;
         }
@@ -108,12 +104,10 @@ namespace Simula.Scripting.Json.Bson
         }
         public override bool Read()
         {
-            try
-            {
+            try {
                 bool success;
 
-                switch (_bsonReaderState)
-                {
+                switch (_bsonReaderState) {
                     case BsonReaderState.Normal:
                         success = ReadNormal();
                         break;
@@ -133,16 +127,13 @@ namespace Simula.Scripting.Json.Bson
                         throw JsonReaderException.Create(this, "Unexpected state: {0}".FormatWith(CultureInfo.InvariantCulture, _bsonReaderState));
                 }
 
-                if (!success)
-                {
+                if (!success) {
                     SetToken(JsonToken.None);
                     return false;
                 }
 
                 return true;
-            }
-            catch (EndOfStreamException)
-            {
+            } catch (EndOfStreamException) {
                 SetToken(JsonToken.None);
                 return false;
             }
@@ -151,8 +142,7 @@ namespace Simula.Scripting.Json.Bson
         {
             base.Close();
 
-            if (CloseInput)
-            {
+            if (CloseInput) {
 #if HAVE_STREAM_READER_WRITER_CLOSE
                 _reader?.Close();
 #else
@@ -163,8 +153,7 @@ namespace Simula.Scripting.Json.Bson
 
         private bool ReadCodeWScope()
         {
-            switch (_bsonReaderState)
-            {
+            switch (_bsonReaderState) {
                 case BsonReaderState.CodeWScopeStart:
                     SetToken(JsonToken.PropertyName, "$code");
                     _bsonReaderState = BsonReaderState.CodeWScopeCode;
@@ -176,13 +165,10 @@ namespace Simula.Scripting.Json.Bson
                     _bsonReaderState = BsonReaderState.CodeWScopeScope;
                     return true;
                 case BsonReaderState.CodeWScopeScope:
-                    if (CurrentState == State.PostValue)
-                    {
+                    if (CurrentState == State.PostValue) {
                         SetToken(JsonToken.PropertyName, "$scope");
                         return true;
-                    }
-                    else
-                    {
+                    } else {
                         SetToken(JsonToken.StartObject);
                         _bsonReaderState = BsonReaderState.CodeWScopeScopeObject;
 
@@ -194,8 +180,7 @@ namespace Simula.Scripting.Json.Bson
                     }
                 case BsonReaderState.CodeWScopeScopeObject:
                     bool result = ReadNormal();
-                    if (result && TokenType == JsonToken.EndObject)
-                    {
+                    if (result && TokenType == JsonToken.EndObject) {
                         _bsonReaderState = BsonReaderState.CodeWScopeScopeEnd;
                     }
 
@@ -211,50 +196,36 @@ namespace Simula.Scripting.Json.Bson
 
         private bool ReadReference()
         {
-            switch (CurrentState)
-            {
-                case State.ObjectStart:
-                {
-                    SetToken(JsonToken.PropertyName, JsonTypeReflector.RefPropertyName);
-                    _bsonReaderState = BsonReaderState.ReferenceRef;
-                    return true;
-                }
-                case State.Property:
-                {
-                    if (_bsonReaderState == BsonReaderState.ReferenceRef)
-                    {
-                        SetToken(JsonToken.String, ReadLengthString());
+            switch (CurrentState) {
+                case State.ObjectStart: {
+                        SetToken(JsonToken.PropertyName, JsonTypeReflector.RefPropertyName);
+                        _bsonReaderState = BsonReaderState.ReferenceRef;
                         return true;
                     }
-                    else if (_bsonReaderState == BsonReaderState.ReferenceId)
-                    {
-                        SetToken(JsonToken.Bytes, ReadBytes(12));
-                        return true;
+                case State.Property: {
+                        if (_bsonReaderState == BsonReaderState.ReferenceRef) {
+                            SetToken(JsonToken.String, ReadLengthString());
+                            return true;
+                        } else if (_bsonReaderState == BsonReaderState.ReferenceId) {
+                            SetToken(JsonToken.Bytes, ReadBytes(12));
+                            return true;
+                        } else {
+                            throw JsonReaderException.Create(this, "Unexpected state when reading BSON reference: " + _bsonReaderState);
+                        }
                     }
-                    else
-                    {
-                        throw JsonReaderException.Create(this, "Unexpected state when reading BSON reference: " + _bsonReaderState);
+                case State.PostValue: {
+                        if (_bsonReaderState == BsonReaderState.ReferenceRef) {
+                            SetToken(JsonToken.PropertyName, JsonTypeReflector.IdPropertyName);
+                            _bsonReaderState = BsonReaderState.ReferenceId;
+                            return true;
+                        } else if (_bsonReaderState == BsonReaderState.ReferenceId) {
+                            SetToken(JsonToken.EndObject);
+                            _bsonReaderState = BsonReaderState.Normal;
+                            return true;
+                        } else {
+                            throw JsonReaderException.Create(this, "Unexpected state when reading BSON reference: " + _bsonReaderState);
+                        }
                     }
-                }
-                case State.PostValue:
-                {
-                    if (_bsonReaderState == BsonReaderState.ReferenceRef)
-                    {
-                        SetToken(JsonToken.PropertyName, JsonTypeReflector.IdPropertyName);
-                        _bsonReaderState = BsonReaderState.ReferenceId;
-                        return true;
-                    }
-                    else if (_bsonReaderState == BsonReaderState.ReferenceId)
-                    {
-                        SetToken(JsonToken.EndObject);
-                        _bsonReaderState = BsonReaderState.Normal;
-                        return true;
-                    }
-                    else
-                    {
-                        throw JsonReaderException.Create(this, "Unexpected state when reading BSON reference: " + _bsonReaderState);
-                    }
-                }
                 default:
                     throw JsonReaderException.Create(this, "Unexpected state when reading BSON reference: " + CurrentState);
             }
@@ -262,35 +233,30 @@ namespace Simula.Scripting.Json.Bson
 
         private bool ReadNormal()
         {
-            switch (CurrentState)
-            {
-                case State.Start:
-                {
-                    JsonToken token = (!_readRootValueAsArray) ? JsonToken.StartObject : JsonToken.StartArray;
-                    BsonType type = (!_readRootValueAsArray) ? BsonType.Object : BsonType.Array;
+            switch (CurrentState) {
+                case State.Start: {
+                        JsonToken token = (!_readRootValueAsArray) ? JsonToken.StartObject : JsonToken.StartArray;
+                        BsonType type = (!_readRootValueAsArray) ? BsonType.Object : BsonType.Array;
 
-                    SetToken(token);
-                    ContainerContext newContext = new ContainerContext(type);
-                    PushContext(newContext);
-                    newContext.Length = ReadInt32();
-                    return true;
-                }
+                        SetToken(token);
+                        ContainerContext newContext = new ContainerContext(type);
+                        PushContext(newContext);
+                        newContext.Length = ReadInt32();
+                        return true;
+                    }
                 case State.Complete:
                 case State.Closed:
                     return false;
-                case State.Property:
-                {
-                    ReadType(_currentElementType);
-                    return true;
-                }
+                case State.Property: {
+                        ReadType(_currentElementType);
+                        return true;
+                    }
                 case State.ObjectStart:
                 case State.ArrayStart:
                 case State.PostValue:
                     ContainerContext context = _currentContext;
-                    if (context == null)
-                    {
-                        if (SupportMultipleContent)
-                        {
+                    if (context == null) {
+                        if (SupportMultipleContent) {
                             goto case State.Start;
                         }
 
@@ -299,39 +265,29 @@ namespace Simula.Scripting.Json.Bson
 
                     int lengthMinusEnd = context.Length - 1;
 
-                    if (context.Position < lengthMinusEnd)
-                    {
-                        if (context.Type == BsonType.Array)
-                        {
+                    if (context.Position < lengthMinusEnd) {
+                        if (context.Type == BsonType.Array) {
                             ReadElement();
                             ReadType(_currentElementType);
                             return true;
-                        }
-                        else
-                        {
+                        } else {
                             SetToken(JsonToken.PropertyName, ReadElement());
                             return true;
                         }
-                    }
-                    else if (context.Position == lengthMinusEnd)
-                    {
-                        if (ReadByte() != 0)
-                        {
+                    } else if (context.Position == lengthMinusEnd) {
+                        if (ReadByte() != 0) {
                             throw JsonReaderException.Create(this, "Unexpected end of object byte value.");
                         }
 
                         PopContext();
-                        if (_currentContext != null)
-                        {
+                        if (_currentContext != null) {
                             MovePosition(context.Length);
                         }
 
                         JsonToken endToken = (context.Type == BsonType.Object) ? JsonToken.EndObject : JsonToken.EndArray;
                         SetToken(endToken);
                         return true;
-                    }
-                    else
-                    {
+                    } else {
                         throw JsonReaderException.Create(this, "Read past end of current container context.");
                     }
                 case State.ConstructorStart:
@@ -352,12 +308,9 @@ namespace Simula.Scripting.Json.Bson
         private void PopContext()
         {
             _stack.RemoveAt(_stack.Count - 1);
-            if (_stack.Count == 0)
-            {
+            if (_stack.Count == 0) {
                 _currentContext = null;
-            }
-            else
-            {
+            } else {
                 _currentContext = _stack[_stack.Count - 1];
             }
         }
@@ -376,17 +329,13 @@ namespace Simula.Scripting.Json.Bson
 
         private void ReadType(BsonType type)
         {
-            switch (type)
-            {
+            switch (type) {
                 case BsonType.Number:
                     double d = ReadDouble();
 
-                    if (_floatParseHandling == FloatParseHandling.Decimal)
-                    {
+                    if (_floatParseHandling == FloatParseHandling.Decimal) {
                         SetToken(JsonToken.Float, Convert.ToDecimal(d, CultureInfo.InvariantCulture));
-                    }
-                    else
-                    {
+                    } else {
                         SetToken(JsonToken.Float, d);
                     }
                     break;
@@ -394,24 +343,22 @@ namespace Simula.Scripting.Json.Bson
                 case BsonType.Symbol:
                     SetToken(JsonToken.String, ReadLengthString());
                     break;
-                case BsonType.Object:
-                {
-                    SetToken(JsonToken.StartObject);
+                case BsonType.Object: {
+                        SetToken(JsonToken.StartObject);
 
-                    ContainerContext newContext = new ContainerContext(BsonType.Object);
-                    PushContext(newContext);
-                    newContext.Length = ReadInt32();
-                    break;
-                }
-                case BsonType.Array:
-                {
-                    SetToken(JsonToken.StartArray);
+                        ContainerContext newContext = new ContainerContext(BsonType.Object);
+                        PushContext(newContext);
+                        newContext.Length = ReadInt32();
+                        break;
+                    }
+                case BsonType.Array: {
+                        SetToken(JsonToken.StartArray);
 
-                    ContainerContext newContext = new ContainerContext(BsonType.Array);
-                    PushContext(newContext);
-                    newContext.Length = ReadInt32();
-                    break;
-                }
+                        ContainerContext newContext = new ContainerContext(BsonType.Array);
+                        PushContext(newContext);
+                        newContext.Length = ReadInt32();
+                        break;
+                    }
                 case BsonType.Binary:
                     BsonBinaryType binaryType;
                     byte[] data = ReadBinary(out binaryType);
@@ -438,8 +385,7 @@ namespace Simula.Scripting.Json.Bson
                     DateTime utcDateTime = DateTimeUtils.ConvertJavaScriptTicksToDateTime(ticks);
 
                     DateTime dateTime;
-                    switch (DateTimeKindHandling)
-                    {
+                    switch (DateTimeKindHandling) {
                         case DateTimeKind.Unspecified:
                             dateTime = DateTime.SpecifyKind(utcDateTime, DateTimeKind.Unspecified);
                             break;
@@ -493,8 +439,7 @@ namespace Simula.Scripting.Json.Bson
             binaryType = (BsonBinaryType)ReadByte();
 
 #pragma warning disable 612,618
-            if (binaryType == BsonBinaryType.BinaryOld && !_jsonNet35BinaryCompatibility)
-            {
+            if (binaryType == BsonBinaryType.BinaryOld && !_jsonNet35BinaryCompatibility) {
                 dataLength = ReadInt32();
             }
 #pragma warning restore 612,618
@@ -510,46 +455,36 @@ namespace Simula.Scripting.Json.Bson
 
             int totalBytesRead = 0;
             int offset = 0;
-            while (true)
-            {
+            while (true) {
                 int count = offset;
                 byte b;
-                while (count < MaxCharBytesSize && (b = _reader.ReadByte()) > 0)
-                {
+                while (count < MaxCharBytesSize && (b = _reader.ReadByte()) > 0) {
                     _byteBuffer[count++] = b;
                 }
                 int byteCount = count - offset;
                 totalBytesRead += byteCount;
 
-                if (count < MaxCharBytesSize && builder == null)
-                {
+                if (count < MaxCharBytesSize && builder == null) {
                     int length = Encoding.UTF8.GetChars(_byteBuffer, 0, byteCount, _charBuffer, 0);
 
                     MovePosition(totalBytesRead + 1);
                     return new string(_charBuffer, 0, length);
-                }
-                else
-                {
+                } else {
                     int lastFullCharStop = GetLastFullCharStop(count - 1);
 
                     int charCount = Encoding.UTF8.GetChars(_byteBuffer, 0, lastFullCharStop + 1, _charBuffer, 0);
 
-                    if (builder == null)
-                    {
+                    if (builder == null) {
                         builder = new StringBuilder(MaxCharBytesSize * 2);
                     }
 
                     builder.Append(_charBuffer, 0, charCount);
 
-                    if (lastFullCharStop < byteCount - 1)
-                    {
+                    if (lastFullCharStop < byteCount - 1) {
                         offset = byteCount - lastFullCharStop - 1;
                         Array.Copy(_byteBuffer, lastFullCharStop + 1, _byteBuffer, 0, offset);
-                    }
-                    else
-                    {
-                        if (count < MaxCharBytesSize)
-                        {
+                    } else {
+                        if (count < MaxCharBytesSize) {
                             MovePosition(totalBytesRead + 1);
                             return builder.ToString();
                         }
@@ -574,8 +509,7 @@ namespace Simula.Scripting.Json.Bson
 
         private string GetString(int length)
         {
-            if (length == 0)
-            {
+            if (length == 0) {
                 return string.Empty;
             }
 
@@ -585,46 +519,37 @@ namespace Simula.Scripting.Json.Bson
 
             int totalBytesRead = 0;
             int offset = 0;
-            do
-            {
+            do {
                 int count = ((length - totalBytesRead) > MaxCharBytesSize - offset)
                     ? MaxCharBytesSize - offset
                     : length - totalBytesRead;
 
                 int byteCount = _reader.Read(_byteBuffer, offset, count);
 
-                if (byteCount == 0)
-                {
+                if (byteCount == 0) {
                     throw new EndOfStreamException("Unable to read beyond the end of the stream.");
                 }
 
                 totalBytesRead += byteCount;
                 byteCount += offset;
 
-                if (byteCount == length)
-                {
+                if (byteCount == length) {
                     int charCount = Encoding.UTF8.GetChars(_byteBuffer, 0, byteCount, _charBuffer, 0);
                     return new string(_charBuffer, 0, charCount);
-                }
-                else
-                {
+                } else {
                     int lastFullCharStop = GetLastFullCharStop(byteCount - 1);
 
-                    if (builder == null)
-                    {
+                    if (builder == null) {
                         builder = new StringBuilder(length);
                     }
 
                     int charCount = Encoding.UTF8.GetChars(_byteBuffer, 0, lastFullCharStop + 1, _charBuffer, 0);
                     builder.Append(_charBuffer, 0, charCount);
 
-                    if (lastFullCharStop < byteCount - 1)
-                    {
+                    if (lastFullCharStop < byteCount - 1) {
                         offset = byteCount - lastFullCharStop - 1;
                         Array.Copy(_byteBuffer, lastFullCharStop + 1, _byteBuffer, 0, offset);
-                    }
-                    else
-                    {
+                    } else {
                         offset = 0;
                     }
                 }
@@ -637,50 +562,37 @@ namespace Simula.Scripting.Json.Bson
         {
             int lookbackPos = start;
             int bis = 0;
-            while (lookbackPos >= 0)
-            {
+            while (lookbackPos >= 0) {
                 bis = BytesInSequence(_byteBuffer[lookbackPos]);
-                if (bis == 0)
-                {
+                if (bis == 0) {
                     lookbackPos--;
                     continue;
-                }
-                else if (bis == 1)
-                {
+                } else if (bis == 1) {
                     break;
-                }
-                else
-                {
+                } else {
                     lookbackPos--;
                     break;
                 }
             }
-            if (bis == start - lookbackPos)
-            {
+            if (bis == start - lookbackPos) {
                 return start;
-            }
-            else
-            {
+            } else {
                 return lookbackPos;
             }
         }
 
         private int BytesInSequence(byte b)
         {
-            if (b <= SeqRange1[1])
-            {
+            if (b <= SeqRange1[1]) {
                 return 1;
             }
-            if (b >= SeqRange2[0] && b <= SeqRange2[1])
-            {
+            if (b >= SeqRange2[0] && b <= SeqRange2[1]) {
                 return 2;
             }
-            if (b >= SeqRange3[0] && b <= SeqRange3[1])
-            {
+            if (b >= SeqRange3[0] && b <= SeqRange3[1]) {
                 return 3;
             }
-            if (b >= SeqRange4[0] && b <= SeqRange4[1])
-            {
+            if (b >= SeqRange4[0] && b <= SeqRange4[1]) {
                 return 4;
             }
             return 0;
@@ -688,12 +600,10 @@ namespace Simula.Scripting.Json.Bson
 
         private void EnsureBuffers()
         {
-            if (_byteBuffer == null)
-            {
+            if (_byteBuffer == null) {
                 _byteBuffer = new byte[MaxCharBytesSize];
             }
-            if (_charBuffer == null)
-            {
+            if (_charBuffer == null) {
                 int charBufferSize = Encoding.UTF8.GetMaxCharCount(MaxCharBytesSize);
                 _charBuffer = new char[charBufferSize];
             }

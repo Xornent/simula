@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using Simula.Scripting.Json.Utilities;
 using System.Globalization;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 #if !HAVE_LINQ
 using Simula.Scripting.Json.Utilities.LinqBridge;
 #else
@@ -70,8 +69,7 @@ namespace Simula.Scripting.Json.Linq
         {
             ValidationUtils.ArgumentNotNull(value, nameof(value));
 
-            if (!(value is JToken token))
-            {
+            if (!(value is JToken token)) {
                 throw new ArgumentException("Source value must be a JToken.");
             }
 
@@ -82,30 +80,20 @@ namespace Simula.Scripting.Json.Linq
         {
             ValidationUtils.ArgumentNotNull(source, nameof(source));
 
-            if (key == null)
-            {
-                foreach (T token in source)
-                {
-                    if (token is JValue value)
-                    {
+            if (key == null) {
+                foreach (T token in source) {
+                    if (token is JValue value) {
                         yield return Convert<JValue, U>(value);
-                    }
-                    else
-                    {
-                        foreach (JToken t in token.Children())
-                        {
+                    } else {
+                        foreach (JToken t in token.Children()) {
                             yield return t.Convert<JToken, U>();
                         }
                     }
                 }
-            }
-            else
-            {
-                foreach (T token in source)
-                {
+            } else {
+                foreach (T token in source) {
                     JToken? value = token[key];
-                    if (value != null)
-                    {
+                    if (value != null) {
                         yield return value.Convert<JToken, U>();
                     }
                 }
@@ -126,8 +114,7 @@ namespace Simula.Scripting.Json.Linq
         {
             ValidationUtils.ArgumentNotNull(source, nameof(source));
 
-            foreach (T token in source)
-            {
+            foreach (T token in source) {
                 yield return Convert<JToken, U>(token);
             }
         }
@@ -135,36 +122,28 @@ namespace Simula.Scripting.Json.Linq
         [return: MaybeNull]
         internal static U Convert<T, U>(this T token) where T : JToken?
         {
-            if (token == null)
-            {
+            if (token == null) {
 #pragma warning disable CS8653 // A default expression introduces a null value for a type parameter.
                 return default;
 #pragma warning restore CS8653 // A default expression introduces a null value for a type parameter.
             }
 
             if (token is U castValue
-                && typeof(U) != typeof(IComparable) && typeof(U) != typeof(IFormattable))
-            {
+                && typeof(U) != typeof(IComparable) && typeof(U) != typeof(IFormattable)) {
                 return castValue;
-            }
-            else
-            {
-                if (!(token is JValue value))
-                {
+            } else {
+                if (!(token is JValue value)) {
                     throw new InvalidCastException("Cannot cast {0} to {1}.".FormatWith(CultureInfo.InvariantCulture, token.GetType(), typeof(T)));
                 }
 
-                if (value.Value is U u)
-                {
+                if (value.Value is U u) {
                     return u;
                 }
 
                 Type targetType = typeof(U);
 
-                if (ReflectionUtils.IsNullableType(targetType))
-                {
-                    if (value.Value == null)
-                    {
+                if (ReflectionUtils.IsNullableType(targetType)) {
+                    if (value.Value == null) {
 #pragma warning disable CS8653 // A default expression introduces a null value for a type parameter.
                         return default;
 #pragma warning restore CS8653 // A default expression introduces a null value for a type parameter.
@@ -182,16 +161,11 @@ namespace Simula.Scripting.Json.Linq
         }
         public static IJEnumerable<T> AsJEnumerable<T>(this IEnumerable<T> source) where T : JToken
         {
-            if (source == null)
-            {
+            if (source == null) {
                 return null!;
-            }
-            else if (source is IJEnumerable<T> customEnumerable)
-            {
+            } else if (source is IJEnumerable<T> customEnumerable) {
                 return customEnumerable;
-            }
-            else
-            {
+            } else {
                 return new JEnumerable<T>(source);
             }
         }

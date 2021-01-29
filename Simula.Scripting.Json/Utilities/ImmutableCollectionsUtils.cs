@@ -8,8 +8,6 @@ using Simula.Scripting.Json.Utilities.LinqBridge;
 using System.Linq;
 #endif
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
 using Simula.Scripting.Json.Serialization;
 
 namespace Simula.Scripting.Json.Utilities
@@ -82,24 +80,20 @@ namespace Simula.Scripting.Json.Utilities
             new ImmutableCollectionTypeInfo(ImmutableDictionaryGenericTypeName, ImmutableDictionaryGenericTypeName, ImmutableDictionaryTypeName)
         };
 
-        internal static bool TryBuildImmutableForArrayContract(Type underlyingType, Type collectionItemType, [NotNullWhen(true)]out Type? createdType, [NotNullWhen(true)]out ObjectConstructor<object>? parameterizedCreator)
+        internal static bool TryBuildImmutableForArrayContract(Type underlyingType, Type collectionItemType, [NotNullWhen(true)] out Type? createdType, [NotNullWhen(true)] out ObjectConstructor<object>? parameterizedCreator)
         {
-            if (underlyingType.IsGenericType())
-            {
+            if (underlyingType.IsGenericType()) {
                 Type underlyingTypeDefinition = underlyingType.GetGenericTypeDefinition();
                 string name = underlyingTypeDefinition.FullName;
 
                 ImmutableCollectionTypeInfo definition = ArrayContractImmutableCollectionDefinitions.FirstOrDefault(d => d.ContractTypeName == name);
-                if (definition != null)
-                {
+                if (definition != null) {
                     Type createdTypeDefinition = underlyingTypeDefinition.Assembly().GetType(definition.CreatedTypeName);
                     Type builderTypeDefinition = underlyingTypeDefinition.Assembly().GetType(definition.BuilderTypeName);
 
-                    if (createdTypeDefinition != null && builderTypeDefinition != null)
-                    {
+                    if (createdTypeDefinition != null && builderTypeDefinition != null) {
                         MethodInfo mb = builderTypeDefinition.GetMethods().FirstOrDefault(m => m.Name == "CreateRange" && m.GetParameters().Length == 1);
-                        if (mb != null)
-                        {
+                        if (mb != null) {
                             createdType = createdTypeDefinition.MakeGenericType(collectionItemType);
                             MethodInfo method = mb.MakeGenericMethod(collectionItemType);
                             parameterizedCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateParameterizedConstructor(method);
@@ -114,29 +108,24 @@ namespace Simula.Scripting.Json.Utilities
             return false;
         }
 
-        internal static bool TryBuildImmutableForDictionaryContract(Type underlyingType, Type keyItemType, Type valueItemType, [NotNullWhen(true)]out Type? createdType, [NotNullWhen(true)]out ObjectConstructor<object>? parameterizedCreator)
+        internal static bool TryBuildImmutableForDictionaryContract(Type underlyingType, Type keyItemType, Type valueItemType, [NotNullWhen(true)] out Type? createdType, [NotNullWhen(true)] out ObjectConstructor<object>? parameterizedCreator)
         {
-            if (underlyingType.IsGenericType())
-            {
+            if (underlyingType.IsGenericType()) {
                 Type underlyingTypeDefinition = underlyingType.GetGenericTypeDefinition();
                 string name = underlyingTypeDefinition.FullName;
 
                 ImmutableCollectionTypeInfo definition = DictionaryContractImmutableCollectionDefinitions.FirstOrDefault(d => d.ContractTypeName == name);
-                if (definition != null)
-                {
+                if (definition != null) {
                     Type createdTypeDefinition = underlyingTypeDefinition.Assembly().GetType(definition.CreatedTypeName);
                     Type builderTypeDefinition = underlyingTypeDefinition.Assembly().GetType(definition.BuilderTypeName);
 
-                    if (createdTypeDefinition != null && builderTypeDefinition != null)
-                    {
-                        MethodInfo mb = builderTypeDefinition.GetMethods().FirstOrDefault(m =>
-                        {
+                    if (createdTypeDefinition != null && builderTypeDefinition != null) {
+                        MethodInfo mb = builderTypeDefinition.GetMethods().FirstOrDefault(m => {
                             ParameterInfo[] parameters = m.GetParameters();
 
                             return m.Name == "CreateRange" && parameters.Length == 1 && parameters[0].ParameterType.IsGenericType() && parameters[0].ParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>);
                         });
-                        if (mb != null)
-                        {
+                        if (mb != null) {
                             createdType = createdTypeDefinition.MakeGenericType(keyItemType, valueItemType);
                             MethodInfo method = mb.MakeGenericMethod(keyItemType, valueItemType);
                             parameterizedCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateParameterizedConstructor(method);

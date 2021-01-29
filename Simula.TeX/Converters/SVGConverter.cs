@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using System.Windows.Media;
-using System.Globalization;
-using System.Diagnostics;
 
 namespace Simula.TeX.Converters
 {
@@ -15,8 +13,7 @@ namespace Simula.TeX.Converters
         public string ConvertGeometry(Geometry geometry)
         {
             StringBuilder svgOutput = new StringBuilder();
-            if (geometry is GeometryGroup group)
-            {
+            if (geometry is GeometryGroup group) {
                 AddGeometry(svgOutput, group);
             }
             return svgOutput.ToString();
@@ -25,36 +22,26 @@ namespace Simula.TeX.Converters
         private void AddGeometry(StringBuilder svgString, GeometryGroup group)
         {
             m_nestedLevel++;
-            if (!group.Transform.Value.IsIdentity)
-            {
+            if (!group.Transform.Value.IsIdentity) {
                 svgString.AppendFormat(CultureInfo.InvariantCulture, "<g transform=\"matrix({0} {1} {2} {3} {4} {5})\">"
                     , group.Transform.Value.M11, group.Transform.Value.M12
                     , group.Transform.Value.M21, group.Transform.Value.M22, group.Transform.Value.OffsetX, group.Transform.Value.OffsetY);
             }
-            foreach (Geometry geometry in group.Children)
-            {
-                if (geometry is GeometryGroup)
-                {
+            foreach (Geometry geometry in group.Children) {
+                if (geometry is GeometryGroup) {
                     GeometryGroup childGroup = (GeometryGroup)geometry;
                     AddGeometry(svgString, childGroup);
-                }
-                else if (geometry is PathGeometry)
-                {
+                } else if (geometry is PathGeometry) {
                     PathGeometry path = (PathGeometry)geometry;
                     AddGeometry(svgString, path);
-                }
-                else if (geometry is RectangleGeometry)
-                {
+                } else if (geometry is RectangleGeometry) {
                     RectangleGeometry rectangle = (RectangleGeometry)geometry;
                     AddGeometry(svgString, rectangle);
-                }
-                else
-                {
+                } else {
                     Debug.Assert(false);
                 }
             }
-            if (!group.Transform.Value.IsIdentity)
-            {
+            if (!group.Transform.Value.IsIdentity) {
                 svgString.AppendLine("</g>");
                 svgString.AppendLine(Environment.NewLine);
             }
@@ -66,28 +53,21 @@ namespace Simula.TeX.Converters
         {
             svgString.Append("<path d=\"");
 
-            foreach (PathFigure pf in path.Figures)
-            {
+            foreach (PathFigure pf in path.Figures) {
 
                 svgString.Append("M ");
                 svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", pf.StartPoint.X);
                 svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", pf.StartPoint.Y);
 
-                foreach (PathSegment ps in pf.Segments)
-                {
-                    if (ps is PolyLineSegment plSeg)
-                    {
-                        for (int i = 0; i < plSeg.Points.Count; ++i)
-                        {
+                foreach (PathSegment ps in pf.Segments) {
+                    if (ps is PolyLineSegment plSeg) {
+                        for (int i = 0; i < plSeg.Points.Count; ++i) {
                             svgString.Append("L ");
                             svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", plSeg.Points[i].X);
                             svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", plSeg.Points[i].Y);
                         }
-                    }
-                    else if (ps is PolyBezierSegment pbSeg)
-                    {
-                        for (int i = 0; i < pbSeg.Points.Count; i += 3)
-                        {
+                    } else if (ps is PolyBezierSegment pbSeg) {
+                        for (int i = 0; i < pbSeg.Points.Count; i += 3) {
                             svgString.Append("C ");
                             svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", pbSeg.Points[i].X);
                             svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", pbSeg.Points[i].Y);
@@ -98,15 +78,11 @@ namespace Simula.TeX.Converters
                             svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", pbSeg.Points[i + 2].X);
                             svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", pbSeg.Points[i + 2].Y);
                         }
-                    }
-                    else if (ps is LineSegment lSeg)
-                    {
+                    } else if (ps is LineSegment lSeg) {
                         svgString.Append("L ");
                         svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", lSeg.Point.X);
                         svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", lSeg.Point.Y);
-                    }
-                    else if (ps is BezierSegment bSeg)
-                    {
+                    } else if (ps is BezierSegment bSeg) {
                         svgString.Append("C ");
                         svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", bSeg.Point1.X);
                         svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", bSeg.Point1.Y);
@@ -116,9 +92,7 @@ namespace Simula.TeX.Converters
 
                         svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", bSeg.Point3.X);
                         svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", bSeg.Point3.Y);
-                    }
-                    else if (ps is QuadraticBezierSegment qbSeg)
-                    {
+                    } else if (ps is QuadraticBezierSegment qbSeg) {
                         //Untested: BuildGeometry converts quadratic bezier to cubic
                         svgString.Append("Q ");
                         svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", qbSeg.Point1.X);
@@ -126,12 +100,9 @@ namespace Simula.TeX.Converters
 
                         svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", qbSeg.Point2.X);
                         svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", qbSeg.Point2.Y);
-                    }
-                    else if (ps is PolyQuadraticBezierSegment pqbSeg)
-                    {
+                    } else if (ps is PolyQuadraticBezierSegment pqbSeg) {
                         //Untested: BuildGeometry converts quadratic bezier to cubic
-                        for (int i = 0; i < pqbSeg.Points.Count; i += 2)
-                        {
+                        for (int i = 0; i < pqbSeg.Points.Count; i += 2) {
                             svgString.Append("Q ");
                             svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", pqbSeg.Points[i].X);
                             svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", pqbSeg.Points[i].Y);
@@ -139,9 +110,7 @@ namespace Simula.TeX.Converters
                             svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", pqbSeg.Points[i + 1].X);
                             svgString.AppendFormat(CultureInfo.InvariantCulture, "{0} ", pqbSeg.Points[i + 1].Y);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         Debug.Assert(false);        //If asserted, implement segment type
                     }
                 }

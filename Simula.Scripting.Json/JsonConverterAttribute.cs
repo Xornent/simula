@@ -1,7 +1,5 @@
 ﻿
 using System;
-using Simula.Scripting.Json.Utilities;
-using System.Globalization;
 
 namespace Simula.Scripting.Json
 {
@@ -13,8 +11,7 @@ namespace Simula.Scripting.Json
         public object[]? ConverterParameters { get; }
         public JsonConverterAttribute(Type converterType)
         {
-            if (converterType == null)
-            {
+            if (converterType == null) {
                 throw new ArgumentNullException(nameof(converterType));
             }
 

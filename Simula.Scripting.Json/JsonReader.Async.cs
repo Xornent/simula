@@ -1,11 +1,11 @@
 ﻿
 #if HAVE_ASYNC
 
+using Simula.Scripting.Json.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json
 {
@@ -17,25 +17,21 @@ namespace Simula.Scripting.Json
         }
         public async Task SkipAsync(CancellationToken cancellationToken = default)
         {
-            if (TokenType == JsonToken.PropertyName)
-            {
+            if (TokenType == JsonToken.PropertyName) {
                 await ReadAsync(cancellationToken).ConfigureAwait(false);
             }
 
-            if (JsonTokenUtils.IsStartToken(TokenType))
-            {
+            if (JsonTokenUtils.IsStartToken(TokenType)) {
                 int depth = Depth;
 
-                while (await ReadAsync(cancellationToken).ConfigureAwait(false) && depth < Depth)
-                {
+                while (await ReadAsync(cancellationToken).ConfigureAwait(false) && depth < Depth) {
                 }
             }
         }
 
         internal async Task ReaderReadAndAssertAsync(CancellationToken cancellationToken)
         {
-            if (!await ReadAsync(cancellationToken).ConfigureAwait(false))
-            {
+            if (!await ReadAsync(cancellationToken).ConfigureAwait(false)) {
                 throw CreateUnexpectedEndException();
             }
         }
@@ -52,15 +48,12 @@ namespace Simula.Scripting.Json
         {
             List<byte> buffer = new List<byte>();
 
-            while (true)
-            {
-                if (!await ReadAsync(cancellationToken).ConfigureAwait(false))
-                {
+            while (true) {
+                if (!await ReadAsync(cancellationToken).ConfigureAwait(false)) {
                     SetToken(JsonToken.None);
                 }
 
-                if (ReadArrayElementIntoByteArrayReportDone(buffer))
-                {
+                if (ReadArrayElementIntoByteArrayReportDone(buffer)) {
                     byte[] d = buffer.ToArray();
                     SetToken(JsonToken.Bytes, d, false);
                     return d;
@@ -99,8 +92,7 @@ namespace Simula.Scripting.Json
 
         internal Task<bool> MoveToContentAsync(CancellationToken cancellationToken)
         {
-            switch (TokenType)
-            {
+            switch (TokenType) {
                 case JsonToken.None:
                 case JsonToken.Comment:
                     return MoveToContentFromNonContentAsync(cancellationToken);
@@ -111,15 +103,12 @@ namespace Simula.Scripting.Json
 
         private async Task<bool> MoveToContentFromNonContentAsync(CancellationToken cancellationToken)
         {
-            while (true)
-            {
-                if (!await ReadAsync(cancellationToken).ConfigureAwait(false))
-                {
+            while (true) {
+                if (!await ReadAsync(cancellationToken).ConfigureAwait(false)) {
                     return false;
                 }
 
-                switch (TokenType)
-                {
+                switch (TokenType) {
                     case JsonToken.None:
                     case JsonToken.Comment:
                         break;

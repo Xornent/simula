@@ -1,8 +1,8 @@
+using Simula.TeX.Exceptions;
+using Simula.TeX.Utils;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
-using Simula.TeX.Exceptions;
-using Simula.TeX.Utils;
 
 namespace Simula.TeX
 {
@@ -34,11 +34,10 @@ namespace Simula.TeX
 
         public Result<CharInfo> GetCharInfo(char character, string textStyle, TexStyle style)
         {
-            var typeface = this.GetTypeface();
-            if (!typeface.TryGetGlyphTypeface(out var glyphTypeface))
-            {
+            var typeface = GetTypeface();
+            if (!typeface.TryGetGlyphTypeface(out var glyphTypeface)) {
                 return Result.Error<CharInfo>(new TypeFaceNotFoundException(
-                    $"Glyph typeface for font {this.fontFamily.BaseUri} was not found"));
+                    $"Glyph typeface for font {fontFamily.BaseUri} was not found"));
             }
 
             var metrics = GetFontMetrics(character, typeface);
@@ -115,7 +114,7 @@ namespace Simula.TeX
 
         private TexFontMetrics GetFontMetrics(char c, Typeface typeface)
         {
-            #pragma warning disable CS0618
+#pragma warning disable CS0618
             var formattedText = new FormattedText(c.ToString(),
                 CultureInfo.CurrentUICulture,
                 FlowDirection.LeftToRight,
@@ -125,6 +124,6 @@ namespace Simula.TeX
             return new TexFontMetrics(formattedText.Width, formattedText.Height, 0.0, formattedText.Width, 1.0);
         }
 
-        private Typeface GetTypeface() => new Typeface(this.fontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal); // TODO[F]: Put into lazy field
+        private Typeface GetTypeface() => new Typeface(fontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal); // TODO[F]: Put into lazy field
     }
 }

@@ -1,19 +1,25 @@
-﻿using Simula.Scripting.Debugging;
+﻿using Simula.Scripting.Build;
+using Simula.Scripting.Contexts;
 using Simula.Scripting.Token;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Simula.Scripting.Syntax {
-
-    public class BreakStatement : Statement {
-
-        public override void Parse(TokenCollection sentence) {
-
+namespace Simula.Scripting.Syntax
+{
+    public class BreakStatement : Statement
+    {
+        public override void Parse(TokenCollection sentence)
+        {
+            this.RawToken.AddRange(sentence);
         }
 
-        public override ExecutionResult Execute(Compilation.RuntimeContext ctx) {
-            return new ExecutionResult(0, ctx, ExecutableFlag.Break);
+        public override Execution Execute(DynamicRuntime ctx)
+        {
+            return new Execution() { Flag = ExecutionFlag.Break };
+        }
+
+        public override string Generate(GenerationContext ctx)
+        {
+            string code = ctx.Indention() + "break;";
+            return code;
         }
     }
 }

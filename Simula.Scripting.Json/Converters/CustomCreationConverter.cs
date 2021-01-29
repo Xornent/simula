@@ -1,7 +1,5 @@
 ﻿
 using System;
-using System.Reflection;
-using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json.Converters
 {
@@ -13,14 +11,12 @@ namespace Simula.Scripting.Json.Converters
         }
         public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
-            if (reader.TokenType == JsonToken.Null)
-            {
+            if (reader.TokenType == JsonToken.Null) {
                 return null;
             }
 
             T value = Create(objectType);
-            if (value == null)
-            {
+            if (value == null) {
                 throw new JsonSerializationException("No object created.");
             }
 

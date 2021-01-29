@@ -8,8 +8,8 @@ namespace Simula.TeX.Atoms
         public CharAtom(SourceSpan? source, char character, string? textStyle = null)
             : base(source)
         {
-            this.TextStyle = textStyle;
-            this.Character = character;
+            TextStyle = textStyle;
+            Character = character;
         }
 
         public char Character { get; }
@@ -18,15 +18,15 @@ namespace Simula.TeX.Atoms
         public string? TextStyle { get; }
 
         public override ITeXFont GetStyledFont(TexEnvironment environment) =>
-            this.TextStyle == TexUtilities.TextStyleName ? environment.TextFont : base.GetStyledFont(environment);
+            TextStyle == TexUtilities.TextStyleName ? environment.TextFont : base.GetStyledFont(environment);
 
         protected override Result<CharInfo> GetCharInfo(ITeXFont texFont, TexStyle style) =>
-            this.TextStyle == null
-                ? texFont.GetDefaultCharInfo(this.Character, style)
-                : texFont.GetCharInfo(this.Character, this.TextStyle, style);
+            TextStyle == null
+                ? texFont.GetDefaultCharInfo(Character, style)
+                : texFont.GetCharInfo(Character, TextStyle, style);
 
         public override Result<CharFont> GetCharFont(ITeXFont texFont) =>
             // Style is irrelevant here.
-            this.GetCharInfo(texFont, TexStyle.Display).Map(ci => ci.GetCharacterFont());
+            GetCharInfo(texFont, TexStyle.Display).Map(ci => ci.GetCharacterFont());
     }
 }

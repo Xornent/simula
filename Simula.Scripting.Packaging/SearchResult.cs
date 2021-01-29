@@ -1,14 +1,14 @@
 ﻿using Simula.Scripting.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Text;
 
-namespace Simula.Scripting.Packaging {
+namespace Simula.Scripting.Packaging
+{
 
     [JsonObject(MemberSerialization.OptIn)]
-    public class SearchResult {
+    public class SearchResult
+    {
 
         [JsonProperty("totalHits")]
         public int Hit { get; set; }
@@ -18,12 +18,13 @@ namespace Simula.Scripting.Packaging {
 
         public int MaximumPage {
             get {
-                return (int) Math.Ceiling(Hit / 20d);
+                return (int)Math.Ceiling(Hit / 20d);
             }
         }
 
         public static SearchResult Create(string query, string baseUrl,
-            int skip = 0, bool prerelease = false) {
+            int skip = 0, bool prerelease = false)
+        {
             HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(baseUrl +
                 "?" + "q=" + query + "&skip=" + skip + "&take=20&prerelease=" + prerelease.ToString().ToLower());
             request.Method = "GET";

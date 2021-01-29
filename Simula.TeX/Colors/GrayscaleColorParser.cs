@@ -30,14 +30,14 @@ namespace Simula.TeX.Colors
                             NumberStyles.AllowDecimalPoint,
                             CultureInfo.InvariantCulture,
                             out var value) && value >= 0.0 && value <= 1.0
-                    ? (double?) value
+                    ? (double?)value
                     : null;
 
             if (alpha == null)
                 return null;
 
-            var colorValue = (byte) Math.Round(gradation * 255.0, MidpointRounding.AwayFromZero);
-            var a = (byte) Math.Round(alpha.Value * 255.0, MidpointRounding.AwayFromZero);
+            var colorValue = (byte)Math.Round(gradation * 255.0, MidpointRounding.AwayFromZero);
+            var a = (byte)Math.Round(alpha.Value * 255.0, MidpointRounding.AwayFromZero);
             return Color.FromArgb(a, colorValue, colorValue, colorValue);
         }
     }

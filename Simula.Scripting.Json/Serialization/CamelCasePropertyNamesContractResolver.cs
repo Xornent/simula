@@ -1,8 +1,7 @@
 
+using Simula.Scripting.Json.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json.Serialization
 {
@@ -21,17 +20,14 @@ namespace Simula.Scripting.Json.Serialization
         }
         public override JsonContract ResolveContract(Type type)
         {
-            if (type == null)
-            {
+            if (type == null) {
                 throw new ArgumentNullException(nameof(type));
             }
             StructMultiKey<Type, Type> key = new StructMultiKey<Type, Type>(GetType(), type);
             Dictionary<StructMultiKey<Type, Type>, JsonContract>? cache = _contractCache;
-            if (cache == null || !cache.TryGetValue(key, out JsonContract contract))
-            {
+            if (cache == null || !cache.TryGetValue(key, out JsonContract contract)) {
                 contract = CreateContract(type);
-                lock (TypeContractCacheLock)
-                {
+                lock (TypeContractCacheLock) {
                     cache = _contractCache;
                     Dictionary<StructMultiKey<Type, Type>, JsonContract> updatedCache = (cache != null)
                         ? new Dictionary<StructMultiKey<Type, Type>, JsonContract>(cache)

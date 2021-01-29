@@ -12,39 +12,30 @@ namespace Simula.Scripting.Json.Linq
         {
             _propertyNameComparison = StringComparison.Ordinal;
         }
-        public MergeArrayHandling MergeArrayHandling
-        {
+        public MergeArrayHandling MergeArrayHandling {
             get => _mergeArrayHandling;
-            set
-            {
-                if (value < MergeArrayHandling.Concat || value > MergeArrayHandling.Merge)
-                {
+            set {
+                if (value < MergeArrayHandling.Concat || value > MergeArrayHandling.Merge) {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
                 _mergeArrayHandling = value;
             }
         }
-        public MergeNullValueHandling MergeNullValueHandling
-        {
+        public MergeNullValueHandling MergeNullValueHandling {
             get => _mergeNullValueHandling;
-            set
-            {
-                if (value < MergeNullValueHandling.Ignore || value > MergeNullValueHandling.Merge)
-                {
+            set {
+                if (value < MergeNullValueHandling.Ignore || value > MergeNullValueHandling.Merge) {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
                 _mergeNullValueHandling = value;
             }
         }
-        public StringComparison PropertyNameComparison
-        {
+        public StringComparison PropertyNameComparison {
             get => _propertyNameComparison;
-            set
-            {
-                if (value < StringComparison.CurrentCulture || value > StringComparison.OrdinalIgnoreCase)
-                {
+            set {
+                if (value < StringComparison.CurrentCulture || value > StringComparison.OrdinalIgnoreCase) {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 

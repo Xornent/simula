@@ -1,8 +1,8 @@
 
+using Simula.Scripting.Json.Serialization;
 using System;
 using System.Globalization;
 using System.Reflection;
-using Simula.Scripting.Json.Serialization;
 
 #if !HAVE_LINQ
 using Simula.Scripting.Json.Utilities.LinqBridge;
@@ -14,18 +14,15 @@ namespace Simula.Scripting.Json.Utilities
     {
         public Func<T, object?> CreateGet<T>(MemberInfo memberInfo)
         {
-            if (memberInfo is PropertyInfo propertyInfo)
-            {
-                if (propertyInfo.PropertyType.IsByRef)
-                {
+            if (memberInfo is PropertyInfo propertyInfo) {
+                if (propertyInfo.PropertyType.IsByRef) {
                     throw new InvalidOperationException("Could not create getter for {0}. ByRef return values are not supported.".FormatWith(CultureInfo.InvariantCulture, propertyInfo));
                 }
 
                 return CreateGet<T>(propertyInfo);
             }
 
-            if (memberInfo is FieldInfo fieldInfo)
-            {
+            if (memberInfo is FieldInfo fieldInfo) {
                 return CreateGet<T>(fieldInfo);
             }
 
@@ -34,13 +31,11 @@ namespace Simula.Scripting.Json.Utilities
 
         public Action<T, object?> CreateSet<T>(MemberInfo memberInfo)
         {
-            if (memberInfo is PropertyInfo propertyInfo)
-            {
+            if (memberInfo is PropertyInfo propertyInfo) {
                 return CreateSet<T>(propertyInfo);
             }
 
-            if (memberInfo is FieldInfo fieldInfo)
-            {
+            if (memberInfo is FieldInfo fieldInfo) {
                 return CreateSet<T>(fieldInfo);
             }
 

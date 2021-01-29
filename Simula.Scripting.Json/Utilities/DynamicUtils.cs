@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
-using System.Linq;
 using System.Linq.Expressions;
 #if !HAVE_REFLECTION_BINDER
 using System.Reflection;
@@ -11,10 +10,6 @@ using System.Reflection;
 using Microsoft.CSharp.RuntimeBinder;
 #endif
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Globalization;
-using Simula.Scripting.Json.Serialization;
-using System.Diagnostics;
 
 namespace Simula.Scripting.Json.Utilities
 {
@@ -95,7 +90,7 @@ namespace Simula.Scripting.Json.Utilities
                 return (CallSiteBinder)_getMemberCall(null, 0, name, context, _getCSharpArgumentInfoArray)!;
 #else
                 return Binder.GetMember(
-                    CSharpBinderFlags.None, name, context, new[] {CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.None, null)});
+                    CSharpBinderFlags.None, name, context, new[] { CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.None, null) });
 #endif
             }
 
@@ -174,8 +169,7 @@ namespace Simula.Scripting.Json.Utilities
 
         protected override Expression VisitConditional(ConditionalExpression node)
         {
-            if (node.IfFalse.NodeType == ExpressionType.Throw)
-            {
+            if (node.IfFalse.NodeType == ExpressionType.Throw) {
                 return Expression.Condition(node.Test, node.IfTrue, Expression.Constant(ErrorResult));
             }
 

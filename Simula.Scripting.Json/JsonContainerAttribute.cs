@@ -1,6 +1,6 @@
 ﻿
-using System;
 using Simula.Scripting.Json.Serialization;
+using System;
 
 namespace Simula.Scripting.Json
 {
@@ -12,20 +12,16 @@ namespace Simula.Scripting.Json
         public string? Description { get; set; }
         public Type? ItemConverterType { get; set; }
         public object[]? ItemConverterParameters { get; set; }
-        public Type? NamingStrategyType
-        {
+        public Type? NamingStrategyType {
             get => _namingStrategyType;
-            set
-            {
+            set {
                 _namingStrategyType = value;
                 NamingStrategyInstance = null;
             }
         }
-        public object[]? NamingStrategyParameters
-        {
+        public object[]? NamingStrategyParameters {
             get => _namingStrategyParameters;
-            set
-            {
+            set {
                 _namingStrategyParameters = value;
                 NamingStrategyInstance = null;
             }
@@ -38,23 +34,19 @@ namespace Simula.Scripting.Json
         internal TypeNameHandling? _itemTypeNameHandling;
         private Type? _namingStrategyType;
         private object[]? _namingStrategyParameters;
-        public bool IsReference
-        {
+        public bool IsReference {
             get => _isReference ?? default;
             set => _isReference = value;
         }
-        public bool ItemIsReference
-        {
+        public bool ItemIsReference {
             get => _itemIsReference ?? default;
             set => _itemIsReference = value;
         }
-        public ReferenceLoopHandling ItemReferenceLoopHandling
-        {
+        public ReferenceLoopHandling ItemReferenceLoopHandling {
             get => _itemReferenceLoopHandling ?? default;
             set => _itemReferenceLoopHandling = value;
         }
-        public TypeNameHandling ItemTypeNameHandling
-        {
+        public TypeNameHandling ItemTypeNameHandling {
             get => _itemTypeNameHandling ?? default;
             set => _itemTypeNameHandling = value;
         }

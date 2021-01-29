@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Simula.TeX.Boxes;
+using System.Collections.Generic;
 
 namespace Simula.TeX
 {
@@ -10,7 +7,7 @@ namespace Simula.TeX
     internal class Glue
     {
         private static readonly IList<Glue> glueTypes;
-        private static readonly int[, ,] glueRules;
+        private static readonly int[,,] glueRules;
 
         static Glue()
         {
@@ -29,32 +26,28 @@ namespace Simula.TeX
 
         public Glue(double space, double stretch, double shrink, string name)
         {
-            this.Space = space;
-            this.Stretch = stretch;
-            this.Shrink = shrink;
-            this.Name = name;
+            Space = space;
+            Stretch = stretch;
+            Shrink = shrink;
+            Name = name;
         }
 
-        public double Space
-        {
+        public double Space {
             get;
             private set;
         }
 
-        public double Stretch
-        {
+        public double Stretch {
             get;
             private set;
         }
 
-        public double Shrink
-        {
+        public double Shrink {
             get;
             private set;
         }
 
-        public string Name
-        {
+        public string Name {
             get;
             private set;
         }
@@ -63,7 +56,7 @@ namespace Simula.TeX
         {
             var texFont = environment.MathFont;
             var quad = texFont.GetQuad(texFont.GetMuFontId(), environment.Style);
-            return new GlueBox((this.Space / 18.0f) * quad, (this.Stretch / 18.0f) * quad, (this.Shrink / 18.0f) * quad);
+            return new GlueBox((Space / 18.0f) * quad, (Stretch / 18.0f) * quad, (Shrink / 18.0f) * quad);
         }
     }
 }

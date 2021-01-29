@@ -1,7 +1,6 @@
 ﻿
 #if HAVE_ASYNC
 
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,7 +26,7 @@ namespace Simula.Scripting.Json.Utilities
         public static Task FromCanceled(this CancellationToken cancellationToken)
         {
             MiscellaneousUtils.Assert(cancellationToken.IsCancellationRequested);
-            return new Task(() => {}, cancellationToken);
+            return new Task(() => { }, cancellationToken);
         }
 
         public static Task<T> FromCanceled<T>(this CancellationToken cancellationToken)

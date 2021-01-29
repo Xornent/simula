@@ -3,7 +3,7 @@
 					xmlns:cc="clr-namespace:Simula.Editor.CodeCompletion">
 	<Style TargetType="{x:Type ListBoxItem}" x:Key="CompletionListBoxItem">
         <Setter Property="FontFamily" Value="Consolas, Simsun"/>
-        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontSize" Value="13.5"/>
         <Setter Property="Template">
 			<Setter.Value>
 				<ControlTemplate TargetType="{x:Type ListBoxItem}">
@@ -21,9 +21,10 @@
 					-->
 					<ControlTemplate.Triggers>
 						<Trigger Property="IsSelected" Value="true">
-							<Setter Property="Background"
+                            <Setter Property="Background"
 							        Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-							<Setter Property="Foreground"
+                            <Setter Property="FontWeight" Value="Black"/>
+                            <Setter Property="Foreground"
 							        Value="OrangeRed"/>
 						</Trigger>
 					</ControlTemplate.Triggers>
@@ -43,8 +44,7 @@
 							<DataTemplate>
 								<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <Grid Width="4"/>
-                                    <TextBlock Width="16" Height="16" FontSize="14" VerticalAlignment="Center" TextAlignment="Center" FontFamily="Segoe MDL2 Assets" Text="{Binding Image}"/>
-                                    <!--<Image Source="{Binding Image}" Width="16" Height="16" Margin="0,0,2,0"/>-->
+                                    <Image Source="{Binding Image}" Width="16" Height="16" Margin="0,0,2,0"/>
                                     <Grid Width="4"/>
 									<ContentPresenter Content="{Binding Content}"/>
 								</StackPanel>

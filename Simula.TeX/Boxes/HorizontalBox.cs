@@ -1,6 +1,6 @@
+using Simula.TeX.Rendering;
 using System;
 using System.Windows.Media;
-using Simula.TeX.Rendering;
 
 namespace Simula.TeX.Boxes
 {
@@ -13,29 +13,24 @@ namespace Simula.TeX.Boxes
             : this()
         {
             var extraWidth = width - box.Width;
-            if (alignment == TexAlignment.Center)
-            {
+            if (alignment == TexAlignment.Center) {
                 var strutBox = new StrutBox(extraWidth / 2, 0, 0, 0);
-                this.Add(strutBox);
-                this.Add(box);
-                this.Add(strutBox);
-            }
-            else if (alignment == TexAlignment.Left)
-            {
-                this.Add(box);
-                this.Add(new StrutBox(extraWidth, 0, 0, 0));
-            }
-            else if (alignment == TexAlignment.Right)
-            {
-                this.Add(new StrutBox(extraWidth, 0, 0, 0));
-                this.Add(box);
+                Add(strutBox);
+                Add(box);
+                Add(strutBox);
+            } else if (alignment == TexAlignment.Left) {
+                Add(box);
+                Add(new StrutBox(extraWidth, 0, 0, 0));
+            } else if (alignment == TexAlignment.Right) {
+                Add(new StrutBox(extraWidth, 0, 0, 0));
+                Add(box);
             }
         }
 
         public HorizontalBox(Box box)
             : this()
         {
-            this.Add(box);
+            Add(box);
         }
 
         public HorizontalBox(Brush? foreground, Brush? background)
@@ -52,18 +47,17 @@ namespace Simula.TeX.Boxes
         {
             base.Add(box);
 
-            this.childBoxesTotalWidth += box.Width;
-            this.Width = Math.Max(this.Width, this.childBoxesTotalWidth);
-            this.Height = Math.Max((this.Children.Count == 0 ? double.NegativeInfinity : this.Height), box.Height - box.Shift);
-            this.Depth = Math.Max((this.Children.Count == 0 ? double.NegativeInfinity : this.Depth), box.Depth + box.Shift);
-            this.Italic = Math.Max((this.Children.Count == 0 ? double.NegativeInfinity : this.Italic), box.Italic);
+            childBoxesTotalWidth += box.Width;
+            Width = Math.Max(Width, childBoxesTotalWidth);
+            Height = Math.Max((Children.Count == 0 ? double.NegativeInfinity : Height), box.Height - box.Shift);
+            Depth = Math.Max((Children.Count == 0 ? double.NegativeInfinity : Depth), box.Depth + box.Shift);
+            Italic = Math.Max((Children.Count == 0 ? double.NegativeInfinity : Italic), box.Italic);
         }
 
         public override void RenderTo(IElementRenderer renderer, double x, double y)
         {
             var curX = x;
-            foreach (var box in this.Children)
-            {
+            foreach (var box in Children) {
                 renderer.RenderElement(box, curX, y + box.Shift);
                 curX += box.Width;
             }
@@ -72,8 +66,7 @@ namespace Simula.TeX.Boxes
         public override int GetLastFontId()
         {
             var fontId = TexFontUtilities.NoFontId;
-            foreach (var child in this.Children)
-            {
+            foreach (var child in Children) {
                 fontId = child.GetLastFontId();
                 if (fontId == TexFontUtilities.NoFontId)
                     break;

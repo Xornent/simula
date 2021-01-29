@@ -27,23 +27,19 @@ namespace Simula.Scripting.Json.Utilities
 
         private void ValidateEncode(byte[] buffer, int index, int count)
         {
-            if (buffer == null)
-            {
+            if (buffer == null) {
                 throw new ArgumentNullException(nameof(buffer));
             }
 
-            if (index < 0)
-            {
+            if (index < 0) {
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
 
-            if (count < 0)
-            {
+            if (count < 0) {
                 throw new ArgumentOutOfRangeException(nameof(count));
             }
 
-            if (count > (buffer.Length - index))
-            {
+            if (count > (buffer.Length - index)) {
                 throw new ArgumentOutOfRangeException(nameof(count));
             }
         }
@@ -52,10 +48,8 @@ namespace Simula.Scripting.Json.Utilities
         {
             ValidateEncode(buffer, index, count);
 
-            if (_leftOverBytesCount > 0)
-            {
-                if(FulfillFromLeftover(buffer, index, ref count))
-                {
+            if (_leftOverBytesCount > 0) {
+                if (FulfillFromLeftover(buffer, index, ref count)) {
                     return;
                 }
 
@@ -67,10 +61,8 @@ namespace Simula.Scripting.Json.Utilities
 
             int num4 = index + count;
             int length = LineSizeInBytes;
-            while (index < num4)
-            {
-                if ((index + length) > num4)
-                {
+            while (index < num4) {
+                if ((index + length) > num4) {
                     length = num4 - index;
                 }
                 int num6 = Convert.ToBase64CharArray(buffer, index, length, _charsLine, 0);
@@ -82,16 +74,13 @@ namespace Simula.Scripting.Json.Utilities
         private void StoreLeftOverBytes(byte[] buffer, int index, ref int count)
         {
             int leftOverBytesCount = count % 3;
-            if (leftOverBytesCount > 0)
-            {
+            if (leftOverBytesCount > 0) {
                 count -= leftOverBytesCount;
-                if (_leftOverBytes == null)
-                {
+                if (_leftOverBytes == null) {
                     _leftOverBytes = new byte[3];
                 }
 
-                for (int i = 0; i < leftOverBytesCount; i++)
-                {
+                for (int i = 0; i < leftOverBytesCount; i++) {
                     _leftOverBytes[i] = buffer[index + count + i];
                 }
             }
@@ -102,14 +91,12 @@ namespace Simula.Scripting.Json.Utilities
         private bool FulfillFromLeftover(byte[] buffer, int index, ref int count)
         {
             int leftOverBytesCount = _leftOverBytesCount;
-            while (leftOverBytesCount < 3 && count > 0)
-            {
+            while (leftOverBytesCount < 3 && count > 0) {
                 _leftOverBytes![leftOverBytesCount++] = buffer[index++];
                 count--;
             }
 
-            if (count == 0 && leftOverBytesCount < 3)
-            {
+            if (count == 0 && leftOverBytesCount < 3) {
                 _leftOverBytesCount = leftOverBytesCount;
                 return true;
             }
@@ -119,8 +106,7 @@ namespace Simula.Scripting.Json.Utilities
 
         public void Flush()
         {
-            if (_leftOverBytesCount > 0)
-            {
+            if (_leftOverBytesCount > 0) {
                 int count = Convert.ToBase64CharArray(_leftOverBytes, 0, _leftOverBytesCount, _charsLine, 0);
                 WriteChars(_charsLine, 0, count);
                 _leftOverBytesCount = 0;
@@ -138,10 +124,8 @@ namespace Simula.Scripting.Json.Utilities
         {
             ValidateEncode(buffer, index, count);
 
-            if (_leftOverBytesCount > 0)
-            {
-                if (FulfillFromLeftover(buffer, index, ref count))
-                {
+            if (_leftOverBytesCount > 0) {
+                if (FulfillFromLeftover(buffer, index, ref count)) {
                     return;
                 }
 
@@ -153,10 +137,8 @@ namespace Simula.Scripting.Json.Utilities
 
             int num4 = index + count;
             int length = LineSizeInBytes;
-            while (index < num4)
-            {
-                if (index + length > num4)
-                {
+            while (index < num4) {
+                if (index + length > num4) {
                     length = num4 - index;
                 }
                 int num6 = Convert.ToBase64CharArray(buffer, index, length, _charsLine, 0);
@@ -172,13 +154,11 @@ namespace Simula.Scripting.Json.Utilities
 
         public Task FlushAsync(CancellationToken cancellationToken)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            if (cancellationToken.IsCancellationRequested) {
                 return cancellationToken.FromCanceled();
             }
 
-            if (_leftOverBytesCount > 0)
-            {
+            if (_leftOverBytesCount > 0) {
                 int count = Convert.ToBase64CharArray(_leftOverBytes, 0, _leftOverBytesCount, _charsLine, 0);
                 _leftOverBytesCount = 0;
                 return WriteCharsAsync(_charsLine, 0, count, cancellationToken);

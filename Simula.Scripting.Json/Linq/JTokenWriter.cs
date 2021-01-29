@@ -1,7 +1,5 @@
 
 using System;
-using System.Diagnostics;
-using System.Globalization;
 #if HAVE_BIG_INTEGER
 using System.Numerics;
 #endif
@@ -16,12 +14,9 @@ namespace Simula.Scripting.Json.Linq
         private JValue? _value;
         private JToken? _current;
         public JToken? CurrentToken => _current;
-        public JToken? Token
-        {
-            get
-            {
-                if (_token != null)
-                {
+        public JToken? Token {
+            get {
+                if (_token != null) {
                     return _token;
                 }
 
@@ -54,12 +49,9 @@ namespace Simula.Scripting.Json.Linq
 
         private void AddParent(JContainer container)
         {
-            if (_parent == null)
-            {
+            if (_parent == null) {
                 _token = container;
-            }
-            else
-            {
+            } else {
                 _parent.AddAndSkipParentCheck(container);
             }
 
@@ -72,8 +64,7 @@ namespace Simula.Scripting.Json.Linq
             _current = _parent;
             _parent = _parent!.Parent;
 
-            if (_parent != null && _parent.Type == JTokenType.Property)
-            {
+            if (_parent != null && _parent.Type == JTokenType.Property) {
                 _parent = _parent.Parent;
             }
         }
@@ -108,18 +99,14 @@ namespace Simula.Scripting.Json.Linq
 
         internal void AddValue(JValue? value, JsonToken token)
         {
-            if (_parent != null)
-            {
+            if (_parent != null) {
                 _parent.Add(value);
                 _current = _parent.Last;
 
-                if (_parent.Type == JTokenType.Property)
-                {
+                if (_parent.Type == JTokenType.Property) {
                     _parent = _parent.Parent;
                 }
-            }
-            else
-            {
+            } else {
                 _value = value ?? JValue.CreateNull();
                 _current = _value;
             }
@@ -278,43 +265,33 @@ namespace Simula.Scripting.Json.Linq
 
         internal override void WriteToken(JsonReader reader, bool writeChildren, bool writeDateConstructorAsDate, bool writeComments)
         {
-            if (reader is JTokenReader tokenReader && writeChildren && writeDateConstructorAsDate && writeComments)
-            {
-                if (tokenReader.TokenType == JsonToken.None)
-                {
-                    if (!tokenReader.Read())
-                    {
+            if (reader is JTokenReader tokenReader && writeChildren && writeDateConstructorAsDate && writeComments) {
+                if (tokenReader.TokenType == JsonToken.None) {
+                    if (!tokenReader.Read()) {
                         return;
                     }
                 }
 
                 JToken value = tokenReader.CurrentToken!.CloneToken();
 
-                if (_parent != null)
-                {
+                if (_parent != null) {
                     _parent.Add(value);
                     _current = _parent.Last;
-                    if (_parent.Type == JTokenType.Property)
-                    {
+                    if (_parent.Type == JTokenType.Property) {
                         _parent = _parent.Parent;
                         InternalWriteValue(JsonToken.Null);
                     }
-                }
-                else
-                {
+                } else {
                     _current = value;
 
-                    if (_token == null && _value == null)
-                    {
+                    if (_token == null && _value == null) {
                         _token = value as JContainer;
                         _value = value as JValue;
                     }
                 }
 
                 tokenReader.Skip();
-            }
-            else
-            {
+            } else {
                 base.WriteToken(reader, writeChildren, writeDateConstructorAsDate, writeComments);
             }
         }

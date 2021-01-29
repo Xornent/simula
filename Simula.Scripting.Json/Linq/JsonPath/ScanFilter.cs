@@ -13,36 +13,27 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 
         public override IEnumerable<JToken> ExecuteFilter(JToken root, IEnumerable<JToken> current, bool errorWhenNoMatch)
         {
-            foreach (JToken c in current)
-            {
-                if (Name == null)
-                {
+            foreach (JToken c in current) {
+                if (Name == null) {
                     yield return c;
                 }
 
                 JToken? value = c;
 
-                while (true)
-                {
+                while (true) {
                     JContainer? container = value as JContainer;
 
                     value = GetNextScanValue(c, container, value);
-                    if (value == null)
-                    {
+                    if (value == null) {
                         break;
                     }
 
-                    if (value is JProperty property)
-                    {
-                        if (property.Name == Name)
-                        {
+                    if (value is JProperty property) {
+                        if (property.Name == Name) {
                             yield return property.Value;
                         }
-                    }
-                    else
-                    {
-                        if (Name == null)
-                        {
+                    } else {
+                        if (Name == null) {
                             yield return value;
                         }
                     }

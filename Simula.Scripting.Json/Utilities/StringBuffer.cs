@@ -8,8 +8,7 @@ namespace Simula.Scripting.Json.Utilities
         private char[]? _buffer;
         private int _position;
 
-        public int Position
-        {
+        public int Position {
             get => _position;
             set => _position = value;
         }
@@ -28,8 +27,7 @@ namespace Simula.Scripting.Json.Utilities
 
         public void Append(IArrayPool<char>? bufferPool, char value)
         {
-            if (_position == _buffer!.Length)
-            {
+            if (_position == _buffer!.Length) {
                 EnsureSize(bufferPool, 1);
             }
             _buffer![_position++] = value;
@@ -37,8 +35,7 @@ namespace Simula.Scripting.Json.Utilities
 
         public void Append(IArrayPool<char>? bufferPool, char[] buffer, int startIndex, int count)
         {
-            if (_position + count >= _buffer!.Length)
-            {
+            if (_position + count >= _buffer!.Length) {
                 EnsureSize(bufferPool, count);
             }
 
@@ -49,8 +46,7 @@ namespace Simula.Scripting.Json.Utilities
 
         public void Clear(IArrayPool<char>? bufferPool)
         {
-            if (_buffer != null)
-            {
+            if (_buffer != null) {
                 BufferUtils.ReturnBuffer(bufferPool, _buffer);
                 _buffer = null;
             }
@@ -61,8 +57,7 @@ namespace Simula.Scripting.Json.Utilities
         {
             char[] newBuffer = BufferUtils.RentBuffer(bufferPool, (_position + appendLength) * 2);
 
-            if (_buffer != null)
-            {
+            if (_buffer != null) {
                 Array.Copy(_buffer, newBuffer, _position);
                 BufferUtils.ReturnBuffer(bufferPool, _buffer);
             }

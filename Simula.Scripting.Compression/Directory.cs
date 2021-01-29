@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Simula.Scripting.Compression {
-    class Directory {
+﻿namespace Simula.Scripting.Compression
+{
+    internal class Directory
+    {
     }
 }

@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
 namespace Simula.TeX
 {
     // Single character together with specific font.
@@ -10,18 +5,16 @@ namespace Simula.TeX
     {
         public CharFont(char character, int fontId)
         {
-            this.Character = character;
-            this.FontId = fontId;
+            Character = character;
+            FontId = fontId;
         }
 
-        public char Character
-        {
+        public char Character {
             get;
             private set;
         }
 
-        public int FontId
-        {
+        public int FontId {
             get;
             private set;
         }

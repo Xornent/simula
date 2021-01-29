@@ -1,6 +1,6 @@
 
-using System;
 using Simula.Scripting.Json.Serialization;
+using System;
 using System.Reflection;
 
 #if !HAVE_LINQ
@@ -19,8 +19,7 @@ namespace Simula.Scripting.Json.Utilities
         {
             ValidationUtils.ArgumentNotNull(method, nameof(method));
 
-            if (method is ConstructorInfo c)
-            {
+            if (method is ConstructorInfo c) {
                 return a => c.Invoke(a);
             }
 
@@ -31,8 +30,7 @@ namespace Simula.Scripting.Json.Utilities
         {
             ValidationUtils.ArgumentNotNull(method, nameof(method));
 
-            if (method is ConstructorInfo c)
-            {
+            if (method is ConstructorInfo c) {
                 return (o, a) => c.Invoke(a);
             }
 
@@ -43,8 +41,7 @@ namespace Simula.Scripting.Json.Utilities
         {
             ValidationUtils.ArgumentNotNull(type, nameof(type));
 
-            if (type.IsValueType())
-            {
+            if (type.IsValueType()) {
                 return () => (T)Activator.CreateInstance(type);
             }
 

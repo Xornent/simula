@@ -1,13 +1,6 @@
-﻿
-using System;
-using System.Diagnostics;
-using System.Text;
-
-using Simula.Editor.Utils;
-
-namespace Simula.Editor.Document
+﻿namespace Simula.Editor.Document
 {
-	/*
+    /*
 	/// <summary>
 	/// Implementation of a gap text buffer.
 	/// </summary>

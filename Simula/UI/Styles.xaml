@@ -2,7 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:Simula.UI">
 
-    <SolidColorBrush x:Key="buttonFace" Color="#f6f6f6"/>
+    <SolidColorBrush x:Key="buttonFace" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="searchFace" Color="#fafafa"/>
     <SolidColorBrush x:Key="backFace" Color="#e0e0e0"/>
     <SolidColorBrush x:Key="highlight" Color="#885086ef"/>
@@ -21,34 +21,34 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Button}">
-                    <Border Name="Border" BorderThickness="0.8" CornerRadius="4" BorderBrush="#e8e8e8" Background="{StaticResource buttonFace}" TextBlock.Foreground="Black">
+                    <Border Name="Border" BorderThickness="0.8" CornerRadius="4" BorderBrush="#DADADA" Background="{StaticResource buttonFace}" TextBlock.Foreground="Black">
                         <Grid Margin="0 0 0 0">
                             <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center" >
                             </ContentPresenter>
                         </Grid>
                         <Border.Effect>
-                            <DropShadowEffect BlurRadius="3" ShadowDepth="0" Opacity="0.2"/>
+                            <DropShadowEffect BlurRadius="2" ShadowDepth="0.5" Direction="-80" Opacity="0.2"/>
                         </Border.Effect>
                     </Border>
                     <ControlTemplate.Triggers>
                         <EventTrigger RoutedEvent="MouseEnter">
                             <BeginStoryboard>
-                                <Storyboard>
+                                <Storyboard> <!--
                                     <DoubleAnimation From="3" To="8" Duration="0:0:0.1" Storyboard.TargetName="Border" Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.BlurRadius)"/>
-                                    <DoubleAnimation From="0.2" To="0.35" Duration="0:0:0.1" Storyboard.TargetName="Border" Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)"/>
+                                    <DoubleAnimation From="0.2" To="0.35" Duration="0:0:0.1" Storyboard.TargetName="Border" Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)"/> -->
                                 </Storyboard>
                             </BeginStoryboard>
                         </EventTrigger>
                         <EventTrigger RoutedEvent="MouseLeave">
                             <BeginStoryboard>
-                                <Storyboard>
+                                <Storyboard> <!--
                                     <DoubleAnimation From="8" To="3" Duration="0:0:0.1" Storyboard.TargetName="Border" Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.BlurRadius)"/>
-                                    <DoubleAnimation From="0.35" To="0.2" Duration="0:0:0.1" Storyboard.TargetName="Border" Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)"/>
+                                    <DoubleAnimation From="0.35" To="0.2" Duration="0:0:0.1" Storyboard.TargetName="Border" Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)"/> -->
                                 </Storyboard>
                             </BeginStoryboard>
                         </EventTrigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Border" Property="Background" Value="Gray"></Setter>
+                            <Setter TargetName="Border" Property="Background" Value="#333333"></Setter>
                             <Setter TargetName="Border" Property="TextBlock.Foreground" Value="White"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -491,7 +491,7 @@
                  TargetType="{x:Type MenuItem}">
         <Border x:Name="Border">
             <Grid x:Name="placer">
-                <ContentPresenter Margin="6,1,6,3"
+                <ContentPresenter Margin="6,3,6,3"
                         ContentSource="Header"
                         RecognizesAccessKey="True" />
                 <Popup x:Name="Popup"
@@ -573,7 +573,7 @@
                  TargetType="{x:Type MenuItem}">
         <Border x:Name="Border">
             <Grid>
-                <ContentPresenter Margin="6,1,6,3"
+                <ContentPresenter Margin="6,2,6,3"
                         ContentSource="Header"
                         RecognizesAccessKey="True" />
             </Grid>
@@ -660,7 +660,7 @@
                 <ContentPresenter x:Name="HeaderHost"
                         Grid.Column="1"
                         ContentSource="Header"
-                        RecognizesAccessKey="True" Margin="0, -1,0,0"/>
+                        RecognizesAccessKey="True" Margin="0, 1,0,0"/>
                 <TextBlock x:Name="InputGestureText"
                  Grid.Column="2"
                  Text="{TemplateBinding InputGestureText}"
@@ -751,7 +751,7 @@
                 <ContentPresenter x:Name="HeaderHost"
                         Grid.Column="1"
                         ContentSource="Header"
-                        RecognizesAccessKey="True" Margin="13, -1, 0, 0"/>
+                        RecognizesAccessKey="True" Margin="13, 1, 0, 0"/>
                 <TextBlock x:Name="InputGestureText"
                  Grid.Column="2"
                  Text="{TemplateBinding InputGestureText}"
@@ -1130,8 +1130,8 @@
             </Setter.Value>
         </Setter>
     </Style>
-    <Style x:Key="{x:Type TreeViewItem}"
-       TargetType="{x:Type TreeViewItem}">
+    <Style x:Key="{x:Type local:IconTreeNode}"
+       TargetType="{x:Type local:IconTreeNode}">
         <Setter Property="Background"  Value="Transparent" />
         <Setter Property="HorizontalContentAlignment" Value="{Binding Path=HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />
         <Setter Property="VerticalContentAlignment" Value="{Binding Path=VerticalContentAlignment,  RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />
@@ -1140,7 +1140,7 @@
         <Setter Property="FocusVisualStyle" Value="{StaticResource TreeViewItemFocusVisual}" />
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="{x:Type TreeViewItem}">
+                <ControlTemplate TargetType="{x:Type local:IconTreeNode}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -1162,7 +1162,7 @@
                                         <ColorAnimationUsingKeyFrames Storyboard.TargetName="Bd"
                                                 Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)">
                                             <EasingColorKeyFrame KeyTime="0"
-                                         Value="{StaticResource SelectedUnfocusedColor}" />
+                                         Value="Gray" />
                                         </ColorAnimationUsingKeyFrames>
                                     </Storyboard>
                                 </VisualState>
@@ -1182,14 +1182,14 @@
                         <Border x:Name="Bd"  Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}"
                                     Grid.Row="0">
-                            <StackPanel Orientation="Horizontal" Margin="4,0,0,0">
+                            <StackPanel Orientation="Horizontal" Margin="4,1,0,1">
                                 <ToggleButton x:Name="Expander" Style="{StaticResource ExpandCollapseToggleStyle}" ClickMode="Press"
                                           IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"/>
                                 <Grid  Margin="-1,0,5,0">
-                                    <TextBlock Width="16" Height="16" Text="{TemplateBinding Tag}" Margin="0,2,0,0" FontFamily="Segoe MDL2 Assets"/>
+                                    <Image Width="16" Height="16" Margin="0,1,0,0" Source="{TemplateBinding Property=Icon}"/>
                                 </Grid>
 
-                                <ContentPresenter x:Name="PART_Header" ContentSource="Header" Margin="0, 0,0,0"
+                                <ContentPresenter x:Name="PART_Header" TextElement.FontWeight="Bold" ContentSource="Header" Margin="0,1,0,-1"
                                                   HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
                             </StackPanel>
                         </Border>
@@ -1224,5 +1224,4 @@
             </Setter.Value>
         </Setter>
     </Style>
-
 </ResourceDictionary>

@@ -5,11 +5,31 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Simula.Pages"
              xmlns:tex="clr-namespace:Simula.TeX.Controls;assembly=Simula.TeX"
-             mc:Ignorable="d" 
-             d:DesignHeight="400" d:DesignWidth="800" FontFamily="{StaticResource default}">
+             mc:Ignorable="d" UseLayoutRounding="True"
+             d:DesignHeight="500" d:DesignWidth="500" FontFamily="{StaticResource default}">
     <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-        <StackPanel HorizontalAlignment="Center" Orientation="Vertical">
-            <TextBlock FontSize="40" FontWeight="Light" Foreground="LightGray" Text="Welcome Back"/>
+        <StackPanel Orientation="Vertical">
+            <Grid Height="30"/>
+            <Grid HorizontalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
+                    <Grid Width="64" Height="64">
+                        <Image Source="pack://siteoforigin:,,,/app.icon.ico"/>
+                    </Grid>
+                    <Grid>
+                        <StackPanel Orientation="Vertical" Margin="10,0,0,0">
+                            <Label Content=" Simula" FontWeight="Light" FontSize="30"/>
+                            <Label Content="版本 0.1.0 (α-7.15)" FontFamily="Consolas" Margin="10,-10,0,0" Foreground="Gray"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Grid>
+            <Grid Height="50"/>
+            <TextBlock 
+                Text="本软件处在初级的测试阶段，存在不可预知的漏洞和行为的异常，并且存在丢失用户数据的风险。因此，请不要将此版本用作生产用途，可以在 相应的 Github Repo Issues 中汇报已存在的问题。一切资料的损失由用户自行承担。" 
+                TextWrapping="Wrap" LineHeight="18" Foreground="Gray" Height="72" Width="367"/>
         </StackPanel>
+        <Button FontWeight="Bold" Content="关闭" HorizontalAlignment="Left" Height="23" Margin="363,410,0,0" VerticalAlignment="Top" Width="89"/>
+        <Button FontWeight="Bold" Content="详细系统信息" HorizontalAlignment="Left" Height="23" Margin="248,410,0,0" VerticalAlignment="Top" Width="103"/>
+        <Button FontWeight="Bold" Content="法律声明" HorizontalAlignment="Left" Height="23" Margin="146,410,0,0" VerticalAlignment="Top" Width="89"/>
     </Grid>
 </UserControl>

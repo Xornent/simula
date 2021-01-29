@@ -14,8 +14,7 @@ namespace Simula.Scripting.Json.Linq
         public static async Task<JRaw> CreateAsync(JsonReader reader, CancellationToken cancellationToken = default)
         {
             using (StringWriter sw = new StringWriter(CultureInfo.InvariantCulture))
-            using (JsonTextWriter jsonWriter = new JsonTextWriter(sw))
-            {
+            using (JsonTextWriter jsonWriter = new JsonTextWriter(sw)) {
                 await jsonWriter.WriteTokenSyncReadingAsync(reader, cancellationToken).ConfigureAwait(false);
 
                 return new JRaw(sw.ToString());

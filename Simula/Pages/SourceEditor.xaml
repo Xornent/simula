@@ -10,24 +10,24 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
         <DockPanel>
-            <Grid DockPanel.Dock="Top" Height="38">
+            <Grid DockPanel.Dock="Top" Height="41">
                 <DockPanel>
                     <StackPanel Width="100" DockPanel.Dock="Left" Orientation="Horizontal">
                         
-                        <Button Content="&#xE1DA;" FontFamily="Segoe MDL2 Assets" Width="32" FontSize="13" Margin="6 8 5 8"></Button> 
-                        <Button Content="&#xE102;" FontFamily="Segoe MDL2 Assets" Width="32" FontSize="13" Margin="0 8 5 8" x:Name="n" Click="HandleRun"></Button>
+                        <Button FontFamily="Segoe MDL2 Assets" Width="32" FontSize="13" Margin="6 8 5 8">
+                            <Image IsHitTestVisible="False" Source="pack://siteoforigin:,,,/resources/icons/folder-add.png" Width="16" Height="16"/>
+                        </Button> 
+                        <Button FontFamily="Segoe MDL2 Assets" Width="32" FontSize="13" Margin="0 8 5 8" x:Name="n" Click="HandleRun">
+                            <Image IsHitTestVisible="False" Source="pack://siteoforigin:,,,/resources/icons/play.png" Width="16" Height="16"/>
+                        </Button>
                         
                     </StackPanel>
                     <Grid/>
                 </DockPanel>
             </Grid>
             <Grid>
-                <DockPanel>
-                    <scripting:SimulaTextEditor ShowLineNumbers="True" Language="Simula" x:Name="editor" Margin="5 0 0 0">
-                        <scripting:SimulaTextEditor.Effect>
-                            <DropShadowEffect BlurRadius="5" ShadowDepth="2" Opacity="0.2" Direction="45"/>
-                        </scripting:SimulaTextEditor.Effect>
-                    </scripting:SimulaTextEditor>
+                <DockPanel Background="#FFFFFF">
+                    <scripting:SimulaTextEditor Background="#FFFFFF" FontWeight="Regular" ShowLineNumbers="True" Language="Simula" x:Name="editor" Margin="6 3 0 0"/>
                 </DockPanel>
             </Grid>
         </DockPanel>

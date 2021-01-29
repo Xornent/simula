@@ -1,6 +1,6 @@
-using System;
 using Simula.TeX.Atoms;
 using Simula.TeX.Boxes;
+using System;
 
 namespace Simula.TeX
 {
@@ -16,8 +16,8 @@ namespace Simula.TeX
         public Radical(SourceSpan? source, Atom baseAtom, Atom? degreeAtom = null)
             : base(source)
         {
-            this.BaseAtom = baseAtom;
-            this.DegreeAtom = degreeAtom;
+            BaseAtom = baseAtom;
+            DegreeAtom = degreeAtom;
         }
 
         public Atom BaseAtom { get; }
@@ -39,7 +39,7 @@ namespace Simula.TeX
             clearance = defaultRuleThickness + Math.Abs(clearance) / 4;
 
             // Create box for base atom, in cramped style.
-            var baseBox = this.BaseAtom.CreateBox(environment.GetCrampedStyle());
+            var baseBox = BaseAtom.CreateBox(environment.GetCrampedStyle());
 
             // Create box for radical sign.
             var totalHeight = baseBox.Height + baseBox.Depth;
@@ -59,13 +59,13 @@ namespace Simula.TeX
             radicalContainerBox.Add(overBar);
 
             // If atom is simple radical, just return square-root box.
-            if (this.DegreeAtom == null)
+            if (DegreeAtom == null)
                 return radicalContainerBox;
 
             // Atom is complex radical (nth-root).
 
             // Create box for root atom.
-            var rootBox = this.DegreeAtom.CreateBox(environment.GetRootStyle());
+            var rootBox = DegreeAtom.CreateBox(environment.GetRootStyle());
             var bottomShift = scale * (radicalContainerBox.Height + radicalContainerBox.Depth);
             rootBox.Shift = radicalContainerBox.Depth - rootBox.Depth - bottomShift;
 

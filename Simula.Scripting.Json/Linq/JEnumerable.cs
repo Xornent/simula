@@ -31,12 +31,9 @@ namespace Simula.Scripting.Json.Linq
         {
             return GetEnumerator();
         }
-        public IJEnumerable<JToken> this[object key]
-        {
-            get
-            {
-                if (_enumerable == null)
-                {
+        public IJEnumerable<JToken> this[object key] {
+            get {
+                if (_enumerable == null) {
                     return JEnumerable<JToken>.Empty;
                 }
 
@@ -49,8 +46,7 @@ namespace Simula.Scripting.Json.Linq
         }
         public override bool Equals(object obj)
         {
-            if (obj is JEnumerable<T> enumerable)
-            {
+            if (obj is JEnumerable<T> enumerable) {
                 return Equals(enumerable);
             }
 
@@ -58,8 +54,7 @@ namespace Simula.Scripting.Json.Linq
         }
         public override int GetHashCode()
         {
-            if (_enumerable == null)
-            {
+            if (_enumerable == null) {
                 return 0;
             }
 

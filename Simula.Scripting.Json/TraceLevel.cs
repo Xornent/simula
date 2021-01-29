@@ -1,6 +1,4 @@
-﻿
-#if !HAVE_TRACE_WRITER
-using Simula.Scripting.Json.Serialization;
+﻿#if !HAVE_TRACE_WRITER
 
 namespace Simula.Scripting.Json
 {

@@ -11,8 +11,7 @@ namespace Simula.Scripting.Json.Linq
         }
         public int GetHashCode(JToken obj)
         {
-            if (obj == null)
-            {
+            if (obj == null) {
                 return 0;
             }
 

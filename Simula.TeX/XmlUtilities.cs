@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 
 namespace Simula.TeX
@@ -12,8 +9,7 @@ namespace Simula.TeX
         public static bool AttributeBooleanValue(this XElement element, string attributeName, bool? defaultValue = null)
         {
             var attribute = element.Attribute(attributeName);
-            if (attribute == null)
-            {
+            if (attribute == null) {
                 if (defaultValue != null)
                     return defaultValue.Value;
                 throw new InvalidOperationException();
@@ -24,8 +20,7 @@ namespace Simula.TeX
         public static int AttributeInt32Value(this XElement element, string attributeName, int? defaultValue = null)
         {
             var attribute = element.Attribute(attributeName);
-            if (attribute == null)
-            {
+            if (attribute == null) {
                 if (defaultValue != null)
                     return defaultValue.Value;
                 throw new InvalidOperationException();
@@ -36,8 +31,7 @@ namespace Simula.TeX
         public static double AttributeDoubleValue(this XElement element, string attributeName, double? defaultValue = null)
         {
             var attribute = element.Attribute(attributeName);
-            if (attribute == null)
-            {
+            if (attribute == null) {
                 if (defaultValue != null)
                     return defaultValue.Value;
                 throw new InvalidOperationException();
@@ -48,8 +42,7 @@ namespace Simula.TeX
         public static string AttributeValue(this XElement element, string attributeName, string? defaultValue = null)
         {
             var attribute = element.Attribute(attributeName);
-            if (attribute == null)
-            {
+            if (attribute == null) {
                 if (defaultValue != null)
                     return defaultValue;
                 throw new InvalidOperationException();

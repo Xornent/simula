@@ -1,5 +1,5 @@
-using System.Diagnostics;
 using Simula.TeX.Atoms;
+using System.Diagnostics;
 
 namespace Simula.TeX
 {
@@ -10,9 +10,9 @@ namespace Simula.TeX
 
         public TexFormulaHelper(TexFormula formula, SourceSpan source)
         {
-            this._formulaParser = new TexFormulaParser();
-            this.Formula = formula;
-            this._source = source;
+            _formulaParser = new TexFormulaParser();
+            Formula = formula;
+            _source = source;
         }
 
         public TexFormula Formula { get; }
@@ -22,12 +22,12 @@ namespace Simula.TeX
 
         public void SetFixedTypes(TexAtomType leftType, TexAtomType rightType)
         {
-            this.Formula.RootAtom = new TypedAtom(this._source, this.Formula.RootAtom, leftType, rightType);
+            Formula.RootAtom = new TypedAtom(_source, Formula.RootAtom, leftType, rightType);
         }
 
         public void CenterOnAxis()
         {
-            this.Formula.RootAtom = new VerticalCenteredAtom(this._source, this.Formula.RootAtom);
+            Formula.RootAtom = new VerticalCenteredAtom(_source, Formula.RootAtom);
         }
 
         public void AddAccent(string formula, string accentName)
@@ -37,12 +37,12 @@ namespace Simula.TeX
 
         public void AddAccent(TexFormula baseAtom, string accentName)
         {
-            this.Add(new AccentedAtom(_source, baseAtom?.RootAtom, accentName));
+            Add(new AccentedAtom(_source, baseAtom?.RootAtom, accentName));
         }
 
         public void AddAccent(TexFormula baseAtom, TexFormula accent)
         {
-            this.Add(new AccentedAtom(null, baseAtom?.RootAtom, accent));
+            Add(new AccentedAtom(null, baseAtom?.RootAtom, accent));
         }
 
         public void AddEmbraced(string formula, char leftChar, char rightChar)
@@ -63,7 +63,7 @@ namespace Simula.TeX
 
         public void AddEmbraced(TexFormula formula, string leftSymbol, string rightSymbol)
         {
-            this.Add(
+            Add(
                 new FencedAtom(
                     _source,
                     formula?.RootAtom,
@@ -95,13 +95,13 @@ namespace Simula.TeX
 
         public void AddFraction(TexFormula numerator, TexFormula denominator, bool drawLine)
         {
-            this.Add(new FractionAtom(null, numerator?.RootAtom, denominator?.RootAtom, drawLine));
+            Add(new FractionAtom(null, numerator?.RootAtom, denominator?.RootAtom, drawLine));
         }
 
         public void AddFraction(TexFormula numerator, TexFormula denominator, bool drawLine,
             TexAlignment numeratorAlignment, TexAlignment denominatorAlignment)
         {
-            this.Add(
+            Add(
                 new FractionAtom(
                     null,
                     numerator?.RootAtom,
@@ -139,7 +139,7 @@ namespace Simula.TeX
         public void AddRadical(TexFormula baseFormula, TexFormula? degreeFormula)
         {
             Debug.Assert(baseFormula.RootAtom != null);
-            this.Add(new Radical(null, baseFormula.RootAtom, degreeFormula?.RootAtom));
+            Add(new Radical(null, baseFormula.RootAtom, degreeFormula?.RootAtom));
         }
 
         public void AddOperator(string operatorFormula, string lowerLimitFormula, string upperLimitFormula)
@@ -162,7 +162,7 @@ namespace Simula.TeX
 
         public void AddOperator(TexFormula operatorFormula, TexFormula lowerLimitFormula, TexFormula upperLimitFormula)
         {
-            this.Add(
+            Add(
                 new BigOperatorAtom(
                     operatorFormula?.RootAtom?.Source,
                     operatorFormula?.RootAtom,
@@ -176,7 +176,7 @@ namespace Simula.TeX
             TexFormula? upperLimitFormula,
             bool useVerticalLimits)
         {
-            this.Add(
+            Add(
                 new BigOperatorAtom(
                     operatorFormula?.RootAtom?.Source,
                     operatorFormula?.RootAtom,
@@ -197,17 +197,17 @@ namespace Simula.TeX
 
         public void AddPhantom(TexFormula formula)
         {
-            this.Add(new PhantomAtom(null, formula?.RootAtom));
+            Add(new PhantomAtom(null, formula?.RootAtom));
         }
 
         public void AddPhantom(TexFormula phantom, bool useWidth, bool useHeight, bool useDepth)
         {
-            this.Add(new PhantomAtom(null, phantom?.RootAtom, useWidth, useHeight, useDepth));
+            Add(new PhantomAtom(null, phantom?.RootAtom, useWidth, useHeight, useDepth));
         }
 
         public void AddStrut(TexUnit unit, double width, double height, double depth)
         {
-            this.Add(new SpaceAtom(null, unit, width, height, depth));
+            Add(new SpaceAtom(null, unit, width, height, depth));
         }
 
         public void AddStrut(
@@ -218,7 +218,7 @@ namespace Simula.TeX
             TexUnit depthUnit,
             double depth)
         {
-            this.Add(new SpaceAtom(null, widthUnit, width, heightUnit, height, depthUnit, depth));
+            Add(new SpaceAtom(null, widthUnit, width, heightUnit, height, depthUnit, depth));
         }
 
         public void AddSymbol(string name)
@@ -228,7 +228,7 @@ namespace Simula.TeX
 
         public void AddSymbol(string name, TexAtomType type)
         {
-            this.Add(new SymbolAtom(null, SymbolAtom.GetAtom(name, null), type));
+            Add(new SymbolAtom(null, SymbolAtom.GetAtom(name, null), type));
         }
 
         public void Add(string formula)
@@ -238,25 +238,25 @@ namespace Simula.TeX
 
         public void Add(TexFormula formula)
         {
-            this.Formula.Add(formula, this._source);
+            Formula.Add(formula, _source);
         }
 
         public void Add(Atom atom)
         {
-            this.Formula.Add(atom, this._source);
+            Formula.Add(atom, _source);
         }
 
         public void PutAccentOver(string accentName)
         {
-            this.Formula.RootAtom = new AccentedAtom(this._source, this.Formula.RootAtom, accentName);
+            Formula.RootAtom = new AccentedAtom(_source, Formula.RootAtom, accentName);
         }
 
         public void PutDelimiterOver(TexDelimiter delimiter)
         {
             var name = TexFormulaParser.DelimiterNames[(int)delimiter][(int)TexDelimeterType.Over];
-            this.Formula.RootAtom = new OverUnderDelimiter(
-                this._source,
-                this.Formula.RootAtom,
+            Formula.RootAtom = new OverUnderDelimiter(
+                _source,
+                Formula.RootAtom,
                 null,
                 SymbolAtom.GetAtom(name, null),
                 TexUnit.Ex,
@@ -266,7 +266,7 @@ namespace Simula.TeX
 
         public void PutDelimiterOver(TexDelimiter delimiter, string superscriptFormula, TexUnit kernUnit, double kern)
         {
-            this.PutDelimiterOver(delimiter, this.ParseFormula(superscriptFormula), kernUnit, kern);
+            PutDelimiterOver(delimiter, ParseFormula(superscriptFormula), kernUnit, kern);
         }
 
         public void PutDelimiterOver(
@@ -276,9 +276,9 @@ namespace Simula.TeX
             double kern)
         {
             var name = TexFormulaParser.DelimiterNames[(int)delimiter][(int)TexDelimeterType.Over];
-            this.Formula.RootAtom = new OverUnderDelimiter(
-                this._source,
-                this.Formula.RootAtom,
+            Formula.RootAtom = new OverUnderDelimiter(
+                _source,
+                Formula.RootAtom,
                 superscriptFormula?.RootAtom,
                 SymbolAtom.GetAtom(name, null),
                 kernUnit,
@@ -289,9 +289,9 @@ namespace Simula.TeX
         public void PutDelimiterUnder(TexDelimiter delimiter)
         {
             var name = TexFormulaParser.DelimiterNames[(int)delimiter][(int)TexDelimeterType.Under];
-            this.Formula.RootAtom = new OverUnderDelimiter(
-                this._source,
-                this.Formula.RootAtom,
+            Formula.RootAtom = new OverUnderDelimiter(
+                _source,
+                Formula.RootAtom,
                 null,
                 SymbolAtom.GetAtom(name, null),
                 TexUnit.Ex,
@@ -301,15 +301,15 @@ namespace Simula.TeX
 
         public void PutDelimiterUnder(TexDelimiter delimiter, string subscriptFormula, TexUnit kernUnit, double kern)
         {
-            this.PutDelimiterUnder(delimiter, this.ParseFormula(subscriptFormula), kernUnit, kern);
+            PutDelimiterUnder(delimiter, ParseFormula(subscriptFormula), kernUnit, kern);
         }
 
         public void PutDelimiterUnder(TexDelimiter delimiter, TexFormula subscriptName, TexUnit kernUnit, double kern)
         {
             var name = TexFormulaParser.DelimiterNames[(int)delimiter][(int)TexDelimeterType.Under];
-            this.Formula.RootAtom = new OverUnderDelimiter(
-                this._source,
-                this.Formula.RootAtom,
+            Formula.RootAtom = new OverUnderDelimiter(
+                _source,
+                Formula.RootAtom,
                 subscriptName?.RootAtom,
                 SymbolAtom.GetAtom(name, null),
                 kernUnit,
@@ -319,9 +319,9 @@ namespace Simula.TeX
 
         public void PutOver(TexFormula? overFormula, TexUnit overUnit, double overSpace, bool overScriptSize)
         {
-            this.Formula.RootAtom = new UnderOverAtom(
-                this._source,
-                this.Formula.RootAtom,
+            Formula.RootAtom = new UnderOverAtom(
+                _source,
+                Formula.RootAtom,
                 overFormula?.RootAtom,
                 overUnit,
                 overSpace,
@@ -342,9 +342,9 @@ namespace Simula.TeX
 
         public void PutUnder(TexFormula? underFormula, TexUnit underUnit, double underSpace, bool underScriptSize)
         {
-            this.Formula.RootAtom = new UnderOverAtom(
-                this._source,
-                this.Formula.RootAtom,
+            Formula.RootAtom = new UnderOverAtom(
+                _source,
+                Formula.RootAtom,
                 underFormula?.RootAtom,
                 underUnit,
                 underSpace,
@@ -362,9 +362,9 @@ namespace Simula.TeX
         public void PutUnderAndOver(TexFormula? underFormula, TexUnit underUnit, double underSpace, bool underScriptSize,
             TexFormula? over, TexUnit overUnit, double overSpace, bool overScriptSize)
         {
-            this.Formula.RootAtom = new UnderOverAtom(
-                this._source,
-                this.Formula.RootAtom,
+            Formula.RootAtom = new UnderOverAtom(
+                _source,
+                Formula.RootAtom,
                 underFormula?.RootAtom,
                 underUnit,
                 underSpace,

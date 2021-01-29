@@ -8,7 +8,7 @@ namespace Simula.TeX.Atoms
         public OverlinedAtom(SourceSpan? source, Atom? baseAtom)
             : base(source)
         {
-            this.BaseAtom = baseAtom;
+            BaseAtom = baseAtom;
         }
 
         public Atom? BaseAtom { get; }
@@ -16,7 +16,7 @@ namespace Simula.TeX.Atoms
         protected override Box CreateBoxCore(TexEnvironment environment)
         {
             // Create box for base atom, in cramped style.
-            var baseBox = this.BaseAtom == null ? StrutBox.Empty : this.BaseAtom.CreateBox(environment.GetCrampedStyle());
+            var baseBox = BaseAtom == null ? StrutBox.Empty : BaseAtom.CreateBox(environment.GetCrampedStyle());
 
             // Create result box.
             var defaultLineThickness = environment.MathFont.GetDefaultLineThickness(environment.Style);

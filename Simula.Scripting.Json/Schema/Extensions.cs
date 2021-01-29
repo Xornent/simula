@@ -1,8 +1,8 @@
 ﻿
-using System;
-using System.Collections.Generic;
 using Simula.Scripting.Json.Linq;
 using Simula.Scripting.Json.Utilities;
+using System;
+using System.Collections.Generic;
 
 #nullable disable
 
@@ -39,16 +39,13 @@ namespace Simula.Scripting.Json.Schema
             ValidationUtils.ArgumentNotNull(source, nameof(source));
             ValidationUtils.ArgumentNotNull(schema, nameof(schema));
 
-            using (JsonValidatingReader reader = new JsonValidatingReader(source.CreateReader()))
-            {
+            using (JsonValidatingReader reader = new JsonValidatingReader(source.CreateReader())) {
                 reader.Schema = schema;
-                if (validationEventHandler != null)
-                {
+                if (validationEventHandler != null) {
                     reader.ValidationEventHandler += validationEventHandler;
                 }
 
-                while (reader.Read())
-                {
+                while (reader.Read()) {
                 }
             }
         }

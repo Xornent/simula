@@ -1,9 +1,8 @@
 ﻿
+using Simula.Scripting.Json.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json.Serialization
 {
@@ -37,12 +36,9 @@ namespace Simula.Scripting.Json.Serialization
             TraceWriter = serializer.TraceWriter;
         }
 
-        internal BidirectionalDictionary<string, object> DefaultReferenceMappings
-        {
-            get
-            {
-                if (_mappings == null)
-                {
+        internal BidirectionalDictionary<string, object> DefaultReferenceMappings {
+            get {
+                if (_mappings == null) {
                     _mappings = new BidirectionalDictionary<string, object>(
                         EqualityComparer<string>.Default,
                         new ReferenceEqualsEqualityComparer(),
@@ -66,13 +62,11 @@ namespace Simula.Scripting.Json.Serialization
 
         private ErrorContext GetErrorContext(object? currentObject, object? member, string path, Exception error)
         {
-            if (_currentErrorContext == null)
-            {
+            if (_currentErrorContext == null) {
                 _currentErrorContext = new ErrorContext(currentObject, member, path, error);
             }
 
-            if (_currentErrorContext.Error != error)
-            {
+            if (_currentErrorContext.Error != error) {
                 throw new InvalidOperationException("Current error context error is different to requested error.");
             }
 
@@ -81,8 +75,7 @@ namespace Simula.Scripting.Json.Serialization
 
         protected void ClearErrorContext()
         {
-            if (_currentErrorContext == null)
-            {
+            if (_currentErrorContext == null) {
                 throw new InvalidOperationException("Could not clear error context. Error context is already null.");
             }
 
@@ -93,29 +86,24 @@ namespace Simula.Scripting.Json.Serialization
         {
             ErrorContext errorContext = GetErrorContext(currentObject, keyValue, path, ex);
 
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Error && !errorContext.Traced)
-            {
+            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Error && !errorContext.Traced) {
                 errorContext.Traced = true;
                 string message = (GetType() == typeof(JsonSerializerInternalWriter)) ? "Error serializing" : "Error deserializing";
-                if (contract != null)
-                {
+                if (contract != null) {
                     message += " " + contract.UnderlyingType;
                 }
                 message += ". " + ex.Message;
-                if (!(ex is JsonException))
-                {
+                if (!(ex is JsonException)) {
                     message = JsonPosition.FormatMessage(lineInfo, path, message);
                 }
 
                 TraceWriter.Trace(TraceLevel.Error, message, ex);
             }
-            if (contract != null && currentObject != null)
-            {
+            if (contract != null && currentObject != null) {
                 contract.InvokeOnError(currentObject, Serializer.Context, errorContext);
             }
 
-            if (!errorContext.Handled)
-            {
+            if (!errorContext.Handled) {
                 Serializer.OnError(new ErrorEventArgs(currentObject, errorContext));
             }
 

@@ -33,22 +33,17 @@ namespace Simula.Scripting.Json.Schema
         public JsonSchemaNode AddSchema(JsonSchemaNode existingNode, JsonSchema schema)
         {
             string newId;
-            if (existingNode != null)
-            {
-                if (existingNode.Schemas.Contains(schema))
-                {
+            if (existingNode != null) {
+                if (existingNode.Schemas.Contains(schema)) {
                     return existingNode;
                 }
 
                 newId = JsonSchemaNode.GetId(existingNode.Schemas.Union(new[] { schema }));
-            }
-            else
-            {
+            } else {
                 newId = JsonSchemaNode.GetId(new[] { schema });
             }
 
-            if (_nodes.Contains(newId))
-            {
+            if (_nodes.Contains(newId)) {
                 return _nodes[newId];
             }
 
@@ -62,28 +57,22 @@ namespace Simula.Scripting.Json.Schema
 
             AddProperties(schema.PatternProperties, currentNode.PatternProperties);
 
-            if (schema.Items != null)
-            {
-                for (int i = 0; i < schema.Items.Count; i++)
-                {
+            if (schema.Items != null) {
+                for (int i = 0; i < schema.Items.Count; i++) {
                     AddItem(currentNode, i, schema.Items[i]);
                 }
             }
 
-            if (schema.AdditionalItems != null)
-            {
+            if (schema.AdditionalItems != null) {
                 AddAdditionalItems(currentNode, schema.AdditionalItems);
             }
 
-            if (schema.AdditionalProperties != null)
-            {
+            if (schema.AdditionalProperties != null) {
                 AddAdditionalProperties(currentNode, schema.AdditionalProperties);
             }
 
-            if (schema.Extends != null)
-            {
-                foreach (JsonSchema jsonSchema in schema.Extends)
-                {
+            if (schema.Extends != null) {
+                foreach (JsonSchema jsonSchema in schema.Extends) {
                     currentNode = AddSchema(currentNode, jsonSchema);
                 }
             }
@@ -93,10 +82,8 @@ namespace Simula.Scripting.Json.Schema
 
         public void AddProperties(IDictionary<string, JsonSchema> source, IDictionary<string, JsonSchemaNode> target)
         {
-            if (source != null)
-            {
-                foreach (KeyValuePair<string, JsonSchema> property in source)
-                {
+            if (source != null) {
+                foreach (KeyValuePair<string, JsonSchema> property in source) {
                     AddProperty(target, property.Key, property.Value);
                 }
             }
@@ -117,12 +104,9 @@ namespace Simula.Scripting.Json.Schema
 
             JsonSchemaNode newItemNode = AddSchema(existingItemNode, schema);
 
-            if (!(parentNode.Items.Count > index))
-            {
+            if (!(parentNode.Items.Count > index)) {
                 parentNode.Items.Add(newItemNode);
-            }
-            else
-            {
+            } else {
                 parentNode.Items[index] = newItemNode;
             }
         }
@@ -139,47 +123,38 @@ namespace Simula.Scripting.Json.Schema
 
         private JsonSchemaModel BuildNodeModel(JsonSchemaNode node)
         {
-            if (_nodeModels.TryGetValue(node, out JsonSchemaModel model))
-            {
+            if (_nodeModels.TryGetValue(node, out JsonSchemaModel model)) {
                 return model;
             }
 
             model = JsonSchemaModel.Create(node.Schemas);
             _nodeModels[node] = model;
 
-            foreach (KeyValuePair<string, JsonSchemaNode> property in node.Properties)
-            {
-                if (model.Properties == null)
-                {
+            foreach (KeyValuePair<string, JsonSchemaNode> property in node.Properties) {
+                if (model.Properties == null) {
                     model.Properties = new Dictionary<string, JsonSchemaModel>();
                 }
 
                 model.Properties[property.Key] = BuildNodeModel(property.Value);
             }
-            foreach (KeyValuePair<string, JsonSchemaNode> property in node.PatternProperties)
-            {
-                if (model.PatternProperties == null)
-                {
+            foreach (KeyValuePair<string, JsonSchemaNode> property in node.PatternProperties) {
+                if (model.PatternProperties == null) {
                     model.PatternProperties = new Dictionary<string, JsonSchemaModel>();
                 }
 
                 model.PatternProperties[property.Key] = BuildNodeModel(property.Value);
             }
-            foreach (JsonSchemaNode t in node.Items)
-            {
-                if (model.Items == null)
-                {
+            foreach (JsonSchemaNode t in node.Items) {
+                if (model.Items == null) {
                     model.Items = new List<JsonSchemaModel>();
                 }
 
                 model.Items.Add(BuildNodeModel(t));
             }
-            if (node.AdditionalProperties != null)
-            {
+            if (node.AdditionalProperties != null) {
                 model.AdditionalProperties = BuildNodeModel(node.AdditionalProperties);
             }
-            if (node.AdditionalItems != null)
-            {
+            if (node.AdditionalItems != null) {
                 model.AdditionalItems = BuildNodeModel(node.AdditionalItems);
             }
 
