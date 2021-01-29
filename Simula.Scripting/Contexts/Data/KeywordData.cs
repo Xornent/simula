@@ -48,13 +48,13 @@ namespace Simula.Scripting.Contexts.Data
                 Documentation = "定义这个编译单元中所有内容从属在某个包下. 如果一个编译单元没有一个 module 语句, 它被默认定义在全局变量中, 如果一个编译单元有超过一个 module 语句, 只有从上至下的第一个是有效的"
             }, new KeywordData("def") // 7
             {
-                Definition = "[expose, hidden] def class ... [: ...] [derives ...] \n" +
+                Definition = "[expose, hidden] def class ... [: ...] [assert ...] \n" +
                 "[expose, hidden] def func ... ([..., ...]) \n" +
                 "[expose, hidden] def var ... = ...",
                 Documentation = "定义一个类, 函数, 或变量的开始"
             }, new KeywordData("class") // 8
             {
-                Definition = "[expose, hidden] def class ... [: ...] [derives ...]",
+                Definition = "[expose, hidden] def class ... [: ...] [assert ...]",
                 Documentation = "定义一个类的开始"
             }, new KeywordData("func") // 9
             {
@@ -118,14 +118,17 @@ namespace Simula.Scripting.Contexts.Data
                 Documentation = "声明类型的属性类标记"
             }
         };
+        public static ImageSourceConverter Converter = new ImageSourceConverter();
 
         public KeywordData(string text)
         {
             this.Text = text ?? "";
         }
 
-        public char Image {
-            get { return '\ue910'; }
+        public ImageSource Image {
+            get {
+                return KeywordData.Converter.ConvertFrom("pack://siteoforigin:,,,/resources/icons/code.png") as ImageSource;
+            }
         }
 
         public string Text { get; private set; }
@@ -207,8 +210,10 @@ namespace Simula.Scripting.Contexts.Data
             this.Documentation = doc;
         }
 
-        public char Image {
-            get { return '\ue943'; }
+        public ImageSource Image {
+            get {
+                return KeywordData.Converter.ConvertFrom("pack://siteoforigin:,,,/resources/icons/function.png") as ImageSource;
+            }
         }
 
         public string Text { get; private set; }
@@ -290,8 +295,10 @@ namespace Simula.Scripting.Contexts.Data
             this.Documentation = doc;
         }
 
-        public char Image {
-            get { return '\ue82d'; }
+        public ImageSource Image {
+            get {
+                return KeywordData.Converter.ConvertFrom("pack://siteoforigin:,,,/resources/icons/book.png") as ImageSource;
+            }
         }
 
         public string Text { get; private set; }
@@ -373,8 +380,10 @@ namespace Simula.Scripting.Contexts.Data
             this.Documentation = doc;
         }
 
-        public char Image {
-            get { return '\uf158'; }
+        public ImageSource Image {
+            get {
+                return KeywordData.Converter.ConvertFrom("pack://siteoforigin:,,,/resources/icons/bracket-square.png") as ImageSource;
+            }
         }
 
         public string Text { get; private set; }
@@ -456,8 +465,10 @@ namespace Simula.Scripting.Contexts.Data
             this.Documentation = doc;
         }
 
-        public char Image {
-            get { return '\uecaa'; }
+        public ImageSource Image {
+            get {
+                return KeywordData.Converter.ConvertFrom("pack://siteoforigin:,,,/resources/icons/box.png") as ImageSource;
+            }
         }
 
         public string Text { get; private set; }

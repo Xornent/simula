@@ -55,6 +55,28 @@ namespace Simula.Scripting.Contexts
             RegisterAssignments(block);
         }
 
+        public void SetSource(Token.TokenCollection src)
+        {
+            // now we pick out the definition statements inside the source file
+            // and create a sink info for them.
+
+            Syntax.BlockStatement block = new Syntax.BlockStatement();
+            block.Parse(src);
+            SourceBlock = block;
+
+            AccessibleRoots.RemoveAll((rec) => {
+                return rec.IsPublic == false;
+            });
+
+            foreach (var item in ClassRecords) {
+                if (!item.Value.IsPublic) ClassRecords.Remove(item.Key);
+            }
+
+            RegisterDefinition(block, AccessibleRoots);
+            InferDefinitionType(block, AccessibleRoots);
+            RegisterAssignments(block);
+        }
+
         public CompletionCaret GetCaret(int line, int column)
         {
             return new CompletionCaret(line, column, this.SourceBlock);

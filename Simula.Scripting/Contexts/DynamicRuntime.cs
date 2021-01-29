@@ -576,5 +576,10 @@ namespace Simula.Scripting.Contexts
         {
             System.Windows.MessageBox.Show(Resources.StringTable[index]);
         }
+
+        public static void PostExecutionError(StringTableIndex index)
+        {
+            System.Windows.MessageBox.Show(Resources.StringTable[index]);
+        }
     }
 }

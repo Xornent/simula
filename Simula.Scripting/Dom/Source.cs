@@ -124,5 +124,27 @@ namespace Simula.Scripting.Dom
                 } 
             }
         }
+
+        public void Run(DynamicRuntime ctx)
+        {
+            foreach (var item in this.Body.Children) {
+                if (item is UseStatement mod) {
+                    EvaluationStatement eval = new EvaluationStatement(true);
+                    eval.Parse(mod.Reference);
+                    var result = eval.Execute(ctx).Result;
+
+                    if(result is ExpandoObject exp) {
+                        IDictionary<string, object> dict = (IDictionary<string, object>)exp;
+                        foreach (var dictItem in dict) {
+                            if(dictItem.Key !="fullName") {
+                                ctx.SetMember(dictItem.Key, dictItem.Value);
+                            }
+                        }
+                    } 
+                }
+            }
+
+            this.Body.Execute(ctx);
+        }
     }
 }

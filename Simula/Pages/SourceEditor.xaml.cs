@@ -22,7 +22,7 @@ namespace Simula.Pages
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            src.Body.Execute(runtime);
+            src.Run(runtime);
             sw.Stop();
             System.Windows.MessageBox.Show(sw.ElapsedMilliseconds.ToString()+" ms");
         }

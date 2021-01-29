@@ -4,7 +4,6 @@ namespace Simula.Scripting
 {
     public static class Extension
     {
-
         public static string JoinString<T>(this List<T> list, string connector)
         {
             if (list.Count == 0) return "";

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Linq;
+using Simula.Scripting.Contexts;
 
 namespace Simula.Scripting.Types
 {
@@ -22,6 +24,50 @@ namespace Simula.Scripting.Types
         public bool IsVector()
         {
             return dimension == 1;
+        }
+
+        public NumericalMatrix<int> GetLocation(int location)
+        {
+            if (location > this.total || location <= 0) {
+                DynamicRuntime.PostExecutionError(StringTableIndex.MatrixOutOfRange);
+                return new NumericalMatrix<int>();
+            }
+
+            if (this.dimension == 1)
+                return new NumericalMatrix<int>(new int[1] { location });
+            if (this.dimension == 2)
+                return new NumericalMatrix<int>(new int[2] { ((location - 1) / this.bounds[1]) + 1, ((location - 1) % this.bounds[1]) + 1 });
+            if(this.dimension > 2) {
+                int prevPageCount = (location - 1) / (this.bounds[0] * this.bounds[1]);
+                int pageLoc = (location - 1) % (this.bounds[0] * this.bounds[1]) + 1;
+                int[] pageCoord = new int[this.dimension - 2];
+
+                for (int i = 0; i < pageCoord.Length; i++)
+                    pageCoord[i] = 1;
+
+                for (int i = 1; i < prevPageCount + 1; i ++) {
+                    bool levelUp = true;
+
+                    for (int j = pageCoord.Length - 1; j >= 0; j --) {
+                        if(levelUp) {
+                            pageCoord[j]++;
+                            levelUp = false;
+                            if(pageCoord[j] > this.bounds[j + 2]) {
+                                levelUp = true;
+                                pageCoord[j] = 1;
+                            }
+                        }
+                    }
+                }
+
+                List<int> l = new List<int>() { ((pageLoc - 1) / this.bounds[1]) + 1, ((pageLoc - 1) % this.bounds[1]) + 1 };
+                l.AddRange(pageCoord);
+                return new NumericalMatrix<int>(l.ToArray());
+
+            } else {
+                DynamicRuntime.PostExecutionError(StringTableIndex.MatrixOutOfRange);
+                return new NumericalMatrix<int>();
+            }
         }
 
         public static int SizeMultiplication(int[] dim)
@@ -273,7 +319,23 @@ namespace Simula.Scripting.Types
 
         public override string ToString()
         {
-            return "<numeric matrix>";
+            string eval = "numeric matrix [" + this.bounds.ToList().JoinString("x") + "]\n";
+            if (this.bounds.Count() == 1) eval = "numeric matrix [1x" + this.bounds[0] + "]\n";
+
+            if (this.bounds.Count() <= 2) {
+                int count = 0;
+
+                for (int y = 1; y <= ((this.bounds.Count() == 1) ? 1 : this.bounds[0]); y++) {
+                    string line = "\n";
+                    for (int x = 1; x <= ((this.bounds.Count() == 1) ? this.bounds[0] : this.bounds[1]); x++) {
+                        line += this.data[count].ToString() + "\t";
+                        count++;
+                    }
+                    eval += line;
+                }
+            } else return eval + "\n" + Resources.Loc(StringTableIndex.UnsupportMatrixExpression);
+
+            return eval;
         }
     }
 

@@ -2,6 +2,7 @@
 using Simula.Editor.Document;
 using Simula.Editor.Editing;
 using System;
+using System.Windows.Media;
 
 namespace Simula.Editor.CodeCompletion
 {
@@ -17,7 +18,7 @@ namespace Simula.Editor.CodeCompletion
         /// <summary>
         /// Gets the image.
         /// </summary>
-        char Image { get; }
+        ImageSource Image { get; }
 
         /// <summary>
         /// Gets the text. This property is used to filter the list of visible elements.

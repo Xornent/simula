@@ -46,13 +46,17 @@ namespace Simula.Scripting.Syntax
                 if (subitems.Count > 2) {
                     collection[0].Error = new TokenizerException("SS0010");
                     return;
+                } else if (subitems.Count == 2) {
+                    subitems[0].RemoveAt(0);
+                    Enumerator = new EvaluationStatement();
+                    Enumerator.Parse(subitems[0]);
+                    Collection = new EvaluationStatement();
+                    Collection.Parse(subitems[1]);
+                } else if(subitems.Count == 1) {
+                    subitems[0].RemoveAt(0);
+                    Enumerator = new EvaluationStatement();
+                    Enumerator.Parse(subitems[0]);
                 }
-
-                subitems[0].RemoveAt(0);
-                Enumerator = new EvaluationStatement();
-                Enumerator.Parse(subitems[0]);
-                Collection = new EvaluationStatement();
-                Collection.Parse(subitems[1]);
             }
 
             foreach (var item in this.Children) {
@@ -62,6 +66,44 @@ namespace Simula.Scripting.Syntax
 
         public override Execution Execute(DynamicRuntime ctx)
         {
+            var code = new BlockStatement() { Children = this.Children };
+            if (Enumerator == null) return new Execution();
+            if (Collection == null) {
+                dynamic enumTimes = Enumerator.Execute(ctx).Result;
+                long counter = Convert.ToInt64(enumTimes);
+                for(long i = 0; i < counter; i++) 
+                    code.Execute(ctx);
+
+                return new Execution();
+            }
+
+            dynamic matrix = Collection.Execute(ctx).Result;
+            if (Enumerator.RawEvaluateToken.Count == 0) return new Execution();
+            string sets = Enumerator.RawEvaluateToken[0];
+
+            if(Position!= null) {
+                if (Position.RawEvaluateToken.Count != 0) {
+                    string pos = Position.RawEvaluateToken[0];
+
+                    if (matrix is Types.Matrix) {
+                        for (int i = 0; i < matrix.total; i++) {
+                            Types.NumericalMatrix<int> loc = matrix.GetLocation(i + 1);
+                            ctx.SetMember(sets, matrix.data[i]);
+                            ctx.SetMember(pos, loc);
+                            code.Execute(ctx);
+                        }
+                    }
+                }
+            } else {
+                if (matrix is Types.Matrix) {
+                    for (int i = 0; i < matrix.total; i++) {
+                        Types.NumericalMatrix<int> loc = matrix.GetLocation(i + 1);
+                        ctx.SetMember(sets, matrix.data[i]);
+                        code.Execute(ctx);
+                    }
+                }
+            }
+
             return new Execution();
         }
     }

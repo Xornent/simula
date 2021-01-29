@@ -20,7 +20,9 @@ namespace Simula.Scripting
             {StringTableIndex.Doc_Sys_Uint8, "Convert a numeric value, or a numeric matrix, to an equivilant form of value or matrix of the type uint8(byte).\n\n" +
                                              "If any of the given values are not within the range [0, 255], this will trigger an SS2003" },
             {StringTableIndex.Doc_Sys_Addr, "Get the integer address of given variable. this is in the form of addr.\n\n" + 
-                                            "If the given value is or contains non-volatile members, a container for example, this will trigger an SS2004" }
+                                            "If the given value is or contains non-volatile members, a container for example, this will trigger an SS2004" },
+            {StringTableIndex.UnsupportMatrixExpression, "Unsupport expression for higher-dimensional matrices." },
+            {StringTableIndex.MatrixOutOfRange, "The index is out of the boundary in a matrix." }
         };
 
         public static string Loc(StringTableIndex index)
@@ -40,6 +42,8 @@ namespace Simula.Scripting
         AnnonymousTypeNameReferenceFail,
         IntegralCastOutOfRange,
         NovolatileMemberGetAddrFail,
+        UnsupportMatrixExpression,
+        MatrixOutOfRange,
 
         // documentations. [10000]
 

@@ -58,7 +58,7 @@ namespace Simula.Scripting.Contexts
             if (cascadeList.Count > 0) {
                 var current = cascadeList[0];
                 if (current.RawToken.Count > 0) {
-                    if (current.RawToken[0] != Token.Token.LineBreak)
+                    if (current.RawToken[0] != Token.Token.LineBreak && !("def,expose,hidden,while,for,iter,if,end,label,pass,go,return,break,continue,module,use,option,eif,else".Contains(current.RawToken[0])))
                         data.AddRange(new List<ICompletionData>() {
                             Data.KeywordData.Registry[7],
                             Data.KeywordData.Registry[11],
@@ -70,6 +70,7 @@ namespace Simula.Scripting.Contexts
                             Data.KeywordData.Registry[18],
                             Data.KeywordData.Registry[19]
                         });
+                    
                     {
                         if (current.RawToken[0] == "expose" || current.RawToken[0] == "hidden" || current.RawToken[0] == "def") {
                             data.Clear();
@@ -79,7 +80,7 @@ namespace Simula.Scripting.Contexts
                                 if(current.RawToken.Contains(new Token.Token("(")) ||
                                     current.RawToken.Contains(new Token.Token("=")) ||
                                     current.RawToken.Contains(new Token.Token(":")) ||
-                                    current.RawToken.Contains(new Token.Token("derives"))) {
+                                    current.RawToken.Contains(new Token.Token("assert"))) {
 
                                 } else {
                                     data.Clear();

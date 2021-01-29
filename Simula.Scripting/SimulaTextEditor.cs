@@ -45,6 +45,7 @@ namespace Simula.Scripting
 
             TextArea.TextEntering += TextArea_TextEntering;
             TextArea.TextEntered += TextArea_TextEntered;
+            TextArea.KeyDown += TextArea_KeyDown;
             textView.MouseHover += HandleMouseHover;
             textView.MouseHoverStopped += TextEditorMouseHoverStopped;
             textView.VisualLinesChanged += HandleVisualLinesChanged;
@@ -56,6 +57,12 @@ namespace Simula.Scripting
             folding = new SimulaFoldingStrategy();
             folding.UpdateFoldings(manager, Document);
             this.completionCtx = new Contexts.CompletionContext(runtime);
+        }
+
+        private void TextArea_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key.HasFlag(Key.OemPeriod))
+                awakeCompletion = true;
         }
 
         private void HandleTextChanged(object? sender, EventArgs e)
@@ -162,9 +169,10 @@ namespace Simula.Scripting
             Token.TokenDocument doc = new Token.TokenDocument();
             
             try {
+#if enable_validation
                 doc.Tokenize(this.Text);
-                Syntax.BlockStatement block = new Syntax.BlockStatement();
-                block.Parse(doc.Tokens);
+                completionCtx.SetSource(doc.Tokens);
+#endif
             } catch { } finally {
                 foreach (var item in doc.Tokens ?? new Token.TokenCollection()) {
                     if (item.HasError) {
@@ -256,13 +264,13 @@ namespace Simula.Scripting
 
         }
 
-        bool closeCompletion = true;
+        bool awakeCompletion = false;
         private async void TextArea_TextEntering(object sender, System.Windows.Input.TextCompositionEventArgs e)
         {
             ScrollToLine(TextArea.Caret.Line);
-            
+
             if (e.Text.Length > 0 && (completionWindow != null)) {
-                if (!char.IsLetterOrDigit(e.Text[0])) {
+                if (!char.IsLetterOrDigit(e.Text[0]) || e.Text[0] == '.') {
                     completionWindow.Close();
 
                     // the commented command requested that every time user press whitespace,
@@ -271,8 +279,11 @@ namespace Simula.Scripting
 
                     // completionWindow.CompletionList.RequestInsertion(e);
                 }
+#if enable_insight
             } else if (char.IsLetter(e.Text[0]) || e.Text == "_") {
-
+#else
+            } else if(awakeCompletion && (char.IsLetter(e.Text[0]) || e.Text == "_")) {
+#endif
                 // call completion provider with TextArea.Caret locations, full source
                 // file and current dynamic runtime.
 
@@ -302,6 +313,8 @@ namespace Simula.Scripting
                     completionWindow.Closed += (obj, e) => { completionWindow = null; };
                     completionWindow.Show();
                 }
+
+                awakeCompletion = false;
             }
         }
     }
