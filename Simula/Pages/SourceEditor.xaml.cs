@@ -26,5 +26,15 @@ namespace Simula.Pages
             sw.Stop();
             System.Windows.MessageBox.Show(sw.ElapsedMilliseconds.ToString()+" ms");
         }
+
+        public void ConvertToCs(object sender, EventArgs e)
+        {
+            Scripting.Build.GenerationContext gc = new Scripting.Build.GenerationContext();
+            Simula.Scripting.Dom.Source src = Scripting.Dom.Source.FromSourceCode(editor.Text);
+
+            src.Body.IsParental = true;
+            string cscode = src.Body.Generate(gc);
+            System.Windows.MessageBox.Show(cscode);
+        }
     }
 }

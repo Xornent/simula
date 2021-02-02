@@ -12,13 +12,16 @@
         <DockPanel>
             <Grid DockPanel.Dock="Top" Height="41">
                 <DockPanel>
-                    <StackPanel Width="100" DockPanel.Dock="Left" Orientation="Horizontal">
+                    <StackPanel Width="200" DockPanel.Dock="Left" Orientation="Horizontal">
                         
                         <Button FontFamily="Segoe MDL2 Assets" Width="32" FontSize="13" Margin="6 8 5 8">
                             <Image IsHitTestVisible="False" Source="pack://siteoforigin:,,,/resources/icons/folder-add.png" Width="16" Height="16"/>
                         </Button> 
                         <Button FontFamily="Segoe MDL2 Assets" Width="32" FontSize="13" Margin="0 8 5 8" x:Name="n" Click="HandleRun">
                             <Image IsHitTestVisible="False" Source="pack://siteoforigin:,,,/resources/icons/play.png" Width="16" Height="16"/>
+                        </Button>
+                        <Button FontFamily="Segoe MDL2 Assets" Width="32" FontSize="13" Margin="0 8 5 8" Click="ConvertToCs">
+                            <Image IsHitTestVisible="False" Source="pack://siteoforigin:,,,/resources/icons/rotate-ccw.png" Width="16" Height="16"/>
                         </Button>
                         
                     </StackPanel>

@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 
 using static Simula.Scripting.Resources;
+using Microsoft.CodeAnalysis.CSharp.Scripting;
 
 namespace Simula.Scripting.Contexts
 {
@@ -298,6 +299,26 @@ namespace Simula.Scripting.Contexts
             else return (this.Store, Null.NULL);
         }
 
+        public string GetMemberCode(string name)
+        {
+            int counter = this.Scopes.Count;
+            if (Scopes.Count > 0) {
+                bool turn = true;
+                counter--;
+                while (turn && counter >= 0) {
+                    var dict = (IDictionary<string, object>)(Scopes[counter].Store);
+                    counter--;
+                    if (dict.ContainsKey(name)) return ("scopes[" + (counter + 1) + "]." + name);
+                    if (Scopes[counter + 1].Permeable) turn = true;
+                    else return "scopes[" + (counter + 1) + "]." + name;
+                }
+            }
+
+            var library = (IDictionary<string, object>)Store;
+            if (library.ContainsKey(name)) return "global." + name;
+            else return "global." + name;
+        }
+
         public dynamic SetMember(string name, dynamic value)
         {
             if (Scopes.Count > 0) {
@@ -327,17 +348,19 @@ namespace Simula.Scripting.Contexts
                         if (container != null) {
                             if (container.fullName.Count != 0) {
                                 string positioner = ((container.fullName[0] == "") ? "" : (container.fullName[0] + ".")) + re.Token;
-                                value.fullName.Insert(0, positioner);
+                                if (!(value is System.ValueType)) value.fullName.Insert(0, positioner);
 
                                 if (container is ExpandoObject obj) {
                                     var dictionary = (IDictionary<string, object>)obj;
                                     dynamic original = dictionary[re.Token];
-                                    original.fullName.Remove(positioner);
+                                    if (!(original is ValueType))
+                                        original.fullName.Remove(positioner);
                                     dictionary[re.Token] = value;
                                 } else {
                                     if (container._fields.ContainsKey(re.Token)) {
                                         dynamic original = container._fields[re.Token];
-                                        original.fullName.Remove(positioner);
+                                        if (!(original is ValueType))
+                                            original.fullName.Remove(positioner);
                                         container._fields[re.Token] = value;
                                     } else container._fields.Add(re.Token, value);
                                 }
@@ -366,6 +389,14 @@ namespace Simula.Scripting.Contexts
                             return value;
                         }
 
+                    } else if (dict[name] is System.ValueType) {
+                        if (value is System.ValueType)
+                            dict[name] = value;
+                        else {
+                            string positioner = ((current.Store.fullName[0] == "") ? "" : (current.Store.fullName[0] + ".")) + name;
+                            value.fullName.Insert(0, positioner);
+                            dict[name] = value;
+                        }
                     } else {
 
                         // if the scope has no items of its name, we should set the object
@@ -374,12 +405,16 @@ namespace Simula.Scripting.Contexts
                         dynamic original = dict[name];
                         string positioner = ((current.Store.fullName[0] == "") ? "" : (current.Store.fullName[0] + ".")) + name;
                         original.fullName.Remove(positioner);
-                        value.fullName.Insert(0, positioner);
-                        dict[name] = value;
+                        if (value is System.ValueType)
+                            dict[name] = value;
+                        else {
+                            value.fullName.Insert(0, positioner);
+                            dict[name] = value;
+                        }
                     }
                 } else {
                     string positioner = ((current.Store.fullName[0] == "") ? "" : (current.Store.fullName[0] + ".")) + name;
-                    if (!(value is Reference))
+                    if (!(value is Reference) && !(value is ValueType))
                         value.fullName.Insert(0, positioner);
                     dict[name] = value; 
                 }
@@ -396,16 +431,18 @@ namespace Simula.Scripting.Contexts
                         if (container != null) {
                             if (container.fullName.Count > 0) {
                                 string positioner = ((container.fullName[0] == "") ? "" : (container.fullName[0] + ".")) + re.Token;
-                                value.fullName.Insert(0, positioner);
+                                if(!(value is ValueType)) value.fullName.Insert(0, positioner);
 
                                 if (container is ExpandoObject obj) {
                                     var dictionary = (IDictionary<string, object>)obj;
                                     dynamic original = dictionary[re.Token];
+                                    if(!(original is ValueType))
                                     original.fullName.Remove(positioner);
                                     dictionary[re.Token] = value;
                                 } else {
                                     if (container._fields.ContainsKey(re.Token)) {
                                         dynamic original = container._fields[re.Token];
+                                        if(!(original is ValueType))
                                         original.fullName.Remove(positioner);
                                         container._fields[re.Token] = value;
                                     } else container._fields.Add(re.Token, value);
@@ -431,13 +468,15 @@ namespace Simula.Scripting.Contexts
                     } else {
                         dynamic original = dict[name];
                         string positioner = ((Store.fullName[0] == "") ? "" : (Store.fullName[0] + ".")) + name;
-                        original.fullName.Remove(positioner);
-                        value.fullName.Insert(0, positioner);
+                        if (!(original is ValueType))
+                            original.fullName.Remove(positioner);
+                        if (!(value is ValueType))
+                            value.fullName.Insert(0, positioner);
                         dict[name] = value;
                     }
                 } else {
                     string positioner = ((Store.fullName[0] == "") ? "" : (Store.fullName[0] + ".")) + name;
-                    if (!(value is Reference))
+                    if (!(value is Reference) && !(value is ValueType))
                         value.fullName.Insert(0, positioner);
                     dict[name] = value;
                 }
@@ -445,6 +484,101 @@ namespace Simula.Scripting.Contexts
             }
 
             return value;
+        }
+
+        public (bool AddToField, bool Existed, string Container)? ContainsMember(string name)
+        {
+            if (Scopes.Count > 0) {
+                var current = Scopes[Scopes.Count - 1];
+                int currentScopeCount = Scopes.Count - 1;
+                var dict = (IDictionary<string, object>)(current.Store);
+
+                if (dict.ContainsKey(name)) {
+                    if (dict[name] is Reference re) {
+                        var container = re.Container;
+                        while (container is Reference containerRef)
+                            container = containerRef.Container;
+
+                        if (container != null) {
+                            if (container.fullName.Count != 0) {
+                                if (container is ExpandoObject obj) {
+                                    dynamic expando = obj;
+                                    return (false, true, "scopes[" + currentScopeCount + "]." + expando.fullName[0]);
+                                } else {
+                                    if (container._fields.ContainsKey(re.Token)) {
+                                        return (true, true, "scopes[" + currentScopeCount + "]." + container.fullName[0]);
+                                    } else return (true, false, "scopes[" + currentScopeCount + "]." + container.fullName[0]);
+                                }
+                            } else {
+
+                                if (container is ExpandoObject obj) {
+                                    return (false, true, "");
+                                } else {
+                                    if (container._fields.ContainsKey(re.Token)) {
+                                        return (true, true, "");
+                                    } else return (true, false, "");
+                                }
+                            }
+
+                        } else {
+                            this.PostRuntimeError(StringTableIndex.NullContainer);
+                            return null;
+                        }
+
+                    } else {
+
+                        // if the scope has no items of its name, we should set the object
+                        // directly to the parent scope. 
+
+                        return (false, true, "`" + currentScopeCount);
+                    }
+                } else {
+                    return (false, false, "`" + currentScopeCount);
+                }
+
+            } else {
+                var dict = (IDictionary<string, object>)Store;
+
+                if (dict.ContainsKey(name)) {
+                    if (dict[name] is Reference re) {
+                        var container = re.Container;
+                        while (container is Reference containerRef)
+                            container = containerRef.Container;
+
+                        if (container != null) {
+                            if (container.fullName.Count > 0) {
+                                
+                                if (container is ExpandoObject obj) {
+                                    dynamic dyn = obj;
+                                    return (false, true, "global." + dyn.fullName[0]);
+                                } else {
+                                    if (container._fields.ContainsKey(re.Token)) {
+                                        return (true, true, "global." + container.fullName[0]);
+                                    } else return (true, false, "global." + container.fullName[0]);
+                                }
+                            } else {
+                                if (container is ExpandoObject obj) {
+                                    return (false, true, "");
+                                } else {
+                                    if (container._fields.ContainsKey(re.Token)) {
+                                        return (true, true, "");
+                                    } else return (true, false, "");
+                                }
+                            }
+
+                        } else {
+                            this.PostRuntimeError(StringTableIndex.NullContainer);
+                            return null;
+                        }
+
+                    } else {
+                        return (false, true, "``");
+                    }
+                } else {
+                    return (false, false, "``");
+                }
+
+            }
         }
 
         public dynamic SetMemberReferenceCheck(dynamic expando, string name, dynamic value, string space)
@@ -460,21 +594,22 @@ namespace Simula.Scripting.Contexts
                         if (container != null) {
                             if (container.fullName.Count > 0) {
                                 string positioner = ((container.fullName[0] == "") ? "" : (container.fullName[0] + ".")) + re.Token;
-                                value.fullName.Insert(0, positioner);
+                                if (!(value is ValueType)) value.fullName.Insert(0, positioner);
 
                                 if (container is ExpandoObject obj) {
                                     var dictionary = (IDictionary<string, object>)obj;
                                     dynamic original = dictionary[re.Token];
-                                    original.fullName.Remove(positioner);
+                                    if (!(original is ValueType))
+                                        original.fullName.Remove(positioner);
                                     dictionary[re.Token] = value;
                                 } else {
                                     if (container._fields.ContainsKey(re.Token)) {
                                         dynamic original = container._fields[re.Token];
-                                        original.fullName.Remove(positioner);
+                                        if (!(original is ValueType))
+                                            original.fullName.Remove(positioner);
                                         container._fields[re.Token] = value;
                                     } else container._fields.Add(re.Token, value);
                                 }
-
                             } else {
                                 if (container is ExpandoObject obj) {
                                     var dictionary = (IDictionary<string, object>)obj;
@@ -496,13 +631,15 @@ namespace Simula.Scripting.Contexts
                     } else {
                         dynamic original = dict[name];
                         string positioner = ((expando.fullName[0] == "") ? "" : (expando.fullName[0] + ".")) + name;
-                        original.fullName.Remove(positioner);
-                        value.fullName.Insert(0, positioner);
+                        if (!(original is ValueType))
+                            original.fullName.Remove(positioner);
+                        if (!(value is ValueType))
+                            value.fullName.Insert(0, positioner);
                         dict[name] = value;
                     }
                 } else {
                     string positioner = ((expando.fullName[0] == "") ? "" : (expando.fullName[0] + ".")) + name;
-                    if (!(value is Reference))
+                    if (!(value is Reference) && !(value is ValueType))
                         value.fullName.Insert(0, positioner);
                     dict[name] = value;
                 }
@@ -517,17 +654,19 @@ namespace Simula.Scripting.Contexts
                         if (container != null) {
                             if (container.fullName.Count > 0) {
                                 string positioner = ((container.fullName[0] == "") ? "" : (container.fullName[0] + ".")) + re.Token;
-                                value.fullName.Insert(0, positioner);
+                                if (!(value is ValueType)) value.fullName.Insert(0, positioner);
 
                                 if (container is ExpandoObject obj) {
                                     var dictionary = (IDictionary<string, object>)obj;
                                     dynamic original = dictionary[re.Token];
-                                    original.fullName.Remove(positioner);
+                                    if (!(original is ValueType))
+                                        original.fullName.Remove(positioner);
                                     dictionary[re.Token] = value;
                                 } else {
                                     if (container._fields.ContainsKey(re.Token)) {
                                         dynamic original = container._fields[re.Token];
-                                        original.fullName.Remove(positioner);
+                                        if (!(original is ValueType))
+                                            original.fullName.Remove(positioner);
                                         container._fields[re.Token] = value;
                                     } else container._fields.Add(re.Token, value);
                                 }
@@ -552,19 +691,106 @@ namespace Simula.Scripting.Contexts
                     } else {
                         dynamic original = dict[name];
                         string positioner = ((space == "") ? "" : (space + ".")) + name;
-                        original.fullName.Remove(positioner);
-                        value.fullName.Insert(0, positioner);
+                        if (!(original is ValueType))
+                            original.fullName.Remove(positioner);
+                        if (!(value is ValueType))
+                            value.fullName.Insert(0, positioner);
                         dict[name] = value;
                     }
                 } else {
                     string positioner = ((space == "") ? "" : (space + ".")) + name;
-                    if (!(value is Reference))
+                    if (!(value is Reference) && !(value is ValueType))
                         value.fullName.Insert(0, positioner);
                     dict[name] = value;
                 }
             }
 
             return value;
+        }
+
+        public bool? ContainsMember(dynamic expando, string name)
+        {
+            if (expando is ExpandoObject) {
+                var dict = (IDictionary<string, object>)expando;
+                if (dict.ContainsKey(name)) {
+                    if (dict[name] is Reference re) {
+                        var container = re.Container;
+                        while (container is Reference containerRef)
+                            container = containerRef.Container;
+
+                        if (container != null) {
+                            if (container.fullName.Count > 0) {
+                                if (container is ExpandoObject obj) {
+                                    return true;
+                                } else {
+                                    if (container._fields.ContainsKey(re.Token)) {
+                                        return true;
+                                    } else return false;
+                                }
+
+                            } else {
+                                if (container is ExpandoObject obj) {
+                                    return true;
+                                } else {
+                                    if (container._fields.ContainsKey(re.Token)) {
+                                        return true;
+                                    } else return false;
+                                }
+                            }
+
+                        } else {
+                            this.PostRuntimeError(StringTableIndex.NullContainer);
+                            return null;
+                        }
+
+                    } else {
+                        return true;
+                    }
+                } else {
+                    return false;
+                }
+
+            } else if (expando is Dictionary<string, dynamic> dict) {
+                if (dict.ContainsKey(name)) {
+                    if (dict[name] is Reference re) {
+                        var container = re.Container;
+                        while (container is Reference containerRef)
+                            container = containerRef.Container;
+
+                        if (container != null) {
+                            if (container.fullName.Count > 0) {
+                                
+                                if (container is ExpandoObject obj) {
+                                    return true;
+                                } else {
+                                    if (container._fields.ContainsKey(re.Token)) {
+                                        return true;
+                                    } else return false;
+                                }
+                            } else {
+                                if (container is ExpandoObject obj) {
+                                    return true;
+                                } else {
+                                    if (container._fields.ContainsKey(re.Token)) {
+                                        return true;
+                                    } else return false;
+                                }
+                            }
+
+                        } else {
+                            this.PostRuntimeError(StringTableIndex.NullContainer);
+                            return null;
+                        }
+
+                    } else {
+                        return true;
+                    }
+                } else {
+                    return false;
+                }
+            }
+
+            return null;
         }
 
         public void PostRuntimeError(string code = "ss0000", string message = "", Exception? inner = null)

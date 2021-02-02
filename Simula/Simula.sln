@@ -27,7 +27,7 @@ Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "simula.windows.x64", "..\Wi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Simula.Controls", "..\Simula.Controls\Simula.Controls.csproj", "{F1A197F6-92A3-4ACE-B093-68BA5D970F52}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simula.Resources", "..\Simula.Resources\Simula.Resources.csproj", "{3B6B0FAC-19AC-4208-8361-CDF2E766DEC2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Simula.Resources", "..\Simula.Resources\Simula.Resources.csproj", "{3B6B0FAC-19AC-4208-8361-CDF2E766DEC2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -12,6 +12,8 @@ namespace Simula.Scripting
             {StringTableIndex.IntegralCastOutOfRange, "The target value is either too large or too small for a integral value type." },
             {StringTableIndex.NovolatileMemberGetAddrFail, "The object you are trying to get address is or contains non-volatile members." },
 
+            {StringTableIndex.WorkspaceFolderIllegal, "The current directory is illegal or not exist to open a workspace." },
+
             {StringTableIndex.Doc_Sys_Alert, "Displays a system message box containing the string form of given information" },
             {StringTableIndex.Doc_Sys_Dir, "Basic information output about a given variable, containing its registered fields or functions.\n\n" +
                                            "You should avoid using the dialog in procedure or turn to the 'variable' interface for variable properties."},
@@ -44,6 +46,10 @@ namespace Simula.Scripting
         NovolatileMemberGetAddrFail,
         UnsupportMatrixExpression,
         MatrixOutOfRange,
+
+        // application error messages [8000]
+
+        WorkspaceFolderIllegal = 5001,
 
         // documentations. [10000]
 

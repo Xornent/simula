@@ -4,12 +4,14 @@ using System.Collections.Generic;
 using Simula.Scripting.Contexts;
 using System.Dynamic;
 using Simula.Scripting.Types;
+using Simula.Scripting.Build;
 
 namespace Simula.Scripting.Syntax
 {
     public class BinaryOperation : OperatorStatement
     {
         IDictionary<string, object> store = new Dictionary<string, object>();
+        dynamic? temp;
         public override Execution Operate(DynamicRuntime ctx)
         {
             if (store.Count == 0) store = (IDictionary<string, object>)ctx.Store;
@@ -81,6 +83,25 @@ namespace Simula.Scripting.Syntax
                 if (left is Reference re) { left = re.GetDynamic(); }
                 if (right is Reference refer) { right = refer.GetDynamic(); }
 
+                if(temp != null) {
+                    return new Execution(ctx, temp._call(left, new dynamic[] { right }));
+                }
+
+                if( left is ValueType && right is ValueType) {
+                    switch(this.Operator.Symbol) {
+                        case "+": return new Execution(ctx, left + right);
+                        case "-": return new Execution(ctx, left - right);
+                        case "*": return new Execution(ctx, left * right);
+                        case "/": return new Execution(ctx, left / right);
+                        case "%": return new Execution(ctx, left % right);
+                        case "<=": return new Execution(ctx, left <= right);
+                        case "<": return new Execution(ctx, left < right);
+                        case ">": return new Execution(ctx, left > right);
+                        case ">=": return new Execution(ctx, left >= right);
+                        case "==": return new Execution(ctx, left == right);
+                    }
+                }
+
                 switch (this.Operator.Symbol) {
                     default:
                         var pair = DynamicRuntime.Registry.FirstOrDefault(((arg) => {
@@ -90,8 +111,13 @@ namespace Simula.Scripting.Syntax
                         }));
 
                         if (left._fields.ContainsKey(pair.Key)) {
+                            if (temp == null) temp = left._fields[pair.Key];
                             return new Execution(ctx, ((Function)(left._fields[pair.Key]))?._call(left, new dynamic[] { right }));
                         }
+
+                        if (temp == null) temp = ctx.FunctionCache[(string)left.type].Find((func) => {
+                            return func.name == pair.Key;
+                        });
 
                         return new Execution(ctx, ctx.FunctionCache[(string)left.type].Find((func) => {
                                   return func.name == pair.Key;
@@ -154,6 +180,60 @@ namespace Simula.Scripting.Syntax
                 }
 
                 return new TypeInference(types, null);
+            }
+        }
+
+        public override string Generate(GenerationContext ctx)
+        {
+            if (this.Left == null) return "";
+            if (this.Right == null) return "";
+            if (this.Operator.Symbol == "=") {
+                if (this.Left is SelfOperation self) {
+                    var check = ctx.ContainsMember(self.Self);
+                    if (check == null) return "";
+                    if (check?.Container.StartsWith("`") ?? true) {
+                        string str = check?.Container.Remove(0, 1) ?? "";
+                        if (str.StartsWith("`")) return "global." + self.Self + " = " + this.Right.Generate(ctx);
+                        else return "scopes[" + str + "]." + self.Self + " = " + this.Right.Generate(ctx);
+                    } else return check?.Container + self.Self + " = " + this.Right.Generate(ctx);
+                } else if (this.Left is MemberOperation member) {
+                    return member.Generate(ctx) + " = " + this.Right.Generate(ctx);
+                } else if (this.Left is IndexOperation index) {
+                    return index.Generate(ctx) + " = " + this.Right.Generate(ctx);
+                } else if (this.Left is BraceOperation matrixRaw) {
+
+                    List<OperatorStatement?> ops = new List<OperatorStatement?>();
+                    foreach (var item in matrixRaw.EvaluateOperators) {
+                        if (item is SelfOperation so)
+                            if (so.Self == ";" || so.Self == ",") { continue; }
+                        ops.Add(item);
+                    }
+
+                    string tempName = Guid.NewGuid().ToString().Replace("-", "_").ToLower();
+                    string code = "dynamic " + tempName + " = " + this.Right.Generate(ctx) + "";
+                    int i = 0;
+                    foreach (var item in ops) {
+                        code += ";\n" + ctx.Indention() + item.Generate(ctx) + " = " + tempName + ".__linear_get(" + i + ")";
+                        i++;
+                    }
+
+                    return code;
+                }
+
+                return "";
+
+            } else {
+                switch (this.Operator.Symbol) {
+                    default:
+                        var pair = DynamicRuntime.Registry.FirstOrDefault(((arg) => {
+                            if (arg.Value.Symbol == this.Operator.Symbol &&
+                                arg.Value.Type == this.Operator.Type) return true;
+                            else return false;
+                        }));
+
+                        return this.Left.Generate(ctx) + "." + pair.Key + "(new dynamic[]{" + this.Right.Generate(ctx) + "})";
+
+                }
             }
         }
     }
@@ -229,6 +309,11 @@ namespace Simula.Scripting.Syntax
                 this.Right.RawEvaluateToken[0].Error = new Token.TokenizerException("ss1002");
                 return new TypeInference();
             } else return new TypeInference(record);
+        }
+
+        public override string Generate(GenerationContext ctx)
+        {
+            return Left?.Generate(ctx) + "." + Right?.Generate(ctx);
         }
     }
 }

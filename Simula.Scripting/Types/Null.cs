@@ -129,6 +129,7 @@ namespace Simula.Scripting.Types
     {
         public static int GetSize(dynamic obj)
         {
+            if (obj is double) return 8;
             if (obj is Boolean) return 1;
 
             else if (obj is Double) return 8;
@@ -182,11 +183,11 @@ namespace Simula.Scripting.Types
         }
 
 
-        public static Var WrapUnmanaged(dynamic obj)
+        public static dynamic WrapUnmanaged(dynamic obj)
         {
             if (obj is bool) return new Boolean(obj);
 
-            if (obj is double) return new Double(obj);
+            if (obj is double) return obj;
 
             if (obj is byte) return new Byte(obj);
             if (obj is ushort) return new Char(obj);

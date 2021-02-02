@@ -8,6 +8,7 @@ namespace Simula.Scripting.Syntax
     public class BlockStatement : Statement
     {
         public List<Statement> Children = new List<Statement>();
+        public bool IsParental = false;
 
         public override void Parse(Token.TokenCollection collection)
         {
@@ -218,15 +219,58 @@ namespace Simula.Scripting.Syntax
 
         public override string Generate(GenerationContext ctx)
         {
-            string code = ctx.Indention() + "{\n";
+            string names = ctx.Indention() + "{\n";
+            string baseIndent = ctx.Indention();
+            string code = "";
+            string exec = "";
             ctx.IndentionLevel++;
-            foreach (var item in this.Children) {
-                code += (item.Generate(ctx) + "\n");
-            }
-            ctx.IndentionLevel--;
-            code += ctx.Indention() + "}";
 
-            return code;
+            string module = "";
+            foreach (var item in this.Children) {
+                if (item is UseStatement use) code += ctx.Indention() + "using static " + use.FullName + ";\n";
+                else if (item is ModuleStatement mod) module = mod.FullName;
+            }
+
+            if (!string.IsNullOrEmpty(module))
+                names = baseIndent + "public static partial class " + module + "{\n";
+            else names = baseIndent + "public static partial class _global {\n";
+
+            code = names + code;
+
+            if (IsParental) {
+                foreach (var item in this.Children) {
+                    if (item is UseStatement) {
+                    } else if (item is ModuleStatement) {
+                    } else if (item is DefinitionBlock) {
+                        code += (ctx.Indention() + item.Generate(ctx) + "\n");
+                    } else if (item is EvaluationStatement) {
+                        exec += (ctx.Indention() + item.Generate(ctx) + ";\n");
+                    } else {
+                        exec += (ctx.Indention() + item.Generate(ctx) + "\n");
+                    }
+                }
+
+                ctx.IndentionLevel--;
+                code += ctx.Indention() + "}";
+
+                return code + exec;
+
+            } else {
+                foreach (var item in this.Children) {
+                    if (item is UseStatement) {
+                    } else if (item is ModuleStatement) {
+                    } else if (item is EvaluationStatement) {
+                        code += (ctx.Indention() + item.Generate(ctx) + ";\n");
+                    } else {
+                        code += (ctx.Indention() + item.Generate(ctx) + "\n");
+                    }
+                }
+
+                ctx.IndentionLevel--;
+                code += ctx.Indention() + "}";
+
+                return code;
+            }
         }
     }
 }

@@ -1,5 +1,7 @@
-﻿using Simula.Scripting.Token;
+﻿using Simula.Scripting.Build;
+using Simula.Scripting.Token;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Simula.Scripting.Syntax
 {
@@ -26,7 +28,11 @@ namespace Simula.Scripting.Syntax
     {
         public DefinitionType Type;
         public Visibility Visibility = Visibility.Hidden;
+        public bool IsReadonly = false;
 
+        private string Cascader = "";
+
+        public bool IsStatic = true;
         public Token.Token? FunctionName;
         public List<Parameter> FunctionParameters = new List<Parameter>();
         public EvaluationStatement? FunctionAlias;
@@ -39,6 +45,10 @@ namespace Simula.Scripting.Syntax
 
         public Token.Token? ConstantName;
         public EvaluationStatement? ConstantValue;
+        public bool ExplicitGet = false;
+        public bool ExplicitSet = false;
+        public BlockStatement? GetBlock;
+        public BlockStatement? SetBlock;
 
         public CommentBlock? Documentation;
 
@@ -276,6 +286,98 @@ namespace Simula.Scripting.Syntax
                     return;
                 }
             }
+        }
+
+        public override string Generate(GenerationContext ctx)
+        {
+            switch (this.Type) {
+                case DefinitionType.Constant:
+                    string constant = ((Visibility == Visibility.Expose) ? "public " : "private ") + "dynamic " + ConstantName?.Value;
+                    if (this.IsReadonly) constant += " { get { return _get_" + ConstantName?.ToString() + "(); } }";
+                    else constant += "{ get { return _get_" + ConstantName?.ToString() + "(); } set { _set_" + ConstantName?.Value + "(value); } }";
+
+                    // register the _get method for a hidden variable _name.
+                    if(!ExplicitSet && !ExplicitGet) constant = ctx.Indention() + "private dynamic _" + ConstantName?.Value + " = undef;\n" + constant;
+                    if (ExplicitGet)
+                        constant = ctx.Indention() + "private dynamic _get_" + ConstantName?.Value + "()\n" + GetBlock?.Generate(ctx) + "\n" + constant;
+                    else constant = ctx.Indention() + "private dynamic _get_" + ConstantName?.Value + "() { if(_" + ConstantName?.Value + " == undef) return " + 
+                                    ConstantValue?.Generate(ctx) + "; return _" + ConstantName?.Value + "; }\n" + constant;
+                    
+                    if (ExplicitSet)
+                        constant = ctx.Indention() + "private dynamic _set_" + ConstantName?.Value + "(dynamic value)\n" + SetBlock?.Generate(ctx) + "\n" + constant;
+                    else constant = ctx.Indention() + "private dynamic _set_" + ConstantName?.Value + "(dynamic value) { _" + ConstantName?.Value + " = value; }\n" + constant;
+
+                    if (string.IsNullOrEmpty(ctx.DefinerName)) ctx.Objects.Add("+[0]" + ConstantName?.Value);
+                    else ctx.Objects.Add("+[0]" + ctx.DefinerName + "." + ConstantName?.Value);
+
+                    return constant;
+
+                case DefinitionType.Function:
+                    string function = ((Visibility == Visibility.Expose) ? "public " : "private ") + (IsStatic ? "static " : "") + "dynamic " + FunctionName?.Value + "(dynamic args[]) {\n";
+
+                    function += ctx.Indention() + "    pushscope();\n";
+                    int i = 0;
+                    foreach (Parameter item in FunctionParameters) {
+                        function += ctx.Indention() + "    scopes[" + (ctx.Scopes.Count - 1) + "]." + item.Name?.Value + " = args[" + i + "];\n";
+                        i++;
+                    }
+
+                    string name;
+                    if (string.IsNullOrEmpty(ctx.DefinerName)) name = ("" + FunctionName?.Value);
+                    else name = (ctx.DefinerName + "." + FunctionName?.Value);
+                    ctx.Objects.Add("+[" + (ctx.Scopes.Count - 1) + "]" + FunctionName?.Value);
+
+                    string parent = ctx.DefinerName;
+                    ctx.DefinerName = name;
+                    ctx.PushScope("Function " + FunctionName?.Value);
+                    string funcBlock = new BlockStatement() { Children = this.Children }.Generate(ctx);
+                    ctx.PopScope();
+                    ctx.DefinerName = parent;
+
+                    List<string> lines = funcBlock.Split('\n').ToList();
+                    lines[0] = function;
+                    lines[lines.Count - 1] = (ctx.Indention() + "    popscope();\n" + ctx.Indention() + "}");
+                    return lines.JoinString("\n");
+
+                case DefinitionType.Class:
+                    string cls = ((Visibility == Visibility.Expose) ? "public " : "private ") + (IsStatic ? "static " : "") + "class " + ClassName?.Value;
+                    List<string> inheritages = new List<string>();
+                    if (this.ClassInheritages.Count == 0) { } else {
+                        foreach (var item in ClassInheritages) {
+                            inheritages.Add(item.Generate(ctx));
+                        }
+                    }
+
+                    string inh = inheritages.JoinString(", ");
+                    if (!string.IsNullOrWhiteSpace(inh)) cls += inh;
+                    cls += " {\n";
+                    ctx.IndentionLevel++;
+
+                    if (string.IsNullOrEmpty(ctx.DefinerName)) name = ("" + ConstantName?.Value);
+                    else name = (ctx.DefinerName + "." + ConstantName?.Value);
+                    ctx.Objects.Add("+[0]" + name);
+                    parent = ctx.DefinerName;
+                    ctx.DefinerName = name;
+
+                    foreach (var item in this.Children) {
+                        if(item is DefinitionBlock def) {
+                            def.IsStatic = false;
+                            cls += def.Generate(ctx);
+                        }
+                    }
+
+                    ctx.DefinerName = parent;
+
+                    ctx.IndentionLevel--;
+                    cls += ctx.Indention() + "}";
+
+                    return cls;
+
+                default:
+                    break;
+            }
+
+            return ctx.Indention() + "// invalid definition";
         }
     }
 }

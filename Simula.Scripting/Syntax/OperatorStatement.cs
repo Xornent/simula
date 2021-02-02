@@ -1,4 +1,5 @@
-﻿using Simula.Scripting.Contexts;
+﻿using Simula.Scripting.Build;
+using Simula.Scripting.Contexts;
 using System.Collections.Generic;
 
 namespace Simula.Scripting.Syntax
@@ -17,6 +18,11 @@ namespace Simula.Scripting.Syntax
         public override TypeInference InferType(CompletionContext ctx)
         {
             return new TypeInference( new HashSet<string>() { "any" }, null);
+        }
+
+        public override string Generate(GenerationContext ctx)
+        {
+            return "";
         }
     }
 }

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -11,22 +13,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using System.Windows.Controls.Primitives;
-using System.Diagnostics;
-//###################################################################################
-// Odyssey.Controls
-// (c) Copyright 2008 Thomas Gerber
-// All rights reserved.
-//
-//  THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY
-// APPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT
-// HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM "AS IS" WITHOUT WARRANTY
-// OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO,
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM
-// IS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF
-// ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
-//###################################################################################
 
 namespace Odyssey.Controls
 {
@@ -39,10 +25,10 @@ namespace Odyssey.Controls
     [TemplatePart(Name = partDropDown)]
     public class BreadcrumbButton : HeaderedItemsControl
     {
-        const string partMenu = "PART_Menu";
-        const string partToggle = "PART_Toggle";
-        const string partButton = "PART_button";
-        const string partDropDown = "PART_DropDown";
+        private const string partMenu = "PART_Menu";
+        private const string partToggle = "PART_Toggle";
+        private const string partButton = "PART_button";
+        private const string partDropDown = "PART_DropDown";
         static BreadcrumbButton()
         {
             DefaultStyleKeyProperty.OverrideMetadata(typeof(BreadcrumbButton), new FrameworkPropertyMetadata(typeof(BreadcrumbButton)));
@@ -89,8 +75,6 @@ namespace Odyssey.Controls
             IsPressed = false;
         }
 
-
-
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
         {
             e.Handled = true;
@@ -98,14 +82,10 @@ namespace Odyssey.Controls
             base.OnMouseLeftButtonDown(e);
         }
 
-
-
-
         protected override void OnMouseUp(MouseButtonEventArgs e)
         {
             e.Handled = true;
-            if (isPressed)
-            {
+            if (isPressed) {
                 RoutedEventArgs args = new RoutedEventArgs(BreadcrumbButton.ClickEvent);
                 RaiseEvent(args);
                 selectCommand.Execute(null, this);
@@ -131,66 +111,55 @@ namespace Odyssey.Controls
             e.CanExecute = Items.Count > 0;
         }
 
-        public static RoutedUICommand OpenOverflowCommand
-        {
+        public static RoutedUICommand OpenOverflowCommand {
             get { return openOverflowCommand; }
         }
 
-        public static RoutedUICommand SelectCommand
-        {
+        public static RoutedUICommand SelectCommand {
             get { return selectCommand; }
         }
 
-        private static RoutedUICommand openOverflowCommand = new RoutedUICommand("Open Overflow", "OpenOverflowCommand", typeof(BreadcrumbButton));
-        private static RoutedUICommand selectCommand = new RoutedUICommand("Select", "SelectCommand", typeof(BreadcrumbButton));
-
+        private static readonly RoutedUICommand openOverflowCommand = new RoutedUICommand("Open Overflow", "OpenOverflowCommand", typeof(BreadcrumbButton));
+        private static readonly RoutedUICommand selectCommand = new RoutedUICommand("Select", "SelectCommand", typeof(BreadcrumbButton));
 
         public override void OnApplyTemplate()
         {
-            dropDownBtn = this.GetTemplateChild(partDropDown) as Control;
-            contextMenu = this.GetTemplateChild(partMenu) as ContextMenu;
-            if (contextMenu != null)
-            {
+            dropDownBtn = GetTemplateChild(partDropDown) as Control;
+            contextMenu = GetTemplateChild(partMenu) as ContextMenu;
+            if (contextMenu != null) {
                 contextMenu.Opened += new RoutedEventHandler(contextMenu_Opened);
             }
-            if (dropDownBtn != null)
-            {
+            if (dropDownBtn != null) {
                 dropDownBtn.MouseDown += new MouseButtonEventHandler(dropDownBtn_MouseDown);
             }
             base.OnApplyTemplate();
         }
 
-        void dropDownBtn_MouseDown(object sender, MouseButtonEventArgs e)
+        private void dropDownBtn_MouseDown(object sender, MouseButtonEventArgs e)
         {
             e.Handled = true;
             IsDropDownPressed ^= true;
         }
 
-
         /// <summary>
         /// Gets or sets the Image of the BreadcrumbButton.
         /// </summary>
-        public ImageSource Image
-        {
+        public ImageSource Image {
             get { return (ImageSource)GetValue(ImageProperty); }
             set { SetValue(ImageProperty, value); }
         }
 
-
-        void contextMenu_Opened(object sender, RoutedEventArgs e)
+        private void contextMenu_Opened(object sender, RoutedEventArgs e)
         {
             contextMenu.Items.Clear();
             contextMenu.ItemTemplate = ItemTemplate;
             contextMenu.ItemTemplateSelector = ItemTemplateSelector;
-            foreach (object item in Items)
-            {
-                if (!(item is MenuItem) && !(item is Separator))
-                {
+            foreach (object item in Items) {
+                if (!(item is MenuItem) && !(item is Separator)) {
                     MenuItem menuItem = new MenuItem();
                     menuItem.DataContext = item;
                     BreadcrumbItem bi = item as BreadcrumbItem;
-                    if (bi == null)
-                    {
+                    if (bi == null) {
                         BreadcrumbItem parent = TemplatedParent as BreadcrumbItem;
                         if (parent != null) bi = parent.ContainerFromItem(item);
                     }
@@ -212,9 +181,7 @@ namespace Odyssey.Controls
                     menuItem.ItemTemplate = ItemTemplate;
                     menuItem.ItemTemplateSelector = ItemTemplateSelector;
                     contextMenu.Items.Add(menuItem);
-                }
-                else
-                {
+                } else {
                     contextMenu.Items.Add(item);
                 }
             }
@@ -223,7 +190,7 @@ namespace Odyssey.Controls
             contextMenu.VerticalOffset = dropDownBtn.ActualHeight;
         }
 
-        void item_Click(object sender, RoutedEventArgs e)
+        private void item_Click(object sender, RoutedEventArgs e)
         {
             MenuItem item = e.Source as MenuItem;
             object dataItem = item.DataContext;
@@ -246,17 +213,15 @@ namespace Odyssey.Controls
         /// <summary>
         /// Gets or sets the selectedItem.
         /// </summary>
-        public object SelectedItem
-        {
-            get { return (object)GetValue(SelectedItemProperty); }
+        public object SelectedItem {
+            get { return GetValue(SelectedItemProperty); }
             set { SetValue(SelectedItemProperty, value); }
         }
 
         private static void SelectedItemChangedEvent(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             BreadcrumbButton button = d as BreadcrumbButton;
-            if (button.IsInitialized)
-            {
+            if (button.IsInitialized) {
                 RoutedEventArgs args = new RoutedEventArgs(SelectedItemChanged);
                 button.RaiseEvent(args);
             }
@@ -287,7 +252,6 @@ namespace Odyssey.Controls
         {
         }
 
-
         /// <summary>
         /// Specifies how to display the BreadcrumbButton.
         /// </summary>
@@ -313,8 +277,7 @@ namespace Odyssey.Controls
         /// <summary>
         /// Gets or sets the ButtonMode for the BreadcrumbButton.
         /// </summary>
-        public ButtonMode Mode
-        {
+        public ButtonMode Mode {
             get { return (ButtonMode)GetValue(ModeProperty); }
             set { SetValue(ModeProperty, value); }
         }
@@ -327,8 +290,7 @@ namespace Odyssey.Controls
         /// <summary>
         /// Occurs when the Button is clicked.
         /// </summary>
-        public event RoutedEventHandler Click
-        {
+        public event RoutedEventHandler Click {
             add { AddHandler(BreadcrumbButton.ClickEvent, value); }
             remove { RemoveHandler(BreadcrumbButton.ClickEvent, value); }
         }
@@ -336,18 +298,15 @@ namespace Odyssey.Controls
         /// <summary>
         /// Occurs when the SelectedItem is changed.
         /// </summary>
-        public event RoutedEventHandler Select
-        {
+        public event RoutedEventHandler Select {
             add { AddHandler(BreadcrumbButton.SelectedItemChanged, value); }
             remove { RemoveHandler(BreadcrumbButton.SelectedItemChanged, value); }
         }
 
-
         /// <summary>
         /// Gets or sets whether the button is pressed.
         /// </summary>
-        public bool IsPressed
-        {
+        public bool IsPressed {
             get { return (bool)GetValue(IsPressedProperty); }
             set { SetValue(IsPressedProperty, value); }
         }
@@ -358,12 +317,10 @@ namespace Odyssey.Controls
         public static readonly DependencyProperty IsPressedProperty =
             DependencyProperty.Register("IsPressed", typeof(bool), typeof(BreadcrumbButton), new UIPropertyMetadata(false));
 
-
         /// <summary>
         /// Gets or sets whether the drop down button is pressed.
         /// </summary>
-        public bool IsDropDownPressed
-        {
+        public bool IsDropDownPressed {
             get { return (bool)GetValue(IsDropDownPressedProperty); }
             set { SetValue(IsDropDownPressedProperty, value); }
         }
@@ -374,12 +331,10 @@ namespace Odyssey.Controls
         public static readonly DependencyProperty IsDropDownPressedProperty =
             DependencyProperty.Register("IsDropDownPressed", typeof(bool), typeof(BreadcrumbButton), new UIPropertyMetadata(false, OverflowPressedChanged));
 
-
         /// <summary>
         /// Gets or sets the DataTemplate for the drop down items.
         /// </summary>
-        public DataTemplate DropDownContentTemplate
-        {
+        public DataTemplate DropDownContentTemplate {
             get { return (DataTemplate)GetValue(DropDownContentTemplateProperty); }
             set { SetValue(DropDownContentTemplateProperty, value); }
         }
@@ -388,13 +343,10 @@ namespace Odyssey.Controls
         public static readonly DependencyProperty DropDownContentTemplateProperty =
             DependencyProperty.Register("DropDownContentTemplate", typeof(DataTemplate), typeof(BreadcrumbButton), new UIPropertyMetadata(null));
 
-
-
         /// <summary>
         /// Gets or sets whether the drop down button is visible.
         /// </summary>
-        public bool IsDropDownVisible
-        {
+        public bool IsDropDownVisible {
             get { return (bool)GetValue(IsDropDownVisibleProperty); }
             set { SetValue(IsDropDownVisibleProperty, value); }
         }
@@ -405,13 +357,10 @@ namespace Odyssey.Controls
         public static readonly DependencyProperty IsDropDownVisibleProperty =
             DependencyProperty.Register("IsDropDownVisible", typeof(bool), typeof(BreadcrumbButton), new UIPropertyMetadata(true));
 
-
-
         /// <summary>
         /// Gets or sets whether the button is visible.
         /// </summary>
-        public bool IsButtonVisible
-        {
+        public bool IsButtonVisible {
             get { return (bool)GetValue(IsButtonVisibleProperty); }
             set { SetValue(IsButtonVisibleProperty, value); }
         }
@@ -422,12 +371,10 @@ namespace Odyssey.Controls
         public static readonly DependencyProperty IsButtonVisibleProperty =
             DependencyProperty.Register("IsButtonVisible", typeof(bool), typeof(BreadcrumbButton), new UIPropertyMetadata(true));
 
-
         /// <summary>
         /// Gets or sets whether the Image is visible
         /// </summary>
-        public bool IsImageVisible
-        {
+        public bool IsImageVisible {
             get { return (bool)GetValue(IsImageVisibleProperty); }
             set { SetValue(IsImageVisibleProperty, value); }
         }
@@ -438,14 +385,10 @@ namespace Odyssey.Controls
         public static readonly DependencyProperty IsImageVisibleProperty =
             DependencyProperty.Register("IsImageVisible", typeof(bool), typeof(BreadcrumbButton), new UIPropertyMetadata(true));
 
-
-
-
         /// <summary>
         /// Gets or sets whether to use visual background style on MouseOver and/or MouseDown.
         /// </summary>
-        public bool EnableVisualButtonStyle
-        {
+        public bool EnableVisualButtonStyle {
             get { return (bool)GetValue(EnableVisualButtonStyleProperty); }
             set { SetValue(EnableVisualButtonStyleProperty, value); }
         }
@@ -455,7 +398,5 @@ namespace Odyssey.Controls
         /// </summary>
         public static readonly DependencyProperty EnableVisualButtonStyleProperty =
             DependencyProperty.Register("EnableVisualButtonStyle", typeof(bool), typeof(BreadcrumbButton), new UIPropertyMetadata(true));
-
-
     }
 }

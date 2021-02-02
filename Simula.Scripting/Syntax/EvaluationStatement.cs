@@ -42,8 +42,10 @@ namespace Simula.Scripting.Syntax
 
         public override string Generate(GenerationContext ctx)
         {
-            string code = ctx.Indention() + EvaluateOperators[0].Generate(ctx);
-            return code;
+            if (this.EvaluateOperators.Count > 0) {
+                string code = ctx.Indention() + ((OperatorStatement)EvaluateOperators[0]).Generate(ctx);
+                return code;
+            } else return "";
         }
 
         private string EvalString = "";

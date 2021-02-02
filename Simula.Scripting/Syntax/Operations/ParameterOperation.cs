@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Simula.Scripting.Contexts;
 using System.Dynamic;
 using Simula.Scripting.Types;
+using Simula.Scripting.Build;
 
 namespace Simula.Scripting.Syntax
 {
@@ -100,6 +101,15 @@ namespace Simula.Scripting.Syntax
             }
 
             return members;
+        }
+
+        public override string Generate(GenerationContext ctx)
+        {
+            List<string> str = new List<string>();
+            foreach (var item in this.EvaluateOperators) {
+                str.Add(item.Generate(ctx));
+            }
+            return "(" + str.JoinString(", ") + ")";
         }
     }
 
@@ -309,6 +319,14 @@ namespace Simula.Scripting.Syntax
             }
 
             return new TypeInference(ret, null);
+        }
+
+        public override string Generate(GenerationContext ctx)
+        {
+            string str = this.Right?.Generate(ctx);
+            str = str.Remove(0, 1);
+            str = str.Remove(str.Length - 1, 1);
+            return this.Left?.Generate(ctx) + "(null, new dynamic[] {" + str + "})";
         }
     }
 }

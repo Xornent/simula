@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -11,26 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using System.Diagnostics;
-using System.Windows.Controls.Primitives;
-using System.Reflection;
 using System.Xml;
-using System.Collections;
-//###################################################################################
-// Odyssey.Controls
-// (c) Copyright 2008 Thomas Gerber
-// All rights reserved.
-//
-//  THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY
-// APPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT
-// HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM "AS IS" WITHOUT WARRANTY
-// OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO,
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM
-// IS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF
-// ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
-//###################################################################################
-
 
 namespace Odyssey.Controls
 {
@@ -99,8 +84,8 @@ namespace Odyssey.Controls
 
         #endregion
 
-        const string partHeader = "PART_Header";
-        const string partSelected = "PART_Selected";
+        private const string partHeader = "PART_Header";
+        private const string partSelected = "PART_Selected";
 
         static BreadcrumbItem()
         {
@@ -140,8 +125,7 @@ namespace Odyssey.Controls
         /// <summary>
         /// Occurs when the IsDropDownPressed property is changed.
         /// </summary>
-        public event RoutedPropertyChangedEventHandler<object> DropDownPressedChanged
-        {
+        public event RoutedPropertyChangedEventHandler<object> DropDownPressedChanged {
             add { AddHandler(DropDownPressedChangedEvent, value); }
             remove { RemoveHandler(DropDownPressedChangedEvent, value); }
         }
@@ -155,8 +139,7 @@ namespace Odyssey.Controls
         /// <summary>
         /// Occurs when the Trace property is changed.
         /// </summary>
-        public event RoutedPropertyChangedEventHandler<object> TraceChanged
-        {
+        public event RoutedPropertyChangedEventHandler<object> TraceChanged {
             add { AddHandler(TraceChangedEvent, value); }
             remove { RemoveHandler(TraceChangedEvent, value); }
         }
@@ -167,15 +150,12 @@ namespace Odyssey.Controls
         public static readonly RoutedEvent TraceChangedEvent = EventManager.RegisterRoutedEvent("TraceChanged",
             RoutingStrategy.Bubble, typeof(RoutedPropertyChangedEventHandler<object>), typeof(BreadcrumbItem));
 
-
         /// <summary>
         /// Creates a new instance of BreadcrumbItem.
         /// </summary>
         public BreadcrumbItem()
             : base()
-        {
-        }
-
+        { }
 
         /// <summary>
         /// Creates a new BreadcrumbItem out of the specified data.
@@ -185,8 +165,7 @@ namespace Odyssey.Controls
         public static BreadcrumbItem CreateItem(object dataContext)
         {
             BreadcrumbItem item = dataContext as BreadcrumbItem;
-            if (item == null && dataContext != null)
-            {
+            if (item == null && dataContext != null) {
                 item = new BreadcrumbItem();
                 item.DataContext = dataContext;
             }
@@ -206,8 +185,7 @@ namespace Odyssey.Controls
         /// <param name="newItem"></param>
         protected virtual void OnSelectedBreadcrumbChanged(object oldItem, object newItem)
         {
-            if (SelectedBreadcrumb != null)
-            {
+            if (SelectedBreadcrumb != null) {
                 SelectedBreadcrumb.SelectedItem = null;
             }
         }
@@ -226,7 +204,6 @@ namespace Odyssey.Controls
         private FrameworkElement headerControl;
         private FrameworkElement selectedControl;
 
-
         public override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
@@ -236,25 +213,19 @@ namespace Odyssey.Controls
             ApplyBinding();
         }
 
-        public object Data
-        {
-            get
-            {
+        public object Data {
+            get {
                 return DataContext != null ? DataContext : this;
             }
         }
 
-
-
         /// <summary>
         /// Gets or sets wheter the dropdown button is pressed.
         /// </summary>
-        public bool IsDropDownPressed
-        {
+        public bool IsDropDownPressed {
             get { return (bool)GetValue(IsDropDownPressedProperty); }
             set { SetValue(IsDropDownPressedProperty, value); }
         }
-
 
         /// <summary>
         /// Occurs when the IsDropDownPressed property is changed.
@@ -267,7 +238,6 @@ namespace Odyssey.Controls
             item.OnDropDownPressedChanged();
         }
 
-
         /// <summary>
         /// Occurs when the DropDown button is pressed or released.
         /// </summary>
@@ -277,14 +247,11 @@ namespace Odyssey.Controls
             RaiseEvent(args);
         }
 
-
-
         /// <summary>
         /// Gets whether the breadcrumb item is overflowed which means it is not visible in the breadcrumb bar but in the
         /// drop down menu of the breadcrumb bar.
         /// </summary>
-        public bool IsOverflow
-        {
+        public bool IsOverflow {
             get { return (bool)GetValue(IsOverflowProperty); }
             private set { SetValue(IsOverflowProperty, value); }
         }
@@ -300,17 +267,13 @@ namespace Odyssey.Controls
             item.OnOverflowChanged((bool)e.NewValue);
         }
 
-
-
         /// <summary>
         /// Set to true, to collapse the item if SelectedItem is not null. otherwise false.
         /// </summary>
-        public bool IsRoot
-        {
+        public bool IsRoot {
             get { return (bool)GetValue(IsRootProperty); }
             set { SetValue(IsRootProperty, value); }
         }
-
 
         /// <summary>
         /// Occurs when the Overflow property is changed.
@@ -327,7 +290,6 @@ namespace Odyssey.Controls
             RaiseEvent(args);
         }
 
-
         /// <summary>
         /// Perform a special measurement that checks whether to collapse the header.
         /// </summary>
@@ -335,34 +297,27 @@ namespace Odyssey.Controls
         /// <returns></returns>
         protected override Size MeasureOverride(Size constraint)
         {
-            if (SelectedItem != null)
-            {
+            if (SelectedItem != null) {
                 headerControl.Visibility = Visibility.Visible;
                 headerControl.Measure(constraint);
                 Size size = new Size(constraint.Width - headerControl.DesiredSize.Width, constraint.Height);
                 selectedControl.Measure(new Size(double.PositiveInfinity, constraint.Height));
                 double width = headerControl.DesiredSize.Width + selectedControl.DesiredSize.Width;
-                if (width > constraint.Width || (IsRoot && SelectedItem != null))
-                {
+                if (width > constraint.Width || (IsRoot && SelectedItem != null)) {
                     headerControl.Visibility = Visibility.Collapsed;
                 }
-            }
-            else if (headerControl != null) headerControl.Visibility = Visibility.Visible;
+            } else if (headerControl != null) headerControl.Visibility = Visibility.Visible;
             IsOverflow = headerControl != null ? headerControl.Visibility != Visibility.Visible : false;
 
             Size result = base.MeasureOverride(constraint);
             return result;
         }
 
-
         protected override void OnSelectionChanged(SelectionChangedEventArgs e)
         {
-            if (SelectedItem == null)
-            {
+            if (SelectedItem == null) {
                 SelectedBreadcrumb = null;
-            }
-            else
-            {
+            } else {
                 SelectedBreadcrumb = ContainerFromItem(SelectedItem);
             }
             base.OnSelectionChanged(e);
@@ -377,11 +332,9 @@ namespace Odyssey.Controls
         public BreadcrumbItem ContainerFromItem(object item)
         {
             BreadcrumbItem result = item as BreadcrumbItem;
-            if (result == null)
-            {
+            if (result == null) {
                 result = CreateItem(item);
-                if (result != null)
-                {
+                if (result != null) {
                     AddLogicalChild(result);
                     result.ApplyTemplate();
                 }
@@ -389,45 +342,34 @@ namespace Odyssey.Controls
             return result;
         }
 
-
         /// <summary>
         /// Gets the selected BreadcrumbItem.
         /// </summary>
-        public BreadcrumbItem SelectedBreadcrumb
-        {
+        public BreadcrumbItem SelectedBreadcrumb {
             get { return (BreadcrumbItem)GetValue(SelectedBreadcrumbProperty); }
             private set { SetValue(SelectedBreadcrumbPropertyKey, value); }
         }
 
-
         public static readonly DependencyProperty SelectedBreadcrumbProperty = SelectedBreadcrumbPropertyKey.DependencyProperty;
-
 
         public DataTemplateSelector BreadcrumbTemplateSelector { get; set; }
 
         public DataTemplate BreadcrumbItemTemplate { get; set; }
 
-
-        public DataTemplateSelector OverflowItemTemplateSelector
-        {
+        public DataTemplateSelector OverflowItemTemplateSelector {
             get { return (DataTemplateSelector)GetValue(OverflowItemTemplateSelectorProperty); }
             set { SetValue(OverflowItemTemplateSelectorProperty, value); }
         }
 
-        public DataTemplate OverflowItemTemplate
-        {
+        public DataTemplate OverflowItemTemplate {
             get { return (DataTemplate)GetValue(OverflowItemTemplateProperty); }
             set { SetValue(OverflowItemTemplateProperty, value); }
         }
 
-
-
-
         /// <summary>
         /// Gets or sets the image that is used to display this item.
         /// </summary>
-        public ImageSource Image
-        {
+        public ImageSource Image {
             get { return (ImageSource)GetValue(ImageProperty); }
             set { SetValue(ImageProperty, value); }
         }
@@ -435,40 +377,34 @@ namespace Odyssey.Controls
         /// <summary>
         /// Gets or sets the Trace of the breadcrumb
         /// </summary>
-        public object Trace
-        {
-            get { return (object)GetValue(TraceProperty); }
+        public object Trace {
+            get { return GetValue(TraceProperty); }
             set { SetValue(TraceProperty, value); }
         }
-
 
         /// <summary>
         /// Gets or sets the Binding to the Trace property. This is not a dependency property.
         /// </summary>
         public BindingBase TraceBinding { get; set; }
 
-
         /// <summary>
         /// Gets or sets the Binding to the Image property.  This is not a dependency property.
         /// </summary>
         public BindingBase ImageBinding { get; set; }
 
-
         /// <summary>
         /// Gets or sets the header for the breadcrumb item.
         /// </summary>
-        public object Header
-        {
+        public object Header {
 
-            get { return (object)GetValue(HeaderProperty); }
+            get { return GetValue(HeaderProperty); }
             set { SetValue(HeaderProperty, value); }
         }
 
         /// <summary>
         /// Gets or sets the header template.
         /// </summary>
-        public DataTemplate HeaderTemplate
-        {
+        public DataTemplate HeaderTemplate {
             get { return (DataTemplate)GetValue(HeaderTemplateProperty); }
             set { SetValue(HeaderTemplateProperty, value); }
         }
@@ -476,8 +412,7 @@ namespace Odyssey.Controls
         /// <summary>
         /// Gets or sets the header template selector.
         /// </summary>
-        public DataTemplateSelector HeaderTemplateSelector
-        {
+        public DataTemplateSelector HeaderTemplateSelector {
             get { return (DataTemplateSelector)GetValue(HeaderTemplateSelectorProperty); }
             set { SetValue(HeaderTemplateSelectorProperty, value); }
         }
@@ -493,13 +428,11 @@ namespace Odyssey.Controls
             BreadcrumbItem root = this;
             DataTemplate template = HeaderTemplate;
             DataTemplateSelector templateSelector = HeaderTemplateSelector;
-            if (templateSelector != null)
-            {
+            if (templateSelector != null) {
 
                 template = templateSelector.SelectTemplate(item, root);
             }
-            if (template == null)
-            {
+            if (template == null) {
                 DataTemplateKey key = GetResourceKey(item);
                 if (key != null) template = TryFindResource(key) as DataTemplate;
             }
@@ -507,36 +440,29 @@ namespace Odyssey.Controls
             root.SelectedItem = null;
 
             HierarchicalDataTemplate hdt = template as HierarchicalDataTemplate;
-            if (template != null)
-            {
+            if (template != null) {
                 root.Header = template.LoadContent();
-            }
-            else
-            {
+            } else {
                 root.Header = item;
             }
             root.DataContext = item;
 
-            if (hdt != null)
-            {
+            if (hdt != null) {
                 // bind the Items to the hierarchical data template:
                 root.SetBinding(BreadcrumbItem.ItemsSourceProperty, hdt.ItemsSource);
             }
 
             BreadcrumbBar bar = BreadcrumbBar;
 
-            if (bar != null)
-            {
+            if (bar != null) {
                 if (TraceBinding == null) TraceBinding = bar.TraceBinding;
                 if (ImageBinding == null) ImageBinding = bar.ImageBinding;
             }
 
-            if (TraceBinding != null)
-            {
+            if (TraceBinding != null) {
                 root.SetBinding(BreadcrumbItem.TraceProperty, TraceBinding);
             }
-            if (ImageBinding != null)
-            {
+            if (ImageBinding != null) {
                 root.SetBinding(BreadcrumbItem.ImageProperty, ImageBinding);
             }
 
@@ -544,18 +470,13 @@ namespace Odyssey.Controls
             ApplyProperties(item);
         }
 
-
-
         /// <summary>
         /// Gets the parent BreadcrumbBar container.
         /// </summary>
-        public BreadcrumbBar BreadcrumbBar
-        {
-            get
-            {
+        public BreadcrumbBar BreadcrumbBar {
+            get {
                 DependencyObject current = this;
-                while (current != null)
-                {
+                while (current != null) {
                     current = LogicalTreeHelper.GetParent(current);
                     if (current is BreadcrumbBar) return current as BreadcrumbBar;
                 }
@@ -566,10 +487,8 @@ namespace Odyssey.Controls
         /// <summary>
         /// Gets the parent BreadcrumbItem, otherwise null.
         /// </summary>
-        public BreadcrumbItem ParentBreadcrumbItem
-        {
-            get
-            {
+        public BreadcrumbItem ParentBreadcrumbItem {
+            get {
                 BreadcrumbItem parent = LogicalTreeHelper.GetParent(this) as BreadcrumbItem;
                 return parent;
             }
@@ -579,25 +498,18 @@ namespace Odyssey.Controls
         {
             XmlDataProvider xml = item as XmlDataProvider;
             DataTemplateKey key;
-            if (xml != null)
-            {
+            if (xml != null) {
                 key = new DataTemplateKey(xml.XPath);
-            }
-            else
-            {
+            } else {
                 XmlNode node = item as XmlNode;
-                if (node != null)
-                {
+                if (node != null) {
                     key = new DataTemplateKey(node.Name);
-                }
-                else
-                {
+                } else {
                     key = new DataTemplateKey(item.GetType());
                 }
             }
             return key;
         }
-
 
         private void ApplyProperties(object item)
         {
@@ -605,11 +517,10 @@ namespace Odyssey.Controls
             e.Image = Image;
             e.Trace = Trace;
             e.TraceValue = TraceValue;
-            this.RaiseEvent(e);
+            RaiseEvent(e);
             Image = e.Image;
             Trace = e.Trace;
         }
-
 
         /// <summary>
         /// Gets the string trace that is used to build the path.
@@ -620,20 +531,17 @@ namespace Odyssey.Controls
             ApplyPropertiesEventArgs e = new ApplyPropertiesEventArgs(DataContext, this, BreadcrumbBar.ApplyPropertiesEvent);
             e.Trace = Trace;
             e.TraceValue = TraceValue;
-            this.RaiseEvent(e);
+            RaiseEvent(e);
             return e.TraceValue;
         }
 
         /// <summary>
         /// Gets the Trace string from the Trace property.
         /// </summary>
-        public string TraceValue
-        {
-            get
-            {
+        public string TraceValue {
+            get {
                 XmlNode xml = Trace as XmlNode;
-                if (xml != null)
-                {
+                if (xml != null) {
                     return xml.Value;
                 }
 
@@ -651,38 +559,28 @@ namespace Odyssey.Controls
         public object GetTraceItem(string trace)
         {
             //this.ApplyTemplate();
-            foreach (object item in Items)
-            {
+            foreach (object item in Items) {
                 BreadcrumbItem bcItem = ContainerFromItem(item);
-                if (item != null)
-                {
+                if (item != null) {
                     //ApplyProperties(item);
                     string value = bcItem.TraceValue;
                     if (value != null && value.Equals(trace, StringComparison.InvariantCultureIgnoreCase)) return item;
-                }
-                else return null;
+                } else return null;
             }
             return null;
         }
 
-
-        protected override IEnumerator LogicalChildren
-        {
-            get
-            {
-                object content = this.SelectedBreadcrumb; ;
-                if (content == null)
-                {
+        protected override IEnumerator LogicalChildren {
+            get {
+                object content = SelectedBreadcrumb; ;
+                if (content == null) {
                     return base.LogicalChildren;
                 }
-                if (base.TemplatedParent != null)
-                {
+                if (base.TemplatedParent != null) {
                     DependencyObject current = content as DependencyObject;
-                    if (current != null)
-                    {
+                    if (current != null) {
                         DependencyObject parent = LogicalTreeHelper.GetParent(current);
-                        if ((parent != null) && (parent != this))
-                        {
+                        if ((parent != null) && (parent != this)) {
                             return base.LogicalChildren;
                         }
                     }
@@ -696,23 +594,21 @@ namespace Odyssey.Controls
         /// <summary>
         /// Gets or sets whether the button is visible.
         /// </summary>
-        public bool IsButtonVisible
-        {
+        public bool IsButtonVisible {
             get { return (bool)GetValue(IsButtonVisibleProperty); }
             set { SetValue(IsButtonVisibleProperty, value); }
         }
 
-        // Using a DependencyProperty as the backing store for IsButtonVisible.  This enables animation, styling, binding, etc...
+        // Using a DependencyProperty as the backing store for IsButtonVisible.  
+        // This enables animation, styling, binding, etc...
+
         public static readonly DependencyProperty IsButtonVisibleProperty =
             DependencyProperty.Register("IsButtonVisible", typeof(bool), typeof(BreadcrumbItem), new UIPropertyMetadata(true));
-
-
 
         /// <summary>
         /// Gets or sets whether the Image is visible.
         /// </summary>
-        public bool IsImageVisible
-        {
+        public bool IsImageVisible {
             get { return (bool)GetValue(IsImageVisibleProperty); }
             set { SetValue(IsImageVisibleProperty, value); }
         }
@@ -722,7 +618,5 @@ namespace Odyssey.Controls
         /// </summary>
         public static readonly DependencyProperty IsImageVisibleProperty =
             DependencyProperty.Register("IsImageVisible", typeof(bool), typeof(BreadcrumbItem), new UIPropertyMetadata(false));
-
-
     }
 }
