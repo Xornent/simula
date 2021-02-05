@@ -35,6 +35,14 @@ namespace Simula.Pages
             src.Body.IsParental = true;
             string cscode = src.Body.Generate(gc);
             System.Windows.MessageBox.Show(cscode);
+
+            Scripting.Build.Compiler.Run(cscode);
+
+            this.editor.Text += "\n\n\n";
+            string[] lines = cscode.Split('\n');
+            foreach (var item in lines) {
+                this.editor.Text += "' " + item + "\n";
+            }
         }
     }
 }

@@ -11,7 +11,7 @@ namespace Simula.Scripting.Syntax
     public class BinaryOperation : OperatorStatement
     {
         IDictionary<string, object> store = new Dictionary<string, object>();
-        dynamic? temp;
+        dynamic? operatorFunctionCache;
         public override Execution Operate(DynamicRuntime ctx)
         {
             if (store.Count == 0) store = (IDictionary<string, object>)ctx.Store;
@@ -83,23 +83,8 @@ namespace Simula.Scripting.Syntax
                 if (left is Reference re) { left = re.GetDynamic(); }
                 if (right is Reference refer) { right = refer.GetDynamic(); }
 
-                if(temp != null) {
-                    return new Execution(ctx, temp._call(left, new dynamic[] { right }));
-                }
-
-                if( left is ValueType && right is ValueType) {
-                    switch(this.Operator.Symbol) {
-                        case "+": return new Execution(ctx, left + right);
-                        case "-": return new Execution(ctx, left - right);
-                        case "*": return new Execution(ctx, left * right);
-                        case "/": return new Execution(ctx, left / right);
-                        case "%": return new Execution(ctx, left % right);
-                        case "<=": return new Execution(ctx, left <= right);
-                        case "<": return new Execution(ctx, left < right);
-                        case ">": return new Execution(ctx, left > right);
-                        case ">=": return new Execution(ctx, left >= right);
-                        case "==": return new Execution(ctx, left == right);
-                    }
+                if(operatorFunctionCache != null) {
+                    return new Execution(ctx, operatorFunctionCache._call(left, new dynamic[] { right }));
                 }
 
                 switch (this.Operator.Symbol) {
@@ -111,11 +96,11 @@ namespace Simula.Scripting.Syntax
                         }));
 
                         if (left._fields.ContainsKey(pair.Key)) {
-                            if (temp == null) temp = left._fields[pair.Key];
+                            if (operatorFunctionCache == null) operatorFunctionCache = left._fields[pair.Key];
                             return new Execution(ctx, ((Function)(left._fields[pair.Key]))?._call(left, new dynamic[] { right }));
                         }
 
-                        if (temp == null) temp = ctx.FunctionCache[(string)left.type].Find((func) => {
+                        if (operatorFunctionCache == null) operatorFunctionCache = ctx.FunctionCache[(string)left.type].Find((func) => {
                             return func.name == pair.Key;
                         });
 
@@ -189,13 +174,11 @@ namespace Simula.Scripting.Syntax
             if (this.Right == null) return "";
             if (this.Operator.Symbol == "=") {
                 if (this.Left is SelfOperation self) {
-                    var check = ctx.ContainsMember(self.Self);
-                    if (check == null) return "";
-                    if (check?.Container.StartsWith("`") ?? true) {
-                        string str = check?.Container.Remove(0, 1) ?? "";
-                        if (str.StartsWith("`")) return "global." + self.Self + " = " + this.Right.Generate(ctx);
-                        else return "scopes[" + str + "]." + self.Self + " = " + this.Right.Generate(ctx);
-                    } else return check?.Container + self.Self + " = " + this.Right.Generate(ctx);
+                    if (ctx.ContainsObject(self.Self)) return self.Self + " = " + this.Right.Generate(ctx);
+                    else {
+                        ctx.RegisterObject(self.Self);
+                        return "dynamic " + self.Self + " = " + this.Right.Generate(ctx);
+                    }
                 } else if (this.Left is MemberOperation member) {
                     return member.Generate(ctx) + " = " + this.Right.Generate(ctx);
                 } else if (this.Left is IndexOperation index) {
@@ -209,11 +192,11 @@ namespace Simula.Scripting.Syntax
                         ops.Add(item);
                     }
 
-                    string tempName = Guid.NewGuid().ToString().Replace("-", "_").ToLower();
+                    string tempName = "_" + Guid.NewGuid().ToString().Replace("-", "_").ToLower();
                     string code = "dynamic " + tempName + " = " + this.Right.Generate(ctx) + "";
                     int i = 0;
                     foreach (var item in ops) {
-                        code += ";\n" + ctx.Indention() + item.Generate(ctx) + " = " + tempName + ".__linear_get(" + i + ")";
+                        code += ";\n" + ctx.Indention() + item.Generate(ctx) + " = " + tempName + "_getLinear(" + i + ")";
                         i++;
                     }
 
@@ -231,7 +214,7 @@ namespace Simula.Scripting.Syntax
                             else return false;
                         }));
 
-                        return this.Left.Generate(ctx) + "." + pair.Key + "(new dynamic[]{" + this.Right.Generate(ctx) + "})";
+                        return this.Left.Generate(ctx) + "." + pair.Key + "(" + this.Right.Generate(ctx) + ")";
 
                 }
             }

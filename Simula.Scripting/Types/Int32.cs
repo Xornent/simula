@@ -121,3 +121,44 @@ namespace Simula.Scripting.Types
         }
     }
 }
+
+namespace Simula.Scripting.Build
+{
+    public partial class Global
+    {
+        public static string intExtension = @"
+
+        public static int _add(this int self, int another)
+        {
+            return self + another;
+        }
+
+        public static float _add(this int self, float another)
+        {
+            return self + another;
+        }
+
+        public static double _add(this int self, double another)
+        {
+            return self + another;
+        }
+
+        public static bool _lt(this int self, int another)
+        {
+            return self < another;
+        }
+
+        public static int _rincrement(this int self)
+        {
+            self++;
+            return self - 1;
+        }
+
+        public static int _lincrement(this int self, int another)
+        {
+            self++;
+            return self;
+        }
+";
+    }
+}

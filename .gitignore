@@ -18,6 +18,7 @@ simula/.vs/*
 .vscode/
 simula/.vs/simula/*
 Windows Installer/
+Debug/
 
 !/simula/bin/debug/netcoreapp3.1/app.icon.64.png
 !/simula/bin/debug/netcoreapp3.1/app.icon.128.png

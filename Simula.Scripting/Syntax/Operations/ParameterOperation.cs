@@ -109,7 +109,7 @@ namespace Simula.Scripting.Syntax
             foreach (var item in this.EvaluateOperators) {
                 str.Add(item.Generate(ctx));
             }
-            return "(" + str.JoinString(", ") + ")";
+            return str.JoinString(", ");
         }
     }
 
@@ -130,6 +130,13 @@ namespace Simula.Scripting.Syntax
         public override TypeInference InferType(CompletionContext ctx)
         {
             return new TypeInference(new HashSet<string> { "sys.matrix" }, null);
+        }
+
+        public override string Generate(GenerationContext ctx)
+        {
+            BraceOperation brace = new BraceOperation();
+            brace.EvaluateOperators = this.EvaluateOperators;
+            return brace.Generate(ctx);
         }
     }
 
@@ -249,6 +256,44 @@ namespace Simula.Scripting.Syntax
         {
             return new TypeInference(new HashSet<string> { "sys.matrix" }, null);
         }
+
+        public override string Generate(GenerationContext ctx)
+        {
+            List<string> str = new List<string>();
+            foreach (var item in this.EvaluateOperators) {
+                str.Add(item.Generate(ctx));
+            }
+            string raw = str.JoinString(", ");
+
+            bool uniform = true;
+            int columnCount = 0;
+            int rowCount = 1;
+            int counter = 0;
+            foreach (var item in this.EvaluateOperators) {
+                if (item is SelfOperation self) {
+                    if (self.Self == ";") {
+                        if (counter != 0) {
+                            if (columnCount == 0) {
+                                columnCount = counter;
+                                rowCount++;
+                            } else if (columnCount != counter) {
+                                uniform = false;
+                                break;
+                            } else {
+                                rowCount++;
+                            }
+                        }
+
+                        counter = 0;
+                        continue;
+                    } else if (self.Self == ",") { continue; }
+                }
+
+                counter++;
+            }
+
+            return "new numericmatrix<dynamic>(new dynamic[]{ " + raw + " }, " + rowCount + ", " + columnCount + ")";
+        }
     }
 
     public class IndexOperation : OperatorStatement
@@ -267,6 +312,11 @@ namespace Simula.Scripting.Syntax
             }
 
             return new Execution();
+        }
+
+        public override string Generate(GenerationContext ctx)
+        {
+            return this.Left?.Generate(ctx) + "._get(" + this.Right?.Generate(ctx) + ")";
         }
     }
 
@@ -323,10 +373,8 @@ namespace Simula.Scripting.Syntax
 
         public override string Generate(GenerationContext ctx)
         {
-            string str = this.Right?.Generate(ctx);
-            str = str.Remove(0, 1);
-            str = str.Remove(str.Length - 1, 1);
-            return this.Left?.Generate(ctx) + "(null, new dynamic[] {" + str + "})";
+            string str = this.Right?.Generate(ctx) ?? "";
+            return this.Left?.Generate(ctx) + "(" + str + ")";
         }
     }
 }

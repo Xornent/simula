@@ -9,6 +9,8 @@ namespace Simula.Scripting.Syntax
     {
         public List<Statement> Children = new List<Statement>();
         public bool IsParental = false;
+        public bool OnlyDeclaration = false;
+        public bool Nonmodifier = false;
 
         public override void Parse(Token.TokenCollection collection)
         {
@@ -227,33 +229,43 @@ namespace Simula.Scripting.Syntax
 
             string module = "";
             foreach (var item in this.Children) {
-                if (item is UseStatement use) code += ctx.Indention() + "using static " + use.FullName + ";\n";
-                else if (item is ModuleStatement mod) module = mod.FullName;
+                if (item is ModuleStatement mod) module = mod.FullName;
             }
 
-            if (!string.IsNullOrEmpty(module))
-                names = baseIndent + "public static partial class " + module + "{\n";
-            else names = baseIndent + "public static partial class _global {\n";
+            if (!Nonmodifier) {
+                if (!string.IsNullOrEmpty(module))
+                    names =  "public static partial class " + module + "{\n";
+                else names = "public static partial class _global {\n";
+            } else names = "{\n";
 
             code = names + code;
 
             if (IsParental) {
                 foreach (var item in this.Children) {
-                    if (item is UseStatement) {
-                    } else if (item is ModuleStatement) {
-                    } else if (item is DefinitionBlock) {
+                    if (item is DefinitionBlock) {
                         code += (ctx.Indention() + item.Generate(ctx) + "\n");
-                    } else if (item is EvaluationStatement) {
-                        exec += (ctx.Indention() + item.Generate(ctx) + ";\n");
-                    } else {
-                        exec += (ctx.Indention() + item.Generate(ctx) + "\n");
                     }
                 }
+
+                int ind = ctx.IndentionLevel;
+                ctx.IndentionLevel = 0;
+                foreach (var item in this.Children) {
+                    if (item is UseStatement use) {
+                        exec += "using static " + use.FullName + ";\n";
+                    } else if (item is DefinitionBlock) {
+                    } else if (item is ModuleStatement) {
+                    } else if (item is EvaluationStatement) {
+                        exec += (item.Generate(ctx) + ";\n");
+                    } else {
+                        exec += (item.Generate(ctx) + "\n");
+                    }
+                }
+                ctx.IndentionLevel = ind;
 
                 ctx.IndentionLevel--;
                 code += ctx.Indention() + "}";
 
-                return code + exec;
+                return "using static _global;\n" + exec +"\n\n"+ code;
 
             } else {
                 foreach (var item in this.Children) {

@@ -10,13 +10,13 @@ namespace Simula.Scripting.Syntax
         public override string Generate(GenerationContext ctx)
         {
             if (Lines.Count == 0) return "";
-            string comments = ctx.Indention() + "// " + Lines[0].Remove(0, 1).Trim() ;
+            string comments = "// " + Lines[0].Remove(0, 1);
 
             int index = 0;
             foreach (var item in Lines) {
                 index++;
                 if(index == 1) { continue; }
-                comments += "\n" + ctx.Indention() + "// " + item.Remove(0, 1).Trim();
+                comments += "\n" + ctx.Indention() + "// " + item.Remove(0, 1);
             }
 
             return comments;

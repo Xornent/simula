@@ -1,5 +1,6 @@
 ﻿using Simula.Scripting.Build;
 using Simula.Scripting.Token;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -29,8 +30,6 @@ namespace Simula.Scripting.Syntax
         public DefinitionType Type;
         public Visibility Visibility = Visibility.Hidden;
         public bool IsReadonly = false;
-
-        private string Cascader = "";
 
         public bool IsStatic = true;
         public Token.Token? FunctionName;
@@ -63,6 +62,7 @@ namespace Simula.Scripting.Syntax
                     collection[0].Error = new TokenizerException("SS0012");
                     return;
                 }
+
                 Visibility = Visibility.Expose;
                 switch (collection[1]) {
                     case "def":
@@ -180,9 +180,9 @@ namespace Simula.Scripting.Syntax
                 return;
             }
 
-            // 在此处的 collection 值应为序列
+            // the 'collection' here is a sequence:
 
-            // class_name [: a, b, c ...] [derives a, b, c ...]  [= defined<...>]
+            // class_name [: a, b, c ...] [derives a, b, c ...]
             // func_name([function parameters]) [= defined(...)]
             // const_name = defined
 
@@ -203,6 +203,7 @@ namespace Simula.Scripting.Syntax
                     ParseAbsoluteFunctionDefinition(collection);
                     break;
                 case DefinitionType.Class:
+                    this.IsStatic = false;
                     ParseClassDefinition(collection);
                     break;
             }
@@ -292,7 +293,7 @@ namespace Simula.Scripting.Syntax
         {
             switch (this.Type) {
                 case DefinitionType.Constant:
-                    string constant = ((Visibility == Visibility.Expose) ? "public " : "private ") + "dynamic " + ConstantName?.Value;
+                    string constant = ctx.Indention() + ((Visibility == Visibility.Expose) ? "public " : "private ") + "dynamic " + ConstantName?.Value;
                     if (this.IsReadonly) constant += " { get { return _get_" + ConstantName?.ToString() + "(); } }";
                     else constant += "{ get { return _get_" + ConstantName?.ToString() + "(); } set { _set_" + ConstantName?.Value + "(value); } }";
 
@@ -300,47 +301,76 @@ namespace Simula.Scripting.Syntax
                     if(!ExplicitSet && !ExplicitGet) constant = ctx.Indention() + "private dynamic _" + ConstantName?.Value + " = undef;\n" + constant;
                     if (ExplicitGet)
                         constant = ctx.Indention() + "private dynamic _get_" + ConstantName?.Value + "()\n" + GetBlock?.Generate(ctx) + "\n" + constant;
-                    else constant = ctx.Indention() + "private dynamic _get_" + ConstantName?.Value + "() { if(_" + ConstantName?.Value + " == undef) return " + 
+                    else constant = ctx.Indention() + "private dynamic _get_" + ConstantName?.Value + "() { if(undef.Equals(_" + ConstantName?.Value + ")) return " + 
                                     ConstantValue?.Generate(ctx) + "; return _" + ConstantName?.Value + "; }\n" + constant;
                     
                     if (ExplicitSet)
-                        constant = ctx.Indention() + "private dynamic _set_" + ConstantName?.Value + "(dynamic value)\n" + SetBlock?.Generate(ctx) + "\n" + constant;
-                    else constant = ctx.Indention() + "private dynamic _set_" + ConstantName?.Value + "(dynamic value) { _" + ConstantName?.Value + " = value; }\n" + constant;
-
-                    if (string.IsNullOrEmpty(ctx.DefinerName)) ctx.Objects.Add("+[0]" + ConstantName?.Value);
-                    else ctx.Objects.Add("+[0]" + ctx.DefinerName + "." + ConstantName?.Value);
+                        constant = "private dynamic _set_" + ConstantName?.Value + "(dynamic value)\n" + SetBlock?.Generate(ctx) + "\n" + constant;
+                    else constant = "private dynamic _set_" + ConstantName?.Value + "(dynamic value) { _" + ConstantName?.Value + " = value; return 0; }\n" + constant;
 
                     return constant;
 
                 case DefinitionType.Function:
-                    string function = ((Visibility == Visibility.Expose) ? "public " : "private ") + (IsStatic ? "static " : "") + "dynamic " + FunctionName?.Value + "(dynamic args[]) {\n";
+                    string function = ((Visibility == Visibility.Expose) ? "public " : "private ") + (IsStatic ? "static " : "") + "dynamic " + FunctionName?.Value;
 
-                    function += ctx.Indention() + "    pushscope();\n";
+                    ctx.PushScope("Function " + FunctionName?.Value);
+
+                    // the parameters of function is set to dynamic[] args. to perform its correct function,
+                    // we should alias all used arguments and give them a name.
+
+                    // once declaring an object in a scope, we should also call ctx.RegisterObject to register
+                    // that name in the context, this tells the generator the name has already been declared.
+                    // and when assigning it, we should not declare it again.
+
                     int i = 0;
+                    List<string> parameterList = new List<string>();
                     foreach (Parameter item in FunctionParameters) {
-                        function += ctx.Indention() + "    scopes[" + (ctx.Scopes.Count - 1) + "]." + item.Name?.Value + " = args[" + i + "];\n";
+                        parameterList.Add("dynamic " + item.Name?.Value);
+                        ctx.RegisterObject(item.Name?.Value + "");
                         i++;
                     }
+
+                    function += "(" + parameterList.JoinString(", ") + ") {";
+
+                    // in non-static member functions, 'this' is reserved
+
+                    if(!IsStatic) {
+                        ctx.RegisterObject("this");
+                    }
+
+                    // all other members declared in the same class (if the function is defined in a class)
+                    // should be registered. a temp map inside the ctx is used to record the members of a class
+                    // and it is initialized every time in a class definition block: see below.
+
+                    if (ctx.classMembers.Count > 0 && !(IsStatic))
+                        foreach (var item in ctx.classMembers[ctx.classMembers.Count - 1]) {
+                            ctx.RegisterObject(item);
+                        }
 
                     string name;
                     if (string.IsNullOrEmpty(ctx.DefinerName)) name = ("" + FunctionName?.Value);
                     else name = (ctx.DefinerName + "." + FunctionName?.Value);
-                    ctx.Objects.Add("+[" + (ctx.Scopes.Count - 1) + "]" + FunctionName?.Value);
-
+                    
                     string parent = ctx.DefinerName;
                     ctx.DefinerName = name;
-                    ctx.PushScope("Function " + FunctionName?.Value);
                     string funcBlock = new BlockStatement() { Children = this.Children }.Generate(ctx);
                     ctx.PopScope();
                     ctx.DefinerName = parent;
 
                     List<string> lines = funcBlock.Split('\n').ToList();
                     lines[0] = function;
-                    lines[lines.Count - 1] = (ctx.Indention() + "    popscope();\n" + ctx.Indention() + "}");
+                    lines[lines.Count - 1] = ctx.Indention() + "    return 0;\n" + ctx.Indention() + "}";
                     return lines.JoinString("\n");
 
                 case DefinitionType.Class:
-                    string cls = ((Visibility == Visibility.Expose) ? "public " : "private ") + (IsStatic ? "static " : "") + "class " + ClassName?.Value;
+
+                    // note that a class in c-sharp has a unique name itself, while the true method of initializing
+                    // an instance of class is by calling a function with the name of the class.
+
+                    string alias = "_" + Guid.NewGuid().ToString().Replace("-", "_").ToLower();
+                    string creation = "// constructors";
+                    
+                    string cls = ((Visibility == Visibility.Expose) ? "public " : "private ") + (IsStatic ? "static " : "") + "class " + alias;
                     List<string> inheritages = new List<string>();
                     if (this.ClassInheritages.Count == 0) { } else {
                         foreach (var item in ClassInheritages) {
@@ -349,29 +379,80 @@ namespace Simula.Scripting.Syntax
                     }
 
                     string inh = inheritages.JoinString(", ");
-                    if (!string.IsNullOrWhiteSpace(inh)) cls += inh;
+                    if (!string.IsNullOrWhiteSpace(inh)) cls += " : " + inh;
                     cls += " {\n";
-                    ctx.IndentionLevel++;
-
+                   
                     if (string.IsNullOrEmpty(ctx.DefinerName)) name = ("" + ConstantName?.Value);
                     else name = (ctx.DefinerName + "." + ConstantName?.Value);
-                    ctx.Objects.Add("+[0]" + name);
+                    ctx.RegisterObject(ClassName?.Value + "");
                     parent = ctx.DefinerName;
                     ctx.DefinerName = name;
 
+                    // set the member map in a class. : see above description.
+
+                    HashSet<string> members = new HashSet<string>();
+                    bool hasDefinedConstructor = false;
                     foreach (var item in this.Children) {
-                        if(item is DefinitionBlock def) {
-                            def.IsStatic = false;
-                            cls += def.Generate(ctx);
+                        if (item is DefinitionBlock def) {
+                            switch (def.Type) {
+                                case DefinitionType.Constant:
+                                    members.Add(def.ConstantName?.Value ?? "");
+                                    break;
+                                case DefinitionType.Function:
+                                    if(def.FunctionName == "_init") {
+                                        hasDefinedConstructor = true;
+                                        List<string> ctorParam = new List<string>();
+                                        List<string> ctorNames = new List<string>();
+                                        foreach (Parameter funcParam in def.FunctionParameters) {
+                                            ctorParam.Add("dynamic " + funcParam.Name?.Value);
+                                            ctorNames.Add(funcParam.Name?.Value ?? "undef");
+                                        }
+
+                                        creation += 
+                                     "\n" + ctx.Indention() + ((Visibility == Visibility.Expose) ? "public " : "private ") + "static " + alias + " " + ClassName?.Value + "(" + ctorParam.JoinString(", ") + ") {\n" +
+                                            ctx.Indention() + "    dynamic creation = new " + alias + "();\n" +
+                                            ctx.Indention() + "    creation._init(" + ctorNames.JoinString(", ") + ");\n" +
+                                            ctx.Indention() + "    return creation;\n" +
+                                            ctx.Indention() + "}";
+                                    }
+
+                                    members.Add(def.FunctionName?.Value ?? "");
+                                    break;
+                                case DefinitionType.Class:
+                                    members.Add(def.ClassName?.Value ?? "");
+                                    break;
+                                default:
+                                    break;
+                            }
                         }
                     }
+
+                    // if no constructor (initialization function _init) is defined explicitly, the converter provides a _init
+                    // with no parameter. making the class visible.
+
+                    if(!hasDefinedConstructor) 
+                        creation = ((Visibility == Visibility.Expose) ? "public " : "private ") + "static " + alias + " " + ClassName?.Value + "() {\n" +
+                            ctx.Indention() + "    return new " + alias + "();\n" +
+                            ctx.Indention() + "}";
+                    ctx.classMembers.Add(members);
+
+                    ctx.IndentionLevel++;
+                    cls += ctx.Indention() + "// class " + ClassName?.Value;
+                    foreach (var item in this.Children) {
+                        if(item is DefinitionBlock def) {
+                            def.IsStatic = IsStatic;
+                            cls += "\n" + ctx.Indention() + def.Generate(ctx);
+                        }
+                    }
+
+                    ctx.classMembers.RemoveAt(ctx.classMembers.Count - 1);
 
                     ctx.DefinerName = parent;
 
                     ctx.IndentionLevel--;
-                    cls += ctx.Indention() + "}";
+                    cls += "\n" + ctx.Indention() + "}";
 
-                    return cls;
+                    return creation + "\n" + ctx.Indention() + cls;
 
                 default:
                     break;

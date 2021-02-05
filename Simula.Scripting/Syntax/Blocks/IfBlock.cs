@@ -1,4 +1,5 @@
-﻿using Simula.Scripting.Contexts;
+﻿using Simula.Scripting.Build;
+using Simula.Scripting.Contexts;
 using Simula.Scripting.Token;
 using System;
 using System.Collections.Generic;
@@ -33,6 +34,17 @@ namespace Simula.Scripting.Syntax
             if(!((bool)(eval.Result))) return new Execution() { Flag = ExecutionFlag.Else };
 
             return new BlockStatement() { Children = this.Children }.Execute(ctx);
+        }
+
+        public override string Generate(GenerationContext ctx)
+        {
+            BlockStatement block = new BlockStatement();
+            block.Children = this.Children;
+            block.Nonmodifier = true;
+            ctx.PushScope("If");
+            string str = "if ( " + (this.Evaluation?.Generate(ctx) ?? "true") + " )" + block.Generate(ctx);
+            ctx.PopScope();
+            return str;
         }
     }
 }

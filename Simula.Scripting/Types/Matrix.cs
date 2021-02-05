@@ -82,7 +82,7 @@ namespace Simula.Scripting.Types
             for (int i = 1; i < dim.Length; i++) {
                 mul *= dim[i];
             }
-
+            
             return mul;
         }
 

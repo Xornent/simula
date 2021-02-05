@@ -31,7 +31,7 @@ namespace Simula.Scripting.Syntax
 
         public override string Generate(GenerationContext ctx)
         {
-            return ctx.Indention() + "return " + Evaluation?.Generate(ctx) + ";";
+            return "return " + Evaluation?.Generate(ctx) + ";";
         }
     }
 }

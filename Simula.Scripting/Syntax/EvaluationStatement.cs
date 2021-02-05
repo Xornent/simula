@@ -43,7 +43,7 @@ namespace Simula.Scripting.Syntax
         public override string Generate(GenerationContext ctx)
         {
             if (this.EvaluateOperators.Count > 0) {
-                string code = ctx.Indention() + ((OperatorStatement)EvaluateOperators[0]).Generate(ctx);
+                string code = ((OperatorStatement)EvaluateOperators[0]).Generate(ctx);
                 return code;
             } else return "";
         }

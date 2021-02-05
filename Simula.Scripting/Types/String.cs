@@ -79,3 +79,8 @@ namespace Simula.Scripting.Types
         }
     }
 }
+
+namespace Simula.Scripting.Build
+{
+
+}

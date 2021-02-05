@@ -1,7 +1,9 @@
-﻿using Simula.Scripting.Contexts;
+﻿using Simula.Scripting.Build;
+using Simula.Scripting.Contexts;
 using Simula.Scripting.Token;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Simula.Scripting.Syntax
 {
@@ -105,6 +107,37 @@ namespace Simula.Scripting.Syntax
             }
 
             return new Execution();
+        }
+
+        public override string Generate(GenerationContext ctx)
+        {
+            BlockStatement block = new BlockStatement();
+            block.Children = this.Children;
+            block.Nonmodifier = true;
+            ctx.PushScope("While");
+
+            string str = "";
+            if (this.Collection == null) {
+                str = "for(int i = 0; i < " + this.Enumerator?.Generate(ctx) + "; i++) {";
+            } else {
+                string tempName = "_" + Guid.NewGuid().ToString().Replace("-", "_").ToLower();
+                str = "dynamic " + tempName + " = " + this.Collection?.Generate(ctx) + ";";
+                str += "\n" + ctx.Indention() + "for(int i = 0; i < " + tempName + ".data.Length; i ++) {";
+                str += "\n" + ctx.Indention() + "    dynamic " + this.Enumerator?.Generate(ctx) + " = " + tempName + ".data[i];";
+                ctx.RegisterObject(this.Enumerator?.Generate(ctx) ?? "");
+
+                if(this.Position != null) {
+                    str += "\n" + ctx.Indention() + "    dynamic " + this.Position?.Generate(ctx) + " = " + tempName + ".getLocation(i);";
+                    ctx.RegisterObject(this.Position?.Generate(ctx) ?? "");
+                }
+            }
+
+            List<string> lines = new BlockStatement() { Children = this.Children }.Generate(ctx).Split('\n').ToList();
+            lines.RemoveAt(0);
+            str += lines.JoinString("\n");
+
+            ctx.PopScope();
+            return str;
         }
     }
 }

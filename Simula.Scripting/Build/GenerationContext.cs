@@ -6,33 +6,29 @@ using System.Text.RegularExpressions;
 
 namespace Simula.Scripting.Build
 {
-    public class GenerationContext : Contexts.DynamicRuntime
+    public class GenerationContext
     {
         public int Indent = 4;
         public int IndentionLevel = 0;
 
-        // the representation form of object locator:
-        // some examples of object locator (Objects.Key) is as follows:
-
-        //     +[0]a
-
-        // regex: [\-\+]\[[0-9]+\] ...
-
-        // the object registry is set to determine when the generator chooses to initialize a 
-        // object and when to call a object. it is a named list for object existed. and the priority
-        // precedence is shown as follows: (if we want to find a named 'a')
-
         public HashSet<string> Objects = new HashSet<string>();
+        public List<HashSet<string>> Scopes = new List<HashSet<string>>();
+        public List<string> ScopeNames = new List<string>();
+
+        internal List<HashSet<string>> classMembers = new List<HashSet<string>>();
+
         public string DefinerName = "";
 
         public void PushScope(string name)
         {
-            this.Scopes.Add(new Contexts.ScopeContext());
+            this.Scopes.Add(new HashSet<string>());
+            this.ScopeNames.Add(name);
         }
 
         public void PopScope()
         {
             this.Scopes.RemoveAt(this.Scopes.Count - 1);
+            this.ScopeNames.RemoveAt(this.ScopeNames.Count - 1);
             this.Objects.RemoveWhere((str) => {
                 return str.StartsWith("+[" + this.Scopes.Count + "]") || str.StartsWith("-[" + this.Scopes.Count + "]");
             });
@@ -40,46 +36,52 @@ namespace Simula.Scripting.Build
 
         public bool ContainsObject(string name)
         {
-            Regex reg = new Regex(@"[\-\+]\[[0 - 9]+\]");
-            foreach (var item in this.Objects) {
-                string identifer = reg.Replace(item, "");
-                if (identifer == name) return true;
-            }
+            if (this.Scopes.Count > 0) {
+                bool flag = false;
+                for(int i = this.Scopes.Count - 1; i>=0; i--) {
+                    flag = this.Scopes[i].Contains(name);
+                    if (flag) return true;
+                }
 
-            return false;
+                if (!flag) return Objects.Contains(name);
+                else return true;
+
+            } else return Objects.Contains(name);
+        }
+
+        public void RegisterObject(string name)
+        {
+            if (this.Scopes.Count > 0) this.Scopes[this.Scopes.Count - 1].Add(name);
+            else this.Objects.Add(name);
         }
     }
 
-    public class Global
+    public partial class Global
     {
-        public class _undefined { }
+        public class _undefined 
+        {
+            public override bool Equals(object? obj)
+            {
+                if (obj == null) return false;
+                if (obj is _undefined) return true;
+                return false;
+            }
+        }
+
+        public static partial class GlobalExtension { }
+
         public static _undefined undef = new _undefined();
 
         public abstract class _class { public virtual dynamic _create() { return undef; } }
 
-        public dynamic global = new System.Dynamic.ExpandoObject();
-        public List<dynamic> scopes = new List<dynamic>();
-
-        public void pushscope()
+        public static UInt32 uint32(dynamic data)
         {
-            dynamic exp = new System.Dynamic.ExpandoObject();
-            exp.fullName = new List<string> { "" };
-            scopes.Add(exp);
+            return Convert.ToUInt32(data);
         }
 
-        public void popscope()
+        public static void alert(dynamic data)
         {
-            scopes.RemoveAt(scopes.Count - 1);
-        }
-
-        public UInt32 uint32(dynamic self, dynamic[] args)
-        {
-            return Convert.ToUInt32(args[0]);
-        }
-
-        public void alert(dynamic self, dynamic[] args)
-        {
-            System.Windows.MessageBox.Show(args[0].ToString());
+            System.Windows.MessageBox.Show(data.ToString());
         }
     }
 

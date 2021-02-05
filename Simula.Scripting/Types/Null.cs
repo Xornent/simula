@@ -187,7 +187,7 @@ namespace Simula.Scripting.Types
         {
             if (obj is bool) return new Boolean(obj);
 
-            if (obj is double) return obj;
+            if (obj is double) return new Double(obj);
 
             if (obj is byte) return new Byte(obj);
             if (obj is ushort) return new Char(obj);

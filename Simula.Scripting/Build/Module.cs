@@ -17,7 +17,5 @@ namespace Simula.Scripting.Build
         {
             this.program = block;
         }
-
-        
     }
 }

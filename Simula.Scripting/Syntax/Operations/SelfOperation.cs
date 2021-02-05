@@ -9,8 +9,9 @@ namespace Simula.Scripting.Syntax
     public class SelfOperation : OperatorStatement
     {
         public Token.Token Self { get; set; }
-        public bool IsLiteral = false;
-        dynamic? temp;
+
+        bool IsLiteral = false;
+        dynamic? literalCache;
         dynamic? containerTemp;
         bool notfound = false;
         bool isfield = false;
@@ -23,13 +24,13 @@ namespace Simula.Scripting.Syntax
 
         public override Execution Operate(DynamicRuntime ctx)
         {
-            if (temp != null) return new Execution(ctx, temp);
+            if (literalCache != null) return new Execution(ctx, literalCache);
 
-            string raw = this.Self.ToString();
+            string raw = this.Self.ToString().Replace("\n","").Replace("\r","");
             if (raw.StartsWith("\"") && raw.EndsWith("\"") && (!raw.EndsWith("\\\""))) {
                 if (raw.StartsWith("\"$")) {
                     Types.String noEscape = new String(raw.Remove(0, 2).Remove(Self.Value.Length - 3, 1));
-                    temp = noEscape;
+                    literalCache = noEscape;
                     return new Execution(ctx, noEscape);
                 }
 
@@ -48,17 +49,17 @@ namespace Simula.Scripting.Syntax
                     .Replace("\\v", "\v")
                     .Replace("\\\\", "\\"));
 
-                temp = s;
+                literalCache = s;
                 return new Execution(ctx, s);
             }
 
-            if (raw.ToLower() == "true") { temp = new Boolean(true); return new Execution(ctx, temp); }
-            if (raw.ToLower() == "false") { temp = new Boolean(false); return new Execution(ctx, temp); }
+            if (raw.ToLower() == "true") { literalCache = new Boolean(true); return new Execution(ctx, literalCache); }
+            if (raw.ToLower() == "false") { literalCache = new Boolean(false); return new Execution(ctx, literalCache); }
 
             double d;
             bool successDouble = double.TryParse(raw, out d);
             if (successDouble) {
-                return new Execution(ctx, d);
+                return new Execution(ctx, new Double(d));
             }
 
             if (containerTemp == null) {
@@ -113,7 +114,7 @@ namespace Simula.Scripting.Syntax
 
         public override string Generate(GenerationContext ctx)
         {
-            string raw = this.Self.ToString();
+            string raw = this.Self.ToString().Replace("\r","").Replace("\n","");
             if (raw.StartsWith("\"") && raw.EndsWith("\"") && (!raw.EndsWith("\\\""))) {
                 if (raw.StartsWith("\"$")) {
                     Types.String noEscape = new String(raw.Remove(0, 2).Remove(Self.Value.Length - 3, 1));
@@ -149,7 +150,7 @@ namespace Simula.Scripting.Syntax
             }
 
             if (IsLiteral) return "(" + raw + ")";
-            else return ctx.GetMemberCode(raw);
+            else return raw;
         }
     }
 
