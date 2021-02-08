@@ -1,6 +1,10 @@
 #ifndef SYNTAXTREE_H
 #define SYNTAXTREE_H
 
+#ifdef c_plusplus
+#include <string>
+#endif
+
 // types of syntax tree nodes.
 typedef enum {
 	root = 0,
@@ -16,6 +20,7 @@ typedef enum {
 	elseblock,
 	whileblock,
 	iterateblock,
+	conditionalblock,
 
 	contentblock,
 
@@ -34,7 +39,17 @@ typedef enum {
 	braceOperator,
 	indexOperator,
 	callOperator,
-	literals
+	literals,
+
+	useStmt,
+	optionStmt,
+	moduleStmt,
+	breakstmt,
+	continuestmt,
+	returnstmt,
+	passstmt,
+
+	general
 
 } syntaxNodeType;
 
@@ -59,6 +74,8 @@ typedef struct syntaxTreeNode {
 	struct syntaxTreeNode* lastSibling;
 	struct syntaxTreeNode* parent;
 	
+	const char* literalString;
+
 } syntaxTree;
 
 syntaxTree* defaultSyntaxTree();
@@ -66,5 +83,11 @@ void insertSiblingBefore(syntaxTree* obj, syntaxTree* dest);
 void insertSiblingAfter(syntaxTree* obj, syntaxTree* dest);
 void insertChild(syntaxTree* obj, syntaxTree* parent);
 void appendChild(syntaxTree* obj, syntaxTree* dest);
+
+syntaxTree* createSyntaxTree(syntaxNodeType type);
+syntaxTree* createLiteral(char* val);
+#ifdef c_plusplus
+syntaxTree* createLiteral(std::string val);
+#endif
 
 #endif

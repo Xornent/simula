@@ -31,19 +31,19 @@
     <ClInclude Include="resources.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="lex.yy.c">
+      <Filter>tokenizer</Filter>
+    </ClCompile>
     <ClCompile Include="tokenizer.c">
       <Filter>tokenizer</Filter>
+    </ClCompile>
+    <ClCompile Include="syntaxtree.c">
+      <Filter>parser</Filter>
     </ClCompile>
     <ClCompile Include="syntax.tab.c">
       <Filter>parser</Filter>
     </ClCompile>
-    <ClCompile Include="lex.yy.c">
-      <Filter>tokenizer</Filter>
-    </ClCompile>
     <ClCompile Include="parse.c">
-      <Filter>parser</Filter>
-    </ClCompile>
-    <ClCompile Include="syntaxtree.c">
       <Filter>parser</Filter>
     </ClCompile>
     <ClCompile Include="resources.c" />

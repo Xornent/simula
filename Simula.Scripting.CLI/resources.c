@@ -1,4 +1,7 @@
 #include "resources.h"
+#include <stdio.h>
+#include <cassert>
+#include <stdlib.h>
 
 const char* stringTable[] = {
 	"",
@@ -7,3 +10,25 @@ const char* stringTable[] = {
 };
 
 const char* res(int id) { return stringTable[id]; }
+void report(int id) {
+	printf(stringTable[id]);
+}
+
+char* strcat_c(char* strDest, char* strSrc) {
+    assert((strDest != NULL) && (strSrc != NULL));
+    char* address = (char*)malloc((strlen(strDest) + strlen(strSrc) + 1) * sizeof(char));
+    char* tmp = address;
+    assert(address != NULL);
+    while (*strDest != '\0') {
+        *address = *strDest;
+        strDest++;
+        address++;
+    }
+    while (*strSrc != '\0') {
+        *address = *strSrc;
+        strSrc++;
+        address++;
+    }
+    *address = '\0';
+    return tmp;
+}

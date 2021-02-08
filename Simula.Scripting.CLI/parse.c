@@ -25,7 +25,7 @@ void yyerror(const char* s) {
 }
 
 __declspec(dllexport) int entrypos(void) {
-	yyparse();
+	parseFromFile("d:\\src.ss");
 	return 0;
 }
 
@@ -34,7 +34,7 @@ __declspec(dllexport) syntaxTree* parseFromFile(const char* fileName) {
 	line = 1;
 
 	if (yyin == NULL) {
-		printf(res(fileAccessDenied));
+		report(fileAccessDenied);
 		return defaultSyntaxTree();
 	}
 

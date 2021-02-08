@@ -2,12 +2,11 @@
 #define _CRT_NONSTDC_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
 
+#include <string.h>
 #include <stdio.h>
-#define YYSTYPE char *
-extern YYSTYPE yylval;
 extern int line;
 #include "syntax.tab.h"
-
+#include "resources.h"
 %}
 
 %x comment
@@ -41,18 +40,17 @@ at  return token_at;
 in  return token_in;
 block  return token_block;
 
+[a-zA-Z_][a-zA-Z_0-9]* yylval.string = strcat_c("", yytext); return token_word;
 
-[0-9]+  yylval = strdup(yytext); return token_integer;
-[0-9]+(\.[0-9]+)  yylval = strdup(yytext); return token_digits;
-
-[a-zA-Z][a-zA-Z0-9]*  yylval = strdup(yytext); return token_word;
+[0-9]+ yylval.string = strcat_c("", yytext); return token_integer;
+[0-9]+(\.[0-9]+) yylval.string = strcat_c("", yytext); return token_digits;
 
 \,  return token_comma;
 \.  return token_dot;
 \:  return token_colon;
-[\*\/\+\-\$\%\^\&\:\?\>\<\~\=]  yylval = strdup(yytext); return token_ops_1;
+[\*\/\+\-\$\%\^\&\:\?\>\<\~\=]+  yylval.string = strcat_c(yytext, ""); return token_ops_1;
 
-\"[^\"]*\"  return token_quote;
+\"[^\"]*\"  yylval.string = strcat_c("", yytext); return token_quote;
 \{  return token_obrace;
 \}  return token_ebrace;
 \[  return token_obracket;

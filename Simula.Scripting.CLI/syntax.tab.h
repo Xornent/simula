@@ -61,33 +61,44 @@
      token_expose = 277,
      token_hidden = 278,
      token_readonly = 279,
-     token_continue = 280,
-     token_pass = 281,
-     token_return = 282,
-     token_break = 283,
-     token_at = 284,
-     token_in = 285,
-     token_word = 286,
-     token_ops_1 = 287,
-     token_ops_2 = 288,
-     token_ops_3 = 289,
-     token_quote = 290,
-     token_obrace = 291,
-     token_ebrace = 292,
-     token_obracket = 293,
-     token_ebracket = 294,
-     token_oparen = 295,
-     token_eparen = 296,
-     token_newline = 297,
-     token_integer = 298,
-     token_digits = 299
+     token_return = 280,
+     token_at = 281,
+     token_in = 282,
+     token_word = 283,
+     token_quote = 284,
+     token_obrace = 285,
+     token_integer = 286,
+     token_digits = 287,
+     token_ebrace = 288,
+     token_obracket = 289,
+     token_ebracket = 290,
+     token_oparen = 291,
+     token_eparen = 292,
+     token_newline = 293,
+     token_break = 294,
+     token_pass = 295,
+     token_continue = 296,
+     token_ops_1 = 297
    };
 #endif
 
 
-
+#include "syntaxtree.h"
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef int YYSTYPE;
+typedef union YYSTYPE
+{
+
+/* Line 1676 of yacc.c  */
+#line 16 "D:\\projects\\xornent\\simula\\Simula.Scripting.CLI\\syntax.y"
+
+    const char* string;
+    syntaxTree* tree;
+
+
+
+/* Line 1676 of yacc.c  */
+#line 101 "syntax.tab.h"
+} YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

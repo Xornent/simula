@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Simula.Scripting.Math\Simula.Scripting.Math.csproj" />
-    <ProjectReference Include="..\Simula.Scripting\Simula.Scripting.csproj" />
+    <ProjectReference Include="..\Simula.Scripting\Simula.Scripting.Obsolete.csproj" />
     <ProjectReference Include="..\Simula.TeX\Simula.TeX.csproj" />
   </ItemGroup>
 

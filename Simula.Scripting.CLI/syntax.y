@@ -5,71 +5,124 @@
 #include <string.h>
 #include <errno.h>
 
-#define YYSTYPE char *
-extern YYSTYPE yylval;
+#include "syntaxtree.h"
 #include "syntax.tab.h"
+
+#include "resources.h"
 
 void parseMessage(char* token);
 %}
 
-%token token_eif token_block token_comma token_dot token_module token_use token_if token_while token_iter
-%token token_colon token_end token_else token_def token_class token_func token_prop token_option token_assert
-%token token_conditional token_expose token_hidden token_readonly token_continue token_pass token_return 
-%token token_break token_at token_in token_word token_ops_1 token_ops_2 token_ops_3 token_quote token_obrace
-%token token_ebrace token_obracket token_ebracket token_oparen token_eparen token_newline token_integer token_digits
+%union {
+    const char* string;
+    syntaxTree* tree;
+}
+
+%token<string> token_eif token_block token_comma token_dot token_module token_use token_if token_while token_iter
+%token<string> token_colon token_end token_else token_def token_class token_func token_prop token_option token_assert
+%token<string> token_conditional token_expose token_hidden token_readonly token_return
+%token<string> token_at token_in token_word token_quote token_obrace token_integer token_digits
+%token<string> token_ebrace token_obracket token_ebracket token_oparen token_eparen token_newline
+%token<tree> token_break token_pass token_continue token_ops_1
+
+%type<tree> command commands returnstmt 
+%type<tree> expression block ifblock defblock classdef funcdef propdef conditionalblock whileblock iterblock contentblock
+%type<tree> brace bracket paren anonyfuncdef commasepnames commasepexprs commasepgroup funcpair commaseppairs
+%type<tree> word numeral 
 
 %%
 
-commands: command
-| commands token_newline command
-;
+commands: command{
 
-command : { }
-| expression{
+syntaxTree* tree = createSyntaxTree(general);
+appendChild($1, tree);
+$$ = tree;
 
 }
-| block {
-	printf("[block]\n");
-    return $1;
+| commands token_newline command{
+
+appendChild($3, $1);
+$$ = $1;
+
 }
 ;
 
-word: token_word
-| token_quote
+command: { $$ = NULL; }
+| expression{ $$ = $1; }
+| block{ $$ = $1; }
 ;
 
-block: ifblock
-| defblock
-| conditionalblock
-| whileblock
-| iterblock
+word: token_word{ $$ = createLiteral($1); }
+| token_quote{ $$ = createLiteral($1); }
 ;
 
-numeral : token_digits | token_integer
+block: ifblock{ $1->type = ifblock; $$ = $1; }
+| defblock{ $$ = $1; }
+| conditionalblock{ $1->type = conditionalblock; $$ = $1; }
+| whileblock{ $1->type = whileblock; $$ = $1; }
+| iterblock{ $1->type = iterateblock; $$ = $1; }
+;
 
-expression : numeral
+numeral: token_digits{ $$ = createLiteral($1); } | token_integer{ $$ = createLiteral($1); };
+
+expression: numeral{ 
+
+syntaxTree* tree = createSyntaxTree(evaluation);
+appendChild($1, tree);
+$$ = tree;
+
+}
 | brace
 | bracket
 | paren
-| word
-| token_ops_1
+| word{
+
+syntaxTree * tree = createSyntaxTree(evaluation);
+appendChild($1, tree);
+$$ = tree;
+
+}
+| token_ops_1{
+
+syntaxTree * tree = createSyntaxTree(evaluation);
+appendChild($1, tree);
+$$ = tree;
+
+}
 | anonyfuncdef
 | contentblock
 | token_continue
 | token_return
 | token_pass
 | token_break
-| expression numeral
+| expression numeral{
+
+appendChild($2, $1);
+$$ = $1;
+
+}
 | expression brace
 | expression bracket
-| expression word
+| expression word{
+
+appendChild($2, $1);
+$$ = $1;
+
+}
 | expression paren
-| expression token_ops_1
+| expression token_ops_1{
+
+appendChild($2, $1);
+$$ = $1;
+
+}
 | expression anonyfuncdef
 | expression contentblock
 ;
 
-brace : token_obrace commasepgroup token_ebrace;
+returnstmt: token_return command;
+
+brace: token_obrace commasepgroup token_ebrace;
 
 bracket : token_obracket commasepgroup token_ebracket;
 
@@ -86,7 +139,7 @@ eifblock : token_eif commands token_newline elseblock
 | token_eif commands token_newline token_end
 ;
 
-defblock : classdef
+defblock: classdef
 | funcdef
 | propdef
 ;
@@ -101,17 +154,11 @@ commasepexprs : expression
 commasepgroup : commasepexprs
 | commasepgroup token_newline commasepexprs;
 
-funcpair: expression word{
-    printf("[Expr %s] [Word %s]\n", $1, $2);
-};
+funcpair: expression word;
 
 commaseppairs : 
-| funcpair{
-    printf("[ComSepPairs %s]\n", $1);
-}
-| commaseppairs token_comma funcpair{
-    printf("[ComSepPairs %s, %s]\n", $1, $2);
-}
+| funcpair
+| commaseppairs token_comma funcpair
 ;
 
 classdef : token_class word token_colon commasepnames token_assert commasepnames token_newline commands token_end
@@ -119,11 +166,9 @@ classdef : token_class word token_colon commasepnames token_assert commasepnames
 | token_class word token_assert commasepnames token_newline commands token_end
 ;
 
-funcdef: token_func word token_oparen commaseppairs token_eparen token_newline commands token_end{
-    printf("[Function {%s : [ %s ]}\n", $2, $4);
-};
+funcdef: token_func word token_oparen commaseppairs token_eparen token_newline commands token_end;
 
-anonyfuncdef : token_func token_oparen commaseppairs token_eparen token_newline commands token_end;
+anonyfuncdef: token_func token_oparen commaseppairs token_eparen token_newline commands token_end;
 
 propdef : token_prop word token_ops_1 expression
 | token_prop word
@@ -138,6 +183,10 @@ iterblock : token_iter word token_in expression token_at word token_newline comm
 | token_iter expression token_newline commands token_end
 ;
 
-contentblock : token_block commands token_end;
+contentblock: token_block commands token_end{
+    syntaxTree * tree = $2;
+    tree->type = contentblock;
+    $$ = tree;
+};
 
 %%

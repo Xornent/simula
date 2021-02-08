@@ -10,5 +10,8 @@ enum resourceId {
 };
 
 const char* res(int id);
+void report(int id);
+
+char* strcat_c(char* strDest, char* strSrc);
 
 #endif
