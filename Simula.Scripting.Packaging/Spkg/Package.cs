@@ -6,7 +6,6 @@ using System.Net;
 
 namespace Simula.Scripting.Packaging.Spkg
 {
-
     public class PackageSearchResult
     {
         public List<Package> Packages = new List<Package>();
@@ -16,7 +15,6 @@ namespace Simula.Scripting.Packaging.Spkg
 
     public class Package
     {
-
         public static string SearchAutoCompleteService = "";
         public static string Registrations = "";
         public static string RegistrationsGZip360 = "";
