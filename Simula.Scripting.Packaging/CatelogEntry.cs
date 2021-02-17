@@ -2,11 +2,9 @@
 
 namespace Simula.Scripting.Packaging
 {
-
     [JsonObject]
     public class CatelogEntry
     {
-
         [JsonProperty("@id")]
         public string Id { get; set; } = "";
 

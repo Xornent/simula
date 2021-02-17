@@ -14,8 +14,6 @@ namespace Simula
             timer.Interval = TimeSpan.FromSeconds(5);
             timer.Start();
             timer.Tick += Timer_Tick;
-
-            Scripting.Contexts.DynamicRuntime dy = new Scripting.Contexts.DynamicRuntime();
         }
 
         private void Timer_Tick(object sender, EventArgs e)

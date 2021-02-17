@@ -3,7 +3,7 @@
 
 # *  all program output should be ignored (in bin/ and obj/ folders).
 # *  all runtime folders should be created by the application during
-#    during runtime if they are not exist. 
+#    runtime if they do not exist. 
 # *  application icons can be preserved for design-time use.
 
 bin/

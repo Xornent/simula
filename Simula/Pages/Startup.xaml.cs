@@ -11,7 +11,6 @@ namespace Simula.Pages
         public Startup()
         {
             InitializeComponent();
-            Scripting.Contexts.DynamicRuntime dy = new Scripting.Contexts.DynamicRuntime();
         }
 
         public void WindowDispose() { }

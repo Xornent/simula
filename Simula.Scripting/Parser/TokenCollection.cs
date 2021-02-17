@@ -80,3 +80,19 @@ namespace Simula.Scripting.Parser
         Table
     }
 }
+
+namespace Simula
+{
+    public static partial class Extension
+    {
+        public static Scripting.Parser.TokenCollection JoinTokens(this List<Scripting.Parser.TokenCollection> tokens)
+        {
+            Scripting.Parser.TokenCollection collections = new Scripting.Parser.TokenCollection();
+            foreach (var item in tokens) {
+                collections.AddRange(item);
+                collections.Add(Scripting.Parser.Token.LineBreak);
+            }
+            return collections;
+        }
+    }
+}

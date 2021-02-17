@@ -554,7 +554,6 @@
                                                                                 <ui:IconTreeNode Header="Simula 系统运行时" Icon="pack://siteoforigin:,,,/resources/icons/asset-publish.png"/>
                                                                             </ui:IconTreeNode.Items>
                                                                         </ui:IconTreeNode>
-                                                                        <ui:IconTreeNode Header="对象浏览器" Icon="pack://siteoforigin:,,,/resources/icons/variable.png"/>
                                                                     </ui:IconTreeNode.Items>
                                                                 </ui:IconTreeNode>
                                                                 <ui:IconTreeNode Header="私有工作区设置" Icon="pack://siteoforigin:,,,/resources/icons/settings.png"/>
@@ -565,8 +564,61 @@
                                             </Expander>
                                         </DockPanel>
                                     </TabItem>
+                                    <TabItem Header="变量工作区">
+                                    <TreeView TextElement.FontWeight="Regular" TextElement.FontFamily="Cascadia Code, Consolas" TextElement.FontSize="11">
+                                                            <TreeView.Items>
+                                                                <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Header="lorentzNext ~> [func]" Icon="pack://siteoforigin:,,,/resources/icons/function.png">
+                                                                    <ui:IconTreeNode.Items>
+                                                                        <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Icon="pack://siteoforigin:,,,/resources/icons/function.png">
+                                                                            <ui:IconTreeNode.Header>
+                                                                                <WrapPanel Orientation="Horizontal">
+                                                                                    <TextBlock Text="operator " Foreground="#0078d4"/>
+                                                                                    <TextBlock Text="+ add " Foreground="#002000" FontWeight="Bold"/>
+                                                                                    <TextBlock Text="~> [" Foreground="#555555"/>
+                                                                                    <TextBlock Text="func" Foreground="#00b8c4"/>
+                                                                                    <TextBlock Text="] " Foreground="#555555"/>
+                                                                                    <TextBlock Text="(linked)" Foreground="#555555" FontStyle="Italic"/>
+                                                                                </WrapPanel>
+                                                                            </ui:IconTreeNode.Header>
+                                                                        </ui:IconTreeNode>
+                                                                        <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Icon="pack://siteoforigin:,,,/resources/icons/function.png">
+                                                                            <ui:IconTreeNode.Header>
+                                                                                <WrapPanel Orientation="Horizontal">
+                                                                                    <TextBlock Text="operator " Foreground="#0078d4"/>
+                                                                                    <TextBlock Text="- substract " Foreground="#002000" FontWeight="Bold"/>
+                                                                                    <TextBlock Text="~> [" Foreground="#555555"/>
+                                                                                    <TextBlock Text="func" Foreground="#00b8c4"/>
+                                                                                    <TextBlock Text="] " Foreground="#555555"/>
+                                                                                    <TextBlock Text="(linked)" Foreground="#555555" FontStyle="Italic"/>
+                                                                                </WrapPanel>
+                                                                            </ui:IconTreeNode.Header>
+                                                                        </ui:IconTreeNode>
+                                                                        <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Icon="pack://siteoforigin:,,,/resources/icons/function.png">
+                                                                            <ui:IconTreeNode.Header>
+                                                                                <WrapPanel Orientation="Horizontal">
+                                                                                    <TextBlock Text="operator " Foreground="#0078d4"/>
+                                                                                    <TextBlock Text="|> compound " Foreground="#002000" FontWeight="Bold"/>
+                                                                                    <TextBlock Text="~> [" Foreground="#555555"/>
+                                                                                    <TextBlock Text="func" Foreground="#00b8c4"/>
+                                                                                    <TextBlock Text="] " Foreground="#555555"/>
+                                                                                    <TextBlock Text="(linked)" Foreground="#555555" FontStyle="Italic"/>
+                                                                                </WrapPanel>
+                                                                            </ui:IconTreeNode.Header>
+                                                                        </ui:IconTreeNode>
+                                                                        <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Header="x ~> [double]" Icon="pack://siteoforigin:,,,/resources/icons/bracket-square.png"/>
+                                                                        <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Header="y ~> [double]" Icon="pack://siteoforigin:,,,/resources/icons/bracket-square.png"/>
+                                                                        <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Header="z ~> [double]" Icon="pack://siteoforigin:,,,/resources/icons/bracket-square.png"/>
+                                                                        <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Header="deltaX ~> [double]" Icon="pack://siteoforigin:,,,/resources/icons/bracket-square.png"/>
+                                                                        <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Header="deltaY ~> [double]" Icon="pack://siteoforigin:,,,/resources/icons/bracket-square.png"/>
+                                                                        <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Header="deltaZ ~> [double]" Icon="pack://siteoforigin:,,,/resources/icons/bracket-square.png"/>
+                                                                        <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Header="flag ~> [bool | null]" Icon="pack://siteoforigin:,,,/resources/icons/bracket-square.png"/>
+                                                                    </ui:IconTreeNode.Items>
+                                                                </ui:IconTreeNode>
+                                                                <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Header="Private Settings" Icon="pack://siteoforigin:,,,/resources/icons/settings.png"/>
+                                                            </TreeView.Items>
+                                                        </TreeView>
+                                    </TabItem>
                                     <TabItem Header="工具集"></TabItem>
-                                    <TabItem Header="源代码管理"></TabItem>
                                 </TabControl.Items>
                             </TabControl>
                         </Border>

@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:editor="http://xornent.org/simula/editor"
-             xmlns:scripting="clr-namespace:Simula.Scripting;assembly=Simula.Scripting"
+             
              xmlns:local="clr-namespace:Simula.Pages"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
@@ -30,7 +30,7 @@
             </Grid>
             <Grid>
                 <DockPanel Background="#FFFFFF">
-                    <scripting:SimulaTextEditor Background="#FFFFFF" FontWeight="Regular" ShowLineNumbers="True" Language="Simula" x:Name="editor" Margin="6 3 0 0"/>
+                    <!--<scripting:SimulaTextEditor Background="#FFFFFF" FontWeight="Regular" ShowLineNumbers="True" Language="Simula" x:Name="editor" Margin="6 3 0 0"/>-->
                 </DockPanel>
             </Grid>
         </DockPanel>

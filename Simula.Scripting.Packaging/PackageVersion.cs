@@ -4,11 +4,9 @@ using System.Net;
 
 namespace Simula.Scripting.Packaging
 {
-
     [JsonObject(MemberSerialization.OptIn)]
     public class PackageVersion
     {
-
         [JsonProperty("data")]
         public string[] Versions;
 

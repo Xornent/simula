@@ -2,11 +2,20 @@
 attempts to create an easy-to-read language in data processing and mathematic graphics.
 
 ## currently working on ...
+* `major language revisions: modular matching, user data structures, abandoning classes, assertions, interpreter commandments, configuration statements, type inference and strong-type support, data combinations, functors, lambda and expressions, and some of the additional support of local functions, combination of functions, etc.`
+* `c-sharp interoperations`
+* `workspace support`
 * `improve the speed of scripting interpreter.`
+
+## version history
+### 0.7.15 - 0.7.16
+1. `a further trial on parsing, using lex/yacc to generate syntax trees.` *and paused due to interoperation purposes*
+2. `refactor the simula.scripting in preparation for the 0.8.x versions`
+3. `convertion of c-sharp code classes and members`
+
 * `implement a ss-to-csharp language translator, and using the generated c-sharp code to implement compiler service.`
 * `build a c-sharp base calling alternative base librariy.`
 
-## version history
 ### 0.7.14
 1. `a backup for the c-sharp code translator and compiler service`
 2. `test that the performance of loops and binary operations waste much in self-operation. however, true calculations take about 10% of total time use.`

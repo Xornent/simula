@@ -22,6 +22,7 @@ namespace Simula.Scripting.Parser
         public Token(string value)
         {
             this.Value = value;
+            this.Location = new Span(0,0,0,0);
             this.Errors = new List<LexicalError>();
         }
 
@@ -85,7 +86,7 @@ namespace Simula.Scripting.Parser
             string lower = Value.ToLower();
             bool flag = true;
             foreach (var item in Value)
-                if (item.IsSymbol()) flag = false;
+                if (!item.IsSymbol()) flag = false;
             return flag;
         }
 

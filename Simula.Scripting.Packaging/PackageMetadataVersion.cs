@@ -2,11 +2,9 @@
 
 namespace Simula.Scripting.Packaging
 {
-
     [JsonObject]
     public class PackageMetadataVersion
     {
-
         [JsonProperty("@id")]
         public string Id { get; set; }
 

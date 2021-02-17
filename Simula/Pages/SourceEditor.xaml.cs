@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
 using System;
 using System.Windows.Controls;
-using Simula.Scripting.Syntax;
-using Simula.Scripting.Token;
-using Simula.Scripting.Contexts;
+// using Simula.Scripting.Syntax;
+// using Simula.Scripting.Token;
+// using Simula.Scripting.Contexts;
 
 namespace Simula.Pages
 {
@@ -16,6 +16,7 @@ namespace Simula.Pages
 
         public void HandleRun(object sender, EventArgs e)
         {
+            /*
             DynamicRuntime runtime = new DynamicRuntime();
             Simula.Scripting.Dom.Source src = Scripting.Dom.Source.FromSourceCode(editor.Text);
             src.LoadDefinition(runtime);
@@ -25,10 +26,12 @@ namespace Simula.Pages
             src.Run(runtime);
             sw.Stop();
             System.Windows.MessageBox.Show(sw.ElapsedMilliseconds.ToString()+" ms");
+            */
         }
 
         public void ConvertToCs(object sender, EventArgs e)
         {
+            /*
             Scripting.Build.GenerationContext gc = new Scripting.Build.GenerationContext();
             Simula.Scripting.Dom.Source src = Scripting.Dom.Source.FromSourceCode(editor.Text);
 
@@ -43,6 +46,7 @@ namespace Simula.Pages
             foreach (var item in lines) {
                 this.editor.Text += "' " + item + "\n";
             }
+            */
         }
     }
 }

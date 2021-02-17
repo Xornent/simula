@@ -98,6 +98,7 @@ namespace Simula.Scripting.Parser
                     return LexicalError.Ok;
 
                 case TokenType.Identifer:
+                    if (character == '.') return LexicalError.RuleNotMatch;
                     previous.Value += character;
                     previous.Location.End = new Position(line, column);
                     return LexicalError.Ok;
@@ -155,9 +156,19 @@ namespace Simula.Scripting.Parser
                     previous.Location.End = new Position(line, column);
                     return LexicalError.Ok;
                 case TokenType.Punctuator:
-                    previous.Value += character;
-                    previous.Location.End = new Position(line, column);
-                    return LexicalError.Ok;
+                    if ((previous.Value == "(") ||
+                        (previous.Value == ")") ||
+                        (previous.Value == "[") ||
+                        (previous.Value == "]") ||
+                        (previous.Value == "{") ||
+                        (previous.Value == "}")) {
+                        collection.Add(new Token(character.ToString(), new Span(line, column, line, column), TokenType.Punctuator));
+                        return LexicalError.Ok;
+                    } else {
+                        previous.Value += character;
+                        previous.Location.End = new Position(line, column);
+                        return LexicalError.Ok;
+                    }
                 case TokenType.StringLiteral:
                     if(character == '\"') {
                         if (previous.Value.EndsWith("\\")) { }

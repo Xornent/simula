@@ -5,11 +5,9 @@ using System.Net;
 
 namespace Simula.Scripting.Packaging
 {
-
     [JsonObject(MemberSerialization.OptIn)]
     public class SearchResult
     {
-
         [JsonProperty("totalHits")]
         public int Hit { get; set; }
 

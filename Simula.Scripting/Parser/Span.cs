@@ -18,5 +18,7 @@ namespace Simula.Scripting.Parser
 
         public Position Start { get; set; }
         public Position End { get; set; }
+
+        public static Span Default = new Span(0,0,0,0);
     }
 }
