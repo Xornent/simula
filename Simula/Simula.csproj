@@ -18,7 +18,7 @@
     <ProjectReference Include="..\Simula.Controls\Simula.Controls.csproj" />
     <ProjectReference Include="..\Simula.Editor\Simula.Editor.csproj" />
     <ProjectReference Include="..\Simula.Scripting.Packaging\Simula.Scripting.Packaging.csproj" />
-    <ProjectReference Include="..\Simula.Scripting\Simula.Scripting.Obsolete.csproj" />
+    <ProjectReference Include="..\Simula.Scripting.Obsolete\Simula.Scripting.Obsolete.csproj" />
     <ProjectReference Include="..\Simula.TeX\Simula.TeX.csproj" />
   </ItemGroup>
 

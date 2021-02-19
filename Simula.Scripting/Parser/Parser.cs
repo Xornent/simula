@@ -122,14 +122,90 @@ namespace Simula.Scripting.Parser
             return ParseStatementList(tryStatement, tokens, state, options, result);
         }
 
+        // iterate statement provides alternative way of looping with simplified grammar. one can loop
+        // for a certain times or enumerate the elements inside a collection.
+
+        // the following code shows the iteration of elements in a collection, using iter ... in ...
+        // clause. you can also have additional knowledge on where the enumerator is by adding
+        // iter ... in ... at ... to obtain the information.
+        //
+        // 1.  iter item in collection
+        //         item++
+        //     end
+        //
+        // 2.  iter item in collection at position
+        //         alert(position)
+        //         ...
+        //     end
+
+        // if you just want to repeat the code for a certain time, and do not want to know anything more,
+        // just iter + constant can have a good performance.
+        //
+        // 3.  iter 193
+        //         ... (this will be performed 193 times)
+        //     end
+
         public BlockStatement? ParseIterateStatement(TokenCollection tokens, ParserState state,
             ParserOptions options, ParserResult result, BlockStatement? parent = null)
         {
-            IterateStatement tryStatement = new IterateStatement(new Literal(""), new Literal(""));
-            tryStatement.Tokens.AddRange(tokens);
-            if (tokens[0].Value == "iter") tokens.RemoveAt(0);
+            TokenCollection storeToken = new TokenCollection();
+            storeToken.AddRange(tokens);
 
-            return ParseStatementList(tryStatement, tokens, state, options, result);
+            if (tokens.Last().Value == "end") tokens.RemoveLast();
+            if (tokens[0].Value == "iter") tokens.RemoveAt(0);
+            TokenCollection controller = tokens.SplitCascade(Token.LineBreak)[0];
+            var content = tokens.SplitCascade(Token.LineBreak);
+            content.RemoveAt(0);
+            tokens.Clear();
+            tokens.AddRange(content.JoinTokens());
+
+            Literal? atLiteral = null;
+            if (controller.ContainsCascade("at")) {
+                var atStmts = controller.SplitCascade("at");
+                if(atStmts.Count!= 2) {
+                    result.AddFatal(SyntaxError.IterateAtSyntaxError, controller.Last());
+                    return null;
+                }
+
+                if (atStmts[1].Count > 1) {
+                    result.AddWarning(SyntaxError.IterateAtSyntaxError, controller.Last());
+                }
+
+                atLiteral = new Literal(atStmts[1].First());
+                controller = atStmts[0];
+            }
+
+            if (controller.ContainsCascade("in")) {
+                var inStmts = controller.SplitCascade("in");
+                if (inStmts.Count != 2) {
+                    result.AddFatal(SyntaxError.IterateInSyntaxError, controller.Last());
+                    return null;
+                }
+
+                if (inStmts[0].Count != 1)
+                    result.AddWarning(SyntaxError.IterateInSyntaxError, inStmts[0].Last());
+
+                if(atLiteral == null) {
+                    IterateStatement iterate = new IterateStatement(new Literal(inStmts[0].First()),
+                        ParseExpression(inStmts[1], state, options, result));
+                    iterate.Tokens = storeToken;
+                    return ParseStatementList(iterate, tokens, state, options, result);
+                } else {
+                    IteratePositionalStatement iterate = new IteratePositionalStatement(new Literal(inStmts[0].First()),
+                        ParseExpression(inStmts[1], state, options, result), atLiteral);
+                    iterate.Tokens = storeToken;
+                    return ParseStatementList(iterate, tokens, state, options, result);
+                }
+
+            } else {
+                if(controller.Count != 1) {
+                    result.AddWarning(SyntaxError.IterateConstantSyntaxError, controller[0]);
+                }
+
+                IterateLiteralStatement iterateLiteral = new IterateLiteralStatement(new Literal(controller[0]));
+                iterateLiteral.Tokens = storeToken;
+                return ParseStatementList(iterateLiteral, tokens, state, options, result);
+            }
         }
 
         // while is a sentinel loop, repeat doing the block statement until its evaluation turned false.
@@ -145,12 +221,12 @@ namespace Simula.Scripting.Parser
             whileStatement.Tokens.AddRange(tokens);
             if (tokens.Last().Value == "end") tokens.RemoveLast();
             if (tokens[0].Value == "while") tokens.RemoveAt(0);
-            TokenCollection controller = tokens.Split(Token.LineBreak)[0];
+            TokenCollection controller = tokens.SplitCascade(Token.LineBreak)[0];
 
             if (controller.Count > 0) whileStatement.Evaluation = ParseExpression(controller, state, options, result);
             else result.AddFatal(SyntaxError.WhileConditionMissing, whileStatement.Tokens[0]);
 
-            var content = tokens.Split(Token.LineBreak);
+            var content = tokens.SplitCascade(Token.LineBreak);
             content.RemoveAt(0);
             tokens.Clear();
             tokens.AddRange(content.JoinTokens());
@@ -177,37 +253,209 @@ namespace Simula.Scripting.Parser
             conditional.Tokens.AddRange(tokens);
             if (tokens.Last().Value == "end") tokens.RemoveLast();
             if (tokens[0].Value == "conditional") tokens.RemoveAt(0);
-            TokenCollection controller = tokens.Split(Token.LineBreak)[0];
+            TokenCollection controller = tokens.SplitCascade(Token.LineBreak)[0];
 
             if (controller.Count > 0) conditional.ConditionalType = ParseExpression(controller, state, options, result);
             else result.AddFatal(SyntaxError.UndefinedConditionalTarget, conditional.Tokens[0]);
 
-            var content = tokens.Split(Token.LineBreak);
+            var content = tokens.SplitCascade(Token.LineBreak);
             content.RemoveAt(0);
             tokens.Clear();
             tokens.AddRange(content.JoinTokens());
             return ParseStatementList(conditional, tokens, state, options, result);
         }
 
+        // data statements are declarations of user-datatype, i.e. classes in the program blocks.
+        // data types contains members(fields) and functions declarations.
+
+        // 1.  data (int32 field1, string|null field2)
+        //         ...
+        //     end
+
+        // data types don't have to declare all members in use, if the program has another type as its base,
+        // inheriting can initialize a data type from another.
+
+        // 1.  data baseType (int32 baseField)
+        //         ...
+        //     end
+        //     data newType (string field) : baseType
+        //         ... (note that field and baseField are available here)
+        //     end
+
+        // assertion types are a special form of inherit base types, that the class can refer to the member
+        // of the assertion base type only when its condition is reached.
+
+        // 1.  data numeral (int32 value) assert odd
+        //     end
+        //     data odd()
+        //         conditional numeral
+        //             return base.value % 2 == 1
+        //         end
+        //         double = func () => numeral
+        //             return numeral(value * 2)
+        //         end
+        //     end
+        
         public BlockStatement? ParseDataStatement(TokenCollection tokens, ParserState state,
             ParserOptions options, ParserResult result, BlockStatement? parent = null)
         {
-            DataDeclaration tryStatement = new DataDeclaration(new Literal(""));
-            tryStatement.Tokens.AddRange(tokens);
+            DataDeclaration dataStatement = new DataDeclaration(new Literal(""));
+            dataStatement.Tokens.AddRange(tokens); 
+            if (tokens.Last().Value == "end") tokens.RemoveLast();
             if (tokens[0].Value == "data") tokens.RemoveAt(0);
+            var content = tokens.SplitCascade(Token.LineBreak);
 
-            return ParseStatementList(tryStatement, tokens, state, options, result);
+            if (content.Count == 0) {
+                result.AddFatal(SyntaxError.DataDeclarationMissing, dataStatement.Tokens[0]);
+                return null;
+            }
+
+            var declarator = content[0];
+            if(declarator.ContainsCascade(new Token("assert"))) {
+                var assertSecs = declarator.SplitCascade(new Token("assert"));
+                if(assertSecs.Count!= 2) {
+                    result.AddFatal(SyntaxError.DataAssertionSyntaxError, dataStatement.Tokens[0]);
+                    return null;
+                }
+                var assertionList = assertSecs[1];
+                var items = assertionList.SplitCascade(new Token(","));
+                foreach (var assertion in items) {
+                    if(assertion.Count == 0) {
+                        result.AddFatal(SyntaxError.DataAssertionSyntaxError, dataStatement.Tokens[0]);
+                        return null;
+                    }
+
+                    dataStatement.Assumptions.Add(new Literal(assertion[0].Value));
+                }
+                declarator = assertSecs[0];
+            }
+
+            if (declarator.ContainsCascade(new Token(":"))) {
+                var inheritages = declarator.SplitCascade(new Token(":"));
+                if (inheritages.Count != 2) {
+                    result.AddFatal(SyntaxError.DataInheritageSyntaxError, dataStatement.Tokens[0]);
+                    return null;
+                }
+                var inhlist = inheritages[1];
+                var items = inhlist.SplitCascade(new Token(","));
+                foreach (var inheritage in items) {
+                    if (inheritage.Count == 0) {
+                        result.AddFatal(SyntaxError.DataInheritageSyntaxError, dataStatement.Tokens[0]);
+                        return null;
+                    }
+
+                    dataStatement.Inheritage.Add(ParseExpression(inheritage, state, options, result));
+                }
+                declarator = inheritages[0];
+            }
+
+            if (declarator.Last().Value == ")") declarator.RemoveLast();
+            if (declarator[0].Value == "(") declarator.RemoveAt(0);
+            List<TokenCollection> param = new List<TokenCollection>();
+            int blockLevel = 0;
+            TokenCollection temp = new TokenCollection();
+            foreach (var item in declarator) {
+                if(blockLevel == 0 && item.Value == ",") {
+                    param.Add(temp);
+                    temp = new TokenCollection();
+                    continue;
+                }
+
+                switch(item.Value) {
+                    case "(": case "[": case "{":
+                        blockLevel++;
+                        break;
+                    case ")": case "]": case "}":
+                        blockLevel--;
+                        break;
+                }
+
+                temp.Add(item);
+            }
+
+            if (temp.Count > 0) param.Add(temp);
+            foreach (var parameter in param) {
+                if (parameter.Count > 0)
+                    dataStatement.Fields.Add(ParseFunctionParameter(parameter, state, options, result));
+            }
+
+            content.RemoveAt(0);
+            tokens.Clear();
+            tokens.AddRange(content.JoinTokens());
+            return ParseStatementList(dataStatement, tokens, state, options, result);
         }
+
+        // functions declarations
+        
+        // 1.  add = func (int32 i, int32 j) => int32
+        //         return i + j
+        //     end
 
         public BlockStatement? ParseFunctionStatement(TokenCollection tokens, ParserState state,
             ParserOptions options, ParserResult result, BlockStatement? parent = null)
         {
-            FunctionDeclaration tryStatement = new FunctionDeclaration(new Literal(""));
-            tryStatement.Tokens.AddRange(tokens);
-            if (tokens[0].Value == "func") tokens.RemoveAt(0);
+            FunctionDeclaration funcDecl = new FunctionDeclaration(new Literal(""));
+            funcDecl.Tokens.AddRange(tokens);
             if (tokens.Last().Value == "end") tokens.RemoveLast();
+            if (tokens[0].Value == "func") tokens.RemoveAt(0);
+            var content = tokens.SplitCascade(Token.LineBreak);
 
-            return ParseStatementList(tryStatement, tokens, state, options, result);
+            if (content.Count == 0) {
+                result.AddFatal(SyntaxError.FunctionDeclarationMissing, funcDecl.Tokens[0]);
+                return null;
+            }
+
+            var declarator = content[0];
+            
+            if (declarator.ContainsCascade(new Token("=>"))) {
+                var returnSecs = declarator.SplitCascade(new Token("=>"));
+                if (returnSecs.Count != 2) {
+                    result.AddFatal(SyntaxError.FunctionReturnTypeSyntaxError, funcDecl.Tokens[0]);
+                    return null;
+                }
+                var ret = returnSecs[1];
+                funcDecl.ReturnType = ParseExpression(ret, state, options, result);
+                declarator = returnSecs[0];
+            }
+
+            if (declarator.Last().Value == ")") declarator.RemoveLast();
+            if (declarator[0].Value == "(") declarator.RemoveAt(0);
+            List<TokenCollection> param = new List<TokenCollection>();
+            int blockLevel = 0;
+            TokenCollection temp = new TokenCollection();
+            foreach (var item in declarator) {
+                if (blockLevel == 0 && item.Value == ",") {
+                    param.Add(temp);
+                    temp = new TokenCollection();
+                    continue;
+                }
+
+                switch (item.Value) {
+                    case "(":
+                    case "[":
+                    case "{":
+                        blockLevel++;
+                        break;
+                    case ")":
+                    case "]":
+                    case "}":
+                        blockLevel--;
+                        break;
+                }
+
+                temp.Add(item);
+            }
+
+            if (temp.Count > 0) param.Add(temp);
+            foreach (var parameter in param) {
+                if (parameter.Count > 0)
+                    funcDecl.Parameters.Add(ParseFunctionParameter(parameter, state, options, result));
+            }
+
+            content.RemoveAt(0);
+            tokens.Clear();
+            tokens.AddRange(content.JoinTokens());
+            return ParseStatementList(funcDecl, tokens, state, options, result);
         }
 
         // configure statements are a short and efficient way when one want to modify many properties
@@ -248,26 +496,87 @@ namespace Simula.Scripting.Parser
             configure.Tokens.AddRange(tokens);
             if (tokens.Last().Value == "end") tokens.RemoveLast();
             if (tokens[0].Value == "config") tokens.RemoveAt(0);
-            TokenCollection controller = tokens.Split(Token.LineBreak)[0];
+            TokenCollection controller = tokens.SplitCascade(Token.LineBreak)[0];
 
             if (controller.Count > 0) configure.ConfigurationObject = ParseExpression(controller, state, options, result);
             else result.AddFatal(SyntaxError.UndefinedConfigureTarget, configure.Tokens[0]);
 
-            var content = tokens.Split(Token.LineBreak);
+            var content = tokens.SplitCascade(Token.LineBreak);
             content.RemoveAt(0);
             tokens.Clear();
             tokens.AddRange(content.JoinTokens());
             return ParseStatementList(configure, tokens, state, options, result);
         }
 
+        // match statement represent a pattern-match execution. witha specified object to match and corresbonding
+        // return value of the match.
+
+        // 1.  result = match matchObject => int32
+        //     !~> int32   => -1
+        //         0       => 1
+        //         1       => 1
+        //       < 0       => -1
+        //         int32 n => fib(n-1) + fib(n-2)
+        //         any x   => -1
+        //     end
+
+        // match branches are conditional branches that are uniquely available in a pattern matching section.
+        // it is splited by a '=>' signal whose left is the declarative pattern and whose right is the action
+        // to take out. the right part, or the last expression of the right part if it is a block, is regarded
+        // as the output value of match statement. the match branch has 3 forms.
+        
+        // 1.  this form is the simpliest form of match branch, specifying a constant value in the left, and 
+        //     a return value in the right. this means if(matchObject == 0) return 1.
+        //
+        //     0 => 1
+        //
+        //     the right part can also be written in a block, and carry out extra commands. the last expression
+        //     '1' is the return type of match statement.
+        //
+        //     0 => block
+        //         alert("inside 0 pattern match branch")
+        //         1
+        //     end
+
+        // 2.  match can also carry out relationship operators as a condition, when the left part begins with
+        //     a valid relationship operator. the following branch means if(matchObject < 0) return -1.
+        //
+        //     < 0 => -1
+
+        // 3.  the left part can also be written as a pair of target fields in a customized data type, and that
+        //     filters any type with the given fields exist. the name of the selected type is given in the context
+        //     in the evaluation process of the right.
+        //
+        //     (string name, int32 id) => return (name + id) -> string
+
+        // when the pattern match detects no match in your given branches, this will throw a runtime error
+        // so it is wise for you to specify a default branch to handle all other cases, like the (3) suggests,
+        // you can write 'any' identifer to refer to all types:
+        //
+        //     any x => ...
+        //
+        // or you can write the following placeholder statement if you need not to know the value.
+        //
+        //     otherwise => ...
+
         public BlockStatement? ParseMatchStatement(TokenCollection tokens, ParserState state,
             ParserOptions options, ParserResult result, BlockStatement? parent = null)
         {
-            MatchStatement tryStatement = new MatchStatement(new Literal(""), new Literal(""));
-            tryStatement.Tokens.AddRange(tokens);
+            MatchStatement matchBlock = new MatchStatement(new Literal(""), new Literal(""));
+            matchBlock.Tokens.AddRange(tokens);
+            if (tokens.Last().Value == "end") tokens.RemoveLast();
             if (tokens[0].Value == "match") tokens.RemoveAt(0);
+            var content = tokens.SplitCascade(Token.LineBreak);
 
-            return ParseStatementList(tryStatement, tokens, state, options, result);
+            if (content.Count == 0) {
+                result.AddFatal(SyntaxError.MatchDeclarationMissing, matchBlock.Tokens[0]);
+                return null;
+            }
+
+            var declarator = content[0];
+            if(!declarator.ContainsCascade(new Token("=>"))) { /* todo */ }
+
+            return matchBlock;
         }
         
         // the decision making branches if/eif/else.
@@ -290,12 +599,12 @@ namespace Simula.Scripting.Parser
             ifStatement.Tokens.AddRange(tokens);
             if (tokens.Last().Value == "end") tokens.RemoveLast();
             if (tokens[0].Value == "if") tokens.RemoveAt(0);
-            TokenCollection controller = tokens.Split(Token.LineBreak)[0];
+            TokenCollection controller = tokens.SplitCascade(Token.LineBreak)[0];
 
             if (controller.Count > 0) ifStatement.Condition = ParseExpression(controller, state, options, result);
             else result.AddFatal(SyntaxError.IfConditionMissing, ifStatement.Tokens[0]);
 
-            var content = tokens.Split(Token.LineBreak);
+            var content = tokens.SplitCascade(Token.LineBreak);
             content.RemoveAt(0);
             tokens.Clear();
             tokens.AddRange(content.JoinTokens());
@@ -325,12 +634,12 @@ namespace Simula.Scripting.Parser
             eifStatement.Tokens.AddRange(tokens);
             if (tokens.Last().Value == "end") tokens.RemoveLast();
             if (tokens[0].Value == "eif") tokens.RemoveAt(0);
-            TokenCollection controller = tokens.Split(Token.LineBreak)[0];
+            TokenCollection controller = tokens.SplitCascade(Token.LineBreak)[0];
 
             if (controller.Count > 0) eifStatement.Condition = ParseExpression(controller, state, options, result);
             else result.AddFatal(SyntaxError.EifConditionMissing, eifStatement.Tokens[0]);
 
-            var content = tokens.Split(Token.LineBreak);
+            var content = tokens.SplitCascade(Token.LineBreak);
             content.RemoveAt(0);
             tokens.Clear();
             tokens.AddRange(content.JoinTokens());
@@ -363,7 +672,7 @@ namespace Simula.Scripting.Parser
             if (tokens.Last().Value == "end") tokens.RemoveLast();
             if (tokens[0].Value == "else") tokens.RemoveAt(0);
 
-            var content = tokens.Split(Token.LineBreak);
+            var content = tokens.SplitCascade(Token.LineBreak);
             content.RemoveAt(0);
             tokens.Clear();
             tokens.AddRange(content.JoinTokens());
@@ -401,12 +710,12 @@ namespace Simula.Scripting.Parser
             catchStatement.Tokens.AddRange(tokens);
             if (tokens.Last().Value == "end") tokens.RemoveLast();
             if (tokens[0].Value == "catch") tokens.RemoveAt(0);
-            TokenCollection controller = tokens.Split(Token.LineBreak)[0];
+            TokenCollection controller = tokens.SplitCascade(Token.LineBreak)[0];
 
             if (controller.Count > 0) catchStatement.ExceptionName = new Literal(controller[0].Value);
             else result.AddFatal(SyntaxError.CatchUnnamedException, catchStatement.Tokens[0]);
 
-            var content = tokens.Split(Token.LineBreak);
+            var content = tokens.SplitCascade(Token.LineBreak);
             content.RemoveAt(0);
             tokens.Clear();
             tokens.AddRange(content.JoinTokens());
@@ -633,6 +942,69 @@ namespace Simula.Scripting.Parser
             } else {
                 result.AddFatal(SyntaxError.EmptyExpression, Span.Default);
                 return new Literal("none");
+            }
+        }
+
+        public FunctionParameter ParseFunctionParameter(TokenCollection tokens,
+            ParserState state, ParserOptions options, ParserResult result)
+        {
+            List<IExpression> expressionUnits = new List<IExpression>();
+            foreach (Token token in tokens) {
+                expressionUnits.Add(new Literal(token.Value) { Tokens = new TokenCollection() { token } });
+            }
+
+            ParseEnclosedExpression(expressionUnits, state, options, result);
+
+            while (ParseLtrs(expressionUnits, state, options, result)) { }
+
+            foreach (var op in Operator.Operators) {
+                while (ParseOperators(op.Value, expressionUnits, state, options, result)) { }
+            }
+
+            while (ParseRtls(expressionUnits, state, options, result)) { }
+
+            if(expressionUnits.Count==0) {
+                result.AddFatal(SyntaxError.EmptyExpression, tokens[0]);
+                return new FunctionParameter();
+            }
+
+            if (expressionUnits.Count >= 2) {
+                FunctionParameter param = new FunctionParameter();
+                if (expressionUnits.Last() is BinaryExpression bin && bin.Operator.Symbol == "=") {
+                    param.Default = bin.Right;
+                    if (bin.Left is Literal literal)
+                        param.Identifer = literal;
+                    else {
+                        result.AddFatal(SyntaxError.ExpectLiteralParameterName, bin.Left.Tokens[0]);
+                        param.Identifer = new Literal(bin.Left.Tokens[0].Value);
+                    }
+
+                } else {
+                    if (expressionUnits.Last() is Literal literal)
+                        param.Identifer = literal;
+                    else {
+                        result.AddFatal(SyntaxError.ExpectLiteralParameterName, expressionUnits.Last().Tokens[0]);
+                        param.Identifer = new Literal(expressionUnits.Last().Tokens[0].Value);
+                    }
+                }
+
+                expressionUnits.RemoveAt(expressionUnits.Count - 1);
+                param.Type = expressionUnits.Last();
+                expressionUnits.RemoveAt(expressionUnits.Count - 1);
+
+                foreach (var item in expressionUnits) {
+                    if (item is Literal litem)
+                        param.Modifers.Add(litem);
+                    else {
+                        result.AddFatal(SyntaxError.ExpectLiteralModifers, item.Tokens[0]);
+                        continue;
+                    }
+                }
+
+                return param;
+            } else {
+                result.AddFatal(SyntaxError.InvalidParameter, Span.Default);
+                return new FunctionParameter();
             }
         }
 

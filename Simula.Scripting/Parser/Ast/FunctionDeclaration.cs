@@ -10,7 +10,8 @@ namespace Simula.Scripting.Parser.Ast
         {
             this.Identifer = identifer;
         }
-        
+
+        public IExpression ReturnType { get; set; } = new Literal("null");
         public IFunctionScope Scope { get; set; } 
             = new FunctionScope(new List<VariableDeclaration>(), new List<FunctionDeclaration>());
         public List<FunctionParameter> Parameters { get; set; } = new List<FunctionParameter>();
@@ -18,8 +19,9 @@ namespace Simula.Scripting.Parser.Ast
 
     public class FunctionParameter
     {
-        public List<Literal> Identifer { get; set; } = new List<Literal>();
-        public List<IExpression> Type { get; set; } = new List<IExpression>();
-        public List<IExpression> Default { get; set; } = new List<IExpression>();
+        public List<Literal> Modifers { get; set; } = new List<Literal>();
+        public Literal Identifer { get; set; } = new Literal("_");
+        public IExpression Type { get; set; } = new Literal("_");
+        public IExpression Default { get; set; } = new Literal("_");
     }
 }

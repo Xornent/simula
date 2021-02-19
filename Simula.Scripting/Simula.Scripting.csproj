@@ -33,5 +33,6 @@
     <Folder Include="Runtime\Profiler\" />
     <Folder Include="Runtime\Interop\" />
     <Folder Include="Runtime\References\" />
+    <Folder Include="Analysis\" />
   </ItemGroup>
 </Project>

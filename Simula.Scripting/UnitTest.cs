@@ -23,6 +23,16 @@ module sys.io
 use sys.io 
 ' this is a line comment
 debugger on
+d1 = data(private int32 i = 0, ...
+          public static * readonly int32 j)
+end
+d2 = data(params int32 k) : d1
+end
+a1 = data()
+end
+d3 = data(int32 l) : d1, d2 assert a1
+end
+
 a = func (int32 i, int32 j) => int32
    another = 0
    variable = [block return i + j end, 2
@@ -55,6 +65,15 @@ config conf
 end
 catch ex
 touch sbls
+end
+
+iter 19293
+    iter a in collection
+        a = 1
+    end
+    iter a in collection at pos
+        alert(pos)
+    end
 end
 ";
             var str2 = @"

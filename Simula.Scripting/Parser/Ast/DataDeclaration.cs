@@ -13,7 +13,8 @@ namespace Simula.Scripting.Parser.Ast
         
         public IDataScope Scope { get; set; } 
             = new DataScope(new List<VariableDeclaration>(), new List<FunctionDeclaration>());
-        public IExpression? Inheritage { get; set; }
+        public List<FunctionParameter> Fields { get; set; } = new List<FunctionParameter>();
+        public List<IExpression?> Inheritage { get; set; } = new List<IExpression?>();
         public List<Literal> Assumptions { get; set; } = new List<Literal>();
     }
 }

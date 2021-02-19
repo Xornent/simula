@@ -30,6 +30,18 @@ namespace Simula.Scripting.Parser
         IfConditionMissing,
         EifConditionMissing,
         WhileConditionMissing,
+        MatchDeclarationMissing,
+        DataAssertionSyntaxError,
+        DataInheritageSyntaxError,
+        InvalidParameter,
+        ExpectLiteralParameterName,
+        ExpectLiteralModifers,
+        DataDeclarationMissing,
+        FunctionDeclarationMissing,
+        FunctionReturnTypeSyntaxError,
+        IterateAtSyntaxError,
+        IterateInSyntaxError,
+        IterateConstantSyntaxError,
 
         // internal parser errors from 901 - 999. this indicates that the parser design has logical
         // errors, and for any code, a parser should not throw any internal errors, this is for the

@@ -6,6 +6,22 @@ namespace Simula.Scripting.Parser
 {
     public class TokenCollection : List<Token>
     {
+        // the methods Split, Contains has a corresponding *Cascade version. this means the method
+        // will check whether the specified symbol is in identical level of blocks as the baseline.
+        // taking nested blocks into consideration.
+        
+        // for example, the following token collection:
+        //     data a ( int : c ) : b
+
+        // applying Split(":"), the sections are:
+        // [1] data a ( int
+        // [2] c ) 
+        // [3] b
+
+        // applying SplitCascade(":"), the sections are:
+        // [1] data a ( int : c ) 
+        // [2] b
+
         public List<TokenCollection> Split(Token token)
         {
             List<TokenCollection> result = new List<TokenCollection>();
@@ -24,13 +40,103 @@ namespace Simula.Scripting.Parser
             return result;
         }
 
+        public List<TokenCollection> SplitCascade(Token token)
+        {
+            return SplitCascade(token.Value);
+        }
+
+        public List<TokenCollection> SplitCascade(string token)
+        {
+            List<TokenCollection> result = new List<TokenCollection>();
+            TokenCollection collection = new TokenCollection();
+
+            int blockLevel = 0;
+            foreach (var item in this) {
+                if (item.Value == token && blockLevel == 0) {
+                    result.Add(collection);
+                    collection = new TokenCollection();
+                    continue;
+                }
+
+                switch (item.Value) {
+                    case "iter":
+                    case "while":
+                    case "conditional":
+                    case "data":
+                    case "func":
+                    case "config":
+                    case "if":
+                    case "match":
+                    case "try":
+                    case "(":
+                    case "[":
+                    case "{": blockLevel++; break;
+
+                    case ")":
+                    case "]":
+                    case "}":
+                    case "end": blockLevel--; break;
+                    default: break;
+                }
+
+                collection.Add(item);
+            }
+
+            if (collection.Count > 0) result.Add(collection);
+            return result;
+        }
+
         public new bool Contains(Token token)
+        {
+            return Contains(token.Value);
+        }
+
+        public bool Contains(string token)
         {
             bool flag = false;
             foreach (var item in this)
-                if (item.ContentEquals(token)) {
+                if (item.Value == token) {
                     flag = true; break;
                 }
+
+            return flag;
+        }
+
+        public bool ContainsCascade(Token token)
+        {
+            return ContainsCascade(token.Value);
+        }
+
+        public bool ContainsCascade(string token)
+        {
+            bool flag = false;
+            int blockLevel = 0;
+            foreach (var item in this) {
+                if (item.Value == token && blockLevel == 0) {
+                    flag = true; break;
+                }
+
+                switch (item.Value) {
+                    case "iter":
+                    case "while":
+                    case "conditional":
+                    case "data":
+                    case "func":
+                    case "config":
+                    case "if":
+                    case "match":
+                    case "try":
+                    case "(":
+                    case "[":
+                    case "{": blockLevel++; break;
+
+                    case ")":
+                    case "]":
+                    case "}":
+                    case "end": blockLevel--; break;
+                    default: break;
+                }
+            }
 
             return flag;
         }
