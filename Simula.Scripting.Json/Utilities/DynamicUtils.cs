@@ -1,8 +1,8 @@
-﻿
-#if HAVE_DYNAMIC
+﻿#if HAVE_DYNAMIC
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Linq;
 using System.Linq.Expressions;
 #if !HAVE_REFLECTION_BINDER
 using System.Reflection;
@@ -10,6 +10,9 @@ using System.Reflection;
 using Microsoft.CSharp.RuntimeBinder;
 #endif
 using System.Runtime.CompilerServices;
+using System.Text;
+using System.Globalization;
+using Simula.Scripting.Json.Serialization;
 
 namespace Simula.Scripting.Json.Utilities
 {
@@ -25,10 +28,10 @@ namespace Simula.Scripting.Json.Utilities
             private const string CSharpArgumentInfoFlagsTypeName = "Microsoft.CSharp.RuntimeBinder.CSharpArgumentInfoFlags, " + CSharpAssemblyName;
             private const string CSharpBinderFlagsTypeName = "Microsoft.CSharp.RuntimeBinder.CSharpBinderFlags, " + CSharpAssemblyName;
 
-            private static object? _getCSharpArgumentInfoArray;
-            private static object? _setCSharpArgumentInfoArray;
-            private static MethodCall<object?, object?>? _getMemberCall;
-            private static MethodCall<object?, object?>? _setMemberCall;
+            private static object _getCSharpArgumentInfoArray;
+            private static object _setCSharpArgumentInfoArray;
+            private static MethodCall<object, object> _getMemberCall;
+            private static MethodCall<object, object> _setMemberCall;
             private static bool _init;
 
             private static void Init()
@@ -40,7 +43,10 @@ namespace Simula.Scripting.Json.Utilities
                     {
                         throw new InvalidOperationException("Could not resolve type '{0}'. You may need to add a reference to Microsoft.CSharp.dll to work with dynamic types.".FormatWith(CultureInfo.InvariantCulture, BinderTypeName));
                     }
+
+                    // None
                     _getCSharpArgumentInfoArray = CreateSharpArgumentInfoArray(0);
+                    // None, Constant | UseCompileTimeType
                     _setCSharpArgumentInfoArray = CreateSharpArgumentInfoArray(0, 3);
                     CreateMemberCalls();
 
@@ -58,7 +64,7 @@ namespace Simula.Scripting.Json.Utilities
                 for (int i = 0; i < values.Length; i++)
                 {
                     MethodInfo createArgumentInfoMethod = csharpArgumentInfoType.GetMethod("Create", new[] { csharpArgumentInfoFlags, typeof(string) });
-                    object arg = createArgumentInfoMethod.Invoke(null, new object?[] { 0, null });
+                    object arg = createArgumentInfoMethod.Invoke(null, new object[] { 0, null });
                     a.SetValue(arg, i);
                 }
 
@@ -74,10 +80,10 @@ namespace Simula.Scripting.Json.Utilities
                 Type csharpArgumentInfoTypeEnumerableType = typeof(IEnumerable<>).MakeGenericType(csharpArgumentInfoType);
 
                 MethodInfo getMemberMethod = binderType.GetMethod("GetMember", new[] { csharpBinderFlagsType, typeof(string), typeof(Type), csharpArgumentInfoTypeEnumerableType });
-                _getMemberCall = JsonTypeReflector.ReflectionDelegateFactory.CreateMethodCall<object?>(getMemberMethod);
+                _getMemberCall = JsonTypeReflector.ReflectionDelegateFactory.CreateMethodCall<object>(getMemberMethod);
 
                 MethodInfo setMemberMethod = binderType.GetMethod("SetMember", new[] { csharpBinderFlagsType, typeof(string), typeof(Type), csharpArgumentInfoTypeEnumerableType });
-                _setMemberCall = JsonTypeReflector.ReflectionDelegateFactory.CreateMethodCall<object?>(setMemberMethod);
+                _setMemberCall = JsonTypeReflector.ReflectionDelegateFactory.CreateMethodCall<object>(setMemberMethod);
             }
 #endif
 
@@ -85,12 +91,10 @@ namespace Simula.Scripting.Json.Utilities
             {
 #if !HAVE_REFLECTION_BINDER
                 Init();
-                MiscellaneousUtils.Assert(_getMemberCall != null);
-                MiscellaneousUtils.Assert(_getCSharpArgumentInfoArray != null);
-                return (CallSiteBinder)_getMemberCall(null, 0, name, context, _getCSharpArgumentInfoArray)!;
+                return (CallSiteBinder)_getMemberCall(null, 0, name, context, _getCSharpArgumentInfoArray);
 #else
                 return Binder.GetMember(
-                    CSharpBinderFlags.None, name, context, new[] { CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.None, null) });
+                    CSharpBinderFlags.None, name, context, new[] {CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.None, null)});
 #endif
             }
 
@@ -98,9 +102,7 @@ namespace Simula.Scripting.Json.Utilities
             {
 #if !HAVE_REFLECTION_BINDER
                 Init();
-                MiscellaneousUtils.Assert(_setMemberCall != null);
-                MiscellaneousUtils.Assert(_setCSharpArgumentInfoArray != null);
-                return (CallSiteBinder)_setMemberCall(null, 0, name, context, _setCSharpArgumentInfoArray)!;
+                return (CallSiteBinder)_setMemberCall(null, 0, name, context, _setCSharpArgumentInfoArray);
 #else
                 return Binder.SetMember(
                     CSharpBinderFlags.None, name, context, new[]
@@ -169,7 +171,9 @@ namespace Simula.Scripting.Json.Utilities
 
         protected override Expression VisitConditional(ConditionalExpression node)
         {
-            if (node.IfFalse.NodeType == ExpressionType.Throw) {
+            // if the result of a test is to throw an error, rewrite to result an error result value
+            if (node.IfFalse.NodeType == ExpressionType.Throw)
+            {
                 return Expression.Condition(node.Test, node.IfTrue, Expression.Constant(ErrorResult));
             }
 

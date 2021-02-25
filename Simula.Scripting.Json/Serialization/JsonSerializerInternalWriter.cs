@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,22 +5,25 @@ using System.ComponentModel;
 #if HAVE_DYNAMIC
 using System.Dynamic;
 #endif
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Security;
 using Simula.Scripting.Json.Linq;
 using Simula.Scripting.Json.Utilities;
-using System.Diagnostics.CodeAnalysis;
+using System.Runtime.Serialization;
 #if !HAVE_LINQ
 using Simula.Scripting.Json.Utilities.LinqBridge;
 #else
 using System.Linq;
+
 #endif
 
 namespace Simula.Scripting.Json.Serialization
 {
     internal class JsonSerializerInternalWriter : JsonSerializerInternalBase
     {
-        private Type? _rootType;
+        private Type _rootType;
         private int _rootLevel;
         private readonly List<object> _serializeStack = new List<object>();
 
@@ -30,63 +32,80 @@ namespace Simula.Scripting.Json.Serialization
         {
         }
 
-        public void Serialize(JsonWriter jsonWriter, object? value, Type? objectType)
+        public void Serialize(JsonWriter jsonWriter, object value, Type objectType)
         {
-            if (jsonWriter == null) {
+            if (jsonWriter == null)
+            {
                 throw new ArgumentNullException(nameof(jsonWriter));
             }
 
             _rootType = objectType;
             _rootLevel = _serializeStack.Count + 1;
 
-            JsonContract? contract = GetContractSafe(value);
+            JsonContract contract = GetContractSafe(value);
 
-            try {
-                if (ShouldWriteReference(value, null, contract, null, null)) {
-                    WriteReference(jsonWriter, value!);
-                } else {
+            try
+            {
+                if (ShouldWriteReference(value, null, contract, null, null))
+                {
+                    WriteReference(jsonWriter, value);
+                }
+                else
+                {
                     SerializeValue(jsonWriter, value, contract, null, null, null);
                 }
-            } catch (Exception ex) {
-                if (IsErrorHandled(null, contract, null, null, jsonWriter.Path, ex)) {
+            }
+            catch (Exception ex)
+            {
+                if (IsErrorHandled(null, contract, null, null, jsonWriter.Path, ex))
+                {
                     HandleError(jsonWriter, 0);
-                } else {
+                }
+                else
+                {
+                    // clear context in case serializer is being used inside a converter
+                    // if the converter wraps the error then not clearing the context will cause this error:
+                    // "Current error context error is different to requested error."
                     ClearErrorContext();
                     throw;
                 }
-            } finally {
+            }
+            finally
+            {
+                // clear root contract to ensure that if level was > 1 then it won't
+                // accidentally be used for non root values
                 _rootType = null;
             }
         }
 
         private JsonSerializerProxy GetInternalSerializer()
         {
-            if (InternalSerializer == null) {
+            if (InternalSerializer == null)
+            {
                 InternalSerializer = new JsonSerializerProxy(this);
             }
 
             return InternalSerializer;
         }
 
-        private JsonContract? GetContractSafe(object? value)
+        private JsonContract GetContractSafe(object value)
         {
-            if (value == null) {
+            if (value == null)
+            {
                 return null;
             }
 
-            return GetContract(value);
-        }
-
-        private JsonContract GetContract(object value)
-        {
             return Serializer._contractResolver.ResolveContract(value.GetType());
         }
 
-        private void SerializePrimitive(JsonWriter writer, object value, JsonPrimitiveContract contract, JsonProperty? member, JsonContainerContract? containerContract, JsonProperty? containerProperty)
+        private void SerializePrimitive(JsonWriter writer, object value, JsonPrimitiveContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerProperty)
         {
-            if (contract.TypeCode == PrimitiveTypeCode.Bytes) {
+            if (contract.TypeCode == PrimitiveTypeCode.Bytes)
+            {
+                // if type name handling is enabled then wrap the base64 byte string in an object with the type name
                 bool includeTypeDetails = ShouldWriteType(TypeNameHandling.Objects, contract, member, containerContract, containerProperty);
-                if (includeTypeDetails) {
+                if (includeTypeDetails)
+                {
                     writer.WriteStartObject();
                     WriteTypeProperty(writer, contract.CreatedType);
                     writer.WritePropertyName(JsonTypeReflector.ValuePropertyName, false);
@@ -101,16 +120,15 @@ namespace Simula.Scripting.Json.Serialization
             JsonWriter.WriteValue(writer, contract.TypeCode, value);
         }
 
-        private void SerializeValue(JsonWriter writer, object? value, JsonContract? valueContract, JsonProperty? member, JsonContainerContract? containerContract, JsonProperty? containerProperty)
+        private void SerializeValue(JsonWriter writer, object value, JsonContract valueContract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerProperty)
         {
-            if (value == null) {
+            if (value == null)
+            {
                 writer.WriteNull();
                 return;
             }
 
-            MiscellaneousUtils.Assert(valueContract != null);
-
-            JsonConverter? converter =
+            JsonConverter converter =
                 member?.Converter ??
                 containerProperty?.ItemConverter ??
                 containerContract?.ItemConverter ??
@@ -118,20 +136,25 @@ namespace Simula.Scripting.Json.Serialization
                 Serializer.GetMatchingConverter(valueContract.UnderlyingType) ??
                 valueContract.InternalConverter;
 
-            if (converter != null && converter.CanWrite) {
+            if (converter != null && converter.CanWrite)
+            {
                 SerializeConvertable(writer, converter, value, valueContract, containerContract, containerProperty);
                 return;
             }
 
-            switch (valueContract.ContractType) {
+            switch (valueContract.ContractType)
+            {
                 case JsonContractType.Object:
                     SerializeObject(writer, value, (JsonObjectContract)valueContract, member, containerContract, containerProperty);
                     break;
                 case JsonContractType.Array:
                     JsonArrayContract arrayContract = (JsonArrayContract)valueContract;
-                    if (!arrayContract.IsMultidimensionalArray) {
+                    if (!arrayContract.IsMultidimensionalArray)
+                    {
                         SerializeList(writer, (IEnumerable)value, arrayContract, member, containerContract, containerProperty);
-                    } else {
+                    }
+                    else
+                    {
                         SerializeMultidimensionalArray(writer, (Array)value, arrayContract, member, containerContract, containerProperty);
                     }
                     break;
@@ -143,7 +166,7 @@ namespace Simula.Scripting.Json.Serialization
                     break;
                 case JsonContractType.Dictionary:
                     JsonDictionaryContract dictionaryContract = (JsonDictionaryContract)valueContract;
-                    SerializeDictionary(writer, (value is IDictionary dictionary) ? dictionary : dictionaryContract.CreateWrapper(value), dictionaryContract, member, containerContract, containerProperty);
+                    SerializeDictionary(writer, (value is IDictionary) ? (IDictionary)value : dictionaryContract.CreateWrapper(value), dictionaryContract, member, containerContract, containerProperty);
                     break;
 #if HAVE_DYNAMIC
                 case JsonContractType.Dynamic:
@@ -161,94 +184,105 @@ namespace Simula.Scripting.Json.Serialization
             }
         }
 
-        private bool? ResolveIsReference(JsonContract contract, JsonProperty? property, JsonContainerContract? collectionContract, JsonProperty? containerProperty)
+        private bool? ResolveIsReference(JsonContract contract, JsonProperty property, JsonContainerContract collectionContract, JsonProperty containerProperty)
         {
             bool? isReference = null;
-            if (property != null) {
+
+            // value could be coming from a dictionary or array and not have a property
+            if (property != null)
+            {
                 isReference = property.IsReference;
             }
 
-            if (isReference == null && containerProperty != null) {
+            if (isReference == null && containerProperty != null)
+            {
                 isReference = containerProperty.ItemIsReference;
             }
 
-            if (isReference == null && collectionContract != null) {
+            if (isReference == null && collectionContract != null)
+            {
                 isReference = collectionContract.ItemIsReference;
             }
 
-            if (isReference == null) {
+            if (isReference == null)
+            {
                 isReference = contract.IsReference;
             }
 
             return isReference;
         }
 
-        private bool ShouldWriteReference(object? value, JsonProperty? property, JsonContract? valueContract, JsonContainerContract? collectionContract, JsonProperty? containerProperty)
+        private bool ShouldWriteReference(object value, JsonProperty property, JsonContract valueContract, JsonContainerContract collectionContract, JsonProperty containerProperty)
         {
-            if (value == null) {
+            if (value == null)
+            {
                 return false;
             }
-
-            MiscellaneousUtils.Assert(valueContract != null);
-
-            if (valueContract.ContractType == JsonContractType.Primitive || valueContract.ContractType == JsonContractType.String) {
+            if (valueContract.ContractType == JsonContractType.Primitive || valueContract.ContractType == JsonContractType.String)
+            {
                 return false;
             }
 
             bool? isReference = ResolveIsReference(valueContract, property, collectionContract, containerProperty);
 
-            if (isReference == null) {
-                if (valueContract.ContractType == JsonContractType.Array) {
+            if (isReference == null)
+            {
+                if (valueContract.ContractType == JsonContractType.Array)
+                {
                     isReference = HasFlag(Serializer._preserveReferencesHandling, PreserveReferencesHandling.Arrays);
-                } else {
+                }
+                else
+                {
                     isReference = HasFlag(Serializer._preserveReferencesHandling, PreserveReferencesHandling.Objects);
                 }
             }
 
-            if (!isReference.GetValueOrDefault()) {
+            if (!isReference.GetValueOrDefault())
+            {
                 return false;
             }
 
             return Serializer.GetReferenceResolver().IsReferenced(this, value);
         }
 
-        private bool ShouldWriteProperty(object? memberValue, JsonObjectContract? containerContract, JsonProperty property)
+        private bool ShouldWriteProperty(object memberValue, JsonProperty property)
         {
-            if (memberValue == null && ResolvedNullValueHandling(containerContract, property) == NullValueHandling.Ignore) {
+            if (property.NullValueHandling.GetValueOrDefault(Serializer._nullValueHandling) == NullValueHandling.Ignore &&
+                memberValue == null)
+            {
                 return false;
             }
 
             if (HasFlag(property.DefaultValueHandling.GetValueOrDefault(Serializer._defaultValueHandling), DefaultValueHandling.Ignore)
-                && MiscellaneousUtils.ValueEquals(memberValue, property.GetResolvedDefaultValue())) {
+                && MiscellaneousUtils.ValueEquals(memberValue, property.GetResolvedDefaultValue()))
+            {
                 return false;
             }
 
             return true;
         }
 
-        private bool CheckForCircularReference(JsonWriter writer, object? value, JsonProperty? property, JsonContract? contract, JsonContainerContract? containerContract, JsonProperty? containerProperty)
+        private bool CheckForCircularReference(JsonWriter writer, object value, JsonProperty property, JsonContract contract, JsonContainerContract containerContract, JsonProperty containerProperty)
         {
-            if (value == null) {
-                return true;
-            }
-
-            MiscellaneousUtils.Assert(contract != null);
-
-            if (contract.ContractType == JsonContractType.Primitive || contract.ContractType == JsonContractType.String) {
+            if (value == null || contract.ContractType == JsonContractType.Primitive || contract.ContractType == JsonContractType.String)
+            {
                 return true;
             }
 
             ReferenceLoopHandling? referenceLoopHandling = null;
 
-            if (property != null) {
+            if (property != null)
+            {
                 referenceLoopHandling = property.ReferenceLoopHandling;
             }
 
-            if (referenceLoopHandling == null && containerProperty != null) {
+            if (referenceLoopHandling == null && containerProperty != null)
+            {
                 referenceLoopHandling = containerProperty.ItemReferenceLoopHandling;
             }
 
-            if (referenceLoopHandling == null && containerContract != null) {
+            if (referenceLoopHandling == null && containerContract != null)
+            {
                 referenceLoopHandling = containerContract.ItemReferenceLoopHandling;
             }
 
@@ -256,24 +290,29 @@ namespace Simula.Scripting.Json.Serialization
                 ? _serializeStack.Contains(value, Serializer._equalityComparer)
                 : _serializeStack.Contains(value);
 
-            if (exists) {
+            if (exists)
+            {
                 string message = "Self referencing loop detected";
-                if (property != null) {
+                if (property != null)
+                {
                     message += " for property '{0}'".FormatWith(CultureInfo.InvariantCulture, property.PropertyName);
                 }
                 message += " with type '{0}'.".FormatWith(CultureInfo.InvariantCulture, value.GetType());
 
-                switch (referenceLoopHandling.GetValueOrDefault(Serializer._referenceLoopHandling)) {
+                switch (referenceLoopHandling.GetValueOrDefault(Serializer._referenceLoopHandling))
+                {
                     case ReferenceLoopHandling.Error:
                         throw JsonSerializationException.Create(null, writer.ContainerPath, message, null);
                     case ReferenceLoopHandling.Ignore:
-                        if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose) {
+                        if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
+                        {
                             TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(null, writer.Path, message + ". Skipping serializing self referenced value."), null);
                         }
 
                         return false;
                     case ReferenceLoopHandling.Serialize:
-                        if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose) {
+                        if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
+                        {
                             TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(null, writer.Path, message + ". Serializing self referenced value."), null);
                         }
 
@@ -288,7 +327,8 @@ namespace Simula.Scripting.Json.Serialization
         {
             string reference = GetReference(writer, value);
 
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info) {
+            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info)
+            {
                 TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(null, writer.Path, "Writing object reference to Id '{0}' for {1}.".FormatWith(CultureInfo.InvariantCulture, reference, value.GetType())), null);
             }
 
@@ -300,33 +340,41 @@ namespace Simula.Scripting.Json.Serialization
 
         private string GetReference(JsonWriter writer, object value)
         {
-            try {
+            try
+            {
                 string reference = Serializer.GetReferenceResolver().GetReference(this, value);
 
                 return reference;
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 throw JsonSerializationException.Create(null, writer.ContainerPath, "Error writing object reference for '{0}'.".FormatWith(CultureInfo.InvariantCulture, value.GetType()), ex);
             }
         }
 
-        internal static bool TryConvertToString(object value, Type type, [NotNullWhen(true)] out string? s)
+        internal static bool TryConvertToString(object value, Type type, out string s)
         {
 #if HAVE_TYPE_DESCRIPTOR
-            if (JsonTypeReflector.CanTypeDescriptorConvertString(type, out TypeConverter converter)) {
+            TypeConverter converter;
+            if (JsonTypeReflector.CanTypeDescriptorConvertString(type, out converter))
+            {
                 s = converter.ConvertToInvariantString(value);
                 return true;
             }
 #endif
 
 #if (DOTNET || PORTABLE)
-            if (value is Guid || value is Uri || value is TimeSpan) {
+            if (value is Guid || value is Uri || value is TimeSpan)
+            {
                 s = value.ToString();
                 return true;
             }
 #endif
 
-            if (value is Type t) {
-                s = t.AssemblyQualifiedName;
+            type = value as Type;
+            if (type != null)
+            {
+                s = type.AssemblyQualifiedName;
                 return true;
             }
 
@@ -338,7 +386,8 @@ namespace Simula.Scripting.Json.Serialization
         {
             OnSerializing(writer, contract, value);
 
-            TryConvertToString(value, contract.UnderlyingType, out string? s);
+            string s;
+            TryConvertToString(value, contract.UnderlyingType, out s);
             writer.WriteValue(s);
 
             OnSerialized(writer, contract, value);
@@ -346,7 +395,8 @@ namespace Simula.Scripting.Json.Serialization
 
         private void OnSerializing(JsonWriter writer, JsonContract contract, object value)
         {
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info) {
+            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info)
+            {
                 TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(null, writer.Path, "Started serializing {0}".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType)), null);
             }
 
@@ -355,14 +405,15 @@ namespace Simula.Scripting.Json.Serialization
 
         private void OnSerialized(JsonWriter writer, JsonContract contract, object value)
         {
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info) {
+            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info)
+            {
                 TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(null, writer.Path, "Finished serializing {0}".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType)), null);
             }
 
             contract.InvokeOnSerialized(value, Serializer._context);
         }
 
-        private void SerializeObject(JsonWriter writer, object value, JsonObjectContract contract, JsonProperty? member, JsonContainerContract? collectionContract, JsonProperty? containerProperty)
+        private void SerializeObject(JsonWriter writer, object value, JsonObjectContract contract, JsonProperty member, JsonContainerContract collectionContract, JsonProperty containerProperty)
         {
             OnSerializing(writer, contract, value);
 
@@ -372,41 +423,59 @@ namespace Simula.Scripting.Json.Serialization
 
             int initialDepth = writer.Top;
 
-            for (int index = 0; index < contract.Properties.Count; index++) {
+            for (int index = 0; index < contract.Properties.Count; index++)
+            {
                 JsonProperty property = contract.Properties[index];
-                try {
-                    if (!CalculatePropertyValues(writer, value, contract, member, property, out JsonContract? memberContract, out object? memberValue)) {
+                try
+                {
+                    object memberValue;
+                    JsonContract memberContract;
+
+                    if (!CalculatePropertyValues(writer, value, contract, member, property, out memberContract, out memberValue))
+                    {
                         continue;
                     }
 
                     property.WritePropertyName(writer);
                     SerializeValue(writer, memberValue, memberContract, property, contract, member);
-                } catch (Exception ex) {
-                    if (IsErrorHandled(value, contract, property.PropertyName, null, writer.ContainerPath, ex)) {
+                }
+                catch (Exception ex)
+                {
+                    if (IsErrorHandled(value, contract, property.PropertyName, null, writer.ContainerPath, ex))
+                    {
                         HandleError(writer, initialDepth);
-                    } else {
+                    }
+                    else
+                    {
                         throw;
                     }
                 }
             }
 
-            IEnumerable<KeyValuePair<object, object>>? extensionData = contract.ExtensionDataGetter?.Invoke(value);
-            if (extensionData != null) {
-                foreach (KeyValuePair<object, object> e in extensionData) {
-                    JsonContract keyContract = GetContract(e.Key);
-                    JsonContract? valueContract = GetContractSafe(e.Value);
+            IEnumerable<KeyValuePair<object, object>> extensionData = contract.ExtensionDataGetter?.Invoke(value);
+            if (extensionData != null)
+            {
+                foreach (KeyValuePair<object, object> e in extensionData)
+                {
+                    JsonContract keyContract = GetContractSafe(e.Key);
+                    JsonContract valueContract = GetContractSafe(e.Value);
 
-                    string propertyName = GetPropertyName(writer, e.Key, keyContract, out _);
+                    bool escape;
+                    string propertyName = GetPropertyName(writer, e.Key, keyContract, out escape);
 
                     propertyName = (contract.ExtensionDataNameResolver != null)
                         ? contract.ExtensionDataNameResolver(propertyName)
                         : propertyName;
 
-                    if (ShouldWriteReference(e.Value, null, valueContract, contract, member)) {
+                    if (ShouldWriteReference(e.Value, null, valueContract, contract, member))
+                    {
                         writer.WritePropertyName(propertyName);
-                        WriteReference(writer, e.Value!);
-                    } else {
-                        if (!CheckForCircularReference(writer, e.Value, null, valueContract, contract, member)) {
+                        WriteReference(writer, e.Value);
+                    }
+                    else
+                    {
+                        if (!CheckForCircularReference(writer, e.Value, null, valueContract, contract, member))
+                        {
                             continue;
                         }
 
@@ -424,34 +493,42 @@ namespace Simula.Scripting.Json.Serialization
             OnSerialized(writer, contract, value);
         }
 
-        private bool CalculatePropertyValues(JsonWriter writer, object value, JsonContainerContract contract, JsonProperty? member, JsonProperty property, [NotNullWhen(true)] out JsonContract? memberContract, [NotNullWhen(true)] out object? memberValue)
+        private bool CalculatePropertyValues(JsonWriter writer, object value, JsonContainerContract contract, JsonProperty member, JsonProperty property, out JsonContract memberContract, out object memberValue)
         {
-            if (!property.Ignored && property.Readable && ShouldSerialize(writer, property, value) && IsSpecified(writer, property, value)) {
-                if (property.PropertyContract == null) {
-                    property.PropertyContract = Serializer._contractResolver.ResolveContract(property.PropertyType!);
+            if (!property.Ignored && property.Readable && ShouldSerialize(writer, property, value) && IsSpecified(writer, property, value))
+            {
+                if (property.PropertyContract == null)
+                {
+                    property.PropertyContract = Serializer._contractResolver.ResolveContract(property.PropertyType);
                 }
 
-                memberValue = property.ValueProvider!.GetValue(value);
+                memberValue = property.ValueProvider.GetValue(value);
                 memberContract = (property.PropertyContract.IsSealed) ? property.PropertyContract : GetContractSafe(memberValue);
 
-                if (ShouldWriteProperty(memberValue, contract as JsonObjectContract, property)) {
-                    if (ShouldWriteReference(memberValue, property, memberContract!, contract, member)) {
+                if (ShouldWriteProperty(memberValue, property))
+                {
+                    if (ShouldWriteReference(memberValue, property, memberContract, contract, member))
+                    {
                         property.WritePropertyName(writer);
-                        WriteReference(writer, memberValue!);
+                        WriteReference(writer, memberValue);
                         return false;
                     }
 
-                    if (!CheckForCircularReference(writer, memberValue, property, memberContract!, contract, member)) {
+                    if (!CheckForCircularReference(writer, memberValue, property, memberContract, contract, member))
+                    {
                         return false;
                     }
 
-                    if (memberValue == null) {
-                        JsonObjectContract? objectContract = contract as JsonObjectContract;
+                    if (memberValue == null)
+                    {
+                        JsonObjectContract objectContract = contract as JsonObjectContract;
                         Required resolvedRequired = property._required ?? objectContract?.ItemRequired ?? Required.Default;
-                        if (resolvedRequired == Required.Always) {
+                        if (resolvedRequired == Required.Always)
+                        {
                             throw JsonSerializationException.Create(null, writer.ContainerPath, "Cannot write a null value for property '{0}'. Property requires a value.".FormatWith(CultureInfo.InvariantCulture, property.PropertyName), null);
                         }
-                        if (resolvedRequired == Required.DisallowNull) {
+                        if (resolvedRequired == Required.DisallowNull)
+                        {
                             throw JsonSerializationException.Create(null, writer.ContainerPath, "Cannot write a null value for property '{0}'. Property requires a non-null value.".FormatWith(CultureInfo.InvariantCulture, property.PropertyName), null);
                         }
                     }
@@ -465,33 +542,39 @@ namespace Simula.Scripting.Json.Serialization
             return false;
         }
 
-        private void WriteObjectStart(JsonWriter writer, object value, JsonContract contract, JsonProperty? member, JsonContainerContract? collectionContract, JsonProperty? containerProperty)
+        private void WriteObjectStart(JsonWriter writer, object value, JsonContract contract, JsonProperty member, JsonContainerContract collectionContract, JsonProperty containerProperty)
         {
             writer.WriteStartObject();
 
             bool isReference = ResolveIsReference(contract, member, collectionContract, containerProperty) ?? HasFlag(Serializer._preserveReferencesHandling, PreserveReferencesHandling.Objects);
-            if (isReference && (member == null || member.Writable || HasCreatorParameter(collectionContract, member))) {
+            // don't make readonly fields that aren't creator parameters the referenced value because they can't be deserialized to
+            if (isReference && (member == null || member.Writable || HasCreatorParameter(collectionContract, member)))
+            {
                 WriteReferenceIdProperty(writer, contract.UnderlyingType, value);
             }
-            if (ShouldWriteType(TypeNameHandling.Objects, contract, member, collectionContract, containerProperty)) {
+            if (ShouldWriteType(TypeNameHandling.Objects, contract, member, collectionContract, containerProperty))
+            {
                 WriteTypeProperty(writer, contract.UnderlyingType);
             }
         }
 
-        private bool HasCreatorParameter(JsonContainerContract? contract, JsonProperty property)
+        private bool HasCreatorParameter(JsonContainerContract contract, JsonProperty property)
         {
-            if (!(contract is JsonObjectContract objectContract)) {
+            JsonObjectContract objectContract = contract as JsonObjectContract;
+            if (objectContract == null)
+            {
                 return false;
             }
 
-            return objectContract.CreatorParameters.Contains(property.PropertyName!);
+            return objectContract.CreatorParameters.Contains(property.PropertyName);
         }
 
         private void WriteReferenceIdProperty(JsonWriter writer, Type type, object value)
         {
             string reference = GetReference(writer, value);
 
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose) {
+            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
+            {
                 TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(null, writer.Path, "Writing object reference Id '{0}' for {1}.".FormatWith(CultureInfo.InvariantCulture, reference, type)), null);
             }
 
@@ -503,7 +586,8 @@ namespace Simula.Scripting.Json.Serialization
         {
             string typeName = ReflectionUtils.GetTypeName(type, Serializer._typeNameAssemblyFormatHandling, Serializer._serializationBinder);
 
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose) {
+            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
+            {
                 TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(null, writer.Path, "Writing type name '{0}' for {1}.".FormatWith(CultureInfo.InvariantCulture, typeName, type)), null);
             }
 
@@ -526,24 +610,30 @@ namespace Simula.Scripting.Json.Serialization
             return ((value & flag) == flag);
         }
 
-        private void SerializeConvertable(JsonWriter writer, JsonConverter converter, object value, JsonContract contract, JsonContainerContract? collectionContract, JsonProperty? containerProperty)
+        private void SerializeConvertable(JsonWriter writer, JsonConverter converter, object value, JsonContract contract, JsonContainerContract collectionContract, JsonProperty containerProperty)
         {
-            if (ShouldWriteReference(value, null, contract, collectionContract, containerProperty)) {
+            if (ShouldWriteReference(value, null, contract, collectionContract, containerProperty))
+            {
                 WriteReference(writer, value);
-            } else {
-                if (!CheckForCircularReference(writer, value, null, contract, collectionContract, containerProperty)) {
+            }
+            else
+            {
+                if (!CheckForCircularReference(writer, value, null, contract, collectionContract, containerProperty))
+                {
                     return;
                 }
 
                 _serializeStack.Add(value);
 
-                if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info) {
+                if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info)
+                {
                     TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(null, writer.Path, "Started serializing {0} with converter {1}.".FormatWith(CultureInfo.InvariantCulture, value.GetType(), converter.GetType())), null);
                 }
 
                 converter.WriteJson(writer, value, GetInternalSerializer());
 
-                if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info) {
+                if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info)
+                {
                     TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(null, writer.Path, "Finished serializing {0} with converter {1}.".FormatWith(CultureInfo.InvariantCulture, value.GetType(), converter.GetType())), null);
                 }
 
@@ -551,9 +641,10 @@ namespace Simula.Scripting.Json.Serialization
             }
         }
 
-        private void SerializeList(JsonWriter writer, IEnumerable values, JsonArrayContract contract, JsonProperty? member, JsonContainerContract? collectionContract, JsonProperty? containerProperty)
+        private void SerializeList(JsonWriter writer, IEnumerable values, JsonArrayContract contract, JsonProperty member, JsonContainerContract collectionContract, JsonProperty containerProperty)
         {
-            object underlyingList = values is IWrappedCollection wrappedCollection ? wrappedCollection.UnderlyingCollection : values;
+            IWrappedCollection wrappedCollection = values as IWrappedCollection;
+            object underlyingList = wrappedCollection != null ? wrappedCollection.UnderlyingCollection : values;
 
             OnSerializing(writer, contract, underlyingList);
 
@@ -566,31 +657,46 @@ namespace Simula.Scripting.Json.Serialization
             int initialDepth = writer.Top;
 
             int index = 0;
-            foreach (object value in values) {
-                try {
-                    JsonContract? valueContract = contract.FinalItemContract ?? GetContractSafe(value);
+            // note that an error in the IEnumerable won't be caught
+            foreach (object value in values)
+            {
+                try
+                {
+                    JsonContract valueContract = contract.FinalItemContract ?? GetContractSafe(value);
 
-                    if (ShouldWriteReference(value, null, valueContract, contract, member)) {
+                    if (ShouldWriteReference(value, null, valueContract, contract, member))
+                    {
                         WriteReference(writer, value);
-                    } else {
-                        if (CheckForCircularReference(writer, value, null, valueContract, contract, member)) {
+                    }
+                    else
+                    {
+                        if (CheckForCircularReference(writer, value, null, valueContract, contract, member))
+                        {
                             SerializeValue(writer, value, valueContract, null, contract, member);
                         }
                     }
-                } catch (Exception ex) {
-                    if (IsErrorHandled(underlyingList, contract, index, null, writer.ContainerPath, ex)) {
+                }
+                catch (Exception ex)
+                {
+                    if (IsErrorHandled(underlyingList, contract, index, null, writer.ContainerPath, ex))
+                    {
                         HandleError(writer, initialDepth);
-                    } else {
+                    }
+                    else
+                    {
                         throw;
                     }
-                } finally {
+                }
+                finally
+                {
                     index++;
                 }
             }
 
             writer.WriteEndArray();
 
-            if (hasWrittenMetadataObject) {
+            if (hasWrittenMetadataObject)
+            {
                 writer.WriteEndObject();
             }
 
@@ -599,7 +705,7 @@ namespace Simula.Scripting.Json.Serialization
             OnSerialized(writer, contract, underlyingList);
         }
 
-        private void SerializeMultidimensionalArray(JsonWriter writer, Array values, JsonArrayContract contract, JsonProperty? member, JsonContainerContract? collectionContract, JsonProperty? containerProperty)
+        private void SerializeMultidimensionalArray(JsonWriter writer, Array values, JsonArrayContract contract, JsonProperty member, JsonContainerContract collectionContract, JsonProperty containerProperty)
         {
             OnSerializing(writer, contract, values);
 
@@ -609,7 +715,8 @@ namespace Simula.Scripting.Json.Serialization
 
             SerializeMultidimensionalArray(writer, values, contract, member, writer.Top, CollectionUtils.ArrayEmpty<int>());
 
-            if (hasWrittenMetadataObject) {
+            if (hasWrittenMetadataObject)
+            {
                 writer.WriteEndObject();
             }
 
@@ -618,41 +725,56 @@ namespace Simula.Scripting.Json.Serialization
             OnSerialized(writer, contract, values);
         }
 
-        private void SerializeMultidimensionalArray(JsonWriter writer, Array values, JsonArrayContract contract, JsonProperty? member, int initialDepth, int[] indices)
+        private void SerializeMultidimensionalArray(JsonWriter writer, Array values, JsonArrayContract contract, JsonProperty member, int initialDepth, int[] indices)
         {
             int dimension = indices.Length;
             int[] newIndices = new int[dimension + 1];
-            for (int i = 0; i < dimension; i++) {
+            for (int i = 0; i < dimension; i++)
+            {
                 newIndices[i] = indices[i];
             }
 
             writer.WriteStartArray();
 
-            for (int i = values.GetLowerBound(dimension); i <= values.GetUpperBound(dimension); i++) {
+            for (int i = values.GetLowerBound(dimension); i <= values.GetUpperBound(dimension); i++)
+            {
                 newIndices[dimension] = i;
                 bool isTopLevel = (newIndices.Length == values.Rank);
 
-                if (isTopLevel) {
+                if (isTopLevel)
+                {
                     object value = values.GetValue(newIndices);
 
-                    try {
-                        JsonContract? valueContract = contract.FinalItemContract ?? GetContractSafe(value);
+                    try
+                    {
+                        JsonContract valueContract = contract.FinalItemContract ?? GetContractSafe(value);
 
-                        if (ShouldWriteReference(value, null, valueContract, contract, member)) {
+                        if (ShouldWriteReference(value, null, valueContract, contract, member))
+                        {
                             WriteReference(writer, value);
-                        } else {
-                            if (CheckForCircularReference(writer, value, null, valueContract, contract, member)) {
+                        }
+                        else
+                        {
+                            if (CheckForCircularReference(writer, value, null, valueContract, contract, member))
+                            {
                                 SerializeValue(writer, value, valueContract, null, contract, member);
                             }
                         }
-                    } catch (Exception ex) {
-                        if (IsErrorHandled(values, contract, i, null, writer.ContainerPath, ex)) {
+                    }
+                    catch (Exception ex)
+                    {
+                        if (IsErrorHandled(values, contract, i, null, writer.ContainerPath, ex))
+                        {
                             HandleError(writer, initialDepth + 1);
-                        } else {
+                        }
+                        else
+                        {
                             throw;
                         }
                     }
-                } else {
+                }
+                else
+                {
                     SerializeMultidimensionalArray(writer, values, contract, member, initialDepth + 1, newIndices);
                 }
             }
@@ -660,27 +782,32 @@ namespace Simula.Scripting.Json.Serialization
             writer.WriteEndArray();
         }
 
-        private bool WriteStartArray(JsonWriter writer, object values, JsonArrayContract contract, JsonProperty? member, JsonContainerContract? containerContract, JsonProperty? containerProperty)
+        private bool WriteStartArray(JsonWriter writer, object values, JsonArrayContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerProperty)
         {
             bool isReference = ResolveIsReference(contract, member, containerContract, containerProperty) ?? HasFlag(Serializer._preserveReferencesHandling, PreserveReferencesHandling.Arrays);
+            // don't make readonly fields that aren't creator parameters the referenced value because they can't be deserialized to
             isReference = (isReference && (member == null || member.Writable || HasCreatorParameter(containerContract, member)));
 
             bool includeTypeDetails = ShouldWriteType(TypeNameHandling.Arrays, contract, member, containerContract, containerProperty);
             bool writeMetadataObject = isReference || includeTypeDetails;
 
-            if (writeMetadataObject) {
+            if (writeMetadataObject)
+            {
                 writer.WriteStartObject();
 
-                if (isReference) {
+                if (isReference)
+                {
                     WriteReferenceIdProperty(writer, contract.UnderlyingType, values);
                 }
-                if (includeTypeDetails) {
+                if (includeTypeDetails)
+                {
                     WriteTypeProperty(writer, values.GetType());
                 }
                 writer.WritePropertyName(JsonTypeReflector.ArrayValuesPropertyName, false);
             }
 
-            if (contract.ItemContract == null) {
+            if (contract.ItemContract == null)
+            {
                 contract.ItemContract = Serializer._contractResolver.ResolveContract(contract.CollectionItemType ?? typeof(object));
             }
 
@@ -691,7 +818,7 @@ namespace Simula.Scripting.Json.Serialization
 #if HAVE_SECURITY_SAFE_CRITICAL_ATTRIBUTE
         [SecuritySafeCritical]
 #endif
-        private void SerializeISerializable(JsonWriter writer, ISerializable value, JsonISerializableContract contract, JsonProperty? member, JsonContainerContract? collectionContract, JsonProperty? containerProperty)
+        private void SerializeISerializable(JsonWriter writer, ISerializable value, JsonISerializableContract contract, JsonProperty member, JsonContainerContract collectionContract, JsonProperty containerProperty)
         {
             if (!JsonTypeReflector.FullyTrusted)
             {
@@ -712,7 +839,7 @@ namespace Simula.Scripting.Json.Serialization
 
             foreach (SerializationEntry serializationEntry in serializationInfo)
             {
-                JsonContract? valueContract = GetContractSafe(serializationEntry.Value);
+                JsonContract valueContract = GetContractSafe(serializationEntry.Value);
 
                 if (ShouldWriteReference(serializationEntry.Value, null, valueContract, contract, member))
                 {
@@ -734,7 +861,7 @@ namespace Simula.Scripting.Json.Serialization
 #endif
 
 #if HAVE_DYNAMIC
-        private void SerializeDynamic(JsonWriter writer, IDynamicMetaObjectProvider value, JsonDynamicContract contract, JsonProperty? member, JsonContainerContract? collectionContract, JsonProperty? containerProperty)
+        private void SerializeDynamic(JsonWriter writer, IDynamicMetaObjectProvider value, JsonDynamicContract contract, JsonProperty member, JsonContainerContract collectionContract, JsonProperty containerProperty)
         {
             OnSerializing(writer, contract, value);
             _serializeStack.Add(value);
@@ -743,36 +870,56 @@ namespace Simula.Scripting.Json.Serialization
 
             int initialDepth = writer.Top;
 
-            for (int index = 0; index < contract.Properties.Count; index++) {
+            for (int index = 0; index < contract.Properties.Count; index++)
+            {
                 JsonProperty property = contract.Properties[index];
-                if (property.HasMemberAttribute) {
-                    try {
-                        if (!CalculatePropertyValues(writer, value, contract, member, property, out JsonContract? memberContract, out object? memberValue)) {
+
+                // only write non-dynamic properties that have an explicit attribute
+                if (property.HasMemberAttribute)
+                {
+                    try
+                    {
+                        object memberValue;
+                        JsonContract memberContract;
+
+                        if (!CalculatePropertyValues(writer, value, contract, member, property, out memberContract, out memberValue))
+                        {
                             continue;
                         }
 
                         property.WritePropertyName(writer);
                         SerializeValue(writer, memberValue, memberContract, property, contract, member);
-                    } catch (Exception ex) {
-                        if (IsErrorHandled(value, contract, property.PropertyName, null, writer.ContainerPath, ex)) {
+                    }
+                    catch (Exception ex)
+                    {
+                        if (IsErrorHandled(value, contract, property.PropertyName, null, writer.ContainerPath, ex))
+                        {
                             HandleError(writer, initialDepth);
-                        } else {
+                        }
+                        else
+                        {
                             throw;
                         }
                     }
                 }
             }
 
-            foreach (string memberName in value.GetDynamicMemberNames()) {
-                if (contract.TryGetMember(value, memberName, out object? memberValue)) {
-                    try {
-                        JsonContract? valueContract = GetContractSafe(memberValue);
+            foreach (string memberName in value.GetDynamicMemberNames())
+            {
+                object memberValue;
+                if (contract.TryGetMember(value, memberName, out memberValue))
+                {
+                    try
+                    {
+                        JsonContract valueContract = GetContractSafe(memberValue);
 
-                        if (!ShouldWriteDynamicProperty(memberValue)) {
+                        if (!ShouldWriteDynamicProperty(memberValue))
+                        {
                             continue;
                         }
 
-                        if (CheckForCircularReference(writer, memberValue, null, valueContract, contract, member)) {
+                        if (CheckForCircularReference(writer, memberValue, null, valueContract, contract, member))
+                        {
                             string resolvedPropertyName = (contract.PropertyNameResolver != null)
                                 ? contract.PropertyNameResolver(memberName)
                                 : memberName;
@@ -780,10 +927,15 @@ namespace Simula.Scripting.Json.Serialization
                             writer.WritePropertyName(resolvedPropertyName);
                             SerializeValue(writer, memberValue, valueContract, null, contract, member);
                         }
-                    } catch (Exception ex) {
-                        if (IsErrorHandled(value, contract, memberName, null, writer.ContainerPath, ex)) {
+                    }
+                    catch (Exception ex)
+                    {
+                        if (IsErrorHandled(value, contract, memberName, null, writer.ContainerPath, ex))
+                        {
                             HandleError(writer, initialDepth);
-                        } else {
+                        }
+                        else
+                        {
                             throw;
                         }
                     }
@@ -797,21 +949,23 @@ namespace Simula.Scripting.Json.Serialization
         }
 #endif
 
-        private bool ShouldWriteDynamicProperty(object? memberValue)
+        private bool ShouldWriteDynamicProperty(object memberValue)
         {
-            if (Serializer._nullValueHandling == NullValueHandling.Ignore && memberValue == null) {
+            if (Serializer._nullValueHandling == NullValueHandling.Ignore && memberValue == null)
+            {
                 return false;
             }
 
             if (HasFlag(Serializer._defaultValueHandling, DefaultValueHandling.Ignore) &&
-                (memberValue == null || MiscellaneousUtils.ValueEquals(memberValue, ReflectionUtils.GetDefaultValue(memberValue.GetType())))) {
+                (memberValue == null || MiscellaneousUtils.ValueEquals(memberValue, ReflectionUtils.GetDefaultValue(memberValue.GetType()))))
+            {
                 return false;
             }
 
             return true;
         }
 
-        private bool ShouldWriteType(TypeNameHandling typeNameHandlingFlag, JsonContract contract, JsonProperty? member, JsonContainerContract? containerContract, JsonProperty? containerProperty)
+        private bool ShouldWriteType(TypeNameHandling typeNameHandlingFlag, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerProperty)
         {
             TypeNameHandling resolvedTypeNameHandling =
                 member?.TypeNameHandling
@@ -819,22 +973,34 @@ namespace Simula.Scripting.Json.Serialization
                 ?? containerContract?.ItemTypeNameHandling
                 ?? Serializer._typeNameHandling;
 
-            if (HasFlag(resolvedTypeNameHandling, typeNameHandlingFlag)) {
+            if (HasFlag(resolvedTypeNameHandling, typeNameHandlingFlag))
+            {
                 return true;
             }
-            if (HasFlag(resolvedTypeNameHandling, TypeNameHandling.Auto)) {
-                if (member != null) {
-                    if (contract.NonNullableUnderlyingType != member.PropertyContract!.CreatedType) {
+
+            // instance type and the property's type's contract default type are different (no need to put the type in JSON because the type will be created by default)
+            if (HasFlag(resolvedTypeNameHandling, TypeNameHandling.Auto))
+            {
+                if (member != null)
+                {
+                    if (contract.NonNullableUnderlyingType != member.PropertyContract.CreatedType)
+                    {
                         return true;
                     }
-                } else if (containerContract != null) {
-                    if (containerContract.ItemContract == null || contract.NonNullableUnderlyingType != containerContract.ItemContract.CreatedType) {
+                }
+                else if (containerContract != null)
+                {
+                    if (containerContract.ItemContract == null || contract.NonNullableUnderlyingType != containerContract.ItemContract.CreatedType)
+                    {
                         return true;
                     }
-                } else if (_rootType != null && _serializeStack.Count == _rootLevel) {
+                }
+                else if (_rootType != null && _serializeStack.Count == _rootLevel)
+                {
                     JsonContract rootContract = Serializer._contractResolver.ResolveContract(_rootType);
 
-                    if (contract.NonNullableUnderlyingType != rootContract.CreatedType) {
+                    if (contract.NonNullableUnderlyingType != rootContract.CreatedType)
+                    {
                         return true;
                     }
                 }
@@ -843,45 +1009,57 @@ namespace Simula.Scripting.Json.Serialization
             return false;
         }
 
-        private void SerializeDictionary(JsonWriter writer, IDictionary values, JsonDictionaryContract contract, JsonProperty? member, JsonContainerContract? collectionContract, JsonProperty? containerProperty)
+        private void SerializeDictionary(JsonWriter writer, IDictionary values, JsonDictionaryContract contract, JsonProperty member, JsonContainerContract collectionContract, JsonProperty containerProperty)
         {
-#pragma warning disable CS8600, CS8602, CS8604
-            object underlyingDictionary = values is IWrappedDictionary wrappedDictionary ? wrappedDictionary.UnderlyingDictionary : values;
+            IWrappedDictionary wrappedDictionary = values as IWrappedDictionary;
+            object underlyingDictionary = wrappedDictionary != null ? wrappedDictionary.UnderlyingDictionary : values;
 
             OnSerializing(writer, contract, underlyingDictionary);
             _serializeStack.Add(underlyingDictionary);
 
             WriteObjectStart(writer, underlyingDictionary, contract, member, collectionContract, containerProperty);
 
-            if (contract.ItemContract == null) {
+            if (contract.ItemContract == null)
+            {
                 contract.ItemContract = Serializer._contractResolver.ResolveContract(contract.DictionaryValueType ?? typeof(object));
             }
 
-            if (contract.KeyContract == null) {
+            if (contract.KeyContract == null)
+            {
                 contract.KeyContract = Serializer._contractResolver.ResolveContract(contract.DictionaryKeyType ?? typeof(object));
             }
 
             int initialDepth = writer.Top;
+
+            // Manual use of IDictionaryEnumerator instead of foreach to avoid DictionaryEntry box allocations.
             IDictionaryEnumerator e = values.GetEnumerator();
-            try {
-                while (e.MoveNext()) {
+            try
+            {
+                while (e.MoveNext())
+                {
                     DictionaryEntry entry = e.Entry;
 
-                    string propertyName = GetPropertyName(writer, entry.Key, contract.KeyContract, out bool escape);
+                    bool escape;
+                    string propertyName = GetPropertyName(writer, entry.Key, contract.KeyContract, out escape);
 
                     propertyName = (contract.DictionaryKeyResolver != null)
                         ? contract.DictionaryKeyResolver(propertyName)
                         : propertyName;
 
-                    try {
+                    try
+                    {
                         object value = entry.Value;
-                        JsonContract? valueContract = contract.FinalItemContract ?? GetContractSafe(value);
+                        JsonContract valueContract = contract.FinalItemContract ?? GetContractSafe(value);
 
-                        if (ShouldWriteReference(value, null, valueContract, contract, member)) {
+                        if (ShouldWriteReference(value, null, valueContract, contract, member))
+                        {
                             writer.WritePropertyName(propertyName, escape);
                             WriteReference(writer, value);
-                        } else {
-                            if (!CheckForCircularReference(writer, value, null, valueContract, contract, member)) {
+                        }
+                        else
+                        {
+                            if (!CheckForCircularReference(writer, value, null, valueContract, contract, member))
+                            {
                                 continue;
                             }
 
@@ -889,15 +1067,22 @@ namespace Simula.Scripting.Json.Serialization
 
                             SerializeValue(writer, value, valueContract, null, contract, member);
                         }
-                    } catch (Exception ex) {
-                        if (IsErrorHandled(underlyingDictionary, contract, propertyName, null, writer.ContainerPath, ex)) {
+                    }
+                    catch (Exception ex)
+                    {
+                        if (IsErrorHandled(underlyingDictionary, contract, propertyName, null, writer.ContainerPath, ex))
+                        {
                             HandleError(writer, initialDepth);
-                        } else {
+                        }
+                        else
+                        {
                             throw;
                         }
                     }
                 }
-            } finally {
+            }
+            finally
+            {
                 (e as IDisposable)?.Dispose();
             }
 
@@ -906,60 +1091,67 @@ namespace Simula.Scripting.Json.Serialization
             _serializeStack.RemoveAt(_serializeStack.Count - 1);
 
             OnSerialized(writer, contract, underlyingDictionary);
-#pragma warning restore CS8600, CS8602, CS8604
         }
 
         private string GetPropertyName(JsonWriter writer, object name, JsonContract contract, out bool escape)
         {
-            if (contract.ContractType == JsonContractType.Primitive) {
-                JsonPrimitiveContract primitiveContract = (JsonPrimitiveContract)contract;
-                switch (primitiveContract.TypeCode) {
-                    case PrimitiveTypeCode.DateTime:
-                    case PrimitiveTypeCode.DateTimeNullable: {
-                            DateTime dt = DateTimeUtils.EnsureDateTime((DateTime)name, writer.DateTimeZoneHandling);
+            string propertyName;
 
-                            escape = false;
-                            StringWriter sw = new StringWriter(CultureInfo.InvariantCulture);
-                            DateTimeUtils.WriteDateTimeString(sw, dt, writer.DateFormatHandling, writer.DateFormatString, writer.Culture);
-                            return sw.ToString();
-                        }
+            if (contract.ContractType == JsonContractType.Primitive)
+            {
+                JsonPrimitiveContract primitiveContract = (JsonPrimitiveContract)contract;
+                switch (primitiveContract.TypeCode)
+                {
+                    case PrimitiveTypeCode.DateTime:
+                    case PrimitiveTypeCode.DateTimeNullable:
+                    {
+                        DateTime dt = DateTimeUtils.EnsureDateTime((DateTime)name, writer.DateTimeZoneHandling);
+
+                        escape = false;
+                        StringWriter sw = new StringWriter(CultureInfo.InvariantCulture);
+                        DateTimeUtils.WriteDateTimeString(sw, dt, writer.DateFormatHandling, writer.DateFormatString, writer.Culture);
+                        return sw.ToString();
+                    }
 #if HAVE_DATE_TIME_OFFSET
                     case PrimitiveTypeCode.DateTimeOffset:
-                    case PrimitiveTypeCode.DateTimeOffsetNullable: {
-                            escape = false;
-                            StringWriter sw = new StringWriter(CultureInfo.InvariantCulture);
-                            DateTimeUtils.WriteDateTimeOffsetString(sw, (DateTimeOffset)name, writer.DateFormatHandling, writer.DateFormatString, writer.Culture);
-                            return sw.ToString();
-                        }
+                    case PrimitiveTypeCode.DateTimeOffsetNullable:
+                    {
+                        escape = false;
+                        StringWriter sw = new StringWriter(CultureInfo.InvariantCulture);
+                        DateTimeUtils.WriteDateTimeOffsetString(sw, (DateTimeOffset)name, writer.DateFormatHandling, writer.DateFormatString, writer.Culture);
+                        return sw.ToString();
+                    }
 #endif
                     case PrimitiveTypeCode.Double:
-                    case PrimitiveTypeCode.DoubleNullable: {
-                            double d = (double)name;
+                    case PrimitiveTypeCode.DoubleNullable:
+                    {
+                        double d = (double)name;
 
-                            escape = false;
-                            return d.ToString("R", CultureInfo.InvariantCulture);
-                        }
+                        escape = false;
+                        return d.ToString("R", CultureInfo.InvariantCulture);
+                    }
                     case PrimitiveTypeCode.Single:
-                    case PrimitiveTypeCode.SingleNullable: {
-                            float f = (float)name;
+                    case PrimitiveTypeCode.SingleNullable:
+                    {
+                        float f = (float)name;
 
-                            escape = false;
-                            return f.ToString("R", CultureInfo.InvariantCulture);
-                        }
-                    default: {
-                            escape = true;
-
-                            if (primitiveContract.IsEnum && EnumUtils.TryToString(primitiveContract.NonNullableUnderlyingType, name, null, out string? enumName)) {
-                                return enumName;
-                            }
-
-                            return Convert.ToString(name, CultureInfo.InvariantCulture);
-                        }
+                        escape = false;
+                        return f.ToString("R", CultureInfo.InvariantCulture);
+                    }
+                    default:
+                    {
+                        escape = true;
+                        return Convert.ToString(name, CultureInfo.InvariantCulture);
+                    }
                 }
-            } else if (TryConvertToString(name, name.GetType(), out string? propertyName)) {
+            }
+            else if (TryConvertToString(name, name.GetType(), out propertyName))
+            {
                 escape = true;
                 return propertyName;
-            } else {
+            }
+            else
+            {
                 escape = true;
                 return name.ToString();
             }
@@ -969,24 +1161,28 @@ namespace Simula.Scripting.Json.Serialization
         {
             ClearErrorContext();
 
-            if (writer.WriteState == WriteState.Property) {
+            if (writer.WriteState == WriteState.Property)
+            {
                 writer.WriteNull();
             }
 
-            while (writer.Top > initialDepth) {
+            while (writer.Top > initialDepth)
+            {
                 writer.WriteEnd();
             }
         }
 
         private bool ShouldSerialize(JsonWriter writer, JsonProperty property, object target)
         {
-            if (property.ShouldSerialize == null) {
+            if (property.ShouldSerialize == null)
+            {
                 return true;
             }
 
             bool shouldSerialize = property.ShouldSerialize(target);
 
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose) {
+            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
+            {
                 TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(null, writer.Path, "ShouldSerialize result for property '{0}' on {1}: {2}".FormatWith(CultureInfo.InvariantCulture, property.PropertyName, property.DeclaringType, shouldSerialize)), null);
             }
 
@@ -995,13 +1191,15 @@ namespace Simula.Scripting.Json.Serialization
 
         private bool IsSpecified(JsonWriter writer, JsonProperty property, object target)
         {
-            if (property.GetIsSpecified == null) {
+            if (property.GetIsSpecified == null)
+            {
                 return true;
             }
 
             bool isSpecified = property.GetIsSpecified(target);
 
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose) {
+            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
+            {
                 TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(null, writer.Path, "IsSpecified result for property '{0}' on {1}: {2}".FormatWith(CultureInfo.InvariantCulture, property.PropertyName, property.DeclaringType, isSpecified)), null);
             }
 

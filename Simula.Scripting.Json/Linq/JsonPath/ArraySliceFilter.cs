@@ -1,7 +1,7 @@
-using Simula.Scripting.Json.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json.Linq.JsonPath
 {
@@ -13,21 +13,34 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 
         public override IEnumerable<JToken> ExecuteFilter(JToken root, IEnumerable<JToken> current, bool errorWhenNoMatch)
         {
-            if (Step == 0) {
+            if (Step == 0)
+            {
                 throw new JsonException("Step cannot be zero.");
             }
 
-            foreach (JToken t in current) {
-                if (t is JArray a) {
+            foreach (JToken t in current)
+            {
+                JArray a = t as JArray;
+                if (a != null)
+                {
+                    // set defaults for null arguments
                     int stepCount = Step ?? 1;
                     int startIndex = Start ?? ((stepCount > 0) ? 0 : a.Count - 1);
                     int stopIndex = End ?? ((stepCount > 0) ? a.Count : -1);
-                    if (Start < 0) {
+
+                    // start from the end of the list if start is negative
+                    if (Start < 0)
+                    {
                         startIndex = a.Count + startIndex;
                     }
-                    if (End < 0) {
+
+                    // end from the start of the list if stop is negative
+                    if (End < 0)
+                    {
                         stopIndex = a.Count + stopIndex;
                     }
+
+                    // ensure indexes keep within collection bounds
                     startIndex = Math.Max(startIndex, (stepCount > 0) ? 0 : int.MinValue);
                     startIndex = Math.Min(startIndex, (stepCount > 0) ? a.Count : a.Count - 1);
                     stopIndex = Math.Max(stopIndex, -1);
@@ -35,19 +48,27 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 
                     bool positiveStep = (stepCount > 0);
 
-                    if (IsValid(startIndex, stopIndex, positiveStep)) {
-                        for (int i = startIndex; IsValid(i, stopIndex, positiveStep); i += stepCount) {
+                    if (IsValid(startIndex, stopIndex, positiveStep))
+                    {
+                        for (int i = startIndex; IsValid(i, stopIndex, positiveStep); i += stepCount)
+                        {
                             yield return a[i];
                         }
-                    } else {
-                        if (errorWhenNoMatch) {
+                    }
+                    else
+                    {
+                        if (errorWhenNoMatch)
+                        {
                             throw new JsonException("Array slice of {0} to {1} returned no results.".FormatWith(CultureInfo.InvariantCulture,
                                 Start != null ? Start.GetValueOrDefault().ToString(CultureInfo.InvariantCulture) : "*",
                                 End != null ? End.GetValueOrDefault().ToString(CultureInfo.InvariantCulture) : "*"));
                         }
                     }
-                } else {
-                    if (errorWhenNoMatch) {
+                }
+                else
+                {
+                    if (errorWhenNoMatch)
+                    {
                         throw new JsonException("Array slice is not valid on {0}.".FormatWith(CultureInfo.InvariantCulture, t.GetType().Name));
                     }
                 }
@@ -56,7 +77,8 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 
         private bool IsValid(int index, int stopIndex, bool positiveStep)
         {
-            if (positiveStep) {
+            if (positiveStep)
+            {
                 return (index < stopIndex);
             }
 

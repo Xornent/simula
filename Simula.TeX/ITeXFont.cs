@@ -14,7 +14,7 @@ namespace Simula.TeX
 
         ExtensionChar GetExtension(CharInfo charInfo, TexStyle style);
 
-        CharFont? GetLigature(CharFont leftChar, CharFont rightChar);
+        CharFont GetLigature(CharFont leftChar, CharFont rightChar);
 
         CharInfo GetNextLargerCharInfo(CharInfo charInfo, TexStyle style);
 

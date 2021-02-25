@@ -1,3 +1,4 @@
+using System;
 using Simula.Scripting.Json.Utilities;
 using System.Globalization;
 
@@ -9,10 +10,16 @@ namespace Simula.Scripting.Json.Serialization
 
         private BidirectionalDictionary<string, object> GetMappings(object context)
         {
-            if (!(context is JsonSerializerInternalBase internalSerializer)) {
-                if (context is JsonSerializerProxy proxy) {
+            JsonSerializerInternalBase internalSerializer = context as JsonSerializerInternalBase;
+            if (internalSerializer == null)
+            {
+                JsonSerializerProxy proxy = context as JsonSerializerProxy;
+                if (proxy != null)
+                {
                     internalSerializer = proxy.GetInternalSerializer();
-                } else {
+                }
+                else
+                {
                     throw new JsonException("The DefaultReferenceResolver can only be used internally.");
                 }
             }
@@ -22,7 +29,8 @@ namespace Simula.Scripting.Json.Serialization
 
         public object ResolveReference(object context, string reference)
         {
-            GetMappings(context).TryGetByFirst(reference, out object value);
+            object value;
+            GetMappings(context).TryGetByFirst(reference, out value);
             return value;
         }
 
@@ -30,7 +38,9 @@ namespace Simula.Scripting.Json.Serialization
         {
             BidirectionalDictionary<string, object> mappings = GetMappings(context);
 
-            if (!mappings.TryGetBySecond(value, out string reference)) {
+            string reference;
+            if (!mappings.TryGetBySecond(value, out reference))
+            {
                 _referenceCount++;
                 reference = _referenceCount.ToString(CultureInfo.InvariantCulture);
                 mappings.Set(reference, value);
@@ -46,7 +56,8 @@ namespace Simula.Scripting.Json.Serialization
 
         public bool IsReferenced(object context, object value)
         {
-            return GetMappings(context).TryGetBySecond(value, out _);
+            string reference;
+            return GetMappings(context).TryGetBySecond(value, out reference);
         }
     }
 }

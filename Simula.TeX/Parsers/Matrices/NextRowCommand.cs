@@ -1,6 +1,6 @@
-using Simula.TeX.Atoms;
 using System.Collections.Generic;
 using System.Linq;
+using Simula.TeX.Atoms;
 
 namespace Simula.TeX.Parsers.Matrices
 {

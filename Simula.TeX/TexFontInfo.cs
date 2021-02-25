@@ -1,8 +1,8 @@
-using Simula.TeX.Exceptions;
-using Simula.TeX.Utils;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Windows.Media;
+using Simula.TeX.Exceptions;
+using Simula.TeX.Utils;
 
 namespace Simula.TeX
 {
@@ -19,64 +19,70 @@ namespace Simula.TeX
 
         public TexFontInfo(int fontId, GlyphTypeface font, double xHeight, double space, double quad)
         {
-            metrics = new double[charCodesCount][];
-            ligatures = new Dictionary<Tuple<char, char>, char>();
-            kerns = new Dictionary<Tuple<char, char>, double>();
-            nextLarger = new CharFont[charCodesCount];
-            extensions = new int[charCodesCount][];
+            this.metrics = new double[charCodesCount][];
+            this.ligatures = new Dictionary<Tuple<char, char>, char>();
+            this.kerns = new Dictionary<Tuple<char, char>, double>();
+            this.nextLarger = new CharFont[charCodesCount];
+            this.extensions = new int[charCodesCount][];
 
-            FontId = fontId;
-            Font = font;
-            XHeight = xHeight;
-            Space = space;
-            Quad = quad;
-            SkewCharacter = (char)1;
+            this.FontId = fontId;
+            this.Font = font;
+            this.XHeight = xHeight;
+            this.Space = space;
+            this.Quad = quad;
+            this.SkewCharacter = (char)1;
         }
 
-        public int FontId {
+        public int FontId
+        {
             get;
             private set;
         }
 
-        public GlyphTypeface Font {
+        public GlyphTypeface Font
+        {
             get;
             private set;
         }
 
-        public double XHeight {
+        public double XHeight
+        {
             get;
             private set;
         }
 
-        public double Space {
+        public double Space
+        {
             get;
             private set;
         }
 
-        public double Quad {
+        public double Quad
+        {
             get;
             private set;
         }
 
         // Skew character (used for positioning accents).
-        public char SkewCharacter {
+        public char SkewCharacter
+        {
             get;
             set;
         }
 
         public void AddKern(char leftChar, char rightChar, double kern)
         {
-            kerns.Add(Tuple.Create(leftChar, rightChar), kern);
+            this.kerns.Add(Tuple.Create(leftChar, rightChar), kern);
         }
 
         public void AddLigature(char leftChar, char rightChar, char ligatureChar)
         {
-            ligatures.Add(Tuple.Create(leftChar, rightChar), ligatureChar);
+            this.ligatures.Add(Tuple.Create(leftChar, rightChar), ligatureChar);
         }
 
         public bool HasSpace()
         {
-            return Space > TexUtilities.FloatPrecision;
+            return this.Space > TexUtilities.FloatPrecision;
         }
 
         public void SetExtensions(char character, int[] extensions)
@@ -91,12 +97,12 @@ namespace Simula.TeX
 
         public void SetNextLarger(char character, char largerCharacter, int largerFont)
         {
-            nextLarger[character] = new CharFont(largerCharacter, largerFont);
+            this.nextLarger[character] = new CharFont(largerCharacter, largerFont);
         }
 
         public int[] GetExtension(char character)
         {
-            return extensions[character];
+            return this.extensions[character];
         }
 
         public double GetKern(char leftChar, char rightChar, double factor)
@@ -107,41 +113,44 @@ namespace Simula.TeX
             return kern * factor;
         }
 
-        public CharFont? GetLigature(char left, char right)
+        public CharFont GetLigature(char left, char right)
         {
             Tuple<char, char> tpl = Tuple.Create(left, right);
-            return ligatures.TryGetValue(tpl, out char ch) ? new CharFont(ch, FontId) : null;
+            char ch;
+            return this.ligatures.TryGetValue(tpl, out ch) ? new CharFont(ch, this.FontId) : null;
         }
 
         public CharFont GetNextLarger(char character)
         {
-            return nextLarger[character];
+            return this.nextLarger[character];
         }
 
         public double GetQuad(double factor)
         {
-            return Quad * factor;
+            return this.Quad * factor;
         }
 
         public double GetSpace(double factor)
         {
-            return Space * factor;
+            return this.Space * factor;
         }
 
         public double GetXHeight(double factor)
         {
-            return XHeight * factor;
+            return this.XHeight * factor;
         }
 
+        /// <summary>Return the character metrics or <c>null</c> if the metrics weren't found.</summary>
         public Result<double[]> GetMetrics(char character)
         {
-            if (metrics.Length <= character || metrics[character] == null) {
+            if (this.metrics.Length <= character || this.metrics[character] == null)
+            {
                 return Result.Error<double[]>(
                     new TexCharacterMappingNotFoundException(
-                        $"Cannot determine metrics for '{character}' character in font {FontId}"));
+                        $"Cannot determine metrics for '{character}' character in font {this.FontId}"));
             }
 
-            return Result.Ok(metrics[character]);
+            return Result.Ok(this.metrics[character]);
         }
     }
 }

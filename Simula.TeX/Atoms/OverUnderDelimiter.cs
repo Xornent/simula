@@ -1,13 +1,13 @@
+using System;
 using Simula.TeX.Atoms;
 using Simula.TeX.Boxes;
-using System;
 
 namespace Simula.TeX
 {
     // Atom representing other atom with delimeter and script atoms over or under it.
     internal class OverUnderDelimiter : Atom
     {
-        private static double GetMaxWidth(Box baseBox, Box delimeterBox, Box? scriptBox)
+        private static double GetMaxWidth(Box baseBox, Box delimeterBox, Box scriptBox)
         {
             var maxWidth = Math.Max(baseBox.Width, delimeterBox.Height + delimeterBox.Depth);
             if (scriptBox != null)
@@ -16,25 +16,25 @@ namespace Simula.TeX
         }
 
         public OverUnderDelimiter(
-            SourceSpan? source,
-            Atom? baseAtom,
-            Atom? script,
+            SourceSpan source,
+            Atom baseAtom,
+            Atom script,
             SymbolAtom symbol,
             TexUnit kernUnit,
             double kern,
             bool over)
             : base(source)
         {
-            BaseAtom = baseAtom;
-            Script = script;
-            Symbol = symbol;
-            Kern = new SpaceAtom(null, kernUnit, 0, kern, 0);
-            Over = over;
+            this.BaseAtom = baseAtom;
+            this.Script = script;
+            this.Symbol = symbol;
+            this.Kern = new SpaceAtom(null, kernUnit, 0, kern, 0);
+            this.Over = over;
         }
 
-        public Atom? BaseAtom { get; }
+        public Atom BaseAtom { get; }
 
-        private Atom? Script { get; }
+        private Atom Script { get; }
 
         private SymbolAtom Symbol { get; }
 
@@ -47,9 +47,9 @@ namespace Simula.TeX
         protected override Box CreateBoxCore(TexEnvironment environment)
         {
             // Create boxes for base, delimeter, and script atoms.
-            var baseBox = BaseAtom == null ? StrutBox.Empty : BaseAtom.CreateBox(environment);
-            var delimeterBox = DelimiterFactory.CreateBox(Symbol.Name, baseBox.Width, environment);
-            Box? scriptBox = Script == null ? null : Script.CreateBox(Over ?
+            var baseBox = this.BaseAtom == null ? StrutBox.Empty : this.BaseAtom.CreateBox(environment);
+            var delimeterBox = DelimiterFactory.CreateBox(this.Symbol.Name, baseBox.Width, environment);
+            var scriptBox = this.Script == null ? null : this.Script.CreateBox(this.Over ?
                 environment.GetSuperscriptStyle() : environment.GetSubscriptStyle());
 
             // Create centered horizontal box if any box is smaller than maximum width.
@@ -61,7 +61,7 @@ namespace Simula.TeX
             if (scriptBox != null && Math.Abs(maxWidth - scriptBox.Width) > TexUtilities.FloatPrecision)
                 scriptBox = new HorizontalBox(scriptBox, maxWidth, TexAlignment.Center);
 
-            return new OverUnderBox(baseBox, delimeterBox, scriptBox, Kern.CreateBox(environment).Height, Over);
+            return new OverUnderBox(baseBox, delimeterBox, scriptBox, this.Kern.CreateBox(environment).Height, this.Over);
         }
     }
 }

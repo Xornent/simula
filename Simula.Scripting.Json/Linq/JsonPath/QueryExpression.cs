@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Text.RegularExpressions;
 #if !HAVE_LINQ
 using Simula.Scripting.Json.Utilities.LinqBridge;
 #else
@@ -23,20 +22,12 @@ namespace Simula.Scripting.Json.Linq.JsonPath
         GreaterThan = 6,
         GreaterThanOrEquals = 7,
         And = 8,
-        Or = 9,
-        RegexEquals = 10,
-        StrictEquals = 11,
-        StrictNotEquals = 12
+        Or = 9
     }
 
     internal abstract class QueryExpression
     {
-        internal QueryOperator Operator;
-
-        public QueryExpression(QueryOperator @operator)
-        {
-            Operator = @operator;
-        }
+        public QueryOperator Operator { get; set; }
 
         public abstract bool IsMatch(JToken root, JToken t);
     }
@@ -45,24 +36,29 @@ namespace Simula.Scripting.Json.Linq.JsonPath
     {
         public List<QueryExpression> Expressions { get; set; }
 
-        public CompositeExpression(QueryOperator @operator) : base(@operator)
+        public CompositeExpression()
         {
             Expressions = new List<QueryExpression>();
         }
 
         public override bool IsMatch(JToken root, JToken t)
         {
-            switch (Operator) {
+            switch (Operator)
+            {
                 case QueryOperator.And:
-                    foreach (QueryExpression e in Expressions) {
-                        if (!e.IsMatch(root, t)) {
+                    foreach (QueryExpression e in Expressions)
+                    {
+                        if (!e.IsMatch(root, t))
+                        {
                             return false;
                         }
                     }
                     return true;
                 case QueryOperator.Or:
-                    foreach (QueryExpression e in Expressions) {
-                        if (e.IsMatch(root, t)) {
+                    foreach (QueryExpression e in Expressions)
+                    {
+                        if (e.IsMatch(root, t))
+                        {
                             return true;
                         }
                     }
@@ -75,22 +71,20 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 
     internal class BooleanQueryExpression : QueryExpression
     {
-        public readonly object Left;
-        public readonly object? Right;
+        public object Left { get; set; }
+        public object Right { get; set; }
 
-        public BooleanQueryExpression(QueryOperator @operator, object left, object? right) : base(@operator)
+        private IEnumerable<JToken> GetResult(JToken root, JToken t, object o)
         {
-            Left = left;
-            Right = right;
-        }
-
-        private IEnumerable<JToken> GetResult(JToken root, JToken t, object? o)
-        {
-            if (o is JToken resultToken) {
+            JToken resultToken = o as JToken;
+            if (resultToken != null)
+            {
                 return new[] { resultToken };
             }
 
-            if (o is List<PathFilter> pathFilters) {
+            List<PathFilter> pathFilters = o as List<PathFilter>;
+            if (pathFilters != null)
+            {
                 return JPath.Evaluate(pathFilters, root, t, false);
             }
 
@@ -99,19 +93,25 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 
         public override bool IsMatch(JToken root, JToken t)
         {
-            if (Operator == QueryOperator.Exists) {
+            if (Operator == QueryOperator.Exists)
+            {
                 return GetResult(root, t, Left).Any();
             }
 
-            using (IEnumerator<JToken> leftResults = GetResult(root, t, Left).GetEnumerator()) {
-                if (leftResults.MoveNext()) {
+            using (IEnumerator<JToken> leftResults = GetResult(root, t, Left).GetEnumerator())
+            {
+                if (leftResults.MoveNext())
+                {
                     IEnumerable<JToken> rightResultsEn = GetResult(root, t, Right);
                     ICollection<JToken> rightResults = rightResultsEn as ICollection<JToken> ?? rightResultsEn.ToList();
 
-                    do {
+                    do
+                    {
                         JToken leftResult = leftResults.Current;
-                        foreach (JToken rightResult in rightResults) {
-                            if (MatchTokens(leftResult, rightResult)) {
+                        foreach (JToken rightResult in rightResults)
+                        {
+                            if (MatchTokens(leftResult, rightResult))
+                            {
                                 return true;
                             }
                         }
@@ -124,59 +124,60 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 
         private bool MatchTokens(JToken leftResult, JToken rightResult)
         {
-            if (leftResult is JValue leftValue && rightResult is JValue rightValue) {
-                switch (Operator) {
-                    case QueryOperator.RegexEquals:
-                        if (RegexEquals(leftValue, rightValue)) {
-                            return true;
-                        }
-                        break;
+            JValue leftValue = leftResult as JValue;
+            JValue rightValue = rightResult as JValue;
+
+            if (leftValue != null && rightValue != null)
+            {
+                switch (Operator)
+                {
                     case QueryOperator.Equals:
-                        if (EqualsWithStringCoercion(leftValue, rightValue)) {
-                            return true;
-                        }
-                        break;
-                    case QueryOperator.StrictEquals:
-                        if (EqualsWithStrictMatch(leftValue, rightValue)) {
+                        if (EqualsWithStringCoercion(leftValue, rightValue))
+                        {
                             return true;
                         }
                         break;
                     case QueryOperator.NotEquals:
-                        if (!EqualsWithStringCoercion(leftValue, rightValue)) {
-                            return true;
-                        }
-                        break;
-                    case QueryOperator.StrictNotEquals:
-                        if (!EqualsWithStrictMatch(leftValue, rightValue)) {
+                        if (!EqualsWithStringCoercion(leftValue, rightValue))
+                        {
                             return true;
                         }
                         break;
                     case QueryOperator.GreaterThan:
-                        if (leftValue.CompareTo(rightValue) > 0) {
+                        if (leftValue.CompareTo(rightValue) > 0)
+                        {
                             return true;
                         }
                         break;
                     case QueryOperator.GreaterThanOrEquals:
-                        if (leftValue.CompareTo(rightValue) >= 0) {
+                        if (leftValue.CompareTo(rightValue) >= 0)
+                        {
                             return true;
                         }
                         break;
                     case QueryOperator.LessThan:
-                        if (leftValue.CompareTo(rightValue) < 0) {
+                        if (leftValue.CompareTo(rightValue) < 0)
+                        {
                             return true;
                         }
                         break;
                     case QueryOperator.LessThanOrEquals:
-                        if (leftValue.CompareTo(rightValue) <= 0) {
+                        if (leftValue.CompareTo(rightValue) <= 0)
+                        {
                             return true;
                         }
                         break;
                     case QueryOperator.Exists:
                         return true;
                 }
-            } else {
-                switch (Operator) {
+            }
+            else
+            {
+                switch (Operator)
+                {
                     case QueryOperator.Exists:
+                    // you can only specify primitive types in a comparison
+                    // notequals will always be true
                     case QueryOperator.NotEquals:
                         return true;
                 }
@@ -185,83 +186,57 @@ namespace Simula.Scripting.Json.Linq.JsonPath
             return false;
         }
 
-        private static bool RegexEquals(JValue input, JValue pattern)
+        private bool EqualsWithStringCoercion(JValue value, JValue queryValue)
         {
-            if (input.Type != JTokenType.String || pattern.Type != JTokenType.String) {
-                return false;
-            }
-
-            string regexText = (string)pattern.Value!;
-            int patternOptionDelimiterIndex = regexText.LastIndexOf('/');
-
-            string patternText = regexText.Substring(1, patternOptionDelimiterIndex - 1);
-            string optionsText = regexText.Substring(patternOptionDelimiterIndex + 1);
-
-            return Regex.IsMatch((string)input.Value!, patternText, MiscellaneousUtils.GetRegexOptions(optionsText));
-        }
-
-        internal static bool EqualsWithStringCoercion(JValue value, JValue queryValue)
-        {
-            if (value.Equals(queryValue)) {
+            if (value.Equals(queryValue))
+            {
                 return true;
             }
-            if ((value.Type == JTokenType.Integer && queryValue.Type == JTokenType.Float)
-                || (value.Type == JTokenType.Float && queryValue.Type == JTokenType.Integer)) {
-                return JValue.Compare(value.Type, value.Value, queryValue.Value) == 0;
-            }
 
-            if (queryValue.Type != JTokenType.String) {
+            if (queryValue.Type != JTokenType.String)
+            {
                 return false;
             }
 
-            string queryValueString = (string)queryValue.Value!;
+            string queryValueString = (string)queryValue.Value;
 
             string currentValueString;
-            switch (value.Type) {
+
+            // potential performance issue with converting every value to string?
+            switch (value.Type)
+            {
                 case JTokenType.Date:
-                    using (StringWriter writer = StringUtils.CreateStringWriter(64)) {
+                    using (StringWriter writer = StringUtils.CreateStringWriter(64))
+                    {
 #if HAVE_DATE_TIME_OFFSET
-                        if (value.Value is DateTimeOffset offset) {
-                            DateTimeUtils.WriteDateTimeOffsetString(writer, offset, DateFormatHandling.IsoDateFormat, null, CultureInfo.InvariantCulture);
-                        } else
+                        if (value.Value is DateTimeOffset)
+                        {
+                            DateTimeUtils.WriteDateTimeOffsetString(writer, (DateTimeOffset)value.Value, DateFormatHandling.IsoDateFormat, null, CultureInfo.InvariantCulture);
+                        }
+                        else
 #endif
                         {
-                            DateTimeUtils.WriteDateTimeString(writer, (DateTime)value.Value!, DateFormatHandling.IsoDateFormat, null, CultureInfo.InvariantCulture);
+                            DateTimeUtils.WriteDateTimeString(writer, (DateTime)value.Value, DateFormatHandling.IsoDateFormat, null, CultureInfo.InvariantCulture);
                         }
 
                         currentValueString = writer.ToString();
                     }
                     break;
                 case JTokenType.Bytes:
-                    currentValueString = Convert.ToBase64String((byte[])value.Value!);
+                    currentValueString = Convert.ToBase64String((byte[])value.Value);
                     break;
                 case JTokenType.Guid:
                 case JTokenType.TimeSpan:
-                    currentValueString = value.Value!.ToString();
+                    currentValueString = value.Value.ToString();
                     break;
                 case JTokenType.Uri:
-                    currentValueString = ((Uri)value.Value!).OriginalString;
+                    currentValueString = ((Uri)value.Value).OriginalString;
                     break;
                 default:
                     return false;
             }
 
             return string.Equals(currentValueString, queryValueString, StringComparison.Ordinal);
-        }
-
-        internal static bool EqualsWithStrictMatch(JValue value, JValue queryValue)
-        {
-            MiscellaneousUtils.Assert(value != null);
-            MiscellaneousUtils.Assert(queryValue != null);
-            if ((value.Type == JTokenType.Integer && queryValue.Type == JTokenType.Float)
-                || (value.Type == JTokenType.Float && queryValue.Type == JTokenType.Integer)) {
-                return JValue.Compare(value.Type, value.Value, queryValue.Value) == 0;
-            }
-            if (value.Type != queryValue.Type) {
-                return false;
-            }
-
-            return value.Equals(queryValue);
         }
     }
 }

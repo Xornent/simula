@@ -4,39 +4,58 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 {
     internal class ScanFilter : PathFilter
     {
-        internal string? Name;
-
-        public ScanFilter(string? name)
-        {
-            Name = name;
-        }
+        public string Name { get; set; }
 
         public override IEnumerable<JToken> ExecuteFilter(JToken root, IEnumerable<JToken> current, bool errorWhenNoMatch)
         {
-            foreach (JToken c in current) {
-                if (Name == null) {
+            foreach (JToken c in current)
+            {
+                if (Name == null)
+                {
                     yield return c;
                 }
 
-                JToken? value = c;
+                JToken value = c;
+                JToken container = c;
 
-                while (true) {
-                    JContainer? container = value as JContainer;
+                while (true)
+                {
+                    if (container != null && container.HasValues)
+                    {
+                        value = container.First;
+                    }
+                    else
+                    {
+                        while (value != null && value != c && value == value.Parent.Last)
+                        {
+                            value = value.Parent;
+                        }
 
-                    value = GetNextScanValue(c, container, value);
-                    if (value == null) {
-                        break;
+                        if (value == null || value == c)
+                        {
+                            break;
+                        }
+
+                        value = value.Next;
                     }
 
-                    if (value is JProperty property) {
-                        if (property.Name == Name) {
-                            yield return property.Value;
+                    JProperty e = value as JProperty;
+                    if (e != null)
+                    {
+                        if (e.Name == Name)
+                        {
+                            yield return e.Value;
                         }
-                    } else {
-                        if (Name == null) {
+                    }
+                    else
+                    {
+                        if (Name == null)
+                        {
                             yield return value;
                         }
                     }
+
+                    container = value as JContainer;
                 }
             }
         }

@@ -6,10 +6,10 @@ namespace Simula.TeX.Boxes
         public OverBar(TexEnvironment environment, Box box, double kern, double thickness)
             : base()
         {
-            Add(new StrutBox(0, thickness, 0, 0));
-            Add(new HorizontalRule(environment, thickness, box.Width, 0));
-            Add(new StrutBox(0, kern, 0, 0));
-            Add(box);
+            this.Add(new StrutBox(0, thickness, 0, 0));
+            this.Add(new HorizontalRule(environment, thickness, box.Width, 0));
+            this.Add(new StrutBox(0, kern, 0, 0));
+            this.Add(box);
         }
     }
 }

@@ -5,18 +5,18 @@ namespace Simula.TeX.Atoms
     // Atom representing other atom with horizontal rule above it.
     internal class OverlinedAtom : Atom
     {
-        public OverlinedAtom(SourceSpan? source, Atom? baseAtom)
+        public OverlinedAtom(SourceSpan source, Atom baseAtom)
             : base(source)
         {
-            BaseAtom = baseAtom;
+            this.BaseAtom = baseAtom;
         }
 
-        public Atom? BaseAtom { get; }
+        public Atom BaseAtom { get; }
 
         protected override Box CreateBoxCore(TexEnvironment environment)
         {
             // Create box for base atom, in cramped style.
-            var baseBox = BaseAtom == null ? StrutBox.Empty : BaseAtom.CreateBox(environment.GetCrampedStyle());
+            var baseBox = this.BaseAtom == null ? StrutBox.Empty : this.BaseAtom.CreateBox(environment.GetCrampedStyle());
 
             // Create result box.
             var defaultLineThickness = environment.MathFont.GetDefaultLineThickness(environment.Style);

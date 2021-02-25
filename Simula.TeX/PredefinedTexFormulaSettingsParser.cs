@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Xml.Linq;
 
 namespace Simula.TeX
@@ -16,7 +19,8 @@ namespace Simula.TeX
 
         private static void AddToMap(IEnumerable<XElement> mapList, string[] table)
         {
-            foreach (var map in mapList) {
+            foreach (var map in mapList)
+            {
                 var character = map.AttributeValue("char");
                 var symbol = map.AttributeValue("symbol");
                 Debug.Assert(character != null);
@@ -26,12 +30,12 @@ namespace Simula.TeX
             }
         }
 
-        private readonly XElement rootElement;
+        private XElement rootElement;
 
         public TexPredefinedFormulaSettingsParser()
         {
-            var doc = XDocument.Load(new System.IO.StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName)!));
-            rootElement = doc.Root;
+            var doc = XDocument.Load(new System.IO.StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName)));
+            this.rootElement = doc.Root;
         }
 
         public IList<string> GetSymbolMappings()
@@ -57,8 +61,10 @@ namespace Simula.TeX
             var result = new HashSet<string>();
 
             var textStyles = rootElement.Element("TextStyles");
-            if (textStyles != null) {
-                foreach (var textStyleElement in textStyles.Elements("TextStyle")) {
+            if (textStyles != null)
+            {
+                foreach (var textStyleElement in textStyles.Elements("TextStyle"))
+                {
                     var name = textStyleElement.AttributeValue("name");
                     Debug.Assert(name != null);
                     result.Add(name);

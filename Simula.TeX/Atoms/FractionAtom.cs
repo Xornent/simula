@@ -23,21 +23,21 @@ namespace Simula.TeX.Atoms
         private readonly double? lineRelativeThickness;
 
         public FractionAtom(
-            SourceSpan? source,
-            Atom? numerator,
-            Atom? denominator,
+            SourceSpan source,
+            Atom numerator,
+            Atom denominator,
             double relativeThickness,
             TexAlignment numeratorAlignment,
             TexAlignment denominatorAlignment)
             : this(source, numerator, denominator, true, numeratorAlignment, denominatorAlignment)
         {
-            lineRelativeThickness = relativeThickness;
+            this.lineRelativeThickness = relativeThickness;
         }
 
         public FractionAtom(
-            SourceSpan? source,
-            Atom? numerator,
-            Atom? denominator,
+            SourceSpan source,
+            Atom numerator,
+            Atom denominator,
             bool drawLine,
             TexAlignment numeratorAlignment,
             TexAlignment denominatorAlignment)
@@ -47,15 +47,15 @@ namespace Simula.TeX.Atoms
             this.denominatorAlignment = CheckAlignment(denominatorAlignment);
         }
 
-        public FractionAtom(SourceSpan? source, Atom? numerator, Atom? denominator, bool drawLine)
+        public FractionAtom(SourceSpan source, Atom numerator, Atom denominator, bool drawLine)
             : this(source, numerator, denominator, drawLine, TexUnit.Pixel, 0d)
         {
         }
 
         public FractionAtom(
-            SourceSpan? source,
-            Atom? numerator,
-            Atom? denominator,
+            SourceSpan source,
+            Atom numerator,
+            Atom denominator,
             TexUnit unit,
             double thickness,
             TexAlignment numeratorAlignment,
@@ -66,15 +66,15 @@ namespace Simula.TeX.Atoms
             this.denominatorAlignment = CheckAlignment(denominatorAlignment);
         }
 
-        public FractionAtom(SourceSpan? source, Atom? numerator, Atom? denominator, TexUnit unit, double thickness)
+        public FractionAtom(SourceSpan source, Atom numerator, Atom denominator, TexUnit unit, double thickness)
             : this(source, numerator, denominator, false, unit, thickness)
         {
         }
 
         protected FractionAtom(
-            SourceSpan? source,
-            Atom? numerator,
-            Atom? denominator,
+            SourceSpan source,
+            Atom numerator,
+            Atom denominator,
             bool useDefaultThickness,
             TexUnit unit,
             double thickness)
@@ -82,18 +82,18 @@ namespace Simula.TeX.Atoms
         {
             SpaceAtom.CheckUnit(unit);
 
-            Numerator = numerator;
-            Denominator = denominator;
-            numeratorAlignment = TexAlignment.Center;
-            denominatorAlignment = TexAlignment.Center;
+            this.Numerator = numerator;
+            this.Denominator = denominator;
+            this.numeratorAlignment = TexAlignment.Center;
+            this.denominatorAlignment = TexAlignment.Center;
             this.useDefaultThickness = useDefaultThickness;
-            lineThicknessUnit = unit;
-            lineThickness = thickness;
+            this.lineThicknessUnit = unit;
+            this.lineThickness = thickness;
         }
 
-        public Atom? Numerator { get; }
+        public Atom Numerator { get; }
 
-        public Atom? Denominator { get; }
+        public Atom Denominator { get; }
 
         protected override Box CreateBoxCore(TexEnvironment environment)
         {
@@ -103,30 +103,33 @@ namespace Simula.TeX.Atoms
             // set thickness to default if default value should be used
             double lineHeight;
             var defaultLineThickness = texFont.GetDefaultLineThickness(style);
-            if (useDefaultThickness)
-                lineHeight = lineRelativeThickness.HasValue ? lineRelativeThickness.Value * defaultLineThickness :
+            if (this.useDefaultThickness)
+                lineHeight = this.lineRelativeThickness.HasValue ? this.lineRelativeThickness.Value * defaultLineThickness :
                     defaultLineThickness;
             else
-                lineHeight = new SpaceAtom(null, lineThicknessUnit, 0, lineThickness, 0)
+                lineHeight = new SpaceAtom(null, this.lineThicknessUnit, 0, this.lineThickness, 0)
                     .CreateBox(environment).Height;
 
             // Create boxes for numerator and demoninator atoms, and make them of equal width.
-            var numeratorBox = Numerator == null ? StrutBox.Empty :
-                Numerator.CreateBox(environment.GetNumeratorStyle());
-            var denominatorBox = Denominator == null ? StrutBox.Empty :
-                Denominator.CreateBox(environment.GetDenominatorStyle());
+            var numeratorBox = this.Numerator == null ? StrutBox.Empty :
+                this.Numerator.CreateBox(environment.GetNumeratorStyle());
+            var denominatorBox = this.Denominator == null ? StrutBox.Empty :
+                this.Denominator.CreateBox(environment.GetDenominatorStyle());
 
             if (numeratorBox.Width < denominatorBox.Width)
-                numeratorBox = new HorizontalBox(numeratorBox, denominatorBox.Width, numeratorAlignment);
+                numeratorBox = new HorizontalBox(numeratorBox, denominatorBox.Width, this.numeratorAlignment);
             else
-                denominatorBox = new HorizontalBox(denominatorBox, numeratorBox.Width, denominatorAlignment);
+                denominatorBox = new HorizontalBox(denominatorBox, numeratorBox.Width, this.denominatorAlignment);
 
             // Calculate preliminary shift-up and shift-down amounts.
             double shiftUp, shiftDown;
-            if (style < TexStyle.Text) {
+            if (style < TexStyle.Text)
+            {
                 shiftUp = texFont.GetNum1(style);
                 shiftDown = texFont.GetDenom1(style);
-            } else {
+            }
+            else
+            {
                 shiftDown = texFont.GetDenom2(style);
                 if (lineHeight > 0)
                     shiftUp = texFont.GetNum2(style);
@@ -143,7 +146,8 @@ namespace Simula.TeX.Atoms
             // Calculate clearance and adjust shift amounts.
             var axis = texFont.GetAxisHeight(style);
 
-            if (lineHeight > 0) {
+            if (lineHeight > 0)
+            {
                 // Draw fraction line.
 
                 // Calculate clearance amount.
@@ -159,11 +163,13 @@ namespace Simula.TeX.Atoms
                 var kern2 = axis - delta - (denominatorBox.Height - shiftDown);
                 var delta1 = clearance - kern1;
                 var delta2 = clearance - kern2;
-                if (delta1 > 0) {
+                if (delta1 > 0)
+                {
                     shiftUp += delta1;
                     kern1 += delta1;
                 }
-                if (delta2 > 0) {
+                if (delta2 > 0)
+                {
                     shiftDown += delta2;
                     kern2 += delta2;
                 }
@@ -171,7 +177,9 @@ namespace Simula.TeX.Atoms
                 resultBox.Add(new StrutBox(0, kern1, 0, 0));
                 resultBox.Add(new HorizontalRule(environment, lineHeight, numeratorBox.Width, 0));
                 resultBox.Add(new StrutBox(0, kern2, 0, 0));
-            } else {
+            }
+            else
+            {
                 // Do not draw fraction line.
 
                 // Calculate clearance amount.
@@ -184,7 +192,8 @@ namespace Simula.TeX.Atoms
                 // Adjust shift amounts.
                 var kern = shiftUp - numeratorBox.Depth - (denominatorBox.Height - shiftDown);
                 var delta = (clearance - kern) / 2;
-                if (delta > 0) {
+                if (delta > 0)
+                {
                     shiftUp += delta;
                     shiftDown += delta;
                     kern += 2 * delta;

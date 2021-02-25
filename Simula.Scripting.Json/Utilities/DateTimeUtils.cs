@@ -1,7 +1,7 @@
-﻿
-using System;
-using System.Globalization;
+﻿using System;
 using System.IO;
+using System.Xml;
+using System.Globalization;
 
 namespace Simula.Scripting.Json.Utilities
 {
@@ -33,7 +33,7 @@ namespace Simula.Scripting.Json.Utilities
 #endif
         }
 
-#if !(PORTABLE40 || PORTABLE) || NETSTANDARD1_3
+#if !(PORTABLE)
         public static XmlDateTimeSerializationMode ToSerializationMode(DateTimeKind kind)
         {
             switch (kind)
@@ -51,7 +51,8 @@ namespace Simula.Scripting.Json.Utilities
 #else
         public static string ToDateTimeFormat(DateTimeKind kind)
         {
-            switch (kind) {
+            switch (kind)
+            {
                 case DateTimeKind.Local:
                     return IsoDateFormat;
                 case DateTimeKind.Unspecified:
@@ -66,7 +67,8 @@ namespace Simula.Scripting.Json.Utilities
 
         internal static DateTime EnsureDateTime(DateTime value, DateTimeZoneHandling timeZone)
         {
-            switch (timeZone) {
+            switch (timeZone)
+            {
                 case DateTimeZoneHandling.Local:
                     value = SwitchToLocalTime(value);
                     break;
@@ -87,7 +89,8 @@ namespace Simula.Scripting.Json.Utilities
 
         private static DateTime SwitchToLocalTime(DateTime value)
         {
-            switch (value.Kind) {
+            switch (value.Kind)
+            {
                 case DateTimeKind.Unspecified:
                     return new DateTime(value.Ticks, DateTimeKind.Local);
 
@@ -102,7 +105,8 @@ namespace Simula.Scripting.Json.Utilities
 
         private static DateTime SwitchToUtcTime(DateTime value)
         {
-            switch (value.Kind) {
+            switch (value.Kind)
+            {
                 case DateTimeKind.Unspecified:
                     return new DateTime(value.Ticks, DateTimeKind.Utc);
 
@@ -117,7 +121,8 @@ namespace Simula.Scripting.Json.Utilities
 
         private static long ToUniversalTicks(DateTime dateTime)
         {
-            if (dateTime.Kind == DateTimeKind.Utc) {
+            if (dateTime.Kind == DateTimeKind.Utc)
+            {
                 return dateTime.Ticks;
             }
 
@@ -126,16 +131,21 @@ namespace Simula.Scripting.Json.Utilities
 
         private static long ToUniversalTicks(DateTime dateTime, TimeSpan offset)
         {
-            if (dateTime.Kind == DateTimeKind.Utc || dateTime == DateTime.MaxValue || dateTime == DateTime.MinValue) {
+            // special case min and max value
+            // they never have a timezone appended to avoid issues
+            if (dateTime.Kind == DateTimeKind.Utc || dateTime == DateTime.MaxValue || dateTime == DateTime.MinValue)
+            {
                 return dateTime.Ticks;
             }
 
             long ticks = dateTime.Ticks - offset.Ticks;
-            if (ticks > 3155378975999999999L) {
+            if (ticks > 3155378975999999999L)
+            {
                 return 3155378975999999999L;
             }
 
-            if (ticks < 0L) {
+            if (ticks < 0L)
+            {
                 return 0L;
             }
 
@@ -179,8 +189,9 @@ namespace Simula.Scripting.Json.Utilities
         internal static bool TryParseDateTimeIso(StringReference text, DateTimeZoneHandling dateTimeZoneHandling, out DateTime dt)
         {
             DateTimeParser dateTimeParser = new DateTimeParser();
-            if (!dateTimeParser.Parse(text.Chars, text.StartIndex, text.Length)) {
-                dt = default;
+            if (!dateTimeParser.Parse(text.Chars, text.StartIndex, text.Length))
+            {
+                dt = default(DateTime);
                 return false;
             }
 
@@ -188,41 +199,52 @@ namespace Simula.Scripting.Json.Utilities
 
             long ticks;
 
-            switch (dateTimeParser.Zone) {
+            switch (dateTimeParser.Zone)
+            {
                 case ParserTimeZone.Utc:
                     d = new DateTime(d.Ticks, DateTimeKind.Utc);
                     break;
 
-                case ParserTimeZone.LocalWestOfUtc: {
-                        TimeSpan offset = new TimeSpan(dateTimeParser.ZoneHour, dateTimeParser.ZoneMinute, 0);
-                        ticks = d.Ticks + offset.Ticks;
-                        if (ticks <= DateTime.MaxValue.Ticks) {
-                            d = new DateTime(ticks, DateTimeKind.Utc).ToLocalTime();
-                        } else {
-                            ticks += d.GetUtcOffset().Ticks;
-                            if (ticks > DateTime.MaxValue.Ticks) {
-                                ticks = DateTime.MaxValue.Ticks;
-                            }
-
-                            d = new DateTime(ticks, DateTimeKind.Local);
-                        }
-                        break;
+                case ParserTimeZone.LocalWestOfUtc:
+                {
+                    TimeSpan offset = new TimeSpan(dateTimeParser.ZoneHour, dateTimeParser.ZoneMinute, 0);
+                    ticks = d.Ticks + offset.Ticks;
+                    if (ticks <= DateTime.MaxValue.Ticks)
+                    {
+                        d = new DateTime(ticks, DateTimeKind.Utc).ToLocalTime();
                     }
-                case ParserTimeZone.LocalEastOfUtc: {
-                        TimeSpan offset = new TimeSpan(dateTimeParser.ZoneHour, dateTimeParser.ZoneMinute, 0);
-                        ticks = d.Ticks - offset.Ticks;
-                        if (ticks >= DateTime.MinValue.Ticks) {
-                            d = new DateTime(ticks, DateTimeKind.Utc).ToLocalTime();
-                        } else {
-                            ticks += d.GetUtcOffset().Ticks;
-                            if (ticks < DateTime.MinValue.Ticks) {
-                                ticks = DateTime.MinValue.Ticks;
-                            }
-
-                            d = new DateTime(ticks, DateTimeKind.Local);
+                    else
+                    {
+                        ticks += d.GetUtcOffset().Ticks;
+                        if (ticks > DateTime.MaxValue.Ticks)
+                        {
+                            ticks = DateTime.MaxValue.Ticks;
                         }
-                        break;
+
+                        d = new DateTime(ticks, DateTimeKind.Local);
                     }
+                    break;
+                }
+                case ParserTimeZone.LocalEastOfUtc:
+                {
+                    TimeSpan offset = new TimeSpan(dateTimeParser.ZoneHour, dateTimeParser.ZoneMinute, 0);
+                    ticks = d.Ticks - offset.Ticks;
+                    if (ticks >= DateTime.MinValue.Ticks)
+                    {
+                        d = new DateTime(ticks, DateTimeKind.Utc).ToLocalTime();
+                    }
+                    else
+                    {
+                        ticks += d.GetUtcOffset().Ticks;
+                        if (ticks < DateTime.MinValue.Ticks)
+                        {
+                            ticks = DateTime.MinValue.Ticks;
+                        }
+
+                        d = new DateTime(ticks, DateTimeKind.Local);
+                    }
+                    break;
+                }
             }
 
             dt = EnsureDateTime(d, dateTimeZoneHandling);
@@ -233,8 +255,9 @@ namespace Simula.Scripting.Json.Utilities
         internal static bool TryParseDateTimeOffsetIso(StringReference text, out DateTimeOffset dt)
         {
             DateTimeParser dateTimeParser = new DateTimeParser();
-            if (!dateTimeParser.Parse(text.Chars, text.StartIndex, text.Length)) {
-                dt = default;
+            if (!dateTimeParser.Parse(text.Chars, text.StartIndex, text.Length))
+            {
+                dt = default(DateTimeOffset);
                 return false;
             }
 
@@ -242,7 +265,8 @@ namespace Simula.Scripting.Json.Utilities
 
             TimeSpan offset;
 
-            switch (dateTimeParser.Zone) {
+            switch (dateTimeParser.Zone)
+            {
                 case ParserTimeZone.Utc:
                     offset = new TimeSpan(0L);
                     break;
@@ -258,8 +282,9 @@ namespace Simula.Scripting.Json.Utilities
             }
 
             long ticks = d.Ticks - offset.Ticks;
-            if (ticks < 0 || ticks > 3155378975999999999) {
-                dt = default;
+            if (ticks < 0 || ticks > 3155378975999999999)
+            {
+                dt = default(DateTimeOffset);
                 return false;
             }
 
@@ -271,129 +296,170 @@ namespace Simula.Scripting.Json.Utilities
         private static DateTime CreateDateTime(DateTimeParser dateTimeParser)
         {
             bool is24Hour;
-            if (dateTimeParser.Hour == 24) {
+            if (dateTimeParser.Hour == 24)
+            {
                 is24Hour = true;
                 dateTimeParser.Hour = 0;
-            } else {
+            }
+            else
+            {
                 is24Hour = false;
             }
 
             DateTime d = new DateTime(dateTimeParser.Year, dateTimeParser.Month, dateTimeParser.Day, dateTimeParser.Hour, dateTimeParser.Minute, dateTimeParser.Second);
             d = d.AddTicks(dateTimeParser.Fraction);
 
-            if (is24Hour) {
+            if (is24Hour)
+            {
                 d = d.AddDays(1);
             }
             return d;
         }
 
-        internal static bool TryParseDateTime(StringReference s, DateTimeZoneHandling dateTimeZoneHandling, string? dateFormatString, CultureInfo culture, out DateTime dt)
+        internal static bool TryParseDateTime(StringReference s, DateTimeZoneHandling dateTimeZoneHandling, string dateFormatString, CultureInfo culture, out DateTime dt)
         {
-            if (s.Length > 0) {
+            if (s.Length > 0)
+            {
                 int i = s.StartIndex;
-                if (s[i] == '/') {
-                    if (s.Length >= 9 && s.StartsWith("/Date(") && s.EndsWith(")/")) {
-                        if (TryParseDateTimeMicrosoft(s, dateTimeZoneHandling, out dt)) {
+                if (s[i] == '/')
+                {
+                    if (s.Length >= 9 && s.StartsWith("/Date(") && s.EndsWith(")/"))
+                    {
+                        if (TryParseDateTimeMicrosoft(s, dateTimeZoneHandling, out dt))
+                        {
                             return true;
                         }
                     }
-                } else if (s.Length >= 19 && s.Length <= 40 && char.IsDigit(s[i]) && s[i + 10] == 'T') {
-                    if (TryParseDateTimeIso(s, dateTimeZoneHandling, out dt)) {
+                }
+                else if (s.Length >= 19 && s.Length <= 40 && char.IsDigit(s[i]) && s[i + 10] == 'T')
+                {
+                    if (TryParseDateTimeIso(s, dateTimeZoneHandling, out dt))
+                    {
                         return true;
                     }
                 }
 
-                if (!StringUtils.IsNullOrEmpty(dateFormatString)) {
-                    if (TryParseDateTimeExact(s.ToString(), dateTimeZoneHandling, dateFormatString, culture, out dt)) {
+                if (!string.IsNullOrEmpty(dateFormatString))
+                {
+                    if (TryParseDateTimeExact(s.ToString(), dateTimeZoneHandling, dateFormatString, culture, out dt))
+                    {
                         return true;
                     }
                 }
             }
 
-            dt = default;
+            dt = default(DateTime);
             return false;
         }
 
-        internal static bool TryParseDateTime(string s, DateTimeZoneHandling dateTimeZoneHandling, string? dateFormatString, CultureInfo culture, out DateTime dt)
+        internal static bool TryParseDateTime(string s, DateTimeZoneHandling dateTimeZoneHandling, string dateFormatString, CultureInfo culture, out DateTime dt)
         {
-            if (s.Length > 0) {
-                if (s[0] == '/') {
-                    if (s.Length >= 9 && s.StartsWith("/Date(", StringComparison.Ordinal) && s.EndsWith(")/", StringComparison.Ordinal)) {
-                        if (TryParseDateTimeMicrosoft(new StringReference(s.ToCharArray(), 0, s.Length), dateTimeZoneHandling, out dt)) {
+            if (s.Length > 0)
+            {
+                if (s[0] == '/')
+                {
+                    if (s.Length >= 9 && s.StartsWith("/Date(", StringComparison.Ordinal) && s.EndsWith(")/", StringComparison.Ordinal))
+                    {
+                        if (TryParseDateTimeMicrosoft(new StringReference(s.ToCharArray(), 0, s.Length), dateTimeZoneHandling, out dt))
+                        {
                             return true;
                         }
                     }
-                } else if (s.Length >= 19 && s.Length <= 40 && char.IsDigit(s[0]) && s[10] == 'T') {
-                    if (DateTime.TryParseExact(s, IsoDateFormat, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out dt)) {
+                }
+                else if (s.Length >= 19 && s.Length <= 40 && char.IsDigit(s[0]) && s[10] == 'T')
+                {
+                    if (DateTime.TryParseExact(s, IsoDateFormat, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out dt))
+                    {
                         dt = EnsureDateTime(dt, dateTimeZoneHandling);
                         return true;
                     }
                 }
 
-                if (!StringUtils.IsNullOrEmpty(dateFormatString)) {
-                    if (TryParseDateTimeExact(s, dateTimeZoneHandling, dateFormatString, culture, out dt)) {
+                if (!string.IsNullOrEmpty(dateFormatString))
+                {
+                    if (TryParseDateTimeExact(s, dateTimeZoneHandling, dateFormatString, culture, out dt))
+                    {
                         return true;
                     }
                 }
             }
 
-            dt = default;
+            dt = default(DateTime);
             return false;
         }
 
 #if HAVE_DATE_TIME_OFFSET
-        internal static bool TryParseDateTimeOffset(StringReference s, string? dateFormatString, CultureInfo culture, out DateTimeOffset dt)
+        internal static bool TryParseDateTimeOffset(StringReference s, string dateFormatString, CultureInfo culture, out DateTimeOffset dt)
         {
-            if (s.Length > 0) {
+            if (s.Length > 0)
+            {
                 int i = s.StartIndex;
-                if (s[i] == '/') {
-                    if (s.Length >= 9 && s.StartsWith("/Date(") && s.EndsWith(")/")) {
-                        if (TryParseDateTimeOffsetMicrosoft(s, out dt)) {
+                if (s[i] == '/')
+                {
+                    if (s.Length >= 9 && s.StartsWith("/Date(") && s.EndsWith(")/"))
+                    {
+                        if (TryParseDateTimeOffsetMicrosoft(s, out dt))
+                        {
                             return true;
                         }
                     }
-                } else if (s.Length >= 19 && s.Length <= 40 && char.IsDigit(s[i]) && s[i + 10] == 'T') {
-                    if (TryParseDateTimeOffsetIso(s, out dt)) {
+                }
+                else if (s.Length >= 19 && s.Length <= 40 && char.IsDigit(s[i]) && s[i + 10] == 'T')
+                {
+                    if (TryParseDateTimeOffsetIso(s, out dt))
+                    {
                         return true;
                     }
                 }
 
-                if (!StringUtils.IsNullOrEmpty(dateFormatString)) {
-                    if (TryParseDateTimeOffsetExact(s.ToString(), dateFormatString, culture, out dt)) {
+                if (!string.IsNullOrEmpty(dateFormatString))
+                {
+                    if (TryParseDateTimeOffsetExact(s.ToString(), dateFormatString, culture, out dt))
+                    {
                         return true;
                     }
                 }
             }
 
-            dt = default;
+            dt = default(DateTimeOffset);
             return false;
         }
 
-        internal static bool TryParseDateTimeOffset(string s, string? dateFormatString, CultureInfo culture, out DateTimeOffset dt)
+        internal static bool TryParseDateTimeOffset(string s, string dateFormatString, CultureInfo culture, out DateTimeOffset dt)
         {
-            if (s.Length > 0) {
-                if (s[0] == '/') {
-                    if (s.Length >= 9 && s.StartsWith("/Date(", StringComparison.Ordinal) && s.EndsWith(")/", StringComparison.Ordinal)) {
-                        if (TryParseDateTimeOffsetMicrosoft(new StringReference(s.ToCharArray(), 0, s.Length), out dt)) {
+            if (s.Length > 0)
+            {
+                if (s[0] == '/')
+                {
+                    if (s.Length >= 9 && s.StartsWith("/Date(", StringComparison.Ordinal) && s.EndsWith(")/", StringComparison.Ordinal))
+                    {
+                        if (TryParseDateTimeOffsetMicrosoft(new StringReference(s.ToCharArray(), 0, s.Length), out dt))
+                        {
                             return true;
                         }
                     }
-                } else if (s.Length >= 19 && s.Length <= 40 && char.IsDigit(s[0]) && s[10] == 'T') {
-                    if (DateTimeOffset.TryParseExact(s, IsoDateFormat, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out dt)) {
-                        if (TryParseDateTimeOffsetIso(new StringReference(s.ToCharArray(), 0, s.Length), out dt)) {
+                }
+                else if (s.Length >= 19 && s.Length <= 40 && char.IsDigit(s[0]) && s[10] == 'T')
+                {
+                    if (DateTimeOffset.TryParseExact(s, IsoDateFormat, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out dt))
+                    {
+                        if (TryParseDateTimeOffsetIso(new StringReference(s.ToCharArray(), 0, s.Length), out dt))
+                        {
                             return true;
                         }
                     }
                 }
 
-                if (!StringUtils.IsNullOrEmpty(dateFormatString)) {
-                    if (TryParseDateTimeOffsetExact(s, dateFormatString, culture, out dt)) {
+                if (!string.IsNullOrEmpty(dateFormatString))
+                {
+                    if (TryParseDateTimeOffsetExact(s, dateFormatString, culture, out dt))
+                    {
                         return true;
                     }
                 }
             }
 
-            dt = default;
+            dt = default(DateTimeOffset);
             return false;
         }
 #endif
@@ -404,18 +470,23 @@ namespace Simula.Scripting.Json.Utilities
 
             int index = text.IndexOf('+', 7, text.Length - 8);
 
-            if (index == -1) {
+            if (index == -1)
+            {
                 index = text.IndexOf('-', 7, text.Length - 8);
             }
 
-            if (index != -1) {
+            if (index != -1)
+            {
                 kind = DateTimeKind.Local;
 
-                if (!TryReadOffset(text, index + text.StartIndex, out offset)) {
+                if (!TryReadOffset(text, index + text.StartIndex, out offset))
+                {
                     ticks = 0;
                     return false;
                 }
-            } else {
+            }
+            else
+            {
                 offset = TimeSpan.Zero;
                 index = text.Length - 2;
             }
@@ -425,14 +496,20 @@ namespace Simula.Scripting.Json.Utilities
 
         private static bool TryParseDateTimeMicrosoft(StringReference text, DateTimeZoneHandling dateTimeZoneHandling, out DateTime dt)
         {
-            if (!TryParseMicrosoftDate(text, out long ticks, out _, out DateTimeKind kind)) {
-                dt = default;
+            long ticks;
+            TimeSpan offset;
+            DateTimeKind kind;
+
+            if (!TryParseMicrosoftDate(text, out ticks, out offset, out kind))
+            {
+                dt = default(DateTime);
                 return false;
             }
 
             DateTime utcDateTime = ConvertJavaScriptTicksToDateTime(ticks);
 
-            switch (kind) {
+            switch (kind)
+            {
                 case DateTimeKind.Unspecified:
                     dt = DateTime.SpecifyKind(utcDateTime.ToLocalTime(), DateTimeKind.Unspecified);
                     break;
@@ -450,20 +527,27 @@ namespace Simula.Scripting.Json.Utilities
 
         private static bool TryParseDateTimeExact(string text, DateTimeZoneHandling dateTimeZoneHandling, string dateFormatString, CultureInfo culture, out DateTime dt)
         {
-            if (DateTime.TryParseExact(text, dateFormatString, culture, DateTimeStyles.RoundtripKind, out DateTime temp)) {
+            DateTime temp;
+            if (DateTime.TryParseExact(text, dateFormatString, culture, DateTimeStyles.RoundtripKind, out temp))
+            {
                 temp = EnsureDateTime(temp, dateTimeZoneHandling);
                 dt = temp;
                 return true;
             }
 
-            dt = default;
+            dt = default(DateTime);
             return false;
         }
 
 #if HAVE_DATE_TIME_OFFSET
         private static bool TryParseDateTimeOffsetMicrosoft(StringReference text, out DateTimeOffset dt)
         {
-            if (!TryParseMicrosoftDate(text, out long ticks, out TimeSpan offset, out _)) {
+            long ticks;
+            TimeSpan offset;
+            DateTimeKind kind;
+
+            if (!TryParseMicrosoftDate(text, out ticks, out offset, out kind))
+            {
                 dt = default(DateTime);
                 return false;
             }
@@ -476,12 +560,14 @@ namespace Simula.Scripting.Json.Utilities
 
         private static bool TryParseDateTimeOffsetExact(string text, string dateFormatString, CultureInfo culture, out DateTimeOffset dt)
         {
-            if (DateTimeOffset.TryParseExact(text, dateFormatString, culture, DateTimeStyles.RoundtripKind, out DateTimeOffset temp)) {
+            DateTimeOffset temp;
+            if (DateTimeOffset.TryParseExact(text, dateFormatString, culture, DateTimeStyles.RoundtripKind, out temp))
+            {
                 dt = temp;
                 return true;
             }
 
-            dt = default;
+            dt = default(DateTimeOffset);
             return false;
         }
 #endif
@@ -490,21 +576,26 @@ namespace Simula.Scripting.Json.Utilities
         {
             bool negative = (offsetText[startIndex] == '-');
 
-            if (ConvertUtils.Int32TryParse(offsetText.Chars, startIndex + 1, 2, out int hours) != ParseResult.Success) {
-                offset = default;
+            int hours;
+            if (ConvertUtils.Int32TryParse(offsetText.Chars, startIndex + 1, 2, out hours) != ParseResult.Success)
+            {
+                offset = default(TimeSpan);
                 return false;
             }
 
             int minutes = 0;
-            if (offsetText.Length - startIndex > 5) {
-                if (ConvertUtils.Int32TryParse(offsetText.Chars, startIndex + 3, 2, out minutes) != ParseResult.Success) {
-                    offset = default;
+            if (offsetText.Length - startIndex > 5)
+            {
+                if (ConvertUtils.Int32TryParse(offsetText.Chars, startIndex + 3, 2, out minutes) != ParseResult.Success)
+                {
+                    offset = default(TimeSpan);
                     return false;
                 }
             }
 
             offset = TimeSpan.FromHours(hours) + TimeSpan.FromMinutes(minutes);
-            if (negative) {
+            if (negative)
+            {
                 offset = offset.Negate();
             }
 
@@ -513,13 +604,16 @@ namespace Simula.Scripting.Json.Utilities
         #endregion
 
         #region Write
-        internal static void WriteDateTimeString(TextWriter writer, DateTime value, DateFormatHandling format, string? formatString, CultureInfo culture)
+        internal static void WriteDateTimeString(TextWriter writer, DateTime value, DateFormatHandling format, string formatString, CultureInfo culture)
         {
-            if (StringUtils.IsNullOrEmpty(formatString)) {
+            if (string.IsNullOrEmpty(formatString))
+            {
                 char[] chars = new char[64];
                 int pos = WriteDateTimeString(chars, 0, value, null, value.Kind, format);
                 writer.Write(chars, 0, pos);
-            } else {
+            }
+            else
+            {
                 writer.Write(value.ToString(formatString, culture));
             }
         }
@@ -528,7 +622,8 @@ namespace Simula.Scripting.Json.Utilities
         {
             int pos = start;
 
-            if (format == DateFormatHandling.MicrosoftDateFormat) {
+            if (format == DateFormatHandling.MicrosoftDateFormat)
+            {
                 TimeSpan o = offset ?? value.GetUtcOffset();
 
                 long javaScriptTicks = ConvertDateTimeToJavaScriptTicks(value, o);
@@ -540,9 +635,11 @@ namespace Simula.Scripting.Json.Utilities
                 ticksText.CopyTo(0, chars, pos, ticksText.Length);
                 pos += ticksText.Length;
 
-                switch (kind) {
+                switch (kind)
+                {
                     case DateTimeKind.Unspecified:
-                        if (value != DateTime.MaxValue && value != DateTime.MinValue) {
+                        if (value != DateTime.MaxValue && value != DateTime.MinValue)
+                        {
                             pos = WriteDateTimeOffset(chars, pos, o, format);
                         }
                         break;
@@ -553,10 +650,13 @@ namespace Simula.Scripting.Json.Utilities
 
                 @")\/".CopyTo(0, chars, pos, 3);
                 pos += 3;
-            } else {
+            }
+            else
+            {
                 pos = WriteDefaultIsoDate(chars, pos, value);
 
-                switch (kind) {
+                switch (kind)
+                {
                     case DateTimeKind.Local:
                         pos = WriteDateTimeOffset(chars, pos, offset ?? value.GetUtcOffset(), format);
                         break;
@@ -573,7 +673,10 @@ namespace Simula.Scripting.Json.Utilities
         {
             int length = 19;
 
-            GetDateValues(dt, out int year, out int month, out int day);
+            int year;
+            int month;
+            int day;
+            GetDateValues(dt, out year, out month, out day);
 
             CopyIntToCharArray(chars, start, year, 4);
             chars[start + 4] = '-';
@@ -589,9 +692,11 @@ namespace Simula.Scripting.Json.Utilities
 
             int fraction = (int)(dt.Ticks % 10000000L);
 
-            if (fraction != 0) {
+            if (fraction != 0)
+            {
                 int digits = 7;
-                while ((fraction % 10) == 0) {
+                while ((fraction % 10) == 0)
+                {
                     digits--;
                     fraction /= 10;
                 }
@@ -607,7 +712,8 @@ namespace Simula.Scripting.Json.Utilities
 
         private static void CopyIntToCharArray(char[] chars, int start, int value, int digits)
         {
-            while (digits-- != 0) {
+            while (digits-- != 0)
+            {
                 chars[start + digits] = (char)((value % 10) + 48);
                 value /= 10;
             }
@@ -621,7 +727,8 @@ namespace Simula.Scripting.Json.Utilities
             CopyIntToCharArray(chars, start, absHours, 2);
             start += 2;
 
-            if (format == DateFormatHandling.IsoDateFormat) {
+            if (format == DateFormatHandling.IsoDateFormat)
+            {
                 chars[start++] = ':';
             }
 
@@ -633,14 +740,17 @@ namespace Simula.Scripting.Json.Utilities
         }
 
 #if HAVE_DATE_TIME_OFFSET
-        internal static void WriteDateTimeOffsetString(TextWriter writer, DateTimeOffset value, DateFormatHandling format, string? formatString, CultureInfo culture)
+        internal static void WriteDateTimeOffsetString(TextWriter writer, DateTimeOffset value, DateFormatHandling format, string formatString, CultureInfo culture)
         {
-            if (StringUtils.IsNullOrEmpty(formatString)) {
+            if (string.IsNullOrEmpty(formatString))
+            {
                 char[] chars = new char[64];
                 int pos = WriteDateTimeString(chars, 0, (format == DateFormatHandling.IsoDateFormat) ? value.DateTime : value.UtcDateTime, value.Offset, DateTimeKind.Local, format);
 
                 writer.Write(chars, 0, pos);
-            } else {
+            }
+            else
+            {
                 writer.Write(value.ToString(formatString, culture));
             }
         }
@@ -650,31 +760,54 @@ namespace Simula.Scripting.Json.Utilities
         private static void GetDateValues(DateTime td, out int year, out int month, out int day)
         {
             long ticks = td.Ticks;
+            // n = number of days since 1/1/0001
             int n = (int)(ticks / TicksPerDay);
+            // y400 = number of whole 400-year periods since 1/1/0001
             int y400 = n / DaysPer400Years;
+            // n = day number within 400-year period
             n -= y400 * DaysPer400Years;
+            // y100 = number of whole 100-year periods within 400-year period
             int y100 = n / DaysPer100Years;
-            if (y100 == 4) {
+            // Last 100-year period has an extra day, so decrement result if 4
+            if (y100 == 4)
+            {
                 y100 = 3;
             }
+            // n = day number within 100-year period
             n -= y100 * DaysPer100Years;
+            // y4 = number of whole 4-year periods within 100-year period
             int y4 = n / DaysPer4Years;
+            // n = day number within 4-year period
             n -= y4 * DaysPer4Years;
+            // y1 = number of whole years within 4-year period
             int y1 = n / DaysPerYear;
-            if (y1 == 4) {
+            // Last year has an extra day, so decrement result if 4
+            if (y1 == 4)
+            {
                 y1 = 3;
             }
 
             year = y400 * 400 + y100 * 100 + y4 * 4 + y1 + 1;
+
+            // n = day number within year
             n -= y1 * DaysPerYear;
+
+            // Leap year calculation looks different from IsLeapYear since y1, y4,
+            // and y100 are relative to year 1, not year 0
             bool leapYear = y1 == 3 && (y4 != 24 || y100 == 3);
             int[] days = leapYear ? DaysToMonth366 : DaysToMonth365;
+            // All months have less than 32 days, so n >> 5 is a good conservative
+            // estimate for the month
             int m = n >> 5 + 1;
-            while (n >= days[m]) {
+            // m = 1-based month number
+            while (n >= days[m])
+            {
                 m++;
             }
 
             month = m;
+
+            // Return 1-based day-of-month
             day = n - days[m - 1] + 1;
         }
     }

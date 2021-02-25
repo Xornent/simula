@@ -1,5 +1,4 @@
-﻿using Odyssey.Controls;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -17,6 +16,7 @@ namespace Simula
 {
     public partial class MainWindow : Window
     {
+        #region Windows Behavior
 
         /*                    Consructors and Window Features
         * -------------------------------------------------------------------------
@@ -53,7 +53,7 @@ namespace Simula
         private void Window_StateChanged(object sender, EventArgs e)
         {
             if (WindowState == WindowState.Maximized)
-                Margin = new Thickness(8, 7, 8, 8);
+                Margin = new Thickness(7, 7, 7, 7);
             else
                 Margin = new Thickness(0);
         }
@@ -76,8 +76,8 @@ namespace Simula
                 InstallMainGrid.Margin = new Thickness(0, 0, 0, 0);
             } else {
                 WindowState = WindowState.Maximized;
-                MainGrid.Margin = new Thickness(8, 7, 8, 8);
-                InstallMainGrid.Margin = new Thickness(8, 7, 8, 8);
+                MainGrid.Margin = new Thickness(7, 7, 7, 7);
+                InstallMainGrid.Margin = new Thickness(7, 7, 7, 7);
             }
         }
 
@@ -405,6 +405,8 @@ namespace Simula
             body.IsHitTestVisible = true;
         }
 
+        #endregion
+
         private void Menu_About(object sender, EventArgs e)
         {
             var startup = new Pages.Startup();
@@ -423,7 +425,7 @@ namespace Simula
 
         private void Menu_ManageExtensions(object sender, EventArgs e)
         {
-            new Scripting.Packaging.PackageExplorer().ShowDialog();
+            
         }
 
         private void Menu_CheckUpdate(object sender, EventArgs e)
@@ -438,93 +440,89 @@ namespace Simula
             MainGrid.Visibility = Visibility.Visible;
         }
 
-        
-        // A BreadcrumbItem needs to populate it's Items. This can be due to the fact that a new BreadcrumbItem is selected, and thus
-        // it's Items must be populated to determine whether this BreadcrumbItem show a dropdown button,
-        // or when the Path property of the BreadcrumbBar is changed and therefore the Breadcrumbs must be populated from the new path.
-      
-        private void BreadcrumbBar_PopulateItems(object sender, Odyssey.Controls.BreadcrumbItemEventArgs e)
-        {
-            BreadcrumbItem item = e.Item;
-            if (item.Items.Count == 0) {
-                PopulateFolders(item);
-                e.Handled = true;
-            }
-        }
-
-        // Populate the Items of the specified BreadcrumbItem with the sub folders if necassary.
-
-        private static void PopulateFolders(BreadcrumbItem item)
-        {
-            BreadcrumbBar bar = item.BreadcrumbBar;
-            string path = bar.PathFromBreadcrumbItem(item);
-            string trace = item.TraceValue;
-            if (trace.Equals("工作区资源管理器")) {
-                string[] dirs = System.IO.Directory.GetLogicalDrives();
-                foreach (string s in dirs) {
-                    string dir = s;
-                    if (s.EndsWith(bar.SeparatorString)) dir = s.Remove(s.Length - bar.SeparatorString.Length, bar.SeparatorString.Length);
-                    FolderItem fi = new FolderItem();
-                    fi.Folder = dir;
-
-                    item.Items.Add(fi);
-                }
-            } else {
-                try {
-                    string[] paths = System.IO.Directory.GetDirectories(path + "\\");
-                    foreach (string s in paths) {
-                        DirectoryInfo info = new DirectoryInfo(s);
-                        if (!info.Attributes.HasFlag(FileAttributes.Hidden)) {
-                            string file = System.IO.Path.GetFileName(s);
-                            FolderItem fi = new FolderItem();
-                            fi.Folder = file;
-                            item.Items.Add(fi);
-                        }
-                    }
-                } catch { }
-            }
-        }
-
-        private void BreadcrumbBar_PathConversion(object sender, PathConversionEventArgs e)
-        {
-            if (e.Mode == PathConversionEventArgs.ConversionMode.DisplayToEdit) {
-                if (e.DisplayPath.StartsWith(@"工作区资源管理器\", StringComparison.OrdinalIgnoreCase)) {
-                    e.EditPath = e.DisplayPath.Remove(0, 9);
-                } 
-            } else {
-                if (e.EditPath.StartsWith("c:", StringComparison.OrdinalIgnoreCase)) {
-                    e.DisplayPath = @"Desktop\Computer\" + e.EditPath;
-                } else if (e.EditPath.StartsWith(@"\\")) {
-                    e.DisplayPath = @"Desktop\Network\" + e.EditPath.Remove(0, 2).Replace('/', '\\');
-                }
-            }
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            DoubleAnimation da = new DoubleAnimation(100, new Duration(new TimeSpan(0, 0, 2)));
-            da.FillBehavior = FillBehavior.Stop;
-            bar.BeginAnimation(BreadcrumbBar.ProgressValueProperty, da);
-        }
-
-        // The dropdown menu of a BreadcrumbItem was pressed, so delete the current folders, and repopulate the folders
-        // to ensure actual data.
-
-        private void bar_BreadcrumbItemDropDownOpened(object sender, BreadcrumbItemEventArgs e)
-        {
-            BreadcrumbItem item = e.Item;
-
-            // only repopulate, if the BreadcrumbItem is dynamically generated which means, item.Data is a  pointer to itself:
-            if (!(item.Data is BreadcrumbItem)) {
-                item.Items.Clear();
-                PopulateFolders(item);
-            }
-        }
-
         public static event EventHandler DialogCloseCallback;
         public static void InvokeDialogCloseCallback()
         {
             DialogCloseCallback?.Invoke(null, null);
+        }
+
+        //                             Workspaces
+        // ---------------------------------------------------------------------
+        // the following methods invoke the workspace creation, load from directory
+        // and git operations in the workspace explorer and git management panels.
+
+        private string currentWorkspaceLoc = "";
+        private DirectoryInfo currentDirectory;
+        private bool gitAvailable = false;
+        private Scripting.Git.Repository gitRepository;
+        private bool hasWorkspace { get { return !string.IsNullOrEmpty(currentWorkspaceLoc); } }
+
+        private void Event_OpenWorkspace(object sender, EventArgs e)
+        {
+            System.Windows.Forms.FolderBrowserDialog folderBrowser = new System.Windows.Forms.FolderBrowserDialog();
+            if (hasWorkspace) folderBrowser.SelectedPath = currentWorkspaceLoc;
+
+            if (folderBrowser.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
+                this.currentWorkspaceLoc = folderBrowser.SelectedPath;
+                this.currentDirectory = new DirectoryInfo(this.currentWorkspaceLoc);
+                this.lblWorkspace.Text = currentDirectory.Name;
+
+                this.btnInitRemote.IsEnabled = true;
+                this.btnInitRepo.IsEnabled = true;
+
+                // trigger the directory changing events.
+                this.CheckDirectoryGit();
+            }
+        }
+
+        private void CheckDirectoryGit()
+        {
+            if (!hasWorkspace) return;
+
+            if (Directory.Exists(currentWorkspaceLoc + @"\.git"))
+                gitAvailable = true;
+
+            if (gitAvailable) {
+                try {
+                    this.gitRepository = new Scripting.Git.Repository(currentWorkspaceLoc + @"\.git");
+                    this.panelInitGit.Visibility = Visibility.Hidden;
+                    this.panelGit.Visibility = Visibility.Visible;
+
+                    this.treeItemGitBranch.Items.Clear();
+                    foreach (var item in this.gitRepository.Branches) {
+                        this.treeItemGitBranch.Items.Add(new UI.IconTreeNode(item.FriendlyName + ((item.IsRemote) ? " 远程分支" : ""), "resources/icons/branch-circle.png"));
+                    }
+
+                    this.treeItemGitLocal.Items.Clear();
+                    foreach (var item in this.gitRepository.Commits) {
+                        this.treeItemGitLocal.Items.Add(new UI.IconTreeNode(item.MessageShort, "resources/icons/clock-check.png"));
+                    }
+
+                    this.treeItemGitTag.Items.Clear();
+                    foreach (var item in this.gitRepository.Tags) {
+                        this.treeItemGitTag.Items.Add(new UI.IconTreeNode(item.FriendlyName, "resources/icons/label.png"));
+                    }
+
+                } catch  {
+                    this.gitAvailable = false;
+                    this.panelInitGit.Visibility = Visibility.Visible;
+                    this.panelGit.Visibility = Visibility.Hidden;
+                }
+            }
+        }
+
+        private void Event_InitGitFromDirectory(object sender, EventArgs e)
+        {
+            if (gitAvailable) return;
+            if (!hasWorkspace) return;
+            string root = Scripting.Git.Repository.Init(currentWorkspaceLoc);
+            gitAvailable = true;
+            CheckDirectoryGit();
+        }
+
+        private void Event_InitGitFromRemote(object sender, EventArgs e)
+        {
+
         }
     }
 }

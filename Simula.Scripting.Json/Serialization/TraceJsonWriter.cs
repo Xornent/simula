@@ -1,10 +1,11 @@
-
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 #if HAVE_BIG_INTEGER
 using System.Numerics;
 #endif
+using System.Text;
 
 namespace Simula.Scripting.Json.Serialization
 {
@@ -19,6 +20,7 @@ namespace Simula.Scripting.Json.Serialization
             _innerWriter = innerWriter;
 
             _sw = new StringWriter(CultureInfo.InvariantCulture);
+            // prefix the message in the stringwriter to avoid concat with a potentially large JSON string
             _sw.Write("Serialized JSON: " + Environment.NewLine);
 
             _textWriter = new JsonTextWriter(_sw);
@@ -46,9 +48,12 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue) {
+            if (value.HasValue)
+            {
                 base.WriteValue(value.GetValueOrDefault());
-            } else {
+            }
+            else
+            {
                 base.WriteUndefined();
             }
         }
@@ -64,9 +69,12 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue) {
+            if (value.HasValue)
+            {
                 base.WriteValue(value.GetValueOrDefault());
-            } else {
+            }
+            else
+            {
                 base.WriteUndefined();
             }
         }
@@ -82,9 +90,12 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue) {
+            if (value.HasValue)
+            {
                 base.WriteValue(value.GetValueOrDefault());
-            } else {
+            }
+            else
+            {
                 base.WriteUndefined();
             }
         }
@@ -100,20 +111,26 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue) {
+            if (value.HasValue)
+            {
                 base.WriteValue(value.GetValueOrDefault());
-            } else {
+            }
+            else
+            {
                 base.WriteUndefined();
             }
         }
 
-        public override void WriteValue(byte[]? value)
+        public override void WriteValue(byte[] value)
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value == null) {
+            if (value == null)
+            {
                 base.WriteUndefined();
-            } else {
+            }
+            else
+            {
                 base.WriteValue(value);
             }
         }
@@ -129,9 +146,12 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue) {
+            if (value.HasValue)
+            {
                 base.WriteValue(value.GetValueOrDefault());
-            } else {
+            }
+            else
+            {
                 base.WriteUndefined();
             }
         }
@@ -148,9 +168,12 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue) {
+            if (value.HasValue)
+            {
                 base.WriteValue(value.GetValueOrDefault());
-            } else {
+            }
+            else
+            {
                 base.WriteUndefined();
             }
         }
@@ -167,9 +190,12 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue) {
+            if (value.HasValue)
+            {
                 base.WriteValue(value.GetValueOrDefault());
-            } else {
+            }
+            else
+            {
                 base.WriteUndefined();
             }
         }
@@ -199,9 +225,12 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue) {
+            if (value.HasValue)
+            {
                 base.WriteValue(value.GetValueOrDefault());
-            } else {
+            }
+            else
+            {
                 base.WriteUndefined();
             }
         }
@@ -217,9 +246,12 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue) {
+            if (value.HasValue)
+            {
                 base.WriteValue(value.GetValueOrDefault());
-            } else {
+            }
+            else
+            {
                 base.WriteUndefined();
             }
         }
@@ -235,9 +267,12 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue) {
+            if (value.HasValue)
+            {
                 base.WriteValue(value.GetValueOrDefault());
-            } else {
+            }
+            else
+            {
                 base.WriteUndefined();
             }
         }
@@ -253,14 +288,17 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue) {
+            if (value.HasValue)
+            {
                 base.WriteValue(value.GetValueOrDefault());
-            } else {
+            }
+            else
+            {
                 base.WriteUndefined();
             }
         }
 
-        public override void WriteValue(object? value)
+        public override void WriteValue(object value)
         {
 #if HAVE_BIG_INTEGER
             if (value is BigInteger)
@@ -274,10 +312,13 @@ namespace Simula.Scripting.Json.Serialization
             {
                 _textWriter.WriteValue(value);
                 _innerWriter.WriteValue(value);
-                if (value == null) {
+                if (value == null)
+                {
                     base.WriteUndefined();
-                } else {
-                    InternalWriteValue(JsonToken.String);
+                }
+                else
+                {
+                    base.WriteValue(value);
                 }
             }
         }
@@ -293,9 +334,12 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue) {
+            if (value.HasValue)
+            {
                 base.WriteValue(value.GetValueOrDefault());
-            } else {
+            }
+            else
+            {
                 base.WriteUndefined();
             }
         }
@@ -311,14 +355,17 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue) {
+            if (value.HasValue)
+            {
                 base.WriteValue(value.GetValueOrDefault());
-            } else {
+            }
+            else
+            {
                 base.WriteUndefined();
             }
         }
 
-        public override void WriteValue(string? value)
+        public override void WriteValue(string value)
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
@@ -336,9 +383,12 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue) {
+            if (value.HasValue)
+            {
                 base.WriteValue(value.GetValueOrDefault());
-            } else {
+            }
+            else
+            {
                 base.WriteUndefined();
             }
         }
@@ -354,9 +404,12 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue) {
+            if (value.HasValue)
+            {
                 base.WriteValue(value.GetValueOrDefault());
-            } else {
+            }
+            else
+            {
                 base.WriteUndefined();
             }
         }
@@ -372,20 +425,26 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue) {
+            if (value.HasValue)
+            {
                 base.WriteValue(value.GetValueOrDefault());
-            } else {
+            }
+            else
+            {
                 base.WriteUndefined();
             }
         }
 
-        public override void WriteValue(Uri? value)
+        public override void WriteValue(Uri value)
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value == null) {
+            if (value == null)
+            {
                 base.WriteUndefined();
-            } else {
+            }
+            else
+            {
                 base.WriteValue(value);
             }
         }
@@ -401,9 +460,12 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
-            if (value.HasValue) {
+            if (value.HasValue)
+            {
                 base.WriteValue(value.GetValueOrDefault());
-            } else {
+            }
+            else
+            {
                 base.WriteUndefined();
             }
         }
@@ -415,7 +477,7 @@ namespace Simula.Scripting.Json.Serialization
             base.WriteWhitespace(ws);
         }
 
-        public override void WriteComment(string? text)
+        public override void WriteComment(string text)
         {
             _textWriter.WriteComment(text);
             _innerWriter.WriteComment(text);
@@ -461,6 +523,8 @@ namespace Simula.Scripting.Json.Serialization
         {
             _textWriter.WritePropertyName(name, escape);
             _innerWriter.WritePropertyName(name, escape);
+
+            // method with escape will error
             base.WritePropertyName(name);
         }
 
@@ -478,14 +542,16 @@ namespace Simula.Scripting.Json.Serialization
             base.WriteEndObject();
         }
 
-        public override void WriteRawValue(string? json)
+        public override void WriteRawValue(string json)
         {
             _textWriter.WriteRawValue(json);
             _innerWriter.WriteRawValue(json);
+
+            // calling base method will write json twice
             InternalWriteValue(JsonToken.Undefined);
         }
 
-        public override void WriteRaw(string? json)
+        public override void WriteRaw(string json)
         {
             _textWriter.WriteRaw(json);
             _innerWriter.WriteRaw(json);

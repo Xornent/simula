@@ -1,4 +1,3 @@
-
 #if (HAVE_XML_DOCUMENT || HAVE_XLINQ)
 
 #if HAVE_BIG_INTEGER
@@ -14,7 +13,6 @@ using System.Xml.Linq;
 #endif
 using Simula.Scripting.Json.Utilities;
 using System.Runtime.CompilerServices;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Simula.Scripting.Json.Converters
 {
@@ -30,44 +28,44 @@ namespace Simula.Scripting.Json.Converters
             _document = document;
         }
 
-        public IXmlNode CreateComment(string? data)
+        public IXmlNode CreateComment(string data)
         {
             return new XmlNodeWrapper(_document.CreateComment(data));
         }
 
-        public IXmlNode CreateTextNode(string? text)
+        public IXmlNode CreateTextNode(string text)
         {
             return new XmlNodeWrapper(_document.CreateTextNode(text));
         }
 
-        public IXmlNode CreateCDataSection(string? data)
+        public IXmlNode CreateCDataSection(string data)
         {
             return new XmlNodeWrapper(_document.CreateCDataSection(data));
         }
 
-        public IXmlNode CreateWhitespace(string? text)
+        public IXmlNode CreateWhitespace(string text)
         {
             return new XmlNodeWrapper(_document.CreateWhitespace(text));
         }
 
-        public IXmlNode CreateSignificantWhitespace(string? text)
+        public IXmlNode CreateSignificantWhitespace(string text)
         {
             return new XmlNodeWrapper(_document.CreateSignificantWhitespace(text));
         }
 
-        public IXmlNode CreateXmlDeclaration(string? version, string? encoding, string? standalone)
+        public IXmlNode CreateXmlDeclaration(string version, string encoding, string standalone)
         {
             return new XmlDeclarationWrapper(_document.CreateXmlDeclaration(version, encoding, standalone));
         }
 
 #if HAVE_XML_DOCUMENT_TYPE
-        public IXmlNode CreateXmlDocumentType(string? name, string? publicId, string? systemId, string? internalSubset)
+        public IXmlNode CreateXmlDocumentType(string name, string publicId, string systemId, string internalSubset)
         {
             return new XmlDocumentTypeWrapper(_document.CreateDocumentType(name, publicId, systemId, null));
         }
 #endif
 
-        public IXmlNode CreateProcessingInstruction(string target, string? data)
+        public IXmlNode CreateProcessingInstruction(string target, string data)
         {
             return new XmlNodeWrapper(_document.CreateProcessingInstruction(target, data));
         }
@@ -82,7 +80,7 @@ namespace Simula.Scripting.Json.Converters
             return new XmlElementWrapper(_document.CreateElement(qualifiedName, namespaceUri));
         }
 
-        public IXmlNode CreateAttribute(string name, string? value)
+        public IXmlNode CreateAttribute(string name, string value)
         {
             XmlNodeWrapper attribute = new XmlNodeWrapper(_document.CreateAttribute(name));
             attribute.Value = value;
@@ -90,7 +88,7 @@ namespace Simula.Scripting.Json.Converters
             return attribute;
         }
 
-        public IXmlNode CreateAttribute(string qualifiedName, string namespaceUri, string? value)
+        public IXmlNode CreateAttribute(string qualifiedName, string namespaceUri, string value)
         {
             XmlNodeWrapper attribute = new XmlNodeWrapper(_document.CreateAttribute(qualifiedName, namespaceUri));
             attribute.Value = value;
@@ -98,7 +96,7 @@ namespace Simula.Scripting.Json.Converters
             return attribute;
         }
 
-        public IXmlElement? DocumentElement
+        public IXmlElement DocumentElement
         {
             get
             {
@@ -126,7 +124,7 @@ namespace Simula.Scripting.Json.Converters
         {
             XmlNodeWrapper xmlAttributeWrapper = (XmlNodeWrapper)attribute;
 
-            _element.SetAttributeNode((XmlAttribute)xmlAttributeWrapper.WrappedNode!);
+            _element.SetAttributeNode((XmlAttribute)xmlAttributeWrapper.WrappedNode);
         }
 
         public string GetPrefixOfNamespace(string namespaceUri)
@@ -134,7 +132,10 @@ namespace Simula.Scripting.Json.Converters
             return _element.GetPrefixOfNamespace(namespaceUri);
         }
 
-        public bool IsEmpty => _element.IsEmpty;
+        public bool IsEmpty
+        {
+            get { return _element.IsEmpty; }
+        }
     }
 
     internal class XmlDeclarationWrapper : XmlNodeWrapper, IXmlDeclaration
@@ -147,18 +148,21 @@ namespace Simula.Scripting.Json.Converters
             _declaration = declaration;
         }
 
-        public string Version => _declaration.Version;
+        public string Version
+        {
+            get { return _declaration.Version; }
+        }
 
         public string Encoding
         {
-            get => _declaration.Encoding;
-            set => _declaration.Encoding = value;
+            get { return _declaration.Encoding; }
+            set { _declaration.Encoding = value; }
         }
 
         public string Standalone
         {
-            get => _declaration.Standalone;
-            set => _declaration.Standalone = value;
+            get { return _declaration.Standalone; }
+            set { _declaration.Standalone = value; }
         }
     }
 
@@ -173,39 +177,65 @@ namespace Simula.Scripting.Json.Converters
             _documentType = documentType;
         }
 
-        public string Name => _documentType.Name;
+        public string Name
+        {
+            get { return _documentType.Name; }
+        }
 
-        public string System => _documentType.SystemId;
+        public string System
+        {
+            get { return _documentType.SystemId; }
+        }
 
-        public string Public => _documentType.PublicId;
+        public string Public
+        {
+            get { return _documentType.PublicId; }
+        }
 
-        public string InternalSubset => _documentType.InternalSubset;
+        public string InternalSubset
+        {
+            get { return _documentType.InternalSubset; }
+        }
 
-        public override string? LocalName => "DOCTYPE";
+        public override string LocalName
+        {
+            get { return "DOCTYPE"; }
+        }
     }
 #endif
 
     internal class XmlNodeWrapper : IXmlNode
     {
         private readonly XmlNode _node;
-        private List<IXmlNode>? _childNodes;
-        private List<IXmlNode>? _attributes;
+        private List<IXmlNode> _childNodes;
+        private List<IXmlNode> _attributes;
 
         public XmlNodeWrapper(XmlNode node)
         {
             _node = node;
         }
 
-        public object? WrappedNode => _node;
+        public object WrappedNode
+        {
+            get { return _node; }
+        }
 
-        public XmlNodeType NodeType => _node.NodeType;
+        public XmlNodeType NodeType
+        {
+            get { return _node.NodeType; }
+        }
 
-        public virtual string? LocalName => _node.LocalName;
+        public virtual string LocalName
+        {
+            get { return _node.LocalName; }
+        }
 
         public List<IXmlNode> ChildNodes
         {
             get
             {
+                // childnodes is read multiple times
+                // cache results to prevent multiple reads which kills perf in large documents
                 if (_childNodes == null)
                 {
                     if (!_node.HasChildNodes)
@@ -226,7 +256,10 @@ namespace Simula.Scripting.Json.Converters
             }
         }
 
-        protected virtual bool HasChildNodes => _node.HasChildNodes;
+        protected virtual bool HasChildNodes
+        {
+            get { return _node.HasChildNodes; }
+        }
 
         internal static IXmlNode WrapNode(XmlNode node)
         {
@@ -249,6 +282,8 @@ namespace Simula.Scripting.Json.Converters
         {
             get
             {
+                // attributes is read multiple times
+                // cache results to prevent multiple reads which kills perf in large documents
                 if (_attributes == null)
                 {
                     if (!HasAttributes)
@@ -273,7 +308,8 @@ namespace Simula.Scripting.Json.Converters
         {
             get
             {
-                if (_node is XmlElement element)
+                XmlElement element = _node as XmlElement;
+                if (element != null)
                 {
                     return element.HasAttributes;
                 }
@@ -282,11 +318,12 @@ namespace Simula.Scripting.Json.Converters
             }
         }
 
-        public IXmlNode? ParentNode
+        public IXmlNode ParentNode
         {
             get
             {
-                XmlNode node = _node is XmlAttribute attribute ? attribute.OwnerElement : _node.ParentNode;
+                XmlAttribute attribute = _node as XmlAttribute;
+                XmlNode node = attribute != null ? attribute.OwnerElement : _node.ParentNode;
 
                 if (node == null)
                 {
@@ -297,10 +334,10 @@ namespace Simula.Scripting.Json.Converters
             }
         }
 
-        public string? Value
+        public string Value
         {
-            get => _node.Value;
-            set => _node.Value = value;
+            get { return _node.Value; }
+            set { _node.Value = value; }
         }
 
         public IXmlNode AppendChild(IXmlNode newChild)
@@ -313,30 +350,33 @@ namespace Simula.Scripting.Json.Converters
             return newChild;
         }
 
-        public string? NamespaceUri => _node.NamespaceURI;
+        public string NamespaceUri
+        {
+            get { return _node.NamespaceURI; }
+        }
     }
 #endif
-    #endregion
+#endregion
 
-    #region Interfaces
+#region Interfaces
     internal interface IXmlDocument : IXmlNode
     {
-        IXmlNode CreateComment(string? text);
-        IXmlNode CreateTextNode(string? text);
-        IXmlNode CreateCDataSection(string? data);
-        IXmlNode CreateWhitespace(string? text);
-        IXmlNode CreateSignificantWhitespace(string? text);
-        IXmlNode CreateXmlDeclaration(string? version, string? encoding, string? standalone);
+        IXmlNode CreateComment(string text);
+        IXmlNode CreateTextNode(string text);
+        IXmlNode CreateCDataSection(string data);
+        IXmlNode CreateWhitespace(string text);
+        IXmlNode CreateSignificantWhitespace(string text);
+        IXmlNode CreateXmlDeclaration(string version, string encoding, string standalone);
 #if HAVE_XML_DOCUMENT_TYPE
-        IXmlNode CreateXmlDocumentType(string? name, string? publicId, string? systemId, string? internalSubset);
+        IXmlNode CreateXmlDocumentType(string name, string publicId, string systemId, string internalSubset);
 #endif
-        IXmlNode CreateProcessingInstruction(string target, string? data);
+        IXmlNode CreateProcessingInstruction(string target, string data);
         IXmlElement CreateElement(string elementName);
         IXmlElement CreateElement(string qualifiedName, string namespaceUri);
-        IXmlNode CreateAttribute(string name, string? value);
-        IXmlNode CreateAttribute(string qualifiedName, string namespaceUri, string? value);
+        IXmlNode CreateAttribute(string name, string value);
+        IXmlNode CreateAttribute(string qualifiedName, string namespaceUri, string value);
 
-        IXmlElement? DocumentElement { get; }
+        IXmlElement DocumentElement { get; }
     }
 
     internal interface IXmlDeclaration : IXmlNode
@@ -364,18 +404,18 @@ namespace Simula.Scripting.Json.Converters
     internal interface IXmlNode
     {
         XmlNodeType NodeType { get; }
-        string? LocalName { get; }
+        string LocalName { get; }
         List<IXmlNode> ChildNodes { get; }
         List<IXmlNode> Attributes { get; }
-        IXmlNode? ParentNode { get; }
-        string? Value { get; set; }
+        IXmlNode ParentNode { get; }
+        string Value { get; set; }
         IXmlNode AppendChild(IXmlNode newChild);
-        string? NamespaceUri { get; }
-        object? WrappedNode { get; }
+        string NamespaceUri { get; }
+        object WrappedNode { get; }
     }
-    #endregion
+#endregion
 
-    #region XNodeWrappers
+#region XNodeWrappers
 #if HAVE_XLINQ
     internal class XDeclarationWrapper : XObjectWrapper, IXmlDeclaration
     {
@@ -387,18 +427,26 @@ namespace Simula.Scripting.Json.Converters
             Declaration = declaration;
         }
 
-        public override XmlNodeType NodeType => XmlNodeType.XmlDeclaration;
-
-        public string Version => Declaration.Version;
-
-        public string Encoding {
-            get => Declaration.Encoding;
-            set => Declaration.Encoding = value;
+        public override XmlNodeType NodeType
+        {
+            get { return XmlNodeType.XmlDeclaration; }
         }
 
-        public string Standalone {
-            get => Declaration.Standalone;
-            set => Declaration.Standalone = value;
+        public string Version
+        {
+            get { return Declaration.Version; }
+        }
+
+        public string Encoding
+        {
+            get { return Declaration.Encoding; }
+            set { Declaration.Encoding = value; }
+        }
+
+        public string Standalone
+        {
+            get { return Declaration.Standalone; }
+            set { Declaration.Standalone = value; }
         }
     }
 
@@ -412,30 +460,51 @@ namespace Simula.Scripting.Json.Converters
             _documentType = documentType;
         }
 
-        public string Name => _documentType.Name;
+        public string Name
+        {
+            get { return _documentType.Name; }
+        }
 
-        public string System => _documentType.SystemId;
+        public string System
+        {
+            get { return _documentType.SystemId; }
+        }
 
-        public string Public => _documentType.PublicId;
+        public string Public
+        {
+            get { return _documentType.PublicId; }
+        }
 
-        public string InternalSubset => _documentType.InternalSubset;
+        public string InternalSubset
+        {
+            get { return _documentType.InternalSubset; }
+        }
 
-        public override string? LocalName => "DOCTYPE";
+        public override string LocalName
+        {
+            get { return "DOCTYPE"; }
+        }
     }
 
     internal class XDocumentWrapper : XContainerWrapper, IXmlDocument
     {
-        private XDocument Document => (XDocument)WrappedNode!;
+        private XDocument Document
+        {
+            get { return (XDocument)WrappedNode; }
+        }
 
         public XDocumentWrapper(XDocument document)
             : base(document)
         {
         }
 
-        public override List<IXmlNode> ChildNodes {
-            get {
+        public override List<IXmlNode> ChildNodes
+        {
+            get
+            {
                 List<IXmlNode> childNodes = base.ChildNodes;
-                if (Document.Declaration != null && (childNodes.Count == 0 || childNodes[0].NodeType != XmlNodeType.XmlDeclaration)) {
+                if (Document.Declaration != null && (childNodes.Count == 0 || childNodes[0].NodeType != XmlNodeType.XmlDeclaration))
+                {
                     childNodes.Insert(0, new XDeclarationWrapper(Document.Declaration));
                 }
 
@@ -443,9 +512,12 @@ namespace Simula.Scripting.Json.Converters
             }
         }
 
-        protected override bool HasChildNodes {
-            get {
-                if (base.HasChildNodes) {
+        protected override bool HasChildNodes
+        {
+            get
+            {
+                if (base.HasChildNodes)
+                {
                     return true;
                 }
 
@@ -453,42 +525,42 @@ namespace Simula.Scripting.Json.Converters
             }
         }
 
-        public IXmlNode CreateComment(string? text)
+        public IXmlNode CreateComment(string text)
         {
             return new XObjectWrapper(new XComment(text));
         }
 
-        public IXmlNode CreateTextNode(string? text)
+        public IXmlNode CreateTextNode(string text)
         {
             return new XObjectWrapper(new XText(text));
         }
 
-        public IXmlNode CreateCDataSection(string? data)
+        public IXmlNode CreateCDataSection(string data)
         {
             return new XObjectWrapper(new XCData(data));
         }
 
-        public IXmlNode CreateWhitespace(string? text)
+        public IXmlNode CreateWhitespace(string text)
         {
             return new XObjectWrapper(new XText(text));
         }
 
-        public IXmlNode CreateSignificantWhitespace(string? text)
+        public IXmlNode CreateSignificantWhitespace(string text)
         {
             return new XObjectWrapper(new XText(text));
         }
 
-        public IXmlNode CreateXmlDeclaration(string? version, string? encoding, string? standalone)
+        public IXmlNode CreateXmlDeclaration(string version, string encoding, string standalone)
         {
             return new XDeclarationWrapper(new XDeclaration(version, encoding, standalone));
         }
 
-        public IXmlNode CreateXmlDocumentType(string? name, string? publicId, string? systemId, string? internalSubset)
+        public IXmlNode CreateXmlDocumentType(string name, string publicId, string systemId, string internalSubset)
         {
             return new XDocumentTypeWrapper(new XDocumentType(name, publicId, systemId, internalSubset));
         }
 
-        public IXmlNode CreateProcessingInstruction(string target, string? data)
+        public IXmlNode CreateProcessingInstruction(string target, string data)
         {
             return new XProcessingInstructionWrapper(new XProcessingInstruction(target, data));
         }
@@ -504,20 +576,23 @@ namespace Simula.Scripting.Json.Converters
             return new XElementWrapper(new XElement(XName.Get(localName, namespaceUri)));
         }
 
-        public IXmlNode CreateAttribute(string name, string? value)
+        public IXmlNode CreateAttribute(string name, string value)
         {
             return new XAttributeWrapper(new XAttribute(name, value));
         }
 
-        public IXmlNode CreateAttribute(string qualifiedName, string namespaceUri, string? value)
+        public IXmlNode CreateAttribute(string qualifiedName, string namespaceUri, string value)
         {
             string localName = MiscellaneousUtils.GetLocalName(qualifiedName);
             return new XAttributeWrapper(new XAttribute(XName.Get(localName, namespaceUri), value));
         }
 
-        public IXmlElement? DocumentElement {
-            get {
-                if (Document.Root == null) {
+        public IXmlElement DocumentElement
+        {
+            get
+            {
+                if (Document.Root == null)
+                {
                     return null;
                 }
 
@@ -527,10 +602,14 @@ namespace Simula.Scripting.Json.Converters
 
         public override IXmlNode AppendChild(IXmlNode newChild)
         {
-            if (newChild is XDeclarationWrapper declarationWrapper) {
+            XDeclarationWrapper declarationWrapper = newChild as XDeclarationWrapper;
+            if (declarationWrapper != null)
+            {
                 Document.Declaration = declarationWrapper.Declaration;
                 return declarationWrapper;
-            } else {
+            }
+            else
+            {
                 return base.AppendChild(newChild);
             }
         }
@@ -538,21 +617,28 @@ namespace Simula.Scripting.Json.Converters
 
     internal class XTextWrapper : XObjectWrapper
     {
-        private XText Text => (XText)WrappedNode!;
+        private XText Text
+        {
+            get { return (XText)WrappedNode; }
+        }
 
         public XTextWrapper(XText text)
             : base(text)
         {
         }
 
-        public override string? Value {
-            get => Text.Value;
-            set => Text.Value = value;
+        public override string Value
+        {
+            get { return Text.Value; }
+            set { Text.Value = value; }
         }
 
-        public override IXmlNode? ParentNode {
-            get {
-                if (Text.Parent == null) {
+        public override IXmlNode ParentNode
+        {
+            get
+            {
+                if (Text.Parent == null)
+                {
                     return null;
                 }
 
@@ -563,21 +649,28 @@ namespace Simula.Scripting.Json.Converters
 
     internal class XCommentWrapper : XObjectWrapper
     {
-        private XComment Text => (XComment)WrappedNode!;
+        private XComment Text
+        {
+            get { return (XComment)WrappedNode; }
+        }
 
         public XCommentWrapper(XComment text)
             : base(text)
         {
         }
 
-        public override string? Value {
-            get => Text.Value;
-            set => Text.Value = value;
+        public override string Value
+        {
+            get { return Text.Value; }
+            set { Text.Value = value; }
         }
 
-        public override IXmlNode? ParentNode {
-            get {
-                if (Text.Parent == null) {
+        public override IXmlNode ParentNode
+        {
+            get
+            {
+                if (Text.Parent == null)
+                {
                     return null;
                 }
 
@@ -588,40 +681,59 @@ namespace Simula.Scripting.Json.Converters
 
     internal class XProcessingInstructionWrapper : XObjectWrapper
     {
-        private XProcessingInstruction ProcessingInstruction => (XProcessingInstruction)WrappedNode!;
+        private XProcessingInstruction ProcessingInstruction
+        {
+            get { return (XProcessingInstruction)WrappedNode; }
+        }
 
         public XProcessingInstructionWrapper(XProcessingInstruction processingInstruction)
             : base(processingInstruction)
         {
         }
 
-        public override string? LocalName => ProcessingInstruction.Target;
+        public override string LocalName
+        {
+            get { return ProcessingInstruction.Target; }
+        }
 
-        public override string? Value {
-            get => ProcessingInstruction.Data;
-            set => ProcessingInstruction.Data = value;
+        public override string Value
+        {
+            get { return ProcessingInstruction.Data; }
+            set { ProcessingInstruction.Data = value; }
         }
     }
 
     internal class XContainerWrapper : XObjectWrapper
     {
-        private List<IXmlNode>? _childNodes;
+        private List<IXmlNode> _childNodes;
 
-        private XContainer Container => (XContainer)WrappedNode!;
+        private XContainer Container
+        {
+            get { return (XContainer)WrappedNode; }
+        }
 
         public XContainerWrapper(XContainer container)
             : base(container)
         {
         }
 
-        public override List<IXmlNode> ChildNodes {
-            get {
-                if (_childNodes == null) {
-                    if (!HasChildNodes) {
+        public override List<IXmlNode> ChildNodes
+        {
+            get
+            {
+                // childnodes is read multiple times
+                // cache results to prevent multiple reads which kills perf in large documents
+                if (_childNodes == null)
+                {
+                    if (!HasChildNodes)
+                    {
                         _childNodes = XmlNodeConverter.EmptyChildNodes;
-                    } else {
+                    }
+                    else
+                    {
                         _childNodes = new List<IXmlNode>();
-                        foreach (XNode node in Container.Nodes()) {
+                        foreach (XNode node in Container.Nodes())
+                        {
                             _childNodes.Add(WrapNode(node));
                         }
                     }
@@ -631,11 +743,22 @@ namespace Simula.Scripting.Json.Converters
             }
         }
 
-        protected virtual bool HasChildNodes => Container.LastNode != null;
+        protected virtual bool HasChildNodes
+        {
+            get
+            {
+                // use last node for performance
+                // container linked list starts with lastnode
+                return Container.LastNode != null;
+            }
+        }
 
-        public override IXmlNode? ParentNode {
-            get {
-                if (Container.Parent == null) {
+        public override IXmlNode ParentNode
+        {
+            get
+            {
+                if (Container.Parent == null)
+                {
                     return null;
                 }
 
@@ -645,35 +768,51 @@ namespace Simula.Scripting.Json.Converters
 
         internal static IXmlNode WrapNode(XObject node)
         {
-            if (node is XDocument document) {
+            XDocument document = node as XDocument;
+            if (document != null)
+            {
                 return new XDocumentWrapper(document);
             }
 
-            if (node is XElement element) {
+            XElement element = node as XElement;
+            if (element != null)
+            {
                 return new XElementWrapper(element);
             }
 
-            if (node is XContainer container) {
+            XContainer container = node as XContainer;
+            if (container != null)
+            {
                 return new XContainerWrapper(container);
             }
 
-            if (node is XProcessingInstruction pi) {
+            XProcessingInstruction pi = node as XProcessingInstruction;
+            if (pi != null)
+            {
                 return new XProcessingInstructionWrapper(pi);
             }
 
-            if (node is XText text) {
+            XText text = node as XText;
+            if (text != null)
+            {
                 return new XTextWrapper(text);
             }
 
-            if (node is XComment comment) {
+            XComment comment = node as XComment;
+            if (comment != null)
+            {
                 return new XCommentWrapper(comment);
             }
 
-            if (node is XAttribute attribute) {
+            XAttribute attribute = node as XAttribute;
+            if (attribute != null)
+            {
                 return new XAttributeWrapper(attribute);
             }
 
-            if (node is XDocumentType type) {
+            XDocumentType type = node as XDocumentType;
+            if (type != null)
+            {
                 return new XDocumentTypeWrapper(type);
             }
 
@@ -691,28 +830,47 @@ namespace Simula.Scripting.Json.Converters
 
     internal class XObjectWrapper : IXmlNode
     {
-        private readonly XObject? _xmlObject;
+        private readonly XObject _xmlObject;
 
-        public XObjectWrapper(XObject? xmlObject)
+        public XObjectWrapper(XObject xmlObject)
         {
             _xmlObject = xmlObject;
         }
 
-        public object? WrappedNode => _xmlObject;
+        public object WrappedNode
+        {
+            get { return _xmlObject; }
+        }
 
-        public virtual XmlNodeType NodeType => _xmlObject?.NodeType ?? XmlNodeType.None;
+        public virtual XmlNodeType NodeType
+        {
+            get { return _xmlObject.NodeType; }
+        }
 
-        public virtual string? LocalName => null;
+        public virtual string LocalName
+        {
+            get { return null; }
+        }
 
-        public virtual List<IXmlNode> ChildNodes => XmlNodeConverter.EmptyChildNodes;
+        public virtual List<IXmlNode> ChildNodes
+        {
+            get { return XmlNodeConverter.EmptyChildNodes; }
+        }
 
-        public virtual List<IXmlNode> Attributes => XmlNodeConverter.EmptyChildNodes;
+        public virtual List<IXmlNode> Attributes
+        {
+            get { return XmlNodeConverter.EmptyChildNodes; }
+        }
 
-        public virtual IXmlNode? ParentNode => null;
+        public virtual IXmlNode ParentNode
+        {
+            get { return null; }
+        }
 
-        public virtual string? Value {
-            get => null;
-            set => throw new InvalidOperationException();
+        public virtual string Value
+        {
+            get { return null; }
+            set { throw new InvalidOperationException(); }
         }
 
         public virtual IXmlNode AppendChild(IXmlNode newChild)
@@ -720,30 +878,46 @@ namespace Simula.Scripting.Json.Converters
             throw new InvalidOperationException();
         }
 
-        public virtual string? NamespaceUri => null;
+        public virtual string NamespaceUri
+        {
+            get { return null; }
+        }
     }
 
     internal class XAttributeWrapper : XObjectWrapper
     {
-        private XAttribute Attribute => (XAttribute)WrappedNode!;
+        private XAttribute Attribute
+        {
+            get { return (XAttribute)WrappedNode; }
+        }
 
         public XAttributeWrapper(XAttribute attribute)
             : base(attribute)
         {
         }
 
-        public override string? Value {
-            get => Attribute.Value;
-            set => Attribute.Value = value;
+        public override string Value
+        {
+            get { return Attribute.Value; }
+            set { Attribute.Value = value; }
         }
 
-        public override string? LocalName => Attribute.Name.LocalName;
+        public override string LocalName
+        {
+            get { return Attribute.Name.LocalName; }
+        }
 
-        public override string? NamespaceUri => Attribute.Name.NamespaceName;
+        public override string NamespaceUri
+        {
+            get { return Attribute.Name.NamespaceName; }
+        }
 
-        public override IXmlNode? ParentNode {
-            get {
-                if (Attribute.Parent == null) {
+        public override IXmlNode ParentNode
+        {
+            get
+            {
+                if (Attribute.Parent == null)
+                {
                     return null;
                 }
 
@@ -754,9 +928,12 @@ namespace Simula.Scripting.Json.Converters
 
     internal class XElementWrapper : XContainerWrapper, IXmlElement
     {
-        private List<IXmlNode>? _attributes;
+        private List<IXmlNode> _attributes;
 
-        private XElement Element => (XElement)WrappedNode!;
+        private XElement Element
+        {
+            get { return (XElement)WrappedNode; }
+        }
 
         public XElementWrapper(XElement element)
             : base(element)
@@ -770,18 +947,31 @@ namespace Simula.Scripting.Json.Converters
             _attributes = null;
         }
 
-        public override List<IXmlNode> Attributes {
-            get {
-                if (_attributes == null) {
-                    if (!Element.HasAttributes && !HasImplicitNamespaceAttribute(NamespaceUri!)) {
+        public override List<IXmlNode> Attributes
+        {
+            get
+            {
+                // attributes is read multiple times
+                // cache results to prevent multiple reads which kills perf in large documents
+                if (_attributes == null)
+                {
+                    if (!Element.HasAttributes && !HasImplicitNamespaceAttribute(NamespaceUri))
+                    {
                         _attributes = XmlNodeConverter.EmptyChildNodes;
-                    } else {
+                    }
+                    else
+                    {
                         _attributes = new List<IXmlNode>();
-                        foreach (XAttribute attribute in Element.Attributes()) {
+                        foreach (XAttribute attribute in Element.Attributes())
+                        {
                             _attributes.Add(new XAttributeWrapper(attribute));
                         }
-                        string namespaceUri = NamespaceUri!;
-                        if (HasImplicitNamespaceAttribute(namespaceUri)) {
+
+                        // ensure elements created with a namespace but no namespace attribute are converted correctly
+                        // e.g. new XElement("{http://example.com}MyElement");
+                        string namespaceUri = NamespaceUri;
+                        if (HasImplicitNamespaceAttribute(namespaceUri))
+                        {
                             _attributes.Insert(0, new XAttributeWrapper(new XAttribute("xmlns", namespaceUri)));
                         }
                     }
@@ -793,19 +983,25 @@ namespace Simula.Scripting.Json.Converters
 
         private bool HasImplicitNamespaceAttribute(string namespaceUri)
         {
-            if (!StringUtils.IsNullOrEmpty(namespaceUri) && namespaceUri != ParentNode?.NamespaceUri) {
-                if (StringUtils.IsNullOrEmpty(GetPrefixOfNamespace(namespaceUri))) {
+            if (!string.IsNullOrEmpty(namespaceUri) && namespaceUri != ParentNode?.NamespaceUri)
+            {
+                if (string.IsNullOrEmpty(GetPrefixOfNamespace(namespaceUri)))
+                {
                     bool namespaceDeclared = false;
 
-                    if (Element.HasAttributes) {
-                        foreach (XAttribute attribute in Element.Attributes()) {
-                            if (attribute.Name.LocalName == "xmlns" && StringUtils.IsNullOrEmpty(attribute.Name.NamespaceName) && attribute.Value == namespaceUri) {
+                    if (Element.HasAttributes)
+                    {
+                        foreach (XAttribute attribute in Element.Attributes())
+                        {
+                            if (attribute.Name.LocalName == "xmlns" && string.IsNullOrEmpty(attribute.Name.NamespaceName) && attribute.Value == namespaceUri)
+                            {
                                 namespaceDeclared = true;
                             }
                         }
                     }
 
-                    if (!namespaceDeclared) {
+                    if (!namespaceDeclared)
+                    {
                         return true;
                     }
                 }
@@ -821,24 +1017,38 @@ namespace Simula.Scripting.Json.Converters
             return result;
         }
 
-        public override string? Value {
-            get => Element.Value;
-            set => Element.Value = value;
+        public override string Value
+        {
+            get { return Element.Value; }
+            set { Element.Value = value; }
         }
 
-        public override string? LocalName => Element.Name.LocalName;
+        public override string LocalName
+        {
+            get { return Element.Name.LocalName; }
+        }
 
-        public override string? NamespaceUri => Element.Name.NamespaceName;
+        public override string NamespaceUri
+        {
+            get { return Element.Name.NamespaceName; }
+        }
 
         public string GetPrefixOfNamespace(string namespaceUri)
         {
             return Element.GetPrefixOfNamespace(namespaceUri);
         }
 
-        public bool IsEmpty => Element.IsEmpty;
+        public bool IsEmpty
+        {
+            get { return Element.IsEmpty; }
+        }
     }
 #endif
-    #endregion
+#endregion
+
+    /// <summary>
+    /// Converts XML to and from JSON.
+    /// </summary>
     public class XmlNodeConverter : JsonConverter
     {
         internal static readonly List<IXmlNode> EmptyChildNodes = new List<IXmlNode>();
@@ -850,31 +1060,49 @@ namespace Simula.Scripting.Json.Converters
         private const string SignificantWhitespaceName = "#significant-whitespace";
         private const string DeclarationName = "?xml";
         private const string JsonNamespaceUri = "http://james.newtonking.com/projects/json";
-        public string? DeserializeRootElementName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the root element to insert when deserializing to XML if the JSON structure has produced multiple root elements.
+        /// </summary>
+        /// <value>The name of the deserialized root element.</value>
+        public string DeserializeRootElementName { get; set; }
+
+        /// <summary>
+        /// Gets or sets a flag to indicate whether to write the Json.NET array attribute.
+        /// This attribute helps preserve arrays when converting the written XML back to JSON.
+        /// </summary>
+        /// <value><c>true</c> if the array attribute is written to the XML; otherwise, <c>false</c>.</value>
         public bool WriteArrayAttribute { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to write the root JSON object.
+        /// </summary>
+        /// <value><c>true</c> if the JSON root object is omitted; otherwise, <c>false</c>.</value>
         public bool OmitRootObject { get; set; }
-        public bool EncodeSpecialCharacters { get; set; }
 
-        #region Writing
-        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+#region Writing
+        /// <summary>
+        /// Writes the JSON representation of the object.
+        /// </summary>
+        /// <param name="writer">The <see cref="JsonWriter"/> to write to.</param>
+        /// <param name="serializer">The calling serializer.</param>
+        /// <param name="value">The value.</param>
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            if (value == null) {
-                writer.WriteNull();
-                return;
-            }
-
             IXmlNode node = WrapXml(value);
 
             XmlNamespaceManager manager = new XmlNamespaceManager(new NameTable());
             PushParentNamespaces(node, manager);
 
-            if (!OmitRootObject) {
+            if (!OmitRootObject)
+            {
                 writer.WriteStartObject();
             }
 
             SerializeNode(writer, node, manager, !OmitRootObject);
 
-            if (!OmitRootObject) {
+            if (!OmitRootObject)
+            {
                 writer.WriteEndObject();
             }
         }
@@ -882,12 +1110,15 @@ namespace Simula.Scripting.Json.Converters
         private IXmlNode WrapXml(object value)
         {
 #if HAVE_XLINQ
-            if (value is XObject xObject) {
+            XObject xObject = value as XObject;
+            if (xObject != null)
+            {
                 return XContainerWrapper.WrapNode(xObject);
             }
 #endif
 #if HAVE_XML_DOCUMENT
-            if (value is XmlNode node)
+            XmlNode node = value as XmlNode;
+            if (node != null)
             {
                 return XmlNodeWrapper.WrapNode(node);
             }
@@ -898,12 +1129,15 @@ namespace Simula.Scripting.Json.Converters
 
         private void PushParentNamespaces(IXmlNode node, XmlNamespaceManager manager)
         {
-            List<IXmlNode>? parentElements = null;
+            List<IXmlNode> parentElements = null;
 
-            IXmlNode? parent = node;
-            while ((parent = parent.ParentNode) != null) {
-                if (parent.NodeType == XmlNodeType.Element) {
-                    if (parentElements == null) {
+            IXmlNode parent = node;
+            while ((parent = parent.ParentNode) != null)
+            {
+                if (parent.NodeType == XmlNodeType.Element)
+                {
+                    if (parentElements == null)
+                    {
                         parentElements = new List<IXmlNode>();
                     }
 
@@ -911,13 +1145,17 @@ namespace Simula.Scripting.Json.Converters
                 }
             }
 
-            if (parentElements != null) {
+            if (parentElements != null)
+            {
                 parentElements.Reverse();
 
-                foreach (IXmlNode parentElement in parentElements) {
+                foreach (IXmlNode parentElement in parentElements)
+                {
                     manager.PushScope();
-                    foreach (IXmlNode attribute in parentElement.Attributes) {
-                        if (attribute.NamespaceUri == "http://www.w3.org/2000/xmlns/" && attribute.LocalName != "xmlns") {
+                    foreach (IXmlNode attribute in parentElement.Attributes)
+                    {
+                        if (attribute.NamespaceUri == "http://www.w3.org/2000/xmlns/" && attribute.LocalName != "xmlns")
+                        {
                             manager.AddNamespace(attribute.LocalName, attribute.Value);
                         }
                     }
@@ -927,24 +1165,31 @@ namespace Simula.Scripting.Json.Converters
 
         private string ResolveFullName(IXmlNode node, XmlNamespaceManager manager)
         {
-            string? prefix = (node.NamespaceUri == null || (node.LocalName == "xmlns" && node.NamespaceUri == "http://www.w3.org/2000/xmlns/"))
+            string prefix = (node.NamespaceUri == null || (node.LocalName == "xmlns" && node.NamespaceUri == "http://www.w3.org/2000/xmlns/"))
                 ? null
                 : manager.LookupPrefix(node.NamespaceUri);
 
-            if (!StringUtils.IsNullOrEmpty(prefix)) {
+            if (!string.IsNullOrEmpty(prefix))
+            {
                 return prefix + ":" + XmlConvert.DecodeName(node.LocalName);
-            } else {
+            }
+            else
+            {
                 return XmlConvert.DecodeName(node.LocalName);
             }
         }
 
         private string GetPropertyName(IXmlNode node, XmlNamespaceManager manager)
         {
-            switch (node.NodeType) {
+            switch (node.NodeType)
+            {
                 case XmlNodeType.Attribute:
-                    if (node.NamespaceUri == JsonNamespaceUri) {
+                    if (node.NamespaceUri == JsonNamespaceUri)
+                    {
                         return "$" + node.LocalName;
-                    } else {
+                    }
+                    else
+                    {
                         return "@" + ResolveFullName(node, manager);
                     }
                 case XmlNodeType.CDATA:
@@ -952,9 +1197,12 @@ namespace Simula.Scripting.Json.Converters
                 case XmlNodeType.Comment:
                     return CommentName;
                 case XmlNodeType.Element:
-                    if (node.NamespaceUri == JsonNamespaceUri) {
+                    if (node.NamespaceUri == JsonNamespaceUri)
+                    {
                         return "$" + node.LocalName;
-                    } else {
+                    }
+                    else
+                    {
                         return ResolveFullName(node, manager);
                     }
                 case XmlNodeType.ProcessingInstruction:
@@ -976,8 +1224,10 @@ namespace Simula.Scripting.Json.Converters
 
         private bool IsArray(IXmlNode node)
         {
-            foreach (IXmlNode attribute in node.Attributes) {
-                if (attribute.LocalName == "Array" && attribute.NamespaceUri == JsonNamespaceUri) {
+            foreach (IXmlNode attribute in node.Attributes)
+            {
+                if (attribute.LocalName == "Array" && attribute.NamespaceUri == JsonNamespaceUri)
+                {
                     return XmlConvert.ToBoolean(attribute.Value);
                 }
             }
@@ -987,85 +1237,140 @@ namespace Simula.Scripting.Json.Converters
 
         private void SerializeGroupedNodes(JsonWriter writer, IXmlNode node, XmlNamespaceManager manager, bool writePropertyName)
         {
-            switch (node.ChildNodes.Count) {
-                case 0: {
-                        break;
+            switch (node.ChildNodes.Count)
+            {
+                case 0:
+                {
+                    // nothing to serialize
+                    break;
+                }
+                case 1:
+                {
+                    // avoid grouping when there is only one node
+                    string nodeName = GetPropertyName(node.ChildNodes[0], manager);
+                    WriteGroupedNodes(writer, manager, writePropertyName, node.ChildNodes, nodeName);
+                    break;
+                }
+                default:
+                {
+                    // check whether nodes have the same name
+                    // if they don't then group into dictionary together by name
+
+                    // value of dictionary will be a single IXmlNode when there is one for a name,
+                    // or a List<IXmlNode> when there are multiple
+                    Dictionary<string, object> nodesGroupedByName = null;
+
+                    string nodeName = null;
+
+                    for (int i = 0; i < node.ChildNodes.Count; i++)
+                    {
+                        IXmlNode childNode = node.ChildNodes[i];
+                        string currentNodeName = GetPropertyName(childNode, manager);
+
+                        if (nodesGroupedByName == null)
+                        {
+                            if (nodeName == null)
+                            {
+                                nodeName = currentNodeName;
+                            }
+                            else if (currentNodeName == nodeName)
+                            {
+                                // current node name matches others
+                            }
+                            else
+                            {
+                                nodesGroupedByName = new Dictionary<string, object>();
+                                if (i > 1)
+                                {
+                                    List<IXmlNode> nodes = new List<IXmlNode>(i);
+                                    for (int j = 0; j < i; j++)
+                                    {
+                                        nodes.Add(node.ChildNodes[j]);
+                                    }
+                                    nodesGroupedByName.Add(nodeName, nodes);
+                                }
+                                else
+                                {
+                                    nodesGroupedByName.Add(nodeName, node.ChildNodes[0]);
+                                }
+                                nodesGroupedByName.Add(currentNodeName, childNode);
+                            }
+                        }
+                        else
+                        {
+                            object value;
+                            if (!nodesGroupedByName.TryGetValue(currentNodeName, out value))
+                            {
+                                nodesGroupedByName.Add(currentNodeName, childNode);
+                            }
+                            else
+                            {
+                                List<IXmlNode> nodes = value as List<IXmlNode>;
+                                if (nodes == null)
+                                {
+                                    nodes = new List<IXmlNode> {(IXmlNode)value};
+                                    nodesGroupedByName[currentNodeName] = nodes;
+                                }
+
+                                nodes.Add(childNode);
+                            }
+                        }
                     }
-                case 1: {
-                        string nodeName = GetPropertyName(node.ChildNodes[0], manager);
+
+                    if (nodesGroupedByName == null)
+                    {
                         WriteGroupedNodes(writer, manager, writePropertyName, node.ChildNodes, nodeName);
-                        break;
                     }
-                default: {
-                        Dictionary<string, object>? nodesGroupedByName = null;
-
-                        string? nodeName = null;
-
-                        for (int i = 0; i < node.ChildNodes.Count; i++) {
-                            IXmlNode childNode = node.ChildNodes[i];
-                            string currentNodeName = GetPropertyName(childNode, manager);
-
-                            if (nodesGroupedByName == null) {
-                                if (nodeName == null) {
-                                    nodeName = currentNodeName;
-                                } else if (currentNodeName == nodeName) {
-                                } else {
-                                    nodesGroupedByName = new Dictionary<string, object>();
-                                    if (i > 1) {
-                                        List<IXmlNode> nodes = new List<IXmlNode>(i);
-                                        for (int j = 0; j < i; j++) {
-                                            nodes.Add(node.ChildNodes[j]);
-                                        }
-                                        nodesGroupedByName.Add(nodeName, nodes);
-                                    } else {
-                                        nodesGroupedByName.Add(nodeName, node.ChildNodes[0]);
-                                    }
-                                    nodesGroupedByName.Add(currentNodeName, childNode);
-                                }
-                            } else {
-                                if (!nodesGroupedByName.TryGetValue(currentNodeName, out object value)) {
-                                    nodesGroupedByName.Add(currentNodeName, childNode);
-                                } else {
-                                    if (!(value is List<IXmlNode> nodes)) {
-                                        nodes = new List<IXmlNode> { (IXmlNode)value! };
-                                        nodesGroupedByName[currentNodeName] = nodes;
-                                    }
-
-                                    nodes.Add(childNode);
-                                }
+                    else
+                    {
+                        // loop through grouped nodes. write single name instances as normal,
+                        // write multiple names together in an array
+                        foreach (KeyValuePair<string, object> nodeNameGroup in nodesGroupedByName)
+                        {
+                            List<IXmlNode> nodes = nodeNameGroup.Value as List<IXmlNode>;
+                            if (nodes != null)
+                            {
+                                WriteGroupedNodes(writer, manager, writePropertyName, nodes, nodeNameGroup.Key);
+                            }
+                            else
+                            {
+                                WriteGroupedNodes(writer, manager, writePropertyName, (IXmlNode)nodeNameGroup.Value, nodeNameGroup.Key);
                             }
                         }
-
-                        if (nodesGroupedByName == null) {
-                            WriteGroupedNodes(writer, manager, writePropertyName, node.ChildNodes, nodeName!);
-                        } else {
-                            foreach (KeyValuePair<string, object> nodeNameGroup in nodesGroupedByName) {
-                                if (nodeNameGroup.Value is List<IXmlNode> nodes) {
-                                    WriteGroupedNodes(writer, manager, writePropertyName, nodes, nodeNameGroup.Key);
-                                } else {
-                                    WriteGroupedNodes(writer, manager, writePropertyName, (IXmlNode)nodeNameGroup.Value, nodeNameGroup.Key);
-                                }
-                            }
-                        }
-                        break;
                     }
+                    break;
+                }
             }
         }
 
         private void WriteGroupedNodes(JsonWriter writer, XmlNamespaceManager manager, bool writePropertyName, List<IXmlNode> groupedNodes, string elementNames)
         {
-            bool writeArray = groupedNodes.Count != 1 || IsArray(groupedNodes[0]);
+            bool writeArray;
 
-            if (!writeArray) {
+            if (groupedNodes.Count == 1)
+            {
+                writeArray = IsArray(groupedNodes[0]);
+            }
+            else
+            {
+                writeArray = true;
+            }
+
+            if (!writeArray)
+            {
                 SerializeNode(writer, groupedNodes[0], manager, writePropertyName);
-            } else {
-                if (writePropertyName) {
+            }
+            else
+            {
+                if (writePropertyName)
+                {
                     writer.WritePropertyName(elementNames);
                 }
 
                 writer.WriteStartArray();
 
-                for (int i = 0; i < groupedNodes.Count; i++) {
+                for (int i = 0; i < groupedNodes.Count; i++)
+                {
                     SerializeNode(writer, groupedNodes[i], manager, false);
                 }
 
@@ -1077,10 +1382,14 @@ namespace Simula.Scripting.Json.Converters
         {
             bool writeArray = IsArray(node);
 
-            if (!writeArray) {
+            if (!writeArray)
+            {
                 SerializeNode(writer, node, manager, writePropertyName);
-            } else {
-                if (writePropertyName) {
+            }
+            else
+            {
+                if (writePropertyName)
+                {
                     writer.WritePropertyName(elementNames);
                 }
 
@@ -1094,49 +1403,65 @@ namespace Simula.Scripting.Json.Converters
 
         private void SerializeNode(JsonWriter writer, IXmlNode node, XmlNamespaceManager manager, bool writePropertyName)
         {
-            switch (node.NodeType) {
+            switch (node.NodeType)
+            {
                 case XmlNodeType.Document:
                 case XmlNodeType.DocumentFragment:
                     SerializeGroupedNodes(writer, node, manager, writePropertyName);
                     break;
                 case XmlNodeType.Element:
-                    if (IsArray(node) && AllSameName(node) && node.ChildNodes.Count > 0) {
+                    if (IsArray(node) && AllSameName(node) && node.ChildNodes.Count > 0)
+                    {
                         SerializeGroupedNodes(writer, node, manager, false);
-                    } else {
+                    }
+                    else
+                    {
                         manager.PushScope();
 
-                        foreach (IXmlNode attribute in node.Attributes) {
-                            if (attribute.NamespaceUri == "http://www.w3.org/2000/xmlns/") {
+                        foreach (IXmlNode attribute in node.Attributes)
+                        {
+                            if (attribute.NamespaceUri == "http://www.w3.org/2000/xmlns/")
+                            {
                                 string namespacePrefix = (attribute.LocalName != "xmlns")
                                     ? XmlConvert.DecodeName(attribute.LocalName)
                                     : string.Empty;
-                                string? namespaceUri = attribute.Value;
-                                if (namespaceUri == null) {
-                                    throw new JsonSerializationException("Namespace attribute must have a value.");
-                                }
+                                string namespaceUri = attribute.Value;
 
                                 manager.AddNamespace(namespacePrefix, namespaceUri);
                             }
                         }
 
-                        if (writePropertyName) {
+                        if (writePropertyName)
+                        {
                             writer.WritePropertyName(GetPropertyName(node, manager));
                         }
 
                         if (!ValueAttributes(node.Attributes) && node.ChildNodes.Count == 1
-                            && node.ChildNodes[0].NodeType == XmlNodeType.Text) {
+                            && node.ChildNodes[0].NodeType == XmlNodeType.Text)
+                        {
+                            // write elements with a single text child as a name value pair
                             writer.WriteValue(node.ChildNodes[0].Value);
-                        } else if (node.ChildNodes.Count == 0 && node.Attributes.Count == 0) {
+                        }
+                        else if (node.ChildNodes.Count == 0 && node.Attributes.Count == 0)
+                        {
                             IXmlElement element = (IXmlElement)node;
-                            if (element.IsEmpty) {
+
+                            // empty element
+                            if (element.IsEmpty)
+                            {
                                 writer.WriteNull();
-                            } else {
+                            }
+                            else
+                            {
                                 writer.WriteValue(string.Empty);
                             }
-                        } else {
+                        }
+                        else
+                        {
                             writer.WriteStartObject();
 
-                            for (int i = 0; i < node.Attributes.Count; i++) {
+                            for (int i = 0; i < node.Attributes.Count; i++)
+                            {
                                 SerializeNode(writer, node.Attributes[i], manager, true);
                             }
 
@@ -1150,7 +1475,8 @@ namespace Simula.Scripting.Json.Converters
 
                     break;
                 case XmlNodeType.Comment:
-                    if (writePropertyName) {
+                    if (writePropertyName)
+                    {
                         writer.WriteComment(node.Value);
                     }
                     break;
@@ -1160,17 +1486,21 @@ namespace Simula.Scripting.Json.Converters
                 case XmlNodeType.ProcessingInstruction:
                 case XmlNodeType.Whitespace:
                 case XmlNodeType.SignificantWhitespace:
-                    if (node.NamespaceUri == "http://www.w3.org/2000/xmlns/" && node.Value == JsonNamespaceUri) {
+                    if (node.NamespaceUri == "http://www.w3.org/2000/xmlns/" && node.Value == JsonNamespaceUri)
+                    {
                         return;
                     }
 
-                    if (node.NamespaceUri == JsonNamespaceUri) {
-                        if (node.LocalName == "Array") {
+                    if (node.NamespaceUri == JsonNamespaceUri)
+                    {
+                        if (node.LocalName == "Array")
+                        {
                             return;
                         }
                     }
 
-                    if (writePropertyName) {
+                    if (writePropertyName)
+                    {
                         writer.WritePropertyName(GetPropertyName(node, manager));
                     }
                     writer.WriteValue(node.Value);
@@ -1180,15 +1510,18 @@ namespace Simula.Scripting.Json.Converters
                     writer.WritePropertyName(GetPropertyName(node, manager));
                     writer.WriteStartObject();
 
-                    if (!StringUtils.IsNullOrEmpty(declaration.Version)) {
+                    if (!string.IsNullOrEmpty(declaration.Version))
+                    {
                         writer.WritePropertyName("@version");
                         writer.WriteValue(declaration.Version);
                     }
-                    if (!StringUtils.IsNullOrEmpty(declaration.Encoding)) {
+                    if (!string.IsNullOrEmpty(declaration.Encoding))
+                    {
                         writer.WritePropertyName("@encoding");
                         writer.WriteValue(declaration.Encoding);
                     }
-                    if (!StringUtils.IsNullOrEmpty(declaration.Standalone)) {
+                    if (!string.IsNullOrEmpty(declaration.Standalone))
+                    {
                         writer.WritePropertyName("@standalone");
                         writer.WriteValue(declaration.Standalone);
                     }
@@ -1200,19 +1533,23 @@ namespace Simula.Scripting.Json.Converters
                     writer.WritePropertyName(GetPropertyName(node, manager));
                     writer.WriteStartObject();
 
-                    if (!StringUtils.IsNullOrEmpty(documentType.Name)) {
+                    if (!string.IsNullOrEmpty(documentType.Name))
+                    {
                         writer.WritePropertyName("@name");
                         writer.WriteValue(documentType.Name);
                     }
-                    if (!StringUtils.IsNullOrEmpty(documentType.Public)) {
+                    if (!string.IsNullOrEmpty(documentType.Public))
+                    {
                         writer.WritePropertyName("@public");
                         writer.WriteValue(documentType.Public);
                     }
-                    if (!StringUtils.IsNullOrEmpty(documentType.System)) {
+                    if (!string.IsNullOrEmpty(documentType.System))
+                    {
                         writer.WritePropertyName("@system");
                         writer.WriteValue(documentType.System);
                     }
-                    if (!StringUtils.IsNullOrEmpty(documentType.InternalSubset)) {
+                    if (!string.IsNullOrEmpty(documentType.InternalSubset))
+                    {
                         writer.WritePropertyName("@internalSubset");
                         writer.WriteValue(documentType.InternalSubset);
                     }
@@ -1226,19 +1563,30 @@ namespace Simula.Scripting.Json.Converters
 
         private static bool AllSameName(IXmlNode node)
         {
-            foreach (IXmlNode childNode in node.ChildNodes) {
-                if (childNode.LocalName != node.LocalName) {
+            foreach (IXmlNode childNode in node.ChildNodes)
+            {
+                if (childNode.LocalName != node.LocalName)
+                {
                     return false;
                 }
             }
             return true;
         }
-        #endregion
+#endregion
 
-        #region Reading
-        public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+#region Reading
+        /// <summary>
+        /// Reads the JSON representation of the object.
+        /// </summary>
+        /// <param name="reader">The <see cref="JsonReader"/> to read from.</param>
+        /// <param name="objectType">Type of the object.</param>
+        /// <param name="existingValue">The existing value of object being read.</param>
+        /// <param name="serializer">The calling serializer.</param>
+        /// <returns>The object value.</returns>
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            switch (reader.TokenType) {
+            switch (reader.TokenType)
+            {
                 case JsonToken.Null:
                     return null;
                 case JsonToken.StartObject:
@@ -1248,17 +1596,15 @@ namespace Simula.Scripting.Json.Converters
             }
 
             XmlNamespaceManager manager = new XmlNamespaceManager(new NameTable());
-            IXmlDocument? document = null;
-            IXmlNode? rootNode = null;
+            IXmlDocument document = null;
+            IXmlNode rootNode = null;
 
 #if HAVE_XLINQ
-            if (typeof(XObject).IsAssignableFrom(objectType)) {
-                if (objectType != typeof(XContainer)
-                    && objectType != typeof(XDocument)
-                    && objectType != typeof(XElement)
-                    && objectType != typeof(XNode)
-                    && objectType != typeof(XObject)) {
-                    throw JsonSerializationException.Create(reader, "XmlNodeConverter only supports deserializing XDocument, XElement, XContainer, XNode or XObject.");
+            if (typeof(XObject).IsAssignableFrom(objectType))
+            {
+                if (objectType != typeof(XDocument) && objectType != typeof(XElement))
+                {
+                    throw JsonSerializationException.Create(reader, "XmlNodeConverter only supports deserializing XDocument or XElement.");
                 }
 
                 XDocument d = new XDocument();
@@ -1269,15 +1615,14 @@ namespace Simula.Scripting.Json.Converters
 #if HAVE_XML_DOCUMENT
             if (typeof(XmlNode).IsAssignableFrom(objectType))
             {
-                if (objectType != typeof(XmlDocument)
-                    && objectType != typeof(XmlElement)
-                    && objectType != typeof(XmlNode))
+                if (objectType != typeof(XmlDocument))
                 {
-                    throw JsonSerializationException.Create(reader, "XmlNodeConverter only supports deserializing XmlDocument, XmlElement or XmlNode.");
+                    throw JsonSerializationException.Create(reader, "XmlNodeConverter only supports deserializing XmlDocuments");
                 }
 
                 XmlDocument d = new XmlDocument();
 #if HAVE_XML_DOCUMENT_TYPE
+                // prevent http request when resolving any DTD references
                 d.XmlResolver = null;
 #endif
 
@@ -1286,29 +1631,28 @@ namespace Simula.Scripting.Json.Converters
             }
 #endif
 
-            if (document == null || rootNode == null) {
+            if (document == null || rootNode == null)
+            {
                 throw JsonSerializationException.Create(reader, "Unexpected type when converting XML: " + objectType);
             }
 
-            if (!StringUtils.IsNullOrEmpty(DeserializeRootElementName)) {
+            if (!string.IsNullOrEmpty(DeserializeRootElementName))
+            {
                 ReadElement(reader, document, rootNode, DeserializeRootElementName, manager);
-            } else {
-                reader.ReadAndAssert();
+            }
+            else
+            {
+                reader.Read();
                 DeserializeNode(reader, document, manager, rootNode);
             }
 
 #if HAVE_XLINQ
-            if (objectType == typeof(XElement)) {
-                XElement element = (XElement)document.DocumentElement!.WrappedNode!;
+            if (objectType == typeof(XElement))
+            {
+                XElement element = (XElement)document.DocumentElement.WrappedNode;
                 element.Remove();
 
                 return element;
-            }
-#endif
-#if HAVE_XML_DOCUMENT
-            if (objectType == typeof(XmlElement))
-            {
-                return document.DocumentElement!.WrappedNode;
             }
 #endif
 
@@ -1317,124 +1661,132 @@ namespace Simula.Scripting.Json.Converters
 
         private void DeserializeValue(JsonReader reader, IXmlDocument document, XmlNamespaceManager manager, string propertyName, IXmlNode currentNode)
         {
-            if (!EncodeSpecialCharacters) {
-                switch (propertyName) {
-                    case TextName:
-                        currentNode.AppendChild(document.CreateTextNode(ConvertTokenToXmlValue(reader)));
-                        return;
-                    case CDataName:
-                        currentNode.AppendChild(document.CreateCDataSection(ConvertTokenToXmlValue(reader)));
-                        return;
-                    case WhitespaceName:
-                        currentNode.AppendChild(document.CreateWhitespace(ConvertTokenToXmlValue(reader)));
-                        return;
-                    case SignificantWhitespaceName:
-                        currentNode.AppendChild(document.CreateSignificantWhitespace(ConvertTokenToXmlValue(reader)));
-                        return;
-                    default:
-                        if (!StringUtils.IsNullOrEmpty(propertyName) && propertyName[0] == '?') {
-                            CreateInstruction(reader, document, currentNode, propertyName);
-                            return;
-                        }
+            switch (propertyName)
+            {
+                case TextName:
+                    currentNode.AppendChild(document.CreateTextNode(ConvertTokenToXmlValue(reader)));
+                    break;
+                case CDataName:
+                    currentNode.AppendChild(document.CreateCDataSection(ConvertTokenToXmlValue(reader)));
+                    break;
+                case WhitespaceName:
+                    currentNode.AppendChild(document.CreateWhitespace(ConvertTokenToXmlValue(reader)));
+                    break;
+                case SignificantWhitespaceName:
+                    currentNode.AppendChild(document.CreateSignificantWhitespace(ConvertTokenToXmlValue(reader)));
+                    break;
+                default:
+                    // processing instructions and the xml declaration start with ?
+                    if (!string.IsNullOrEmpty(propertyName) && propertyName[0] == '?')
+                    {
+                        CreateInstruction(reader, document, currentNode, propertyName);
+                    }
 #if HAVE_XML_DOCUMENT_TYPE
-                        else if (string.Equals(propertyName, "!DOCTYPE", StringComparison.OrdinalIgnoreCase))
+                    else if (string.Equals(propertyName, "!DOCTYPE", StringComparison.OrdinalIgnoreCase))
+                    {
+                        CreateDocumentType(reader, document, currentNode);
+                    }
+#endif
+                    else
+                    {
+                        if (reader.TokenType == JsonToken.StartArray)
                         {
-                            CreateDocumentType(reader, document, currentNode);
+                            // handle nested arrays
+                            ReadArrayElements(reader, document, propertyName, currentNode, manager);
                             return;
                         }
-#endif
-                        break;
-                }
-            }
 
-            if (reader.TokenType == JsonToken.StartArray) {
-                ReadArrayElements(reader, document, propertyName, currentNode, manager);
-                return;
+                        // have to wait until attributes have been parsed before creating element
+                        // attributes may contain namespace info used by the element
+                        ReadElement(reader, document, currentNode, propertyName, manager);
+                    }
+                    break;
             }
-            ReadElement(reader, document, currentNode, propertyName, manager);
         }
 
         private void ReadElement(JsonReader reader, IXmlDocument document, IXmlNode currentNode, string propertyName, XmlNamespaceManager manager)
         {
-            if (StringUtils.IsNullOrEmpty(propertyName)) {
+            if (string.IsNullOrEmpty(propertyName))
+            {
                 throw JsonSerializationException.Create(reader, "XmlNodeConverter cannot convert JSON with an empty property name to XML.");
             }
 
-            Dictionary<string, string?>? attributeNameValues = null;
-            string? elementPrefix = null;
+            Dictionary<string, string> attributeNameValues = ReadAttributeElements(reader, manager);
 
-            if (!EncodeSpecialCharacters) {
-                attributeNameValues = ShouldReadInto(reader)
-                    ? ReadAttributeElements(reader, manager)
-                    : null;
-                elementPrefix = MiscellaneousUtils.GetPrefix(propertyName);
+            string elementPrefix = MiscellaneousUtils.GetPrefix(propertyName);
 
-                if (propertyName.StartsWith('@')) {
-                    string attributeName = propertyName.Substring(1);
-                    string? attributePrefix = MiscellaneousUtils.GetPrefix(attributeName);
+            if (propertyName.StartsWith('@'))
+            {
+                string attributeName = propertyName.Substring(1);
+                string attributePrefix = MiscellaneousUtils.GetPrefix(attributeName);
 
-                    AddAttribute(reader, document, currentNode, propertyName, attributeName, manager, attributePrefix);
-                    return;
-                }
+                AddAttribute(reader, document, currentNode, propertyName, attributeName, manager, attributePrefix);
+                return;
+            }
 
-                if (propertyName.StartsWith('$')) {
-                    switch (propertyName) {
-                        case JsonTypeReflector.ArrayValuesPropertyName:
-                            propertyName = propertyName.Substring(1);
-                            elementPrefix = manager.LookupPrefix(JsonNamespaceUri);
-                            CreateElement(reader, document, currentNode, propertyName, manager, elementPrefix, attributeNameValues);
-                            return;
-                        case JsonTypeReflector.IdPropertyName:
-                        case JsonTypeReflector.RefPropertyName:
-                        case JsonTypeReflector.TypePropertyName:
-                        case JsonTypeReflector.ValuePropertyName:
-                            string attributeName = propertyName.Substring(1);
-                            string attributePrefix = manager.LookupPrefix(JsonNamespaceUri);
-                            AddAttribute(reader, document, currentNode, propertyName, attributeName, manager, attributePrefix);
-                            return;
-                    }
-                }
-            } else {
-                if (ShouldReadInto(reader)) {
-                    reader.ReadAndAssert();
+            if (propertyName.StartsWith('$'))
+            {
+                switch (propertyName)
+                {
+                    case JsonTypeReflector.ArrayValuesPropertyName:
+                        propertyName = propertyName.Substring(1);
+                        elementPrefix = manager.LookupPrefix(JsonNamespaceUri);
+                        CreateElement(reader, document, currentNode, propertyName, manager, elementPrefix, attributeNameValues);
+                        return;
+                    case JsonTypeReflector.IdPropertyName:
+                    case JsonTypeReflector.RefPropertyName:
+                    case JsonTypeReflector.TypePropertyName:
+                    case JsonTypeReflector.ValuePropertyName:
+                        string attributeName = propertyName.Substring(1);
+                        string attributePrefix = manager.LookupPrefix(JsonNamespaceUri);
+                        AddAttribute(reader, document, currentNode, propertyName, attributeName, manager, attributePrefix);
+                        return;
                 }
             }
 
             CreateElement(reader, document, currentNode, propertyName, manager, elementPrefix, attributeNameValues);
         }
 
-        private void CreateElement(JsonReader reader, IXmlDocument document, IXmlNode currentNode, string elementName, XmlNamespaceManager manager, string? elementPrefix, Dictionary<string, string?>? attributeNameValues)
+        private void CreateElement(JsonReader reader, IXmlDocument document, IXmlNode currentNode, string elementName, XmlNamespaceManager manager, string elementPrefix, Dictionary<string, string> attributeNameValues)
         {
             IXmlElement element = CreateElement(elementName, document, elementPrefix, manager);
 
             currentNode.AppendChild(element);
 
-            if (attributeNameValues != null) {
-                foreach (KeyValuePair<string, string?> nameValue in attributeNameValues) {
+            if (attributeNameValues != null)
+            {
+                // add attributes to newly created element
+                foreach (KeyValuePair<string, string> nameValue in attributeNameValues)
+                {
                     string encodedName = XmlConvert.EncodeName(nameValue.Key);
-                    string? attributePrefix = MiscellaneousUtils.GetPrefix(nameValue.Key);
+                    string attributePrefix = MiscellaneousUtils.GetPrefix(nameValue.Key);
 
-                    IXmlNode attribute = (!StringUtils.IsNullOrEmpty(attributePrefix)) ? document.CreateAttribute(encodedName, manager.LookupNamespace(attributePrefix) ?? string.Empty, nameValue.Value) : document.CreateAttribute(encodedName, nameValue.Value);
+                    IXmlNode attribute = (!string.IsNullOrEmpty(attributePrefix)) ? document.CreateAttribute(encodedName, manager.LookupNamespace(attributePrefix) ?? string.Empty, nameValue.Value) : document.CreateAttribute(encodedName, nameValue.Value);
 
                     element.SetAttributeNode(attribute);
                 }
             }
 
-            switch (reader.TokenType) {
+            switch (reader.TokenType)
+            {
                 case JsonToken.String:
                 case JsonToken.Integer:
                 case JsonToken.Float:
                 case JsonToken.Boolean:
                 case JsonToken.Date:
-                case JsonToken.Bytes:
-                    string? text = ConvertTokenToXmlValue(reader);
-                    if (text != null) {
+                    string text = ConvertTokenToXmlValue(reader);
+                    if (text != null)
+                    {
                         element.AppendChild(document.CreateTextNode(text));
                     }
                     break;
                 case JsonToken.Null:
+
+                    // empty element. do nothing
                     break;
                 case JsonToken.EndObject:
+
+                    // finished element will have no children to deserialize
                     manager.RemoveNamespace(string.Empty, manager.DefaultNamespace);
                     break;
                 default:
@@ -1446,64 +1798,65 @@ namespace Simula.Scripting.Json.Converters
             }
         }
 
-        private static void AddAttribute(JsonReader reader, IXmlDocument document, IXmlNode currentNode, string propertyName, string attributeName, XmlNamespaceManager manager, string? attributePrefix)
+        private static void AddAttribute(JsonReader reader, IXmlDocument document, IXmlNode currentNode, string propertyName, string attributeName, XmlNamespaceManager manager, string attributePrefix)
         {
-            if (currentNode.NodeType == XmlNodeType.Document) {
+            if (currentNode.NodeType == XmlNodeType.Document)
+            {
                 throw JsonSerializationException.Create(reader, "JSON root object has property '{0}' that will be converted to an attribute. A root object cannot have any attribute properties. Consider specifying a DeserializeRootElementName.".FormatWith(CultureInfo.InvariantCulture, propertyName));
             }
 
             string encodedName = XmlConvert.EncodeName(attributeName);
-            string? attributeValue = ConvertTokenToXmlValue(reader);
+            string attributeValue = reader.Value.ToString();
 
-            IXmlNode attribute = (!StringUtils.IsNullOrEmpty(attributePrefix))
+            IXmlNode attribute = (!string.IsNullOrEmpty(attributePrefix))
                 ? document.CreateAttribute(encodedName, manager.LookupNamespace(attributePrefix), attributeValue)
                 : document.CreateAttribute(encodedName, attributeValue);
 
             ((IXmlElement)currentNode).SetAttributeNode(attribute);
         }
 
-        private static string? ConvertTokenToXmlValue(JsonReader reader)
+        private string ConvertTokenToXmlValue(JsonReader reader)
         {
-            switch (reader.TokenType) {
+            switch (reader.TokenType)
+            {
                 case JsonToken.String:
                     return reader.Value?.ToString();
                 case JsonToken.Integer:
 #if HAVE_BIG_INTEGER
-                    if (reader.Value is BigInteger i)
+                    if (reader.Value is BigInteger)
                     {
-                        return i.ToString(CultureInfo.InvariantCulture);
+                        return ((BigInteger)reader.Value).ToString(CultureInfo.InvariantCulture);
                     }
 #endif
                     return XmlConvert.ToString(Convert.ToInt64(reader.Value, CultureInfo.InvariantCulture));
-                case JsonToken.Float: {
-                        if (reader.Value is decimal d) {
-                            return XmlConvert.ToString(d);
-                        }
-
-                        if (reader.Value is float f) {
-                            return XmlConvert.ToString(f);
-                        }
-
-                        return XmlConvert.ToString(Convert.ToDouble(reader.Value, CultureInfo.InvariantCulture));
+                case JsonToken.Float:
+                    if (reader.Value is decimal)
+                    {
+                        return XmlConvert.ToString((decimal)reader.Value);
                     }
+
+                    if (reader.Value is float)
+                    {
+                        return XmlConvert.ToString((float)reader.Value);
+                    }
+
+                    return XmlConvert.ToString(Convert.ToDouble(reader.Value, CultureInfo.InvariantCulture));
                 case JsonToken.Boolean:
                     return XmlConvert.ToString(Convert.ToBoolean(reader.Value, CultureInfo.InvariantCulture));
-                case JsonToken.Date: {
+                case JsonToken.Date:
 #if HAVE_DATE_TIME_OFFSET
-                        if (reader.Value is DateTimeOffset offset) {
-                            return XmlConvert.ToString(offset);
-                        }
+                    if (reader.Value is DateTimeOffset)
+                    {
+                        return XmlConvert.ToString((DateTimeOffset)reader.Value);
+                    }
 
 #endif
-                        DateTime d = Convert.ToDateTime(reader.Value, CultureInfo.InvariantCulture);
-#if !PORTABLE || NETSTANDARD1_3
+                    DateTime d = Convert.ToDateTime(reader.Value, CultureInfo.InvariantCulture);
+#if !PORTABLE
                     return XmlConvert.ToString(d, DateTimeUtils.ToSerializationMode(d.Kind));
 #else
-                        return d.ToString(DateTimeUtils.ToDateTimeFormat(d.Kind), CultureInfo.InvariantCulture);
+                    return XmlConvert.ToString(d, DateTimeUtils.ToDateTimeFormat(d.Kind));
 #endif
-                    }
-                case JsonToken.Bytes:
-                    return Convert.ToBase64String((byte[])reader.Value!);
                 case JsonToken.Null:
                     return null;
                 default:
@@ -1513,25 +1866,31 @@ namespace Simula.Scripting.Json.Converters
 
         private void ReadArrayElements(JsonReader reader, IXmlDocument document, string propertyName, IXmlNode currentNode, XmlNamespaceManager manager)
         {
-            string? elementPrefix = MiscellaneousUtils.GetPrefix(propertyName);
+            string elementPrefix = MiscellaneousUtils.GetPrefix(propertyName);
 
             IXmlElement nestedArrayElement = CreateElement(propertyName, document, elementPrefix, manager);
 
             currentNode.AppendChild(nestedArrayElement);
 
             int count = 0;
-            while (reader.Read() && reader.TokenType != JsonToken.EndArray) {
+            while (reader.Read() && reader.TokenType != JsonToken.EndArray)
+            {
                 DeserializeValue(reader, document, manager, propertyName, nestedArrayElement);
                 count++;
             }
 
-            if (WriteArrayAttribute) {
+            if (WriteArrayAttribute)
+            {
                 AddJsonArrayAttribute(nestedArrayElement, document);
             }
 
-            if (count == 1 && WriteArrayAttribute) {
-                foreach (IXmlNode childNode in nestedArrayElement.ChildNodes) {
-                    if (childNode is IXmlElement element && element.LocalName == propertyName) {
+            if (count == 1 && WriteArrayAttribute)
+            {
+                foreach (IXmlNode childNode in nestedArrayElement.ChildNodes)
+                {
+                    IXmlElement element = childNode as IXmlElement;
+                    if (element != null && element.LocalName == propertyName)
+                    {
                         AddJsonArrayAttribute(element, document);
                         break;
                     }
@@ -1544,73 +1903,89 @@ namespace Simula.Scripting.Json.Converters
             element.SetAttributeNode(document.CreateAttribute("json:Array", JsonNamespaceUri, "true"));
 
 #if HAVE_XLINQ
-            if (element is XElementWrapper) {
-                if (element.GetPrefixOfNamespace(JsonNamespaceUri) == null) {
+            // linq to xml doesn't automatically include prefixes via the namespace manager
+            if (element is XElementWrapper)
+            {
+                if (element.GetPrefixOfNamespace(JsonNamespaceUri) == null)
+                {
                     element.SetAttributeNode(document.CreateAttribute("xmlns:json", "http://www.w3.org/2000/xmlns/", JsonNamespaceUri));
                 }
             }
 #endif
         }
 
-        private bool ShouldReadInto(JsonReader reader)
+        private Dictionary<string, string> ReadAttributeElements(JsonReader reader, XmlNamespaceManager manager)
         {
-            switch (reader.TokenType) {
+            // a string token means the element only has a single text child
+            switch (reader.TokenType)
+            {
                 case JsonToken.String:
                 case JsonToken.Null:
                 case JsonToken.Boolean:
                 case JsonToken.Integer:
                 case JsonToken.Float:
                 case JsonToken.Date:
-                case JsonToken.Bytes:
                 case JsonToken.StartConstructor:
-                    return false;
+                    return null;
             }
 
-            return true;
-        }
-
-        private Dictionary<string, string?>? ReadAttributeElements(JsonReader reader, XmlNamespaceManager manager)
-        {
-            Dictionary<string, string?>? attributeNameValues = null;
+            Dictionary<string, string> attributeNameValues = null;
             bool finished = false;
-            while (!finished && reader.Read()) {
-                switch (reader.TokenType) {
+
+            // read properties until first non-attribute is encountered
+            while (!finished && reader.Read())
+            {
+                switch (reader.TokenType)
+                {
                     case JsonToken.PropertyName:
-                        string attributeName = reader.Value!.ToString();
+                        string attributeName = reader.Value.ToString();
 
-                        if (!StringUtils.IsNullOrEmpty(attributeName)) {
+                        if (!string.IsNullOrEmpty(attributeName))
+                        {
                             char firstChar = attributeName[0];
-                            string? attributeValue;
+                            string attributeValue;
 
-                            switch (firstChar) {
+                            switch (firstChar)
+                            {
                                 case '@':
-                                    if (attributeNameValues == null) {
-                                        attributeNameValues = new Dictionary<string, string?>();
+                                    if (attributeNameValues == null)
+                                    {
+                                        attributeNameValues = new Dictionary<string, string>();
                                     }
 
                                     attributeName = attributeName.Substring(1);
-                                    reader.ReadAndAssert();
+                                    reader.Read();
                                     attributeValue = ConvertTokenToXmlValue(reader);
                                     attributeNameValues.Add(attributeName, attributeValue);
 
-                                    if (IsNamespaceAttribute(attributeName, out string? namespacePrefix)) {
+                                    string namespacePrefix;
+                                    if (IsNamespaceAttribute(attributeName, out namespacePrefix))
+                                    {
                                         manager.AddNamespace(namespacePrefix, attributeValue);
                                     }
                                     break;
                                 case '$':
-                                    switch (attributeName) {
+                                    switch (attributeName)
+                                    {
                                         case JsonTypeReflector.ArrayValuesPropertyName:
                                         case JsonTypeReflector.IdPropertyName:
                                         case JsonTypeReflector.RefPropertyName:
                                         case JsonTypeReflector.TypePropertyName:
                                         case JsonTypeReflector.ValuePropertyName:
+                                            // check that JsonNamespaceUri is in scope
+                                            // if it isn't then add it to document and namespace manager
                                             string jsonPrefix = manager.LookupPrefix(JsonNamespaceUri);
-                                            if (jsonPrefix == null) {
-                                                if (attributeNameValues == null) {
-                                                    attributeNameValues = new Dictionary<string, string?>();
+                                            if (jsonPrefix == null)
+                                            {
+                                                if (attributeNameValues == null)
+                                                {
+                                                    attributeNameValues = new Dictionary<string, string>();
                                                 }
+
+                                                // ensure that the prefix used is free
                                                 int? i = null;
-                                                while (manager.LookupNamespace("json" + i) != null) {
+                                                while (manager.LookupNamespace("json" + i) != null)
+                                                {
                                                     i = i.GetValueOrDefault() + 1;
                                                 }
                                                 jsonPrefix = "json" + i;
@@ -1618,20 +1993,25 @@ namespace Simula.Scripting.Json.Converters
                                                 attributeNameValues.Add("xmlns:" + jsonPrefix, JsonNamespaceUri);
                                                 manager.AddNamespace(jsonPrefix, JsonNamespaceUri);
                                             }
-                                            if (attributeName == JsonTypeReflector.ArrayValuesPropertyName) {
+
+                                            // special case $values, it will have a non-primitive value
+                                            if (attributeName == JsonTypeReflector.ArrayValuesPropertyName)
+                                            {
                                                 finished = true;
                                                 break;
                                             }
 
                                             attributeName = attributeName.Substring(1);
-                                            reader.ReadAndAssert();
+                                            reader.Read();
 
-                                            if (!JsonTokenUtils.IsPrimitiveToken(reader.TokenType)) {
+                                            if (!JsonTokenUtils.IsPrimitiveToken(reader.TokenType))
+                                            {
                                                 throw JsonSerializationException.Create(reader, "Unexpected JsonToken: " + reader.TokenType);
                                             }
 
-                                            if (attributeNameValues == null) {
-                                                attributeNameValues = new Dictionary<string, string?>();
+                                            if (attributeNameValues == null)
+                                            {
+                                                attributeNameValues = new Dictionary<string, string>();
                                             }
 
                                             attributeValue = reader.Value?.ToString();
@@ -1646,7 +2026,9 @@ namespace Simula.Scripting.Json.Converters
                                     finished = true;
                                     break;
                             }
-                        } else {
+                        }
+                        else
+                        {
                             finished = true;
                         }
 
@@ -1665,22 +2047,25 @@ namespace Simula.Scripting.Json.Converters
 
         private void CreateInstruction(JsonReader reader, IXmlDocument document, IXmlNode currentNode, string propertyName)
         {
-            if (propertyName == DeclarationName) {
-                string? version = null;
-                string? encoding = null;
-                string? standalone = null;
-                while (reader.Read() && reader.TokenType != JsonToken.EndObject) {
-                    switch (reader.Value?.ToString()) {
+            if (propertyName == DeclarationName)
+            {
+                string version = null;
+                string encoding = null;
+                string standalone = null;
+                while (reader.Read() && reader.TokenType != JsonToken.EndObject)
+                {
+                    switch (reader.Value.ToString())
+                    {
                         case "@version":
-                            reader.ReadAndAssert();
+                            reader.Read();
                             version = ConvertTokenToXmlValue(reader);
                             break;
                         case "@encoding":
-                            reader.ReadAndAssert();
+                            reader.Read();
                             encoding = ConvertTokenToXmlValue(reader);
                             break;
                         case "@standalone":
-                            reader.ReadAndAssert();
+                            reader.Read();
                             standalone = ConvertTokenToXmlValue(reader);
                             break;
                         default:
@@ -1690,7 +2075,9 @@ namespace Simula.Scripting.Json.Converters
 
                 IXmlNode declaration = document.CreateXmlDeclaration(version, encoding, standalone);
                 currentNode.AppendChild(declaration);
-            } else {
+            }
+            else
+            {
                 IXmlNode instruction = document.CreateProcessingInstruction(propertyName.Substring(1), ConvertTokenToXmlValue(reader));
                 currentNode.AppendChild(instruction);
             }
@@ -1699,28 +2086,28 @@ namespace Simula.Scripting.Json.Converters
 #if HAVE_XML_DOCUMENT_TYPE
         private void CreateDocumentType(JsonReader reader, IXmlDocument document, IXmlNode currentNode)
         {
-            string? name = null;
-            string? publicId = null;
-            string? systemId = null;
-            string? internalSubset = null;
+            string name = null;
+            string publicId = null;
+            string systemId = null;
+            string internalSubset = null;
             while (reader.Read() && reader.TokenType != JsonToken.EndObject)
             {
-                switch (reader.Value?.ToString())
+                switch (reader.Value.ToString())
                 {
                     case "@name":
-                        reader.ReadAndAssert();
+                        reader.Read();
                         name = ConvertTokenToXmlValue(reader);
                         break;
                     case "@public":
-                        reader.ReadAndAssert();
+                        reader.Read();
                         publicId = ConvertTokenToXmlValue(reader);
                         break;
                     case "@system":
-                        reader.ReadAndAssert();
+                        reader.Read();
                         systemId = ConvertTokenToXmlValue(reader);
                         break;
                     case "@internalSubset":
-                        reader.ReadAndAssert();
+                        reader.Read();
                         internalSubset = ConvertTokenToXmlValue(reader);
                         break;
                     default:
@@ -1733,59 +2120,68 @@ namespace Simula.Scripting.Json.Converters
         }
 #endif
 
-        private IXmlElement CreateElement(string elementName, IXmlDocument document, string? elementPrefix, XmlNamespaceManager manager)
+        private IXmlElement CreateElement(string elementName, IXmlDocument document, string elementPrefix, XmlNamespaceManager manager)
         {
-            string encodeName = EncodeSpecialCharacters ? XmlConvert.EncodeLocalName(elementName) : XmlConvert.EncodeName(elementName);
-            string ns = StringUtils.IsNullOrEmpty(elementPrefix) ? manager.DefaultNamespace : manager.LookupNamespace(elementPrefix);
+            string encodeName = XmlConvert.EncodeName(elementName);
+            string ns = string.IsNullOrEmpty(elementPrefix) ? manager.DefaultNamespace : manager.LookupNamespace(elementPrefix);
 
-            IXmlElement element = (!StringUtils.IsNullOrEmpty(ns)) ? document.CreateElement(encodeName, ns) : document.CreateElement(encodeName);
+            IXmlElement element = (!string.IsNullOrEmpty(ns)) ? document.CreateElement(encodeName, ns) : document.CreateElement(encodeName);
 
             return element;
         }
 
         private void DeserializeNode(JsonReader reader, IXmlDocument document, XmlNamespaceManager manager, IXmlNode currentNode)
         {
-            do {
-                switch (reader.TokenType) {
+            do
+            {
+                switch (reader.TokenType)
+                {
                     case JsonToken.PropertyName:
-                        if (currentNode.NodeType == XmlNodeType.Document && document.DocumentElement != null) {
+                        if (currentNode.NodeType == XmlNodeType.Document && document.DocumentElement != null)
+                        {
                             throw JsonSerializationException.Create(reader, "JSON root object has multiple properties. The root object must have a single property in order to create a valid XML document. Consider specifying a DeserializeRootElementName.");
                         }
 
-                        string propertyName = reader.Value!.ToString();
-                        reader.ReadAndAssert();
+                        string propertyName = reader.Value.ToString();
+                        reader.Read();
 
-                        if (reader.TokenType == JsonToken.StartArray) {
+                        if (reader.TokenType == JsonToken.StartArray)
+                        {
                             int count = 0;
-                            while (reader.Read() && reader.TokenType != JsonToken.EndArray) {
+                            while (reader.Read() && reader.TokenType != JsonToken.EndArray)
+                            {
                                 DeserializeValue(reader, document, manager, propertyName, currentNode);
                                 count++;
                             }
 
-                            if (count == 1 && WriteArrayAttribute) {
-                                MiscellaneousUtils.GetQualifiedNameParts(propertyName, out string? elementPrefix, out string localName);
-                                string ns = StringUtils.IsNullOrEmpty(elementPrefix) ? manager.DefaultNamespace : manager.LookupNamespace(elementPrefix);
-
-                                foreach (IXmlNode childNode in currentNode.ChildNodes) {
-                                    if (childNode is IXmlElement element && element.LocalName == localName && element.NamespaceUri == ns) {
+                            if (count == 1 && WriteArrayAttribute)
+                            {
+                                foreach (IXmlNode childNode in currentNode.ChildNodes)
+                                {
+                                    IXmlElement element = childNode as IXmlElement;
+                                    if (element != null && element.LocalName == propertyName)
+                                    {
                                         AddJsonArrayAttribute(element, document);
                                         break;
                                     }
                                 }
                             }
-                        } else {
+                        }
+                        else
+                        {
                             DeserializeValue(reader, document, manager, propertyName, currentNode);
                         }
                         continue;
                     case JsonToken.StartConstructor:
-                        string constructorName = reader.Value!.ToString();
+                        string constructorName = reader.Value.ToString();
 
-                        while (reader.Read() && reader.TokenType != JsonToken.EndConstructor) {
+                        while (reader.Read() && reader.TokenType != JsonToken.EndConstructor)
+                        {
                             DeserializeValue(reader, document, manager, constructorName, currentNode);
                         }
                         break;
                     case JsonToken.Comment:
-                        currentNode.AppendChild(document.CreateComment((string)reader.Value!));
+                        currentNode.AppendChild(document.CreateComment((string)reader.Value));
                         break;
                     case JsonToken.EndObject:
                     case JsonToken.EndArray:
@@ -1794,14 +2190,26 @@ namespace Simula.Scripting.Json.Converters
                         throw JsonSerializationException.Create(reader, "Unexpected JsonToken when deserializing node: " + reader.TokenType);
                 }
             } while (reader.Read());
+            // don't read if current token is a property. token was already read when parsing element attributes
         }
-        private bool IsNamespaceAttribute(string attributeName, [NotNullWhen(true)] out string? prefix)
+
+        /// <summary>
+        /// Checks if the <paramref name="attributeName"/> is a namespace attribute.
+        /// </summary>
+        /// <param name="attributeName">Attribute name to test.</param>
+        /// <param name="prefix">The attribute name prefix if it has one, otherwise an empty string.</param>
+        /// <returns><c>true</c> if attribute name is for a namespace attribute, otherwise <c>false</c>.</returns>
+        private bool IsNamespaceAttribute(string attributeName, out string prefix)
         {
-            if (attributeName.StartsWith("xmlns", StringComparison.Ordinal)) {
-                if (attributeName.Length == 5) {
+            if (attributeName.StartsWith("xmlns", StringComparison.Ordinal))
+            {
+                if (attributeName.Length == 5)
+                {
                     prefix = string.Empty;
                     return true;
-                } else if (attributeName[5] == ':') {
+                }
+                else if (attributeName[5] == ':')
+                {
                     prefix = attributeName.Substring(6, attributeName.Length - 6);
                     return true;
                 }
@@ -1812,12 +2220,15 @@ namespace Simula.Scripting.Json.Converters
 
         private bool ValueAttributes(List<IXmlNode> c)
         {
-            foreach (IXmlNode xmlNode in c) {
-                if (xmlNode.NamespaceUri == JsonNamespaceUri) {
+            foreach (IXmlNode xmlNode in c)
+            {
+                if (xmlNode.NamespaceUri == JsonNamespaceUri)
+                {
                     continue;
                 }
 
-                if (xmlNode.NamespaceUri == "http://www.w3.org/2000/xmlns/" && xmlNode.Value == JsonNamespaceUri) {
+                if (xmlNode.NamespaceUri == "http://www.w3.org/2000/xmlns/" && xmlNode.Value == JsonNamespaceUri)
+                {
                     continue;
                 }
 
@@ -1826,11 +2237,20 @@ namespace Simula.Scripting.Json.Converters
 
             return false;
         }
-        #endregion
+#endregion
+
+        /// <summary>
+        /// Determines whether this instance can convert the specified value type.
+        /// </summary>
+        /// <param name="valueType">Type of the value.</param>
+        /// <returns>
+        /// 	<c>true</c> if this instance can convert the specified value type; otherwise, <c>false</c>.
+        /// </returns>
         public override bool CanConvert(Type valueType)
         {
 #if HAVE_XLINQ
-            if (valueType.AssignableToTypeName("System.Xml.Linq.XObject", false)) {
+            if (valueType.AssignableToTypeName("System.Xml.Linq.XObject", false))
+            {
                 return IsXObject(valueType);
             }
 #endif

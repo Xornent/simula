@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 
 namespace Simula.Scripting.Json.Utilities
 {
@@ -69,7 +68,8 @@ namespace Simula.Scripting.Json.Utilities
             _text = text;
             _end = startIndex + length;
 
-            if (ParseDate(startIndex) && ParseChar(Lzyyyy_MM_dd + startIndex, 'T') && ParseTimeAndZoneAndWhitespace(Lzyyyy_MM_ddT + startIndex)) {
+            if (ParseDate(startIndex) && ParseChar(Lzyyyy_MM_dd + startIndex, 'T') && ParseTimeAndZoneAndWhitespace(Lzyyyy_MM_ddT + startIndex))
+            {
                 return true;
             }
 
@@ -111,13 +111,16 @@ namespace Simula.Scripting.Json.Utilities
             }
 
             start += LzHH_mm_ss;
-            if (ParseChar(start, '.')) {
+            if (ParseChar(start, '.'))
+            {
                 Fraction = 0;
                 int numberOfDigits = 0;
 
-                while (++start < _end && numberOfDigits < MaxFractionDigits) {
+                while (++start < _end && numberOfDigits < MaxFractionDigits)
+                {
                     int digit = _text[start] - '0';
-                    if (digit < 0 || digit > 9) {
+                    if (digit < 0 || digit > 9)
+                    {
                         break;
                     }
 
@@ -126,15 +129,18 @@ namespace Simula.Scripting.Json.Utilities
                     numberOfDigits++;
                 }
 
-                if (numberOfDigits < MaxFractionDigits) {
-                    if (numberOfDigits == 0) {
+                if (numberOfDigits < MaxFractionDigits)
+                {
+                    if (numberOfDigits == 0)
+                    {
                         return false;
                     }
 
                     Fraction *= Power10[MaxFractionDigits - numberOfDigits];
                 }
 
-                if (Hour == 24 && Fraction != 0) {
+                if (Hour == 24 && Fraction != 0)
+                {
                     return false;
                 }
             }
@@ -143,16 +149,22 @@ namespace Simula.Scripting.Json.Utilities
 
         private bool ParseZone(int start)
         {
-            if (start < _end) {
+            if (start < _end)
+            {
                 char ch = _text[start];
-                if (ch == 'Z' || ch == 'z') {
+                if (ch == 'Z' || ch == 'z')
+                {
                     Zone = ParserTimeZone.Utc;
                     start++;
-                } else {
+                }
+                else
+                {
                     if (start + 2 < _end
                         && Parse2Digit(start + Lz_, out ZoneHour)
-                        && ZoneHour <= 99) {
-                        switch (ch) {
+                        && ZoneHour <= 99)
+                    {
+                        switch (ch)
+                        {
                             case '-':
                                 Zone = ParserTimeZone.LocalWestOfUtc;
                                 start += Lz_zz;
@@ -165,19 +177,25 @@ namespace Simula.Scripting.Json.Utilities
                         }
                     }
 
-                    if (start < _end) {
-                        if (ParseChar(start, ':')) {
+                    if (start < _end)
+                    {
+                        if (ParseChar(start, ':'))
+                        {
                             start += 1;
 
                             if (start + 1 < _end
                                 && Parse2Digit(start, out ZoneMinute)
-                                && ZoneMinute <= 99) {
+                                && ZoneMinute <= 99)
+                            {
                                 start += 2;
                             }
-                        } else {
+                        }
+                        else
+                        {
                             if (start + 1 < _end
                                 && Parse2Digit(start, out ZoneMinute)
-                                && ZoneMinute <= 99) {
+                                && ZoneMinute <= 99)
+                            {
                                 start += 2;
                             }
                         }
@@ -190,7 +208,8 @@ namespace Simula.Scripting.Json.Utilities
 
         private bool Parse4Digit(int start, out int num)
         {
-            if (start + 3 < _end) {
+            if (start + 3 < _end)
+            {
                 int digit1 = _text[start] - '0';
                 int digit2 = _text[start + 1] - '0';
                 int digit3 = _text[start + 2] - '0';
@@ -198,7 +217,8 @@ namespace Simula.Scripting.Json.Utilities
                 if (0 <= digit1 && digit1 < 10
                     && 0 <= digit2 && digit2 < 10
                     && 0 <= digit3 && digit3 < 10
-                    && 0 <= digit4 && digit4 < 10) {
+                    && 0 <= digit4 && digit4 < 10)
+                {
                     num = (((((digit1 * 10) + digit2) * 10) + digit3) * 10) + digit4;
                     return true;
                 }
@@ -209,11 +229,13 @@ namespace Simula.Scripting.Json.Utilities
 
         private bool Parse2Digit(int start, out int num)
         {
-            if (start + 1 < _end) {
+            if (start + 1 < _end)
+            {
                 int digit1 = _text[start] - '0';
                 int digit2 = _text[start + 1] - '0';
                 if (0 <= digit1 && digit1 < 10
-                    && 0 <= digit2 && digit2 < 10) {
+                    && 0 <= digit2 && digit2 < 10)
+                {
                     num = (digit1 * 10) + digit2;
                     return true;
                 }

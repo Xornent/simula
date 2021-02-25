@@ -1,8 +1,5 @@
-
 using System.Collections;
 using System.Collections.Generic;
-
-#nullable disable
 
 namespace Simula.Scripting.Json.Bson
 {
@@ -23,7 +20,10 @@ namespace Simula.Scripting.Json.Bson
             token.Parent = this;
         }
 
-        public override BsonType Type => BsonType.Object;
+        public override BsonType Type
+        {
+            get { return BsonType.Object; }
+        }
 
         public IEnumerator<BsonProperty> GetEnumerator()
         {
@@ -46,7 +46,10 @@ namespace Simula.Scripting.Json.Bson
             token.Parent = this;
         }
 
-        public override BsonType Type => BsonType.Array;
+        public override BsonType Type
+        {
+            get { return BsonType.Array; }
+        }
 
         public IEnumerator<BsonToken> GetEnumerator()
         {
@@ -83,9 +86,15 @@ namespace Simula.Scripting.Json.Bson
             _type = type;
         }
 
-        public object Value => _value;
+        public object Value
+        {
+            get { return _value; }
+        }
 
-        public override BsonType Type => _type;
+        public override BsonType Type
+        {
+            get { return _type; }
+        }
     }
 
     internal class BsonBoolean : BsonValue
@@ -133,7 +142,10 @@ namespace Simula.Scripting.Json.Bson
             Options = new BsonString(options, false);
         }
 
-        public override BsonType Type => BsonType.Regex;
+        public override BsonType Type
+        {
+            get { return BsonType.Regex; }
+        }
     }
 
     internal class BsonProperty

@@ -1,13 +1,20 @@
-
-using Simula.Scripting.Json.Utilities;
 using System;
 using System.Collections.Generic;
+using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json.Serialization
 {
+    /// <summary>
+    /// Contract details for a <see cref="Type"/> used by the <see cref="JsonSerializer"/>.
+    /// </summary>
     public class JsonPrimitiveContract : JsonContract
     {
         internal PrimitiveTypeCode TypeCode { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JsonPrimitiveContract"/> class.
+        /// </summary>
+        /// <param name="underlyingType">The underlying type for the contract.</param>
         public JsonPrimitiveContract(Type underlyingType)
             : base(underlyingType)
         {
@@ -16,7 +23,9 @@ namespace Simula.Scripting.Json.Serialization
             TypeCode = ConvertUtils.GetTypeCode(underlyingType);
             IsReadOnlyOrFixedSize = true;
 
-            if (ReadTypeMap.TryGetValue(NonNullableUnderlyingType, out ReadType readType)) {
+            ReadType readType;
+            if (ReadTypeMap.TryGetValue(NonNullableUnderlyingType, out readType))
+            {
                 InternalReadType = readType;
             }
         }
@@ -35,8 +44,7 @@ namespace Simula.Scripting.Json.Serialization
             [typeof(DateTimeOffset)] = ReadType.ReadAsDateTimeOffset,
 #endif
             [typeof(float)] = ReadType.ReadAsDouble,
-            [typeof(double)] = ReadType.ReadAsDouble,
-            [typeof(long)] = ReadType.ReadAsInt64
+            [typeof(double)] = ReadType.ReadAsDouble
         };
     }
 }

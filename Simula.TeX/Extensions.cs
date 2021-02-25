@@ -1,5 +1,5 @@
+﻿using System.Windows.Media.Imaging;
 using System.IO;
-using System.Windows.Media.Imaging;
 
 namespace Simula.TeX
 {
@@ -17,7 +17,8 @@ namespace Simula.TeX
             PngBitmapEncoder encoder = new PngBitmapEncoder();
             encoder.Frames.Add(BitmapFrame.Create(image));
 
-            using (var ms = new MemoryStream()) {
+            using (var ms = new MemoryStream())
+            {
                 encoder.Save(ms);
                 return ms.ToArray();
             }

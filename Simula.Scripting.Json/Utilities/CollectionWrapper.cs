@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
@@ -20,17 +19,21 @@ namespace Simula.Scripting.Json.Utilities
 
     internal class CollectionWrapper<T> : ICollection<T>, IWrappedCollection
     {
-        private readonly IList? _list;
-        private readonly ICollection<T>? _genericCollection;
-        private object? _syncRoot;
+        private readonly IList _list;
+        private readonly ICollection<T> _genericCollection;
+        private object _syncRoot;
 
         public CollectionWrapper(IList list)
         {
             ValidationUtils.ArgumentNotNull(list, nameof(list));
 
-            if (list is ICollection<T> collection) {
+            ICollection<T> collection = list as ICollection<T>;
+            if (collection != null)
+            {
                 _genericCollection = collection;
-            } else {
+            }
+            else
+            {
                 _list = list;
             }
         }
@@ -44,69 +47,95 @@ namespace Simula.Scripting.Json.Utilities
 
         public virtual void Add(T item)
         {
-            if (_genericCollection != null) {
+            if (_genericCollection != null)
+            {
                 _genericCollection.Add(item);
-            } else {
-                _list!.Add(item);
+            }
+            else
+            {
+                _list.Add(item);
             }
         }
 
         public virtual void Clear()
         {
-            if (_genericCollection != null) {
+            if (_genericCollection != null)
+            {
                 _genericCollection.Clear();
-            } else {
-                _list!.Clear();
+            }
+            else
+            {
+                _list.Clear();
             }
         }
 
         public virtual bool Contains(T item)
         {
-            if (_genericCollection != null) {
+            if (_genericCollection != null)
+            {
                 return _genericCollection.Contains(item);
-            } else {
-                return _list!.Contains(item);
+            }
+            else
+            {
+                return _list.Contains(item);
             }
         }
 
         public virtual void CopyTo(T[] array, int arrayIndex)
         {
-            if (_genericCollection != null) {
+            if (_genericCollection != null)
+            {
                 _genericCollection.CopyTo(array, arrayIndex);
-            } else {
-                _list!.CopyTo(array, arrayIndex);
+            }
+            else
+            {
+                _list.CopyTo(array, arrayIndex);
             }
         }
 
-        public virtual int Count {
-            get {
-                if (_genericCollection != null) {
+        public virtual int Count
+        {
+            get
+            {
+                if (_genericCollection != null)
+                {
                     return _genericCollection.Count;
-                } else {
-                    return _list!.Count;
+                }
+                else
+                {
+                    return _list.Count;
                 }
             }
         }
 
-        public virtual bool IsReadOnly {
-            get {
-                if (_genericCollection != null) {
+        public virtual bool IsReadOnly
+        {
+            get
+            {
+                if (_genericCollection != null)
+                {
                     return _genericCollection.IsReadOnly;
-                } else {
-                    return _list!.IsReadOnly;
+                }
+                else
+                {
+                    return _list.IsReadOnly;
                 }
             }
         }
 
         public virtual bool Remove(T item)
         {
-            if (_genericCollection != null) {
+            if (_genericCollection != null)
+            {
                 return _genericCollection.Remove(item);
-            } else {
-                bool contains = _list!.Contains(item);
+            }
+            else
+            {
+                bool contains = _list.Contains(item);
 
-                if (contains) {
-                    _list!.Remove(item);
+                if (contains)
+                {
+                    _list.Remove(item);
                 }
 
                 return contains;
@@ -120,7 +149,7 @@ namespace Simula.Scripting.Json.Utilities
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable)_genericCollection! ?? _list!).GetEnumerator();
+            return ((IEnumerable)_genericCollection ?? _list).GetEnumerator();
         }
 
         int IList.Add(object value)
@@ -133,7 +162,8 @@ namespace Simula.Scripting.Json.Utilities
 
         bool IList.Contains(object value)
         {
-            if (IsCompatibleObject(value)) {
+            if (IsCompatibleObject(value))
+            {
                 return Contains((T)value);
             }
 
@@ -142,12 +172,14 @@ namespace Simula.Scripting.Json.Utilities
 
         int IList.IndexOf(object value)
         {
-            if (_genericCollection != null) {
+            if (_genericCollection != null)
+            {
                 throw new InvalidOperationException("Wrapped ICollection<T> does not support IndexOf.");
             }
 
-            if (IsCompatibleObject(value)) {
-                return _list!.IndexOf((T)value);
+            if (IsCompatibleObject(value))
+            {
+                return _list.IndexOf((T)value);
             }
 
             return -1;
@@ -155,55 +187,69 @@ namespace Simula.Scripting.Json.Utilities
 
         void IList.RemoveAt(int index)
         {
-            if (_genericCollection != null) {
+            if (_genericCollection != null)
+            {
                 throw new InvalidOperationException("Wrapped ICollection<T> does not support RemoveAt.");
             }
 
-            _list!.RemoveAt(index);
+            _list.RemoveAt(index);
         }
 
         void IList.Insert(int index, object value)
         {
-            if (_genericCollection != null) {
+            if (_genericCollection != null)
+            {
                 throw new InvalidOperationException("Wrapped ICollection<T> does not support Insert.");
             }
 
             VerifyValueType(value);
-            _list!.Insert(index, (T)value);
+            _list.Insert(index, (T)value);
         }
 
-        bool IList.IsFixedSize {
-            get {
-                if (_genericCollection != null) {
+        bool IList.IsFixedSize
+        {
+            get
+            {
+                if (_genericCollection != null)
+                {
+                    // ICollection<T> only has IsReadOnly
                     return _genericCollection.IsReadOnly;
-                } else {
-                    return _list!.IsFixedSize;
+                }
+                else
+                {
+                    return _list.IsFixedSize;
                 }
             }
         }
 
         void IList.Remove(object value)
         {
-            if (IsCompatibleObject(value)) {
+            if (IsCompatibleObject(value))
+            {
                 Remove((T)value);
             }
         }
 
-        object IList.this[int index] {
-            get {
-                if (_genericCollection != null) {
+        object IList.this[int index]
+        {
+            get
+            {
+                if (_genericCollection != null)
+                {
                     throw new InvalidOperationException("Wrapped ICollection<T> does not support indexer.");
                 }
 
-                return _list![index];
+                return _list[index];
             }
-            set {
-                if (_genericCollection != null) {
+            set
+            {
+                if (_genericCollection != null)
+                {
                     throw new InvalidOperationException("Wrapped ICollection<T> does not support indexer.");
                 }
 
                 VerifyValueType(value);
-                _list![index] = (T)value;
+                _list[index] = (T)value;
             }
         }
 
@@ -212,11 +258,17 @@ namespace Simula.Scripting.Json.Utilities
             CopyTo((T[])array, arrayIndex);
         }
 
-        bool ICollection.IsSynchronized => false;
+        bool ICollection.IsSynchronized
+        {
+            get { return false; }
+        }
 
-        object ICollection.SyncRoot {
-            get {
-                if (_syncRoot == null) {
+        object ICollection.SyncRoot
+        {
+            get
+            {
+                if (_syncRoot == null)
+                {
                     Interlocked.CompareExchange(ref _syncRoot, new object(), null);
                 }
 
@@ -226,20 +278,25 @@ namespace Simula.Scripting.Json.Utilities
 
         private static void VerifyValueType(object value)
         {
-            if (!IsCompatibleObject(value)) {
+            if (!IsCompatibleObject(value))
+            {
                 throw new ArgumentException("The value '{0}' is not of type '{1}' and cannot be used in this generic collection.".FormatWith(CultureInfo.InvariantCulture, value, typeof(T)), nameof(value));
             }
         }
 
         private static bool IsCompatibleObject(object value)
         {
-            if (!(value is T) && (value != null || (typeof(T).IsValueType() && !ReflectionUtils.IsNullableType(typeof(T))))) {
+            if (!(value is T) && (value != null || (typeof(T).IsValueType() && !ReflectionUtils.IsNullableType(typeof(T)))))
+            {
                 return false;
             }
 
             return true;
         }
 
-        public object UnderlyingCollection => (object)_genericCollection! ?? _list!;
+        public object UnderlyingCollection
+        {
+            get { return (object)_genericCollection ?? _list; }
+        }
     }
 }

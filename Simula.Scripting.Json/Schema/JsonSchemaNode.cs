@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,11 +8,9 @@ using System.Linq;
 
 #endif
 
-#nullable disable
-
 namespace Simula.Scripting.Json.Schema
 {
-    [Obsolete("JSON Schema validation has been moved to its own package. See https://www.newtonsoft.com/jsonschema for more details.")]
+    [Obsolete("JSON Schema validation has been moved to its own package. See http://www.newtonsoft.com/jsonschema for more details.")]
     internal class JsonSchemaNode
     {
         public string Id { get; }

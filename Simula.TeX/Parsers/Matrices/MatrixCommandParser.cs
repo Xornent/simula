@@ -1,20 +1,20 @@
-using Simula.TeX.Atoms;
-using Simula.TeX.Exceptions;
 using System.Collections.Generic;
 using System.Linq;
+using Simula.TeX.Atoms;
+using Simula.TeX.Exceptions;
 
 namespace Simula.TeX.Parsers.Matrices
 {
     /// <summary>A parser for matrix-like constructs.</summary>
     internal class MatrixCommandParser : ICommandParser
     {
-        private readonly string? _leftDelimiterSymbolName;
-        private readonly string? _rightDelimiterSymbolName;
+        private readonly string _leftDelimiterSymbolName;
+        private readonly string _rightDelimiterSymbolName;
         private readonly MatrixCellAlignment _cellAlignment;
 
         public MatrixCommandParser(
-            string? leftDelimiterSymbolName,
-            string? rightDelimiterSymbolName,
+            string leftDelimiterSymbolName,
+            string rightDelimiterSymbolName,
             MatrixCellAlignment cellAlignment)
         {
             _leftDelimiterSymbolName = leftDelimiterSymbolName;
@@ -38,17 +38,17 @@ namespace Simula.TeX.Parsers.Matrices
             var cells = ReadMatrixCells(context.Parser, context.Formula, cellsSource, context.Environment);
             var matrix = new MatrixAtom(matrixSource, cells, _cellAlignment);
 
-            SymbolAtom? GetDelimiter(string? name) =>
+            SymbolAtom GetDelimiter(string name) =>
                 name == null
                     ? null
                     : TexFormulaParser.GetDelimiterSymbol(name, null) ??
                       throw new TexParseException($"The delimiter {name} could not be found");
 
-            SymbolAtom? leftDelimiter = GetDelimiter(_leftDelimiterSymbolName);
-            SymbolAtom? rightDelimiter = GetDelimiter(_rightDelimiterSymbolName);
+            var leftDelimiter = GetDelimiter(_leftDelimiterSymbolName);
+            var rightDelimiter = GetDelimiter(_rightDelimiterSymbolName);
 
             var atom = leftDelimiter == null && rightDelimiter == null
-                ? (Atom)matrix
+                ? (Atom) matrix
                 : new FencedAtom(
                     matrixSource,
                     matrix,
@@ -69,7 +69,8 @@ namespace Simula.TeX.Parsers.Matrices
             // be extracted here.
             var environment = new MatrixInternalEnvironment(parentEnvironment, rows);
             var lastCellAtom = parser.Parse(source, formula.TextStyle, environment).RootAtom;
-            if (lastCellAtom != null) {
+            if (lastCellAtom != null)
+            {
                 var lastRow = rows.LastOrDefault();
                 if (lastRow == null)
                     rows.Add(lastRow = new List<Atom>());
@@ -85,7 +86,8 @@ namespace Simula.TeX.Parsers.Matrices
         private void MakeRectangular(List<List<Atom>> rowAtoms)
         {
             var maxRowLength = rowAtoms.Max(r => r.Count);
-            foreach (var row in rowAtoms.Where(r => r.Count < maxRowLength)) {
+            foreach (var row in rowAtoms.Where(r => r.Count < maxRowLength))
+            {
                 while (row.Count < maxRowLength)
                     row.Add(new NullAtom());
             }

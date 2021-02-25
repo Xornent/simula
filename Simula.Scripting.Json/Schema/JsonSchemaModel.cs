@@ -1,14 +1,11 @@
-﻿
+﻿using System;
+using System.Collections.Generic;
 using Simula.Scripting.Json.Linq;
 using Simula.Scripting.Json.Utilities;
-using System;
-using System.Collections.Generic;
-
-#nullable disable
 
 namespace Simula.Scripting.Json.Schema
 {
-    [Obsolete("JSON Schema validation has been moved to its own package. See https://www.newtonsoft.com/jsonschema for more details.")]
+    [Obsolete("JSON Schema validation has been moved to its own package. See http://www.newtonsoft.com/jsonschema for more details.")]
     internal class JsonSchemaModel
     {
         public bool Required { get; set; }
@@ -47,7 +44,8 @@ namespace Simula.Scripting.Json.Schema
         {
             JsonSchemaModel model = new JsonSchemaModel();
 
-            foreach (JsonSchema schema in schemata) {
+            foreach (JsonSchema schema in schemata)
+            {
                 Combine(model, schema);
             }
 
@@ -56,11 +54,14 @@ namespace Simula.Scripting.Json.Schema
 
         private static void Combine(JsonSchemaModel model, JsonSchema schema)
         {
+            // Version 3 of the Draft JSON Schema has the default value of Not Required
             model.Required = model.Required || (schema.Required ?? false);
             model.Type = model.Type & (schema.Type ?? JsonSchemaType.Any);
 
             model.MinimumLength = MathUtils.Max(model.MinimumLength, schema.MinimumLength);
             model.MaximumLength = MathUtils.Min(model.MaximumLength, schema.MaximumLength);
+
+            // not sure what is the best way to combine divisibleBy
             model.DivisibleBy = MathUtils.Max(model.DivisibleBy, schema.DivisibleBy);
 
             model.Minimum = MathUtils.Max(model.Minimum, schema.Minimum);
@@ -74,8 +75,10 @@ namespace Simula.Scripting.Json.Schema
             model.AllowAdditionalProperties = model.AllowAdditionalProperties && schema.AllowAdditionalProperties;
             model.AllowAdditionalItems = model.AllowAdditionalItems && schema.AllowAdditionalItems;
             model.UniqueItems = model.UniqueItems || schema.UniqueItems;
-            if (schema.Enum != null) {
-                if (model.Enum == null) {
+            if (schema.Enum != null)
+            {
+                if (model.Enum == null)
+                {
                     model.Enum = new List<JToken>();
                 }
 
@@ -83,8 +86,10 @@ namespace Simula.Scripting.Json.Schema
             }
             model.Disallow = model.Disallow | (schema.Disallow ?? JsonSchemaType.None);
 
-            if (schema.Pattern != null) {
-                if (model.Patterns == null) {
+            if (schema.Pattern != null)
+            {
+                if (model.Patterns == null)
+                {
                     model.Patterns = new List<string>();
                 }
 

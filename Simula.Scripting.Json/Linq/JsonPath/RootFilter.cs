@@ -12,7 +12,7 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 
         public override IEnumerable<JToken> ExecuteFilter(JToken root, IEnumerable<JToken> current, bool errorWhenNoMatch)
         {
-            return new[] { root };
+            return root;
         }
     }
 }

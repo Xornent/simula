@@ -1,31 +1,29 @@
-using Simula.TeX.Boxes;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Simula.TeX.Boxes;
 
 namespace Simula.TeX.Atoms
 {
     /// <summary>An atom representing a tabular arrangement of atoms.</summary>
     internal class MatrixAtom : Atom
     {
-        public const double DefaultPadding = 0.35;
-
         public MatrixAtom(
-            SourceSpan? source,
-            IEnumerable<IEnumerable<Atom?>> cells,
+            SourceSpan source,
+            List<List<Atom>> cells,
             MatrixCellAlignment matrixCellAlignment,
-            double verticalPadding = DefaultPadding,
-            double horizontalPadding = DefaultPadding) : base(source)
+            double verticalPadding = 0.35,
+            double horizontalPadding = 0.35) : base(source)
         {
-            MatrixCells = new ReadOnlyCollection<ReadOnlyCollection<Atom?>>(
-                cells.Select(row => new ReadOnlyCollection<Atom?>(row.ToList())).ToList());
+            MatrixCells = new ReadOnlyCollection<ReadOnlyCollection<Atom>>(
+                cells.Select(row => new ReadOnlyCollection<Atom>(row)).ToList());
             MatrixCellAlignment = matrixCellAlignment;
             VerticalPadding = verticalPadding;
             HorizontalPadding = horizontalPadding;
         }
 
-        public ReadOnlyCollection<ReadOnlyCollection<Atom?>> MatrixCells { get; }
+        public ReadOnlyCollection<ReadOnlyCollection<Atom>> MatrixCells { get; }
 
         public double VerticalPadding { get; }
 
@@ -44,28 +42,29 @@ namespace Simula.TeX.Atoms
             return ApplyCellPaddings(environment, cells, columnCount, matrixCellGaps);
         }
 
-        private IEnumerable<Box> CreateRowCellBoxes(TexEnvironment environment, ReadOnlyCollection<Atom?> row) =>
+        private IEnumerable<Box> CreateRowCellBoxes(TexEnvironment environment, ReadOnlyCollection<Atom> row) =>
             row.Select(atom => atom == null ? StrutBox.Empty : atom.CreateBox(environment));
 
         /// <summary>
         /// Calculates the height of each row and the width of each column and returns arrays of those.
         /// </summary>
-        /// <returns>A tuple of RowHeights and ColumnWidths arrays.</returns>
-        private Tuple<double[], double[]> CalculateDimensions(
+        private (double[] RowHeights, double[] ColumnWidths) CalculateDimensions(
             List<List<Box>> matrix,
             int columnCount)
         {
             var rowHeights = new double[matrix.Count];
             var columnWidths = new double[columnCount];
-            for (var i = 0; i < matrix.Count; ++i) {
-                for (var j = 0; j < columnCount; ++j) {
+            for (var i = 0; i < matrix.Count; ++i)
+            {
+                for (var j = 0; j < columnCount; ++j)
+                {
                     var cell = matrix[i][j];
                     rowHeights[i] = Math.Max(rowHeights[i], cell.TotalHeight);
                     columnWidths[j] = Math.Max(columnWidths[j], cell.TotalWidth);
                 }
             }
 
-            return Tuple.Create(rowHeights, columnWidths);
+            return (rowHeights, columnWidths);
         }
 
         private static List<List<CellGaps>> CalculateCellGaps(
@@ -75,14 +74,16 @@ namespace Simula.TeX.Atoms
             double[] columnWidths)
         {
             var matrixCellGaps = new List<List<CellGaps>>();
-            for (var i = 0; i < matrix.Count; ++i) {
+            for (var i = 0; i < matrix.Count; ++i)
+            {
                 var rowGaps = new List<CellGaps>();
-                for (var j = 0; j < columnCount; ++j) {
+                for (var j = 0; j < columnCount; ++j)
+                {
                     var cell = matrix[i][j];
                     double cellVShift = rowHeights[i] - cell.TotalHeight;
                     double cellHShift = columnWidths[j] - cell.TotalWidth;
 
-                    rowGaps.Add(new CellGaps { Horizontal = cellHShift / 2, Vertical = cellVShift / 2 });
+                    rowGaps.Add(new CellGaps {Horizontal = cellHShift / 2, Vertical = cellVShift / 2});
                 }
 
                 matrixCellGaps.Add(rowGaps);
@@ -98,20 +99,22 @@ namespace Simula.TeX.Atoms
             IList<List<CellGaps>> matrixCellGaps)
         {
             var rowsContainer = new VerticalBox();
-            for (var i = 0; i < matrix.Count; ++i) {
+            for (var i = 0; i < matrix.Count; ++i)
+            {
                 var rowContainer = new HorizontalBox();
-                for (var j = 0; j < columnCount; ++j) {
+                for (var j = 0; j < columnCount; ++j)
+                {
                     var cell = matrix[i][j];
 
                     var cellContainer = new VerticalBox();
-                    var (topPadding, bottomPadding) = GetTopBottomPadding(i, j);
+                    var (topPadding, bottomPadding) = GetVerticalPadding(i, j);
                     cellContainer.Add(topPadding);
                     cellContainer.Add(cell);
                     cellContainer.Add(bottomPadding);
                     cellContainer.Height = cellContainer.TotalHeight;
                     cellContainer.Depth = 0;
 
-                    var (leftPadding, rightPadding) = GetLeftRightPadding(i, j);
+                    var (leftPadding, rightPadding) = GetHorizontalPadding(i, j);
                     if (leftPadding != null) rowContainer.Add(leftPadding);
                     rowContainer.Add(cellContainer);
                     rowContainer.Add(rightPadding);
@@ -127,15 +130,15 @@ namespace Simula.TeX.Atoms
 
             return rowsContainer;
 
-            Tuple<Box, Box> GetTopBottomPadding(int i, int j)
+            (Box TopPadding, Box BottomPadding) GetVerticalPadding(int i, int j)
             {
                 var value = matrixCellGaps[i][j].Vertical;
                 var topBox = new StrutBox(0.0, VerticalPadding / 2 + value, 0.0, VerticalPadding);
                 var bottomBox = new StrutBox(0.0, VerticalPadding / 2 + value, 0.0, VerticalPadding);
-                return new Tuple<Box, Box>(topBox, bottomBox);
+                return (topBox, bottomBox);
             }
 
-            Tuple<Box?, Box> GetLeftRightPadding(int i, int j)
+            (Box LeftPadding, Box RightPadding) GetHorizontalPadding(int i, int j)
             {
                 var value = matrixCellGaps[i][j].Horizontal;
                 var leftPadding = MatrixCellAlignment == MatrixCellAlignment.Left ? 0.0 : value;
@@ -144,7 +147,7 @@ namespace Simula.TeX.Atoms
                     ? null
                     : new StrutBox(HorizontalPadding / 2 + leftPadding, 0.0, 0.0, 0.0);
                 var rightBox = new StrutBox(HorizontalPadding / 2 + rightPadding, 0.0, 0.0, 0.0);
-                return new Tuple<Box?, Box>(leftBox, rightBox);
+                return (leftBox, rightBox);
             }
         }
 

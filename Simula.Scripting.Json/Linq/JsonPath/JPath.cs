@@ -1,16 +1,13 @@
-
-using Simula.Scripting.Json.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json.Linq.JsonPath
 {
     internal class JPath
     {
-        private static readonly char[] FloatCharacters = new[] { '.', 'E', 'e' };
-
         private readonly string _expression;
         public List<PathFilter> Filters { get; }
 
@@ -31,27 +28,36 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 
             EatWhitespace();
 
-            if (_expression.Length == _currentIndex) {
+            if (_expression.Length == _currentIndex)
+            {
                 return;
             }
 
-            if (_expression[_currentIndex] == '$') {
-                if (_expression.Length == 1) {
+            if (_expression[_currentIndex] == '$')
+            {
+                if (_expression.Length == 1)
+                {
                     return;
                 }
+
+                // only increment position for "$." or "$["
+                // otherwise assume property that starts with $
                 char c = _expression[_currentIndex + 1];
-                if (c == '.' || c == '[') {
+                if (c == '.' || c == '[')
+                {
                     _currentIndex++;
                     currentPartStartIndex = _currentIndex;
                 }
             }
 
-            if (!ParsePath(Filters, currentPartStartIndex, false)) {
+            if (!ParsePath(Filters, currentPartStartIndex, false))
+            {
                 int lastCharacterIndex = _currentIndex;
 
                 EatWhitespace();
 
-                if (_currentIndex < _expression.Length) {
+                if (_currentIndex < _expression.Length)
+                {
                     throw new JsonException("Unexpected character while parsing path: " + _expression[lastCharacterIndex]);
                 }
             }
@@ -64,15 +70,19 @@ namespace Simula.Scripting.Json.Linq.JsonPath
             bool followingDot = false;
 
             bool ended = false;
-            while (_currentIndex < _expression.Length && !ended) {
+            while (_currentIndex < _expression.Length && !ended)
+            {
                 char currentChar = _expression[_currentIndex];
 
-                switch (currentChar) {
+                switch (currentChar)
+                {
                     case '[':
                     case '(':
-                        if (_currentIndex > currentPartStartIndex) {
-                            string? member = _expression.Substring(currentPartStartIndex, _currentIndex - currentPartStartIndex);
-                            if (member == "*") {
+                        if (_currentIndex > currentPartStartIndex)
+                        {
+                            string member = _expression.Substring(currentPartStartIndex, _currentIndex - currentPartStartIndex);
+                            if (member == "*")
+                            {
                                 member = null;
                             }
 
@@ -81,8 +91,6 @@ namespace Simula.Scripting.Json.Linq.JsonPath
                         }
 
                         filters.Add(ParseIndexer(currentChar, scan));
-                        scan = false;
-
                         _currentIndex++;
                         currentPartStartIndex = _currentIndex;
                         followingIndexer = true;
@@ -93,21 +101,25 @@ namespace Simula.Scripting.Json.Linq.JsonPath
                         ended = true;
                         break;
                     case ' ':
-                        if (_currentIndex < _expression.Length) {
+                        if (_currentIndex < _expression.Length)
+                        {
                             ended = true;
                         }
                         break;
                     case '.':
-                        if (_currentIndex > currentPartStartIndex) {
-                            string? member = _expression.Substring(currentPartStartIndex, _currentIndex - currentPartStartIndex);
-                            if (member == "*") {
+                        if (_currentIndex > currentPartStartIndex)
+                        {
+                            string member = _expression.Substring(currentPartStartIndex, _currentIndex - currentPartStartIndex);
+                            if (member == "*")
+                            {
                                 member = null;
                             }
 
                             filters.Add(CreatePathFilter(member, scan));
                             scan = false;
                         }
-                        if (_currentIndex + 1 < _expression.Length && _expression[_currentIndex + 1] == '.') {
+                        if (_currentIndex + 1 < _expression.Length && _expression[_currentIndex + 1] == '.')
+                        {
                             scan = true;
                             _currentIndex++;
                         }
@@ -117,10 +129,14 @@ namespace Simula.Scripting.Json.Linq.JsonPath
                         followingDot = true;
                         break;
                     default:
-                        if (query && (currentChar == '=' || currentChar == '<' || currentChar == '!' || currentChar == '>' || currentChar == '|' || currentChar == '&')) {
+                        if (query && (currentChar == '=' || currentChar == '<' || currentChar == '!' || currentChar == '>' || currentChar == '|' || currentChar == '&'))
+                        {
                             ended = true;
-                        } else {
-                            if (followingIndexer) {
+                        }
+                        else
+                        {
+                            if (followingIndexer)
+                            {
                                 throw new JsonException("Unexpected character following indexer: " + currentChar);
                             }
 
@@ -132,14 +148,20 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 
             bool atPathEnd = (_currentIndex == _expression.Length);
 
-            if (_currentIndex > currentPartStartIndex) {
-                string? member = _expression.Substring(currentPartStartIndex, _currentIndex - currentPartStartIndex).TrimEnd();
-                if (member == "*") {
+            if (_currentIndex > currentPartStartIndex)
+            {
+                string member = _expression.Substring(currentPartStartIndex, _currentIndex - currentPartStartIndex).TrimEnd();
+                if (member == "*")
+                {
                     member = null;
                 }
                 filters.Add(CreatePathFilter(member, scan));
-            } else {
-                if (followingDot && (atPathEnd || query)) {
+            }
+            else
+            {
+                // no field name following dot in path and at end of base path/query
+                if (followingDot && (atPathEnd || query))
+                {
                     throw new JsonException("Unexpected end while parsing path.");
                 }
             }
@@ -147,9 +169,9 @@ namespace Simula.Scripting.Json.Linq.JsonPath
             return atPathEnd;
         }
 
-        private static PathFilter CreatePathFilter(string? member, bool scan)
+        private static PathFilter CreatePathFilter(string member, bool scan)
         {
-            PathFilter filter = (scan) ? (PathFilter)new ScanFilter(member) : new FieldFilter(member);
+            PathFilter filter = (scan) ? (PathFilter)new ScanFilter {Name = member} : new FieldFilter {Name = member};
             return filter;
         }
 
@@ -163,11 +185,16 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 
             EatWhitespace();
 
-            if (_expression[_currentIndex] == '\'') {
+            if (_expression[_currentIndex] == '\'')
+            {
                 return ParseQuotedField(indexerCloseChar, scan);
-            } else if (_expression[_currentIndex] == '?') {
-                return ParseQuery(indexerCloseChar, scan);
-            } else {
+            }
+            else if (_expression[_currentIndex] == '?')
+            {
+                return ParseQuery(indexerCloseChar);
+            }
+            else
+            {
                 return ParseArrayIndexer(indexerCloseChar);
             }
         }
@@ -176,26 +203,31 @@ namespace Simula.Scripting.Json.Linq.JsonPath
         {
             int start = _currentIndex;
             int? end = null;
-            List<int>? indexes = null;
+            List<int> indexes = null;
             int colonCount = 0;
             int? startIndex = null;
             int? endIndex = null;
             int? step = null;
 
-            while (_currentIndex < _expression.Length) {
+            while (_currentIndex < _expression.Length)
+            {
                 char currentCharacter = _expression[_currentIndex];
 
-                if (currentCharacter == ' ') {
+                if (currentCharacter == ' ')
+                {
                     end = _currentIndex;
                     EatWhitespace();
                     continue;
                 }
 
-                if (currentCharacter == indexerCloseChar) {
+                if (currentCharacter == indexerCloseChar)
+                {
                     int length = (end ?? _currentIndex) - start;
 
-                    if (indexes != null) {
-                        if (length == 0) {
+                    if (indexes != null)
+                    {
+                        if (length == 0)
+                        {
                             throw new JsonException("Array index expected.");
                         }
 
@@ -203,22 +235,31 @@ namespace Simula.Scripting.Json.Linq.JsonPath
                         int index = Convert.ToInt32(indexer, CultureInfo.InvariantCulture);
 
                         indexes.Add(index);
-                        return new ArrayMultipleIndexFilter(indexes);
-                    } else if (colonCount > 0) {
-                        if (length > 0) {
+                        return new ArrayMultipleIndexFilter { Indexes = indexes };
+                    }
+                    else if (colonCount > 0)
+                    {
+                        if (length > 0)
+                        {
                             string indexer = _expression.Substring(start, length);
                             int index = Convert.ToInt32(indexer, CultureInfo.InvariantCulture);
 
-                            if (colonCount == 1) {
+                            if (colonCount == 1)
+                            {
                                 endIndex = index;
-                            } else {
+                            }
+                            else
+                            {
                                 step = index;
                             }
                         }
 
                         return new ArraySliceFilter { Start = startIndex, End = endIndex, Step = step };
-                    } else {
-                        if (length == 0) {
+                    }
+                    else
+                    {
+                        if (length == 0)
+                        {
                             throw new JsonException("Array index expected.");
                         }
 
@@ -227,14 +268,18 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 
                         return new ArrayIndexFilter { Index = index };
                     }
-                } else if (currentCharacter == ',') {
+                }
+                else if (currentCharacter == ',')
+                {
                     int length = (end ?? _currentIndex) - start;
 
-                    if (length == 0) {
+                    if (length == 0)
+                    {
                         throw new JsonException("Array index expected.");
                     }
 
-                    if (indexes == null) {
+                    if (indexes == null)
+                    {
                         indexes = new List<int>();
                     }
 
@@ -247,28 +292,39 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 
                     start = _currentIndex;
                     end = null;
-                } else if (currentCharacter == '*') {
+                }
+                else if (currentCharacter == '*')
+                {
                     _currentIndex++;
                     EnsureLength("Path ended with open indexer.");
                     EatWhitespace();
 
-                    if (_expression[_currentIndex] != indexerCloseChar) {
+                    if (_expression[_currentIndex] != indexerCloseChar)
+                    {
                         throw new JsonException("Unexpected character while parsing path indexer: " + currentCharacter);
                     }
 
                     return new ArrayIndexFilter();
-                } else if (currentCharacter == ':') {
+                }
+                else if (currentCharacter == ':')
+                {
                     int length = (end ?? _currentIndex) - start;
 
-                    if (length > 0) {
+                    if (length > 0)
+                    {
                         string indexer = _expression.Substring(start, length);
                         int index = Convert.ToInt32(indexer, CultureInfo.InvariantCulture);
 
-                        if (colonCount == 0) {
+                        if (colonCount == 0)
+                        {
                             startIndex = index;
-                        } else if (colonCount == 1) {
+                        }
+                        else if (colonCount == 1)
+                        {
                             endIndex = index;
-                        } else {
+                        }
+                        else
+                        {
                             step = index;
                         }
                     }
@@ -281,10 +337,15 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 
                     start = _currentIndex;
                     end = null;
-                } else if (!char.IsDigit(currentCharacter) && currentCharacter != '-') {
+                }
+                else if (!char.IsDigit(currentCharacter) && currentCharacter != '-')
+                {
                     throw new JsonException("Unexpected character while parsing path indexer: " + currentCharacter);
-                } else {
-                    if (end != null) {
+                }
+                else
+                {
+                    if (end != null)
+                    {
                         throw new JsonException("Unexpected character while parsing path indexer: " + currentCharacter);
                     }
 
@@ -297,8 +358,10 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 
         private void EatWhitespace()
         {
-            while (_currentIndex < _expression.Length) {
-                if (_expression[_currentIndex] != ' ') {
+            while (_currentIndex < _expression.Length)
+            {
+                if (_expression[_currentIndex] != ' ')
+                {
                     break;
                 }
 
@@ -306,12 +369,13 @@ namespace Simula.Scripting.Json.Linq.JsonPath
             }
         }
 
-        private PathFilter ParseQuery(char indexerCloseChar, bool scan)
+        private PathFilter ParseQuery(char indexerCloseChar)
         {
             _currentIndex++;
             EnsureLength("Path ended with open indexer.");
 
-            if (_expression[_currentIndex] != '(') {
+            if (_expression[_currentIndex] != '(')
+            {
                 throw new JsonException("Unexpected character while parsing path indexer: " + _expression[_currentIndex]);
             }
 
@@ -323,31 +387,38 @@ namespace Simula.Scripting.Json.Linq.JsonPath
             EnsureLength("Path ended with open indexer.");
             EatWhitespace();
 
-            if (_expression[_currentIndex] != indexerCloseChar) {
+            if (_expression[_currentIndex] != indexerCloseChar)
+            {
                 throw new JsonException("Unexpected character while parsing path indexer: " + _expression[_currentIndex]);
             }
 
-            if (!scan) {
-                return new QueryFilter(expression);
-            } else {
-                return new QueryScanFilter(expression);
-            }
+            return new QueryFilter
+            {
+                Expression = expression
+            };
         }
 
-        private bool TryParseExpression(out List<PathFilter>? expressionPath)
+        private bool TryParseExpression(out List<PathFilter> expressionPath)
         {
-            if (_expression[_currentIndex] == '$') {
-                expressionPath = new List<PathFilter> { RootFilter.Instance };
-            } else if (_expression[_currentIndex] == '@') {
+            if (_expression[_currentIndex] == '$')
+            {
                 expressionPath = new List<PathFilter>();
-            } else {
+                expressionPath.Add(RootFilter.Instance);
+            }
+            else if (_expression[_currentIndex] == '@')
+            {
+                expressionPath = new List<PathFilter>();
+            }
+            else
+            {
                 expressionPath = null;
                 return false;
             }
 
             _currentIndex++;
 
-            if (ParsePath(expressionPath!, _currentIndex, true)) {
+            if (ParsePath(expressionPath, _currentIndex, true))
+            {
                 throw new JsonException("Path ended with open query.");
             }
 
@@ -363,14 +434,18 @@ namespace Simula.Scripting.Json.Linq.JsonPath
         {
             EatWhitespace();
 
-            if (TryParseExpression(out List<PathFilter>? expressionPath)) {
+            List<PathFilter> expressionPath;
+            if (TryParseExpression(out expressionPath))
+            {
                 EatWhitespace();
                 EnsureLength("Path ended with open query.");
 
-                return expressionPath!;
+                return expressionPath;
             }
 
-            if (TryParseValue(out var value)) {
+            object value;
+            if (TryParseValue(out value))
+            {
                 EatWhitespace();
                 EnsureLength("Path ended with open query.");
 
@@ -382,66 +457,85 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 
         private QueryExpression ParseExpression()
         {
-            QueryExpression? rootExpression = null;
-            CompositeExpression? parentExpression = null;
+            QueryExpression rootExpression = null;
+            CompositeExpression parentExpression = null;
 
-            while (_currentIndex < _expression.Length) {
+            while (_currentIndex < _expression.Length)
+            {
                 object left = ParseSide();
-                object? right = null;
+                object right = null;
 
                 QueryOperator op;
                 if (_expression[_currentIndex] == ')'
                     || _expression[_currentIndex] == '|'
-                    || _expression[_currentIndex] == '&') {
+                    || _expression[_currentIndex] == '&')
+                {
                     op = QueryOperator.Exists;
-                } else {
+                }
+                else
+                {
                     op = ParseOperator();
 
                     right = ParseSide();
                 }
 
-                BooleanQueryExpression booleanExpression = new BooleanQueryExpression(op, left, right);
+                BooleanQueryExpression booleanExpression = new BooleanQueryExpression
+                {
+                    Left = left,
+                    Operator = op,
+                    Right = right
+                };
 
-                if (_expression[_currentIndex] == ')') {
-                    if (parentExpression != null) {
+                if (_expression[_currentIndex] == ')')
+                {
+                    if (parentExpression != null)
+                    {
                         parentExpression.Expressions.Add(booleanExpression);
-                        return rootExpression!;
+                        return rootExpression;
                     }
 
                     return booleanExpression;
                 }
-                if (_expression[_currentIndex] == '&') {
-                    if (!Match("&&")) {
+                if (_expression[_currentIndex] == '&')
+                {
+                    if (!Match("&&"))
+                    {
                         throw CreateUnexpectedCharacterException();
                     }
 
-                    if (parentExpression == null || parentExpression.Operator != QueryOperator.And) {
-                        CompositeExpression andExpression = new CompositeExpression(QueryOperator.And);
+                    if (parentExpression == null || parentExpression.Operator != QueryOperator.And)
+                    {
+                        CompositeExpression andExpression = new CompositeExpression { Operator = QueryOperator.And };
 
                         parentExpression?.Expressions.Add(andExpression);
 
                         parentExpression = andExpression;
 
-                        if (rootExpression == null) {
+                        if (rootExpression == null)
+                        {
                             rootExpression = parentExpression;
                         }
                     }
 
                     parentExpression.Expressions.Add(booleanExpression);
                 }
-                if (_expression[_currentIndex] == '|') {
-                    if (!Match("||")) {
+                if (_expression[_currentIndex] == '|')
+                {
+                    if (!Match("||"))
+                    {
                         throw CreateUnexpectedCharacterException();
                     }
 
-                    if (parentExpression == null || parentExpression.Operator != QueryOperator.Or) {
-                        CompositeExpression orExpression = new CompositeExpression(QueryOperator.Or);
+                    if (parentExpression == null || parentExpression.Operator != QueryOperator.Or)
+                    {
+                        CompositeExpression orExpression = new CompositeExpression { Operator = QueryOperator.Or };
 
                         parentExpression?.Expressions.Add(orExpression);
 
                         parentExpression = orExpression;
 
-                        if (rootExpression == null) {
+                        if (rootExpression == null)
+                        {
                             rootExpression = parentExpression;
                         }
                     }
@@ -453,54 +547,72 @@ namespace Simula.Scripting.Json.Linq.JsonPath
             throw new JsonException("Path ended with open query.");
         }
 
-        private bool TryParseValue(out object? value)
+        private bool TryParseValue(out object value)
         {
             char currentChar = _expression[_currentIndex];
-            if (currentChar == '\'') {
+            if (currentChar == '\'')
+            {
                 value = ReadQuotedString();
                 return true;
-            } else if (char.IsDigit(currentChar) || currentChar == '-') {
+            }
+            else if (char.IsDigit(currentChar) || currentChar == '-')
+            {
                 StringBuilder sb = new StringBuilder();
                 sb.Append(currentChar);
 
                 _currentIndex++;
-                while (_currentIndex < _expression.Length) {
+                while (_currentIndex < _expression.Length)
+                {
                     currentChar = _expression[_currentIndex];
-                    if (currentChar == ' ' || currentChar == ')') {
+                    if (currentChar == ' ' || currentChar == ')')
+                    {
                         string numberText = sb.ToString();
 
-                        if (numberText.IndexOfAny(FloatCharacters) != -1) {
-                            bool result = double.TryParse(numberText, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var d);
+                        if (numberText.IndexOfAny(new char[] { '.', 'E', 'e' }) != -1)
+                        {
+                            double d;
+                            bool result = double.TryParse(numberText, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out d);
                             value = d;
                             return result;
-                        } else {
-                            bool result = long.TryParse(numberText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var l);
+                        }
+                        else
+                        {
+                            long l;
+                            bool result = long.TryParse(numberText, NumberStyles.Integer, CultureInfo.InvariantCulture, out l);
                             value = l;
                             return result;
                         }
-                    } else {
+                    }
+                    else
+                    {
                         sb.Append(currentChar);
                         _currentIndex++;
                     }
                 }
-            } else if (currentChar == 't') {
-                if (Match("true")) {
+            }
+            else if (currentChar == 't')
+            {
+                if (Match("true"))
+                {
                     value = true;
                     return true;
                 }
-            } else if (currentChar == 'f') {
-                if (Match("false")) {
+            }
+            else if (currentChar == 'f')
+            {
+                if (Match("false"))
+                {
                     value = false;
                     return true;
                 }
-            } else if (currentChar == 'n') {
-                if (Match("null")) {
+            }
+            else if (currentChar == 'n')
+            {
+                if (Match("null"))
+                {
                     value = null;
                     return true;
                 }
-            } else if (currentChar == '/') {
-                value = ReadRegexString();
-                return true;
             }
 
             value = null;
@@ -512,46 +624,37 @@ namespace Simula.Scripting.Json.Linq.JsonPath
             StringBuilder sb = new StringBuilder();
 
             _currentIndex++;
-            while (_currentIndex < _expression.Length) {
+            while (_currentIndex < _expression.Length)
+            {
                 char currentChar = _expression[_currentIndex];
-                if (currentChar == '\\' && _currentIndex + 1 < _expression.Length) {
+                if (currentChar == '\\' && _currentIndex + 1 < _expression.Length)
+                {
                     _currentIndex++;
-                    currentChar = _expression[_currentIndex];
 
-                    char resolvedChar;
-                    switch (currentChar) {
-                        case 'b':
-                            resolvedChar = '\b';
-                            break;
-                        case 't':
-                            resolvedChar = '\t';
-                            break;
-                        case 'n':
-                            resolvedChar = '\n';
-                            break;
-                        case 'f':
-                            resolvedChar = '\f';
-                            break;
-                        case 'r':
-                            resolvedChar = '\r';
-                            break;
-                        case '\\':
-                        case '"':
-                        case '\'':
-                        case '/':
-                            resolvedChar = currentChar;
-                            break;
-                        default:
-                            throw new JsonException(@"Unknown escape character: \" + currentChar);
+                    if (_expression[_currentIndex] == '\'')
+                    {
+                        sb.Append('\'');
+                    }
+                    else if (_expression[_currentIndex] == '\\')
+                    {
+                        sb.Append('\\');
+                    }
+                    else
+                    {
+                        throw new JsonException(@"Unknown escape character: \" + _expression[_currentIndex]);
                     }
 
-                    sb.Append(resolvedChar);
-
                     _currentIndex++;
-                } else if (currentChar == '\'') {
+                }
+                else if (currentChar == '\'')
+                {
                     _currentIndex++;
-                    return sb.ToString();
-                } else {
+                    {
+                        return sb.ToString();
+                    }
+                }
+                else
+                {
                     _currentIndex++;
                     sb.Append(currentChar);
                 }
@@ -560,44 +663,17 @@ namespace Simula.Scripting.Json.Linq.JsonPath
             throw new JsonException("Path ended with an open string.");
         }
 
-        private string ReadRegexString()
-        {
-            int startIndex = _currentIndex;
-
-            _currentIndex++;
-            while (_currentIndex < _expression.Length) {
-                char currentChar = _expression[_currentIndex];
-                if (currentChar == '\\' && _currentIndex + 1 < _expression.Length) {
-                    _currentIndex += 2;
-                } else if (currentChar == '/') {
-                    _currentIndex++;
-
-                    while (_currentIndex < _expression.Length) {
-                        currentChar = _expression[_currentIndex];
-
-                        if (char.IsLetter(currentChar)) {
-                            _currentIndex++;
-                        } else {
-                            break;
-                        }
-                    }
-
-                    return _expression.Substring(startIndex, _currentIndex - startIndex);
-                } else {
-                    _currentIndex++;
-                }
-            }
-
-            throw new JsonException("Path ended with an open regex.");
-        }
-
         private bool Match(string s)
         {
             int currentPosition = _currentIndex;
-            for (int i = 0; i < s.Length; i++) {
-                if (currentPosition < _expression.Length && _expression[currentPosition] == s[i]) {
+            foreach (char c in s)
+            {
+                if (currentPosition < _expression.Length && _expression[currentPosition] == c)
+                {
                     currentPosition++;
-                } else {
+                }
+                else
+                {
                     return false;
                 }
             }
@@ -608,39 +684,33 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 
         private QueryOperator ParseOperator()
         {
-            if (_currentIndex + 1 >= _expression.Length) {
+            if (_currentIndex + 1 >= _expression.Length)
+            {
                 throw new JsonException("Path ended with open query.");
             }
 
-            if (Match("===")) {
-                return QueryOperator.StrictEquals;
-            }
-
-            if (Match("==")) {
+            if (Match("=="))
+            {
                 return QueryOperator.Equals;
             }
-
-            if (Match("=~")) {
-                return QueryOperator.RegexEquals;
-            }
-
-            if (Match("!==")) {
-                return QueryOperator.StrictNotEquals;
-            }
-
-            if (Match("!=") || Match("<>")) {
+            if (Match("!=") || Match("<>"))
+            {
                 return QueryOperator.NotEquals;
             }
-            if (Match("<=")) {
+            if (Match("<="))
+            {
                 return QueryOperator.LessThanOrEquals;
             }
-            if (Match("<")) {
+            if (Match("<"))
+            {
                 return QueryOperator.LessThan;
             }
-            if (Match(">=")) {
+            if (Match(">="))
+            {
                 return QueryOperator.GreaterThanOrEquals;
             }
-            if (Match(">")) {
+            if (Match(">"))
+            {
                 return QueryOperator.GreaterThan;
             }
 
@@ -649,33 +719,43 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 
         private PathFilter ParseQuotedField(char indexerCloseChar, bool scan)
         {
-            List<string>? fields = null;
+            List<string> fields = null;
 
-            while (_currentIndex < _expression.Length) {
+            while (_currentIndex < _expression.Length)
+            {
                 string field = ReadQuotedString();
 
                 EatWhitespace();
                 EnsureLength("Path ended with open indexer.");
 
-                if (_expression[_currentIndex] == indexerCloseChar) {
-                    if (fields != null) {
+                if (_expression[_currentIndex] == indexerCloseChar)
+                {
+                    if (fields != null)
+                    {
                         fields.Add(field);
                         return (scan)
-                            ? new ScanMultipleFilter(fields)
-                            : (PathFilter)new FieldMultipleFilter(fields);
-                    } else {
+                            ? (PathFilter)new ScanMultipleFilter { Names = fields }
+                            : (PathFilter)new FieldMultipleFilter { Names = fields };
+                    }
+                    else
+                    {
                         return CreatePathFilter(field, scan);
                     }
-                } else if (_expression[_currentIndex] == ',') {
+                }
+                else if (_expression[_currentIndex] == ',')
+                {
                     _currentIndex++;
                     EatWhitespace();
 
-                    if (fields == null) {
+                    if (fields == null)
+                    {
                         fields = new List<string>();
                     }
 
                     fields.Add(field);
-                } else {
+                }
+                else
+                {
                     throw new JsonException("Unexpected character while parsing path indexer: " + _expression[_currentIndex]);
                 }
             }
@@ -685,7 +765,8 @@ namespace Simula.Scripting.Json.Linq.JsonPath
 
         private void EnsureLength(string message)
         {
-            if (_currentIndex >= _expression.Length) {
+            if (_currentIndex >= _expression.Length)
+            {
                 throw new JsonException(message);
             }
         }
@@ -698,7 +779,8 @@ namespace Simula.Scripting.Json.Linq.JsonPath
         internal static IEnumerable<JToken> Evaluate(List<PathFilter> filters, JToken root, JToken t, bool errorWhenNoMatch)
         {
             IEnumerable<JToken> current = new[] { t };
-            foreach (PathFilter filter in filters) {
+            foreach (PathFilter filter in filters)
+            {
                 current = filter.ExecuteFilter(root, current, errorWhenNoMatch);
             }
 

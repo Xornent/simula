@@ -1,8 +1,8 @@
-﻿
-using Simula.Scripting.Json.Utilities;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json.Serialization
 {
@@ -17,16 +17,17 @@ namespace Simula.Scripting.Json.Serialization
 
             int IEqualityComparer<object>.GetHashCode(object obj)
             {
+                // put objects in a bucket based on their reference
                 return RuntimeHelpers.GetHashCode(obj);
             }
         }
 
-        private ErrorContext? _currentErrorContext;
-        private BidirectionalDictionary<string, object>? _mappings;
+        private ErrorContext _currentErrorContext;
+        private BidirectionalDictionary<string, object> _mappings;
 
         internal readonly JsonSerializer Serializer;
-        internal readonly ITraceWriter? TraceWriter;
-        protected JsonSerializerProxy? InternalSerializer;
+        internal readonly ITraceWriter TraceWriter;
+        protected JsonSerializerProxy InternalSerializer;
 
         protected JsonSerializerInternalBase(JsonSerializer serializer)
         {
@@ -36,37 +37,34 @@ namespace Simula.Scripting.Json.Serialization
             TraceWriter = serializer.TraceWriter;
         }
 
-        internal BidirectionalDictionary<string, object> DefaultReferenceMappings {
-            get {
-                if (_mappings == null) {
+        internal BidirectionalDictionary<string, object> DefaultReferenceMappings
+        {
+            get
+            {
+                // override equality comparer for object key dictionary
+                // object will be modified as it deserializes and might have mutable hashcode
+                if (_mappings == null)
+                {
                     _mappings = new BidirectionalDictionary<string, object>(
                         EqualityComparer<string>.Default,
                         new ReferenceEqualsEqualityComparer(),
                         "A different value already has the Id '{0}'.",
-                        "A different Id has already been assigned for value '{0}'. This error may be caused by an object being reused multiple times during deserialization and can be fixed with the setting ObjectCreationHandling.Replace.");
+                        "A different Id has already been assigned for value '{0}'.");
                 }
 
                 return _mappings;
             }
         }
 
-        protected NullValueHandling ResolvedNullValueHandling(JsonObjectContract? containerContract, JsonProperty property)
+        private ErrorContext GetErrorContext(object currentObject, object member, string path, Exception error)
         {
-            NullValueHandling resolvedNullValueHandling =
-                property.NullValueHandling
-                ?? containerContract?.ItemNullValueHandling
-                ?? Serializer._nullValueHandling;
-
-            return resolvedNullValueHandling;
-        }
-
-        private ErrorContext GetErrorContext(object? currentObject, object? member, string path, Exception error)
-        {
-            if (_currentErrorContext == null) {
+            if (_currentErrorContext == null)
+            {
                 _currentErrorContext = new ErrorContext(currentObject, member, path, error);
             }
 
-            if (_currentErrorContext.Error != error) {
+            if (_currentErrorContext.Error != error)
+            {
                 throw new InvalidOperationException("Current error context error is different to requested error.");
             }
 
@@ -75,35 +73,48 @@ namespace Simula.Scripting.Json.Serialization
 
         protected void ClearErrorContext()
         {
-            if (_currentErrorContext == null) {
+            if (_currentErrorContext == null)
+            {
                 throw new InvalidOperationException("Could not clear error context. Error context is already null.");
             }
 
             _currentErrorContext = null;
         }
 
-        protected bool IsErrorHandled(object? currentObject, JsonContract? contract, object? keyValue, IJsonLineInfo? lineInfo, string path, Exception ex)
+        protected bool IsErrorHandled(object currentObject, JsonContract contract, object keyValue, IJsonLineInfo lineInfo, string path, Exception ex)
         {
             ErrorContext errorContext = GetErrorContext(currentObject, keyValue, path, ex);
 
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Error && !errorContext.Traced) {
+            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Error && !errorContext.Traced)
+            {
+                // only write error once
                 errorContext.Traced = true;
+
+                // kind of a hack but meh. might clean this up later
                 string message = (GetType() == typeof(JsonSerializerInternalWriter)) ? "Error serializing" : "Error deserializing";
-                if (contract != null) {
+                if (contract != null)
+                {
                     message += " " + contract.UnderlyingType;
                 }
                 message += ". " + ex.Message;
-                if (!(ex is JsonException)) {
+
+                // add line information to non-json.net exception message
+                if (!(ex is JsonException))
+                {
                     message = JsonPosition.FormatMessage(lineInfo, path, message);
                 }
 
                 TraceWriter.Trace(TraceLevel.Error, message, ex);
             }
-            if (contract != null && currentObject != null) {
+
+            // attribute method is non-static so don't invoke if no object
+            if (contract != null && currentObject != null)
+            {
                 contract.InvokeOnError(currentObject, Serializer.Context, errorContext);
             }
 
-            if (!errorContext.Handled) {
+            if (!errorContext.Handled)
+            {
                 Serializer.OnError(new ErrorEventArgs(currentObject, errorContext));
             }
 

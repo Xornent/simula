@@ -17,5 +17,17 @@ namespace Simula.UI
         {
             
         }
+
+        public IconTreeNode(string text)
+        {
+            this.Header = text;
+        }
+
+        public IconTreeNode( string text, string imageExpr = "resources/icons/apple-files.png")
+        {
+            ImageSourceConverter isc = new ImageSourceConverter();
+            SetCurrentValue(IconProperty, isc.ConvertFrom("pack://siteoforigin:,,,/" + imageExpr) as ImageSource);
+            this.Header = text;
+        }
     }
 }

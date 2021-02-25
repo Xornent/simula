@@ -5,21 +5,22 @@ namespace Simula.TeX.Atoms
     // Atom (smallest unit) of TexFormula.
     internal abstract class Atom
     {
-        protected Atom(SourceSpan? source, TexAtomType type = TexAtomType.Ordinary)
+        protected Atom(SourceSpan source, TexAtomType type = TexAtomType.Ordinary)
         {
-            Source = source;
-            Type = type;
+            this.Source = source;
+            this.Type = type;
         }
 
         public TexAtomType Type { get; }
 
-        public SourceSpan? Source { get; }
+        public SourceSpan Source { get; }
 
         public Box CreateBox(TexEnvironment environment)
         {
-            var box = CreateBoxCore(environment);
-            if (box.Source == null) {
-                box.Source = Source;
+            var box = this.CreateBoxCore(environment);
+            if (box.Source == null)
+            {
+                box.Source = this.Source;
             }
 
             return box;
@@ -30,13 +31,13 @@ namespace Simula.TeX.Atoms
         // Gets type of leftmost child item.
         public virtual TexAtomType GetLeftType()
         {
-            return Type;
+            return this.Type;
         }
 
         // Gets type of leftmost child item.
         public virtual TexAtomType GetRightType()
         {
-            return Type;
+            return this.Type;
         }
     }
 }

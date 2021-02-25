@@ -1,8 +1,7 @@
-using Simula.TeX.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using Simula.TeX.Utils;
 
 namespace Simula.TeX.Atoms
 {
@@ -15,10 +14,10 @@ namespace Simula.TeX.Atoms
         internal const string EmptyDelimiterName = "_emptyDelimiter";
 
         // Dictionary of definitions of all symbols, keyed by name.
-        private static readonly IDictionary<string, Func<SourceSpan?, SymbolAtom>> symbols;
+        private static readonly IDictionary<string, Func<SourceSpan, SymbolAtom>> symbols;
 
         // Set of all valid symbol types.
-        private static readonly BitArray validSymbolTypes;
+        private static BitArray validSymbolTypes;
 
         static SymbolAtom()
         {
@@ -36,48 +35,45 @@ namespace Simula.TeX.Atoms
             validSymbolTypes.Set((int)TexAtomType.Accent, true);
         }
 
-#if !NET452
-        public static bool TryGetAtom(string name, SourceSpan? source, [NotNullWhen(true)] out SymbolAtom? atom)
-#else
-        public static bool TryGetAtom(string name, SourceSpan? source, out SymbolAtom? atom)
-#endif
+        public static SymbolAtom GetAtom(string name, SourceSpan source)
         {
-            if (!symbols.TryGetValue(name, out var factory)) {
-                atom = null;
-                return false;
+            try
+            {
+                var symbol = symbols[name](source);
+                return new SymbolAtom(source, symbol, symbol.Type);
             }
-
-            var symbol = factory(source);
-            atom = new SymbolAtom(source, symbol, symbol.Type);
-            return true;
+            catch (KeyNotFoundException)
+            {
+                throw new SymbolNotFoundException(name);
+            }
         }
 
-        public static SymbolAtom GetAtom(string name, SourceSpan? source) =>
-            TryGetAtom(name, source, out var atom) ? atom : throw new SymbolNotFoundException(name);
-
-#if !NET452
-        public static bool TryGetAtom(SourceSpan name, [NotNullWhen(true)] out SymbolAtom? atom)
-#else
-        public static bool TryGetAtom(SourceSpan name, out SymbolAtom? atom)
-#endif
+        public static bool TryGetAtom(SourceSpan name, out SymbolAtom atom)
         {
-            return TryGetAtom(name.ToString(), name, out atom);
+            if (symbols.TryGetValue(name.ToString(), out var temp))
+            {
+                var symbol = temp(name);
+                atom = new SymbolAtom(name, symbol, symbol.Type);
+                return true;
+            }
+            atom = null;
+            return false;
         }
 
-        public SymbolAtom(SourceSpan? source, SymbolAtom symbolAtom, TexAtomType type)
+        public SymbolAtom(SourceSpan source, SymbolAtom symbolAtom, TexAtomType type)
             : base(source, type)
         {
             if (!validSymbolTypes[(int)type])
                 throw new ArgumentException("The specified type is not a valid symbol type.", nameof(type));
-            Name = symbolAtom.Name;
-            IsDelimeter = symbolAtom.IsDelimeter;
+            this.Name = symbolAtom.Name;
+            this.IsDelimeter = symbolAtom.IsDelimeter;
         }
 
-        public SymbolAtom(SourceSpan? source, string name, TexAtomType type, bool isDelimeter)
+        public SymbolAtom(SourceSpan source, string name, TexAtomType type, bool isDelimeter)
             : base(source, type)
         {
-            Name = name;
-            IsDelimeter = isDelimeter;
+            this.Name = name;
+            this.IsDelimeter = isDelimeter;
         }
 
         public bool IsDelimeter { get; }
@@ -85,10 +81,10 @@ namespace Simula.TeX.Atoms
         public string Name { get; }
 
         protected override Result<CharInfo> GetCharInfo(ITeXFont font, TexStyle style) =>
-            font.GetCharInfo(Name, style);
+            font.GetCharInfo(this.Name, style);
 
         public override Result<CharFont> GetCharFont(ITeXFont texFont) =>
             // Style is irrelevant here.
-            texFont.GetCharInfo(Name, TexStyle.Display).Map(ci => ci.GetCharacterFont());
+            texFont.GetCharInfo(this.Name, TexStyle.Display).Map(ci => ci.GetCharacterFont());
     }
 }

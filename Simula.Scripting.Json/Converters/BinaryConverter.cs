@@ -1,25 +1,35 @@
-﻿
-#if HAVE_LINQ || HAVE_ADO_NET
-using Simula.Scripting.Json.Utilities;
+﻿#if HAVE_LINQ || HAVE_ADO_NET
 using System;
-using System.Collections.Generic;
 using System.Globalization;
+using Simula.Scripting.Json.Utilities;
+using System.Collections.Generic;
 #if HAVE_ADO_NET
 using System.Data.SqlTypes;
 #endif
 
 namespace Simula.Scripting.Json.Converters
 {
+    /// <summary>
+    /// Converts a binary value to and from a base 64 string value.
+    /// </summary>
     public class BinaryConverter : JsonConverter
     {
 #if HAVE_LINQ
         private const string BinaryTypeName = "System.Data.Linq.Binary";
         private const string BinaryToArrayName = "ToArray";
-        private static ReflectionObject? _reflectionObject;
+        private static ReflectionObject _reflectionObject;
 #endif
-        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+
+        /// <summary>
+        /// Writes the JSON representation of the object.
+        /// </summary>
+        /// <param name="writer">The <see cref="JsonWriter"/> to write to.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="serializer">The calling serializer.</param>
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            if (value == null) {
+            if (value == null)
+            {
                 writer.WriteNull();
                 return;
             }
@@ -32,17 +42,16 @@ namespace Simula.Scripting.Json.Converters
         private byte[] GetByteArray(object value)
         {
 #if HAVE_LINQ
-            if (value.GetType().FullName == BinaryTypeName) {
+            if (value.GetType().FullName == BinaryTypeName)
+            {
                 EnsureReflectionObject(value.GetType());
-                MiscellaneousUtils.Assert(_reflectionObject != null);
-
-                return (byte[])_reflectionObject.GetValue(value, BinaryToArrayName)!;
+                return (byte[])_reflectionObject.GetValue(value, BinaryToArrayName);
             }
 #endif
 #if HAVE_ADO_NET
-            if (value is SqlBinary binary)
+            if (value is SqlBinary)
             {
-                return binary.Value;
+                return ((SqlBinary)value).Value;
             }
 #endif
 
@@ -52,15 +61,27 @@ namespace Simula.Scripting.Json.Converters
 #if HAVE_LINQ
         private static void EnsureReflectionObject(Type t)
         {
-            if (_reflectionObject == null) {
+            if (_reflectionObject == null)
+            {
                 _reflectionObject = ReflectionObject.Create(t, t.GetConstructor(new[] { typeof(byte[]) }), BinaryToArrayName);
             }
         }
 #endif
-        public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+
+        /// <summary>
+        /// Reads the JSON representation of the object.
+        /// </summary>
+        /// <param name="reader">The <see cref="JsonReader"/> to read from.</param>
+        /// <param name="objectType">Type of the object.</param>
+        /// <param name="existingValue">The existing value of object being read.</param>
+        /// <param name="serializer">The calling serializer.</param>
+        /// <returns>The object value.</returns>
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            if (reader.TokenType == JsonToken.Null) {
-                if (!ReflectionUtils.IsNullable(objectType)) {
+            if (reader.TokenType == JsonToken.Null)
+            {
+                if (!ReflectionUtils.IsNullable(objectType))
+                {
                     throw JsonSerializationException.Create(reader, "Cannot convert null value to {0}.".FormatWith(CultureInfo.InvariantCulture, objectType));
                 }
 
@@ -69,12 +90,19 @@ namespace Simula.Scripting.Json.Converters
 
             byte[] data;
 
-            if (reader.TokenType == JsonToken.StartArray) {
+            if (reader.TokenType == JsonToken.StartArray)
+            {
                 data = ReadByteArray(reader);
-            } else if (reader.TokenType == JsonToken.String) {
-                string encodedData = reader.Value!.ToString();
+            }
+            else if (reader.TokenType == JsonToken.String)
+            {
+                // current token is already at base64 string
+                // unable to call ReadAsBytes so do it the old fashion way
+                string encodedData = reader.Value.ToString();
                 data = Convert.FromBase64String(encodedData);
-            } else {
+            }
+            else
+            {
                 throw JsonSerializationException.Create(reader, "Unexpected token parsing binary. Expected String or StartArray, got {0}.".FormatWith(CultureInfo.InvariantCulture, reader.TokenType));
             }
 
@@ -83,11 +111,11 @@ namespace Simula.Scripting.Json.Converters
                 : objectType;
 
 #if HAVE_LINQ
-            if (t.FullName == BinaryTypeName) {
+            if (t.FullName == BinaryTypeName)
+            {
                 EnsureReflectionObject(t);
-                MiscellaneousUtils.Assert(_reflectionObject != null);
 
-                return _reflectionObject.Creator!(data);
+                return _reflectionObject.Creator(data);
             }
 #endif
 
@@ -105,14 +133,17 @@ namespace Simula.Scripting.Json.Converters
         {
             List<byte> byteList = new List<byte>();
 
-            while (reader.Read()) {
-                switch (reader.TokenType) {
+            while (reader.Read())
+            {
+                switch (reader.TokenType)
+                {
                     case JsonToken.Integer:
                         byteList.Add(Convert.ToByte(reader.Value, CultureInfo.InvariantCulture));
                         break;
                     case JsonToken.EndArray:
                         return byteList.ToArray();
                     case JsonToken.Comment:
+                        // skip
                         break;
                     default:
                         throw JsonSerializationException.Create(reader, "Unexpected token when reading bytes: {0}".FormatWith(CultureInfo.InvariantCulture, reader.TokenType));
@@ -121,10 +152,19 @@ namespace Simula.Scripting.Json.Converters
 
             throw JsonSerializationException.Create(reader, "Unexpected end when reading bytes.");
         }
+
+        /// <summary>
+        /// Determines whether this instance can convert the specified object type.
+        /// </summary>
+        /// <param name="objectType">Type of the object.</param>
+        /// <returns>
+        /// 	<c>true</c> if this instance can convert the specified object type; otherwise, <c>false</c>.
+        /// </returns>
         public override bool CanConvert(Type objectType)
         {
 #if HAVE_LINQ
-            if (objectType.FullName == BinaryTypeName) {
+            if (objectType.FullName == BinaryTypeName)
+            {
                 return true;
             }
 #endif

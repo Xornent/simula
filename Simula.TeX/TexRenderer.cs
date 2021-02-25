@@ -1,9 +1,9 @@
-using Simula.TeX.Boxes;
-using Simula.TeX.Rendering;
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Simula.TeX.Boxes;
+using Simula.TeX.Rendering;
 
 namespace Simula.TeX
 {
@@ -14,37 +14,40 @@ namespace Simula.TeX
 
         internal TexRenderer(Box box, double scale)
         {
-            Box = box;
-            Scale = scale;
+            this.Box = box;
+            this.Scale = scale;
         }
 
-        public Box Box {
+        public Box Box
+        {
             get;
             set;
         }
 
-        public double Scale {
+        public double Scale
+        {
             get;
             private set;
         }
 
-        public Size RenderSize {
-            get {
-                return new Size(Box.TotalWidth * Scale, Box.TotalHeight * Scale);
-            }
-        }
-
-        public double Baseline {
-            get {
-                return Box.Height / Box.TotalHeight * Scale;
-            }
-        }
-
-        public void RenderFormulaTo(IElementRenderer renderer, double x, double y)
+        public Size RenderSize
         {
-            renderer.RenderElement(Box, x / Scale, y / Scale + Box.Height);
-            renderer.FinishRendering();
+            get
+            {
+                return new Size(this.Box.TotalWidth * this.Scale, this.Box.TotalHeight * this.Scale);
+            }
         }
+
+        public double Baseline
+        {
+            get
+            {
+                return this.Box.Height / this.Box.TotalHeight * this.Scale;
+            }
+        }
+
+        public void RenderFormulaTo(IElementRenderer renderer, double x, double y) =>
+            renderer.RenderElement(Box, x / Scale, y / Scale + Box.Height);
 
         public Geometry RenderToGeometry(double x, double y)
         {
@@ -57,33 +60,34 @@ namespace Simula.TeX
         private void RenderWithPositiveCoordinates(DrawingVisual visual, double x, double y)
         {
             using (var drawingContext = visual.RenderOpen())
-                Render(drawingContext, x, y);
+                this.Render(drawingContext, x, y);
 
             var bounds = visual.ContentBounds;
             if (bounds.X >= 0 && bounds.Y >= 0) return;
 
-            using (var drawingContext = visual.RenderOpen()) {
+            using (var drawingContext = visual.RenderOpen())
+            {
                 drawingContext.PushTransform(
                     new TranslateTransform(Math.Max(0.0, -bounds.X), Math.Max(0.0, -bounds.Y)));
-                Render(drawingContext, x, y);
+                this.Render(drawingContext, x, y);
             }
         }
 
         public BitmapSource RenderToBitmap(double x, double y, double dpi)
         {
             var visual = new DrawingVisual();
-            RenderWithPositiveCoordinates(visual, x, y);
+            this.RenderWithPositiveCoordinates(visual, x, y);
 
             var bounds = visual.ContentBounds;
-            var width = (int)Math.Ceiling((bounds.Right + x) * dpi / DefaultDpi);
-            var height = (int)Math.Ceiling((bounds.Bottom + y) * dpi / DefaultDpi);
+            var width = (int)Math.Ceiling(bounds.Right * dpi / DefaultDpi);
+            var height = (int)Math.Ceiling(bounds.Bottom * dpi / DefaultDpi);
             var bitmap = new RenderTargetBitmap(width, height, dpi, dpi, PixelFormats.Default);
             bitmap.Render(visual);
 
             return bitmap;
         }
 
-        public BitmapSource RenderToBitmap(double x, double y) => RenderToBitmap(x, y, DefaultDpi);
+        public BitmapSource RenderToBitmap(double x, double y) => this.RenderToBitmap(x, y, DefaultDpi);
 
         public void Render(DrawingContext drawingContext, double x, double y) =>
             RenderFormulaTo(new WpfElementRenderer(drawingContext, Scale), x, y);

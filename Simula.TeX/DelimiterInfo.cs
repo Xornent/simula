@@ -1,4 +1,4 @@
-using Simula.TeX.Atoms;
+﻿using Simula.TeX.Atoms;
 
 namespace Simula.TeX
 {

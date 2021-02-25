@@ -1,7 +1,8 @@
-﻿
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text;
 
 namespace Simula.Scripting.Json.Serialization
 {
@@ -16,6 +17,7 @@ namespace Simula.Scripting.Json.Serialization
             _innerReader = innerReader;
 
             _sw = new StringWriter(CultureInfo.InvariantCulture);
+            // prefix the message in the stringwriter to avoid concat with a potentially large JSON string
             _sw.Write("Deserialized JSON: " + Environment.NewLine);
 
             _textWriter = new JsonTextWriter(_sw);
@@ -30,56 +32,56 @@ namespace Simula.Scripting.Json.Serialization
         public override bool Read()
         {
             bool value = _innerReader.Read();
-            WriteCurrentToken();
+            _textWriter.WriteToken(_innerReader, false, false, true);
             return value;
         }
 
         public override int? ReadAsInt32()
         {
             int? value = _innerReader.ReadAsInt32();
-            WriteCurrentToken();
+            _textWriter.WriteToken(_innerReader, false, false, true);
             return value;
         }
 
-        public override string? ReadAsString()
+        public override string ReadAsString()
         {
-            string? value = _innerReader.ReadAsString();
-            WriteCurrentToken();
+            string value = _innerReader.ReadAsString();
+            _textWriter.WriteToken(_innerReader, false, false, true);
             return value;
         }
 
-        public override byte[]? ReadAsBytes()
+        public override byte[] ReadAsBytes()
         {
-            byte[]? value = _innerReader.ReadAsBytes();
-            WriteCurrentToken();
+            byte[] value = _innerReader.ReadAsBytes();
+            _textWriter.WriteToken(_innerReader, false, false, true);
             return value;
         }
 
         public override decimal? ReadAsDecimal()
         {
             decimal? value = _innerReader.ReadAsDecimal();
-            WriteCurrentToken();
+            _textWriter.WriteToken(_innerReader, false, false, true);
             return value;
         }
 
         public override double? ReadAsDouble()
         {
             double? value = _innerReader.ReadAsDouble();
-            WriteCurrentToken();
+            _textWriter.WriteToken(_innerReader, false, false, true);
             return value;
         }
 
         public override bool? ReadAsBoolean()
         {
             bool? value = _innerReader.ReadAsBoolean();
-            WriteCurrentToken();
+            _textWriter.WriteToken(_innerReader, false, false, true);
             return value;
         }
 
         public override DateTime? ReadAsDateTime()
         {
             DateTime? value = _innerReader.ReadAsDateTime();
-            WriteCurrentToken();
+            _textWriter.WriteToken(_innerReader, false, false, true);
             return value;
         }
 
@@ -87,30 +89,41 @@ namespace Simula.Scripting.Json.Serialization
         public override DateTimeOffset? ReadAsDateTimeOffset()
         {
             DateTimeOffset? value = _innerReader.ReadAsDateTimeOffset();
-            WriteCurrentToken();
+            _textWriter.WriteToken(_innerReader, false, false, true);
             return value;
         }
 #endif
 
-        public void WriteCurrentToken()
+        public override int Depth
         {
-            _textWriter.WriteToken(_innerReader, false, false, true);
+            get { return _innerReader.Depth; }
         }
 
-        public override int Depth => _innerReader.Depth;
-
-        public override string Path => _innerReader.Path;
-
-        public override char QuoteChar {
-            get => _innerReader.QuoteChar;
-            protected internal set => _innerReader.QuoteChar = value;
+        public override string Path
+        {
+            get { return _innerReader.Path; }
         }
 
-        public override JsonToken TokenType => _innerReader.TokenType;
+        public override char QuoteChar
+        {
+            get { return _innerReader.QuoteChar; }
+            protected internal set { _innerReader.QuoteChar = value; }
+        }
 
-        public override object? Value => _innerReader.Value;
+        public override JsonToken TokenType
+        {
+            get { return _innerReader.TokenType; }
+        }
 
-        public override Type? ValueType => _innerReader.ValueType;
+        public override object Value
+        {
+            get { return _innerReader.Value; }
+        }
+
+        public override Type ValueType
+        {
+            get { return _innerReader.ValueType; }
+        }
 
         public override void Close()
         {
@@ -119,11 +132,26 @@ namespace Simula.Scripting.Json.Serialization
 
         bool IJsonLineInfo.HasLineInfo()
         {
-            return _innerReader is IJsonLineInfo lineInfo && lineInfo.HasLineInfo();
+            IJsonLineInfo lineInfo = _innerReader as IJsonLineInfo;
+            return lineInfo != null && lineInfo.HasLineInfo();
         }
 
-        int IJsonLineInfo.LineNumber => (_innerReader is IJsonLineInfo lineInfo) ? lineInfo.LineNumber : 0;
+        int IJsonLineInfo.LineNumber
+        {
+            get
+            {
+                IJsonLineInfo lineInfo = _innerReader as IJsonLineInfo;
+                return (lineInfo != null) ? lineInfo.LineNumber : 0;
+            }
+        }
 
-        int IJsonLineInfo.LinePosition => (_innerReader is IJsonLineInfo lineInfo) ? lineInfo.LinePosition : 0;
+        int IJsonLineInfo.LinePosition
+        {
+            get
+            {
+                IJsonLineInfo lineInfo = _innerReader as IJsonLineInfo;
+                return (lineInfo != null) ? lineInfo.LinePosition : 0;
+            }
+        }
     }
 }

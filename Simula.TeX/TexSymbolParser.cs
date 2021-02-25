@@ -1,9 +1,9 @@
-using Simula.TeX.Atoms;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Xml.Linq;
+using Simula.TeX.Atoms;
 
 namespace Simula.TeX
 {
@@ -12,7 +12,7 @@ namespace Simula.TeX
     {
         private static readonly string resourceName = TexUtilities.ResourcesDataDirectory + "TexSymbols.xml";
 
-        private static readonly IDictionary<string, TexAtomType> typeMappings;
+        private static IDictionary<string, TexAtomType> typeMappings;
 
         static TexSymbolParser()
         {
@@ -33,20 +33,22 @@ namespace Simula.TeX
             typeMappings.Add("acc", TexAtomType.Accent);
         }
 
-        private readonly XElement rootElement;
+        private XElement rootElement;
 
         public TexSymbolParser()
         {
             // for 3.5
-            var doc = XDocument.Load(new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName)!));
-            rootElement = doc.Root;
+            var doc = XDocument.Load(new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName)));
+            this.rootElement = doc.Root;
+
         }
 
-        public IDictionary<string, Func<SourceSpan?, SymbolAtom>> GetSymbols()
+        public IDictionary<string, Func<SourceSpan, SymbolAtom>> GetSymbols()
         {
-            var result = new Dictionary<string, Func<SourceSpan?, SymbolAtom>>();
+            var result = new Dictionary<string, Func<SourceSpan, SymbolAtom>>();
 
-            foreach (var symbolElement in rootElement.Elements("Symbol")) {
+            foreach (var symbolElement in rootElement.Elements("Symbol"))
+            {
                 var symbolName = symbolElement.AttributeValue("name");
                 var symbolType = symbolElement.AttributeValue("type");
                 var symbolIsDelimeter = symbolElement.AttributeBooleanValue("del", false);

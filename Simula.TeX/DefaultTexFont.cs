@@ -1,7 +1,7 @@
+﻿using System;
+using System.Collections.Generic;
 using Simula.TeX.Exceptions;
 using Simula.TeX.Utils;
-using System;
-using System.Collections.Generic;
 
 namespace Simula.TeX
 {
@@ -48,12 +48,13 @@ namespace Simula.TeX
 
         public DefaultTexFont(double size)
         {
-            Size = size;
+            this.Size = size;
         }
 
         public bool SupportsMetrics => true;
 
-        public double Size {
+        public double Size
+        {
             get;
             private set;
         }
@@ -70,11 +71,13 @@ namespace Simula.TeX
             // Create character for each part of extension.
             var fontInfo = fontInfoList[charInfo.FontId];
             var extension = fontInfo.GetExtension(charInfo.Character);
-            var parts = new CharInfo?[extension.Length];
-            for (int i = 0; i < extension.Length; i++) {
+            var parts = new CharInfo[extension.Length];
+            for (int i = 0; i < extension.Length; i++)
+            {
                 if (extension[i] == (int)TexCharKind.None)
                     parts[i] = null;
-                else {
+                else
+                {
                     var metrics = GetMetrics(new CharFont((char)extension[i], charInfo.FontId), sizeFactor).Value;
                     parts[i] = new CharInfo(
                         (char)extension[i],
@@ -89,7 +92,7 @@ namespace Simula.TeX
                 parts[TexFontUtilities.ExtensionBottom], parts[TexFontUtilities.ExtensionRepeat]);
         }
 
-        public CharFont? GetLigature(CharFont leftCharFont, CharFont rightCharFont)
+        public CharFont GetLigature(CharFont leftCharFont, CharFont rightCharFont)
         {
             if (leftCharFont.FontId != rightCharFont.FontId)
                 return null;
@@ -127,26 +130,31 @@ namespace Simula.TeX
         }
 
         public Result<CharInfo> GetDefaultCharInfo(char character, TexStyle style) =>
-            GetCharInfo(character, GetDefaultTextStyleMapping(character), style);
+            this.GetCharInfo(character, GetDefaultTextStyleMapping(character), style);
 
         private Result<CharInfo> GetCharInfo(char character, CharFont[] charFont, TexStyle style)
         {
             TexCharKind charKind;
             int charIndexOffset;
-            if (char.IsDigit(character)) {
+            if (char.IsDigit(character))
+            {
                 charKind = TexCharKind.Numbers;
                 charIndexOffset = character - '0';
-            } else if (char.IsLetter(character) && char.IsLower(character)) {
+            }
+            else if (char.IsLetter(character) && char.IsLower(character))
+            {
                 charKind = TexCharKind.Small;
                 charIndexOffset = character - 'a';
-            } else {
+            }
+            else
+            {
                 charKind = TexCharKind.Capitals;
                 charIndexOffset = character - 'A';
             }
 
             return charFont[(int)charKind] == null
-                ? GetDefaultCharInfo(character, style)
-                : GetCharInfo(
+                ? this.GetDefaultCharInfo(character, style)
+                : this.GetCharInfo(
                     new CharFont(
                         (char)(charFont[(int)charKind].Character + charIndexOffset),
                         charFont[(int)charKind].FontId),
@@ -155,12 +163,12 @@ namespace Simula.TeX
 
         public Result<CharInfo> GetCharInfo(char character, string textStyle, TexStyle style) =>
             textStyleMappings.TryGetValue(textStyle, out var mapping)
-                ? GetCharInfo(character, mapping, style)
+                ? this.GetCharInfo(character, mapping, style)
                 : Result.Error<CharInfo>(new TextStyleMappingNotFoundException(textStyle));
 
         public Result<CharInfo> GetCharInfo(string symbolName, TexStyle style) =>
             symbolMappings.TryGetValue(symbolName, out var mapping)
-                ? GetCharInfo(mapping, style)
+                ? this.GetCharInfo(mapping, style)
                 : Result.Error<CharInfo>(new SymbolMappingNotFoundException(symbolName));
 
         public Result<CharInfo> GetCharInfo(CharFont charFont, TexStyle style)

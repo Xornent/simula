@@ -7,17 +7,19 @@ namespace Simula.TeX.Boxes
     {
         public GlueBox(double space, double stretch, double shrink)
         {
-            Width = space;
-            Stretch = stretch;
-            Shrink = shrink;
+            this.Width = space;
+            this.Stretch = stretch;
+            this.Shrink = shrink;
         }
 
-        public double Stretch {
+        public double Stretch
+        {
             get;
             private set;
         }
 
-        public double Shrink {
+        public double Shrink
+        {
             get;
             private set;
         }

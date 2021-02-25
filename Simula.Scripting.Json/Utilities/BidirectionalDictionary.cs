@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 
@@ -37,14 +36,21 @@ namespace Simula.Scripting.Json.Utilities
 
         public void Set(TFirst first, TSecond second)
         {
-            if (_firstToSecond.TryGetValue(first, out TSecond existingSecond)) {
-                if (!existingSecond!.Equals(second)) {
+            TFirst existingFirst;
+            TSecond existingSecond;
+
+            if (_firstToSecond.TryGetValue(first, out existingSecond))
+            {
+                if (!existingSecond.Equals(second))
+                {
                     throw new ArgumentException(_duplicateFirstErrorMessage.FormatWith(CultureInfo.InvariantCulture, first));
                 }
             }
 
-            if (_secondToFirst.TryGetValue(second, out TFirst existingFirst)) {
-                if (!existingFirst!.Equals(first)) {
+            if (_secondToFirst.TryGetValue(second, out existingFirst))
+            {
+                if (!existingFirst.Equals(first))
+                {
                     throw new ArgumentException(_duplicateSecondErrorMessage.FormatWith(CultureInfo.InvariantCulture, second));
                 }
             }

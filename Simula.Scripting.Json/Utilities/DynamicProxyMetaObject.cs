@@ -1,5 +1,4 @@
-﻿
-#if HAVE_DYNAMIC
+﻿#if HAVE_DYNAMIC
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
@@ -53,9 +52,27 @@ namespace Simula.Scripting.Json.Utilities
 
         public override DynamicMetaObject BindInvokeMember(InvokeMemberBinder binder, DynamicMetaObject[] args)
         {
-            if (!IsOverridden(nameof(DynamicProxy<T>.TryInvokeMember))) {
+            if (!IsOverridden(nameof(DynamicProxy<T>.TryInvokeMember)))
+            {
                 return base.BindInvokeMember(binder, args);
             }
+
+            //
+            // Generate a tree like:
+            //
+            // {
+            //   object result;
+            //   TryInvokeMember(payload, out result)
+            //      ? result
+            //      : TryGetMember(payload, out result)
+            //          ? FallbackInvoke(result)
+            //          : fallbackResult
+            // }
+            //
+            // Then it calls FallbackInvokeMember with this tree as the
+            // "error", giving the language the option of using this
+            // tree or doing .NET binding.
+            //
             Fallback fallback = e => binder.FallbackInvokeMember(this, args, e);
 
             return BuildCallMethodWithResult(
@@ -122,13 +139,14 @@ namespace Simula.Scripting.Json.Utilities
                 : base.BindDeleteIndex(binder, indexes);
         }
 
-        private delegate DynamicMetaObject Fallback(DynamicMetaObject? errorSuggestion);
+        private delegate DynamicMetaObject Fallback(DynamicMetaObject errorSuggestion);
 
         private static Expression[] NoArgs => CollectionUtils.ArrayEmpty<Expression>();
 
         private static IEnumerable<Expression> GetArgs(params DynamicMetaObject[] args)
         {
-            return args.Select(arg => {
+            return args.Select(arg =>
+            {
                 Expression exp = arg.Expression;
                 return exp.Type.IsValueType() ? Expression.Convert(exp, typeof(object)) : exp;
             });
@@ -141,7 +159,7 @@ namespace Simula.Scripting.Json.Utilities
 
         private static Expression[] GetArgArray(DynamicMetaObject[] args, DynamicMetaObject value)
         {
-            Expression exp = value.Expression;
+            var exp = value.Expression;
             return new[]
             {
                 Expression.NewArrayInit(typeof(object), GetArgs(args)),
@@ -152,20 +170,37 @@ namespace Simula.Scripting.Json.Utilities
         private static ConstantExpression Constant(DynamicMetaObjectBinder binder)
         {
             Type t = binder.GetType();
-            while (!t.IsVisible()) {
+            while (!t.IsVisible())
+            {
                 t = t.BaseType();
             }
             return Expression.Constant(binder, t);
         }
-        private DynamicMetaObject CallMethodWithResult(string methodName, DynamicMetaObjectBinder binder, IEnumerable<Expression> args, Fallback fallback, Fallback? fallbackInvoke = null)
+
+        /// <summary>
+        /// Helper method for generating a MetaObject which calls a
+        /// specific method on Dynamic that returns a result
+        /// </summary>
+        private DynamicMetaObject CallMethodWithResult(string methodName, DynamicMetaObjectBinder binder, IEnumerable<Expression> args, Fallback fallback, Fallback fallbackInvoke = null)
         {
+            //
+            // First, call fallback to do default binding
+            // This produces either an error or a call to a .NET member
+            //
             DynamicMetaObject fallbackResult = fallback(null);
 
             return BuildCallMethodWithResult(methodName, binder, args, fallbackResult, fallbackInvoke);
         }
 
-        private DynamicMetaObject BuildCallMethodWithResult(string methodName, DynamicMetaObjectBinder binder, IEnumerable<Expression> args, DynamicMetaObject fallbackResult, Fallback? fallbackInvoke)
+        private DynamicMetaObject BuildCallMethodWithResult(string methodName, DynamicMetaObjectBinder binder, IEnumerable<Expression> args, DynamicMetaObject fallbackResult, Fallback fallbackInvoke)
         {
+            //
+            // Build a new expression like:
+            // {
+            //   object result;
+            //   TryGetMember(payload, out result) ? fallbackInvoke(result) : fallbackResult
+            // }
+            //
             ParameterExpression result = Expression.Parameter(typeof(object), null);
 
             IList<Expression> callArgs = new List<Expression>();
@@ -175,13 +210,18 @@ namespace Simula.Scripting.Json.Utilities
             callArgs.Add(result);
 
             DynamicMetaObject resultMetaObject = new DynamicMetaObject(result, BindingRestrictions.Empty);
-            if (binder.ReturnType != typeof(object)) {
+
+            // Need to add a conversion if calling TryConvert
+            if (binder.ReturnType != typeof(object))
+            {
                 UnaryExpression convert = Expression.Convert(resultMetaObject.Expression, binder.ReturnType);
+                // will always be a cast or unbox
 
                 resultMetaObject = new DynamicMetaObject(convert, resultMetaObject.Restrictions);
             }
 
-            if (fallbackInvoke != null) {
+            if (fallbackInvoke != null)
+            {
                 resultMetaObject = fallbackInvoke(resultMetaObject);
             }
 
@@ -204,9 +244,27 @@ namespace Simula.Scripting.Json.Utilities
 
             return callDynamic;
         }
+
+        /// <summary>
+        /// Helper method for generating a MetaObject which calls a
+        /// specific method on Dynamic, but uses one of the arguments for
+        /// the result.
+        /// </summary>
         private DynamicMetaObject CallMethodReturnLast(string methodName, DynamicMetaObjectBinder binder, IEnumerable<Expression> args, Fallback fallback)
         {
+            //
+            // First, call fallback to do default binding
+            // This produces either an error or a call to a .NET member
+            //
             DynamicMetaObject fallbackResult = fallback(null);
+
+            //
+            // Build a new expression like:
+            // {
+            //   object result;
+            //   TrySetMember(payload, result = value) ? result : fallbackResult
+            // }
+            //
             ParameterExpression result = Expression.Parameter(typeof(object), null);
 
             IList<Expression> callArgs = new List<Expression>();
@@ -232,14 +290,29 @@ namespace Simula.Scripting.Json.Utilities
                 GetRestrictions().Merge(fallbackResult.Restrictions)
                 );
         }
+
+        /// <summary>
+        /// Helper method for generating a MetaObject which calls a
+        /// specific method on Dynamic, but uses one of the arguments for
+        /// the result.
+        /// </summary>
         private DynamicMetaObject CallMethodNoResult(string methodName, DynamicMetaObjectBinder binder, Expression[] args, Fallback fallback)
         {
+            //
+            // First, call fallback to do default binding
+            // This produces either an error or a call to a .NET member
+            //
             DynamicMetaObject fallbackResult = fallback(null);
 
             IList<Expression> callArgs = new List<Expression>();
             callArgs.Add(Expression.Convert(Expression, typeof(T)));
             callArgs.Add(Constant(binder));
             callArgs.AddRange(args);
+
+            //
+            // Build a new expression like:
+            //   if (TryDeleteMember(payload)) { } else { fallbackResult }
+            //
             return new DynamicMetaObject(
                 Expression.Condition(
                     Expression.Call(
@@ -254,6 +327,11 @@ namespace Simula.Scripting.Json.Utilities
                 GetRestrictions().Merge(fallbackResult.Restrictions)
                 );
         }
+
+        /// <summary>
+        /// Returns a Restrictions object which includes our current restrictions merged
+        /// with a restriction limiting our type
+        /// </summary>
         private BindingRestrictions GetRestrictions()
         {
             return (Value == null && HasValue)
@@ -265,6 +343,11 @@ namespace Simula.Scripting.Json.Utilities
         {
             return _proxy.GetDynamicMemberNames((T)Value);
         }
+
+        // It is okay to throw NotSupported from this binder. This object
+        // is only used by DynamicObject.GetMember--it is not expected to
+        // (and cannot) implement binding semantics. It is just so the DO
+        // can use the Name and IgnoreCase properties.
         private sealed class GetBinderAdapter : GetMemberBinder
         {
             internal GetBinderAdapter(InvokeMemberBinder binder) :

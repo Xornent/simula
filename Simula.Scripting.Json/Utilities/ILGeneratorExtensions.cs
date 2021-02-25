@@ -1,5 +1,4 @@
-﻿
-#if HAVE_REFLECTION_EMIT
+﻿#if HAVE_REFLECTION_EMIT
 using System;
 using System.Reflection.Emit;
 using System.Reflection;

@@ -7,13 +7,10 @@
         xmlns:page ="clr-namespace:Simula.Pages"
         xmlns:ui ="clr-namespace:Simula.UI"
         xmlns:editor ="http://xornent.org/simula/editor"
-        xmlns:package="clr-namespace:Simula.Scripting.Packaging"
-        xmlns:script="clr-namespace:Simula.Scripting;assembly=Simula.Scripting"
-        xmlns:breadcrumb="clr-namespace:Odyssey.Controls;assembly=Simula.Controls"
         mc:Ignorable="d" UseLayoutRounding="True"
         Icon="pack://siteoforigin:,,,/app.icon.ico"
         FontFamily="{StaticResource default}"
-        Title="无工作区 -  Simula" Height="690" Width="1050" MinWidth="895" MinHeight="570" WindowStartupLocation="CenterScreen">
+        Title="Simula" Height="690" Width="1050" MinWidth="895" MinHeight="570" WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
 
@@ -43,10 +40,6 @@
                 <TextBlock Text="{Binding Folder}" FontFamily="PingFang SC, Consolas"/>
             </StackPanel>
         </DataTemplate>
-
-        <Style TargetType="{x:Type breadcrumb:BreadcrumbItem}">
-            <Setter Property="Image" Value="pack://siteoforigin:,,,/app.icon.ico"/>
-        </Style>
 
         <ControlTemplate x:Key="ExpanderToggleButton"
                  TargetType="{x:Type ToggleButton}">
@@ -177,7 +170,7 @@
     </Window.Resources>
 
     <Grid>
-        <Grid x:Name="MainGrid" Visibility="Visible" >
+        <Grid x:Name="MainGrid" Visibility="Visible" Margin="0,0,-0.288,0.48" Grid.RowSpan="2" >
             <DockPanel x:Name="body">
                 <Grid DockPanel.Dock="Top" Height="32" Name="WindowController"  MouseLeftButtonDown="Window_Drag">
                     <Rectangle Width="auto" Height="auto" Fill="{StaticResource headerPanel}"/>
@@ -185,7 +178,7 @@
                         <DockPanel>
                             <DockPanel Width="300" DockPanel.Dock="Left">
                                 <StackPanel Width="65" DockPanel.Dock="Left" Orientation="Horizontal">
-                                    <Button  FontFamily="Segoe MDL2 Assets" Width="25" FontSize="13" Margin="4">
+                                    <Button  FontFamily="Segoe MDL2 Assets" Width="25" FontSize="13" Margin="5">
                                         <Image IsHitTestVisible="False" Source="pack://siteoforigin:,,,/resources/icons/chevron-left.png" Width="20" Height="20"/>
                                     </Button>
                                     <Button  FontFamily="Segoe MDL2 Assets" Width="25" FontSize="13" Margin="0 5 5 5">
@@ -297,198 +290,210 @@
                                        VerticalAlignment="Center"/>
                             </Grid>
                         </StackPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Margin="10 4 5 4" Click="Event_OpenWorkspace">
+                                <Button.Content>
+                                    <StackPanel Orientation="Horizontal" Margin="15 0 15 0">
+                                        <Image Width="16" Height="16" Source="pack://siteoforigin:,,,/resources/icons/apple-files.png"/>
+                                        <Grid Width="5"/>
+                                        <TextBlock x:Name="lblWorkspace" Text="No Workspace" FontWeight="Bold"/>
+                                    </StackPanel>
+                                </Button.Content>
+                            </Button>
+                            <Button Margin="0 4 10 4">
+                                <Button.Content>
+                                    <StackPanel Orientation="Horizontal" Margin="5 0 5 0">
+                                        <Image Width="16" Height="16" Source="pack://siteoforigin:,,,/resources/icons/profile.png"/>
+                                    </StackPanel>
+                                </Button.Content>
+                            </Button>
+                        </StackPanel>
 
+                        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Margin="0,0,0,0.256" Width="400">
+
+                            <Menu Visibility="Visible" HorizontalAlignment="Left"  Height="24" VerticalAlignment="Center" Width="393" FontFamily="{StaticResource default}" Margin="5,4,0,4.256">
+                                <Menu.Items>
+                                    <MenuItem>
+                                        <MenuItem.Header>
+                                            <Image Width="16" Height="16" Source="pack://siteoforigin:,,,/app.icon.ico"/>
+                                        </MenuItem.Header>
+                                    </MenuItem>
+                                    <MenuItem Header="文件" Name="mi_0_file" Height="24">
+                                        <MenuItem.Items>
+                                            <MenuItem Header="新建项">
+                                                <MenuItem.Items>
+                                                    <MenuItem Header="新建脚本 ..." InputGestureText="Ctrl + N"/>
+                                                    <MenuItem Header="新建函数 ..." InputGestureText="Ctrl + Shift + N"/>
+                                                    <MenuItem Header="新建类和基类 ..." InputGestureText="Ctrl + Shift + C"/>
+                                                </MenuItem.Items>
+                                            </MenuItem>
+                                            <MenuItem Header="新建工作区">
+                                                <MenuItem.Items>
+                                                    <MenuItem Header="从现有代码创建工作区 ..." />
+                                                    <MenuItem Header="从源代码管理创建工作区 ..." InputGestureText="Ctrl + Shift + G"/>
+                                                    <MenuItem Header="从文件夹创建工作区 ..." InputGestureText="Ctrl + Shift + F"/>
+                                                </MenuItem.Items>
+                                            </MenuItem>
+                                            <MenuItem Header="打开">
+                                                <MenuItem.Items>
+                                                    <MenuItem Header="代码文件 ..." InputGestureText="Ctrl + O"/>
+                                                    <MenuItem Header="工作区 ..." InputGestureText="Ctrl + Shift + O"/>
+                                                    <MenuItem Header="克隆储存库 ..."/>
+                                                </MenuItem.Items>
+                                            </MenuItem>
+                                            <Separator/>
+                                            <MenuItem Header="关闭" InputGestureText="Ctrl + X"/>
+                                            <MenuItem Header="关闭工作区" InputGestureText="Ctrl + Shift + X"/>
+                                            <Separator/>
+                                            <MenuItem Header="保存" InputGestureText="Ctrl + S"/>
+                                            <MenuItem Header="另存为 ..." InputGestureText="Ctrl + Shift + S"/>
+                                            <MenuItem Header="保存所有打开的文档"/>
+                                            <MenuItem Header="最近打开的文件历史"/>
+                                            <MenuItem Header="最近使用的工作区"/>
+                                            <Separator/>
+                                            <MenuItem Header="退出应用程序" InputGestureText="Alt + F4"/>
+                                        </MenuItem.Items>
+                                    </MenuItem>
+                                    <MenuItem Header=" 编辑 " Name="mi_0_edit" Height="24">
+                                        <MenuItem.Items>
+                                            <MenuItem Header="转到"/>
+                                            <MenuItem Header="查找和替换">
+                                                <MenuItem.Items>
+                                                    <MenuItem Header="快速查找 ..." InputGestureText="Ctrl + F"/>
+                                                    <MenuItem Header="快速替换 ..." InputGestureText="Ctrl + R"/>
+                                                    <Separator/>
+                                                    <MenuItem Header="在文件中查找 ..." InputGestureText="Ctrl + Shift + F"/>
+                                                    <MenuItem Header="在文件中替换 ..." InputGestureText="Ctrl + Shift + R"/>
+                                                </MenuItem.Items>
+                                            </MenuItem>
+                                            <Separator/>
+                                            <MenuItem Header="撤销" InputGestureText="Ctrl + Z"/>
+                                            <MenuItem Header="重做" InputGestureText="Ctrl + Y"/>
+                                            <MenuItem Header="剪切" InputGestureText="Ctrl + X"/>
+                                            <MenuItem Header="复制" InputGestureText="Ctrl + C"/>
+                                            <MenuItem Header="粘贴" InputGestureText="Ctrl + V"/>
+                                            <MenuItem Header="查看剪切板历史记录 ..." InputGestureText="Ctrl + F"/>
+                                            <MenuItem Header="删除" InputGestureText="Del"/>
+                                            <Separator/>
+                                            <MenuItem Header="全选" InputGestureText="Ctrl + A"/>
+                                            <Separator/>
+                                            <MenuItem Header="将文件作为文本插入 ..."/>
+                                            <MenuItem Header="文本格式">
+                                                <MenuItem.Items>
+                                                    <MenuItem Header="格式化当前文件" InputGestureText="Ctrl + Alt + F"/>
+                                                    <MenuItem Header="格式化选定的内容"/>
+                                                    <MenuItem Header="统一前导空格为 Tab"/>
+                                                    <MenuItem Header="统一前导空格为空格" InputGestureText="Ctrl + Alt + S"/>
+                                                    <Separator/>
+                                                    <MenuItem Header="转换为大写"/>
+                                                    <MenuItem Header="转换为小写"/>
+                                                    <Separator/>
+                                                    <MenuItem Header="将选定行上移"/>
+                                                    <MenuItem Header="将选定行下移"/>
+                                                    <MenuItem Header="注释选定行" InputGestureText="Ctrl + Plus"/>
+                                                    <MenuItem Header="取消注释选定行" InputGestureText="Ctrl + Minus"/>
+                                                    <Separator/>
+                                                    <MenuItem Header="切换查看（省略）空白字符"/>
+                                                    <MenuItem Header="切换自动换行"/>
+                                                </MenuItem.Items>
+                                            </MenuItem>
+                                            <MenuItem Header="书签">
+                                                <MenuItem.Items>
+                                                    <MenuItem Header="切换书签状态" InputGestureText="Ctrl + B"/>
+                                                    <MenuItem Header="上一个书签" InputGestureText="Ctrl + Shift + Up"/>
+                                                    <MenuItem Header="下一个书签" InputGestureText="Ctrl + Shift + Down"/>
+                                                    <MenuItem Header="清除文档中的所有书签" InputGestureText="Ctrl + Shift + C"/>
+                                                </MenuItem.Items>
+                                            </MenuItem>
+                                            <MenuItem Header="相同缩进域的开头" InputGestureText="Ctrl + Up"/>
+                                            <MenuItem Header="相同缩进域的结尾" InputGestureText="Ctrl + Down"/>
+                                            <MenuItem Header="文件编辑设置 ..." />
+                                        </MenuItem.Items>
+                                    </MenuItem>
+                                    <MenuItem Header=" 调试和分析 " Name="mi_0_debug" Height="24">
+                                        <MenuItem Header="从数据文件导入变量 ..." InputGestureText="Ctrl + I"/>
+                                        <MenuItem Header="新建变量 ..." InputGestureText="Ctrl + Shift + V"/>
+                                        <MenuItem Header="导出当前的工作区变量 ..."/>
+                                        <Separator/>
+                                        <MenuItem Header="编辑工作区中的变量"/>
+                                        <MenuItem Header="清除工作区中定义的变量" InputGestureText="Ctrl + Shift + R"/>
+                                        <MenuItem Header="复位变量和函数的重定义 ..." InputGestureText="Ctrl + R"/>
+                                        <Separator/>
+                                        <MenuItem Header="代码度量值 ..." InputGestureText="Ctrl + Shift + I"/>
+                                        <MenuItem Header="代码清理">
+                                            <MenuItem Header="对工作区进行代码清理"/>
+                                            <MenuItem Header="代码清理选项 ..."/>
+                                        </MenuItem>
+                                        <MenuItem Header="执行效率分析 ..."/>
+                                        <MenuItem Header="运行时系统资源分析 ..."/>
+                                        <Separator/>
+                                        <MenuItem Header="开始调试" InputGestureText="F5"/>
+                                        <MenuItem Header="开始执行（不调试）" InputGestureText="Ctrl + F5"/>
+                                        <Separator/>
+                                        <MenuItem Header="逐语句" InputGestureText="F11"/>
+                                        <MenuItem Header="跳出" InputGestureText="F13"/>
+                                        <MenuItem Header="逐过程" InputGestureText="F12"/>
+                                        <Separator/>
+                                        <MenuItem Header="切换断点状态" InputGestureText="F9"/>
+                                        <MenuItem Header="新建条件断点 ..."/>
+                                        <MenuItem Header="删除文档中的所有断点" InputGestureText="Ctrl + Alt + B"/>
+                                        <MenuItem Header="删除工作区内的所有断点 ..."/>
+                                        <Separator/>
+                                        <MenuItem Header="异常行为设置 ..."/>
+                                        <Separator/>
+                                        <MenuItem Header="生成工作区" InputGestureText="Ctrl + B"/>
+                                        <MenuItem Header="重新生成工作区" InputGestureText="Ctrl + Shift + B"/>
+                                        <MenuItem Header="打包当前工作区为工具集 ..." InputGestureText="Ctrl + Shift + P"/>
+
+                                    </MenuItem>
+                                    <MenuItem Header=" 应用程序 " Name="mi_0_application" Height="24"/>
+                                    <MenuItem Header=" 拓展 " Name="mi_0_extension" Height="24" >
+                                        <MenuItem Header="管理拓展程序和工具集 ..." InputGestureText="F9" Click="Menu_ManageExtensions"/>
+                                        <MenuItem Header="管理自定义代码片段 ..." InputGestureText="Ctrl + F9"/>
+                                        <Separator/>
+                                        <MenuItem Header="创建 GUID ..."/>
+                                        <MenuItem Header="管理外部工具 ..."/>
+                                        <Separator/>
+                                        <MenuItem Header="命令提示符 ..." InputGestureText="Ctrl + `"/>
+                                    </MenuItem>
+                                    <MenuItem Header=" 布局 " Name="mi_0_layout" Height="24">
+                                        <MenuItem Header="关闭所有选项卡" InputGestureText="Ctrl + Alt + X"/>
+                                        <MenuItem Header="关闭当前选项卡" InputGestureText="Ctrl + Shift + X"/>
+                                        <Separator/>
+                                        <MenuItem Header="起始页"/>
+                                        <MenuItem Header="窗口 ..." InputGestureText="Ctrl + W"/>
+                                    </MenuItem>
+                                    <MenuItem Header=" 帮助 " Name="mi_0_help" Height="24">
+                                        <MenuItem.Items>
+                                            <MenuItem Header="关于  Simula ..." InputGestureText="Ctrl + Alt + A" Click="Menu_About"/>
+                                            <MenuItem Header="关于  Simula 增效工具和工具集 ..." />
+                                            <MenuItem Header="获取在线帮助 ..." InputGestureText="F1"/>
+                                            <Separator/>
+                                            <MenuItem Header="法律信息 ..."/>
+                                            <MenuItem Header="检查更新程序" Click="Menu_CheckUpdate"/>
+                                        </MenuItem.Items>
+                                    </MenuItem>
+                                    <MenuItem Header=" 图形(_G) " Name="mi_0_graphic" Height="24" Visibility="Hidden"/>
+                                </Menu.Items>
+                            </Menu>
+
+                        </StackPanel>
                         <Grid DockPanel.Dock="Top" Height="32">
-                            <!-- Central Area -->
-                            <Rectangle Margin="150 5" RadiusX="4" RadiusY="4" Fill="White">
+                            <!-- Central Area
+                            <Rectangle Margin="30 5" RadiusX="3" MaxWidth="180" RadiusY="4" Fill="White">
                                 <Rectangle.Effect>
-                                    <DropShadowEffect Opacity="0.2" ShadowDepth="2" Direction="-45" BlurRadius="7"/>
+                                    <DropShadowEffect Opacity="0.2" ShadowDepth="1" Direction="-45" BlurRadius="3"/>
                                 </Rectangle.Effect>
                             </Rectangle>
-                            <breadcrumb:BreadcrumbBar Margin="150 6" x:Name="bar" Focusable="True" 
-                           Path="工作区资源管理器\C:\"
-                           PopulateItems="BreadcrumbBar_PopulateItems"    
-                           BreadcrumbItemDropDownOpened="bar_BreadcrumbItemDropDownOpened"
-                           TraceBinding="{Binding Folder}"
-                           ImageBinding="{Binding Image}" FontFamily="PingFang SC, Consolas" FontWeight="Bold" 
-                           PathConversion="BreadcrumbBar_PathConversion">
-                                <breadcrumb:BreadcrumbItem Header="Simula" Image="{x:Null}">
-                                    <breadcrumb:BreadcrumbItem Header="Simula" Image="pack://siteoforigin:,,,/app.icon.ico"/>
-                                    <breadcrumb:BreadcrumbItem Header="工作区资源管理器" Image="pack://siteoforigin:,,,/resources/icons/file-folder.ico"/>
-                                    <breadcrumb:BreadcrumbItem Header="程序窗口" Image="pack://siteoforigin:,,,/resources/icons/page-gear.png"/>
-                                    <breadcrumb:BreadcrumbItem Header="已下载的帮助文件" Image="pack://siteoforigin:,,,/resources/icons/help.png"/>
-                                </breadcrumb:BreadcrumbItem>
-                            </breadcrumb:BreadcrumbBar>
+                            <Grid Margin="35 5" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Width="16" Height="16" Source="pack://siteoforigin:,,,/resources/icons/apple-files.png"/>
+                                    <Grid Width="5"/>
+                                    <TextBlock Text="No Workspace" FontWeight="Bold"/>
+                                </StackPanel>
+                            </Grid> -->
                         </Grid>
                     </DockPanel>
-                    <Menu Visibility="Hidden" HorizontalAlignment="Left" Height="24" Margin="200,0,0,0" VerticalAlignment="Center" Width="645" FontFamily="{StaticResource default}">
-                        <Menu.Items>
-                            <MenuItem>
-                                <MenuItem.Header>
-                                    <StackPanel Orientation="Horizontal">
-                                        <Image Source="pack://siteoforigin:,,,/app.icon.ico" Margin="0 0 0 -3" Width="16"/>
-                                        <Label Content="Simula" Margin="0 -5 0 -5"/>
-                                    </StackPanel>
-                                </MenuItem.Header>
-                            </MenuItem>
-                            <MenuItem Header="文件(_F)" Name="mi_0_file" Height="24">
-                                <MenuItem.Items>
-                                    <MenuItem Header="新建项">
-                                        <MenuItem.Items>
-                                            <MenuItem Header="新建脚本 ..." InputGestureText="Ctrl + N"/>
-                                            <MenuItem Header="新建函数 ..." InputGestureText="Ctrl + Shift + N"/>
-                                            <MenuItem Header="新建类和基类 ..." InputGestureText="Ctrl + Shift + C"/>
-                                        </MenuItem.Items>
-                                    </MenuItem>
-                                    <MenuItem Header="新建工作区">
-                                        <MenuItem.Items>
-                                            <MenuItem Header="从现有代码创建工作区 ..." />
-                                            <MenuItem Header="从源代码管理创建工作区 ..." InputGestureText="Ctrl + Shift + G"/>
-                                            <MenuItem Header="从文件夹创建工作区 ..." InputGestureText="Ctrl + Shift + F"/>
-                                        </MenuItem.Items>
-                                    </MenuItem>
-                                    <MenuItem Header="打开">
-                                        <MenuItem.Items>
-                                            <MenuItem Header="代码文件 ..." InputGestureText="Ctrl + O"/>
-                                            <MenuItem Header="工作区 ..." InputGestureText="Ctrl + Shift + O"/>
-                                            <MenuItem Header="克隆储存库 ..."/>
-                                        </MenuItem.Items>
-                                    </MenuItem>
-                                    <Separator/>
-                                    <MenuItem Header="关闭" InputGestureText="Ctrl + X"/>
-                                    <MenuItem Header="关闭工作区" InputGestureText="Ctrl + Shift + X"/>
-                                    <Separator/>
-                                    <MenuItem Header="保存" InputGestureText="Ctrl + S"/>
-                                    <MenuItem Header="另存为 ..." InputGestureText="Ctrl + Shift + S"/>
-                                    <MenuItem Header="保存所有打开的文档"/>
-                                    <MenuItem Header="最近打开的文件历史"/>
-                                    <MenuItem Header="最近使用的工作区"/>
-                                    <Separator/>
-                                    <MenuItem Header="退出应用程序" InputGestureText="Alt + F4"/>
-                                </MenuItem.Items>
-                            </MenuItem>
-                            <MenuItem Header=" 编辑(_E) " Name="mi_0_edit" Height="24">
-                                <MenuItem.Items>
-                                    <MenuItem Header="转到"/>
-                                    <MenuItem Header="查找和替换">
-                                        <MenuItem.Items>
-                                            <MenuItem Header="快速查找 ..." InputGestureText="Ctrl + F"/>
-                                            <MenuItem Header="快速替换 ..." InputGestureText="Ctrl + R"/>
-                                            <Separator/>
-                                            <MenuItem Header="在文件中查找 ..." InputGestureText="Ctrl + Shift + F"/>
-                                            <MenuItem Header="在文件中替换 ..." InputGestureText="Ctrl + Shift + R"/>
-                                        </MenuItem.Items>
-                                    </MenuItem>
-                                    <Separator/>
-                                    <MenuItem Header="撤销" InputGestureText="Ctrl + Z"/>
-                                    <MenuItem Header="重做" InputGestureText="Ctrl + Y"/>
-                                    <MenuItem Header="剪切" InputGestureText="Ctrl + X"/>
-                                    <MenuItem Header="复制" InputGestureText="Ctrl + C"/>
-                                    <MenuItem Header="粘贴" InputGestureText="Ctrl + V"/>
-                                    <MenuItem Header="查看剪切板历史记录 ..." InputGestureText="Ctrl + F"/>
-                                    <MenuItem Header="删除" InputGestureText="Del"/>
-                                    <Separator/>
-                                    <MenuItem Header="全选" InputGestureText="Ctrl + A"/>
-                                    <Separator/>
-                                    <MenuItem Header="将文件作为文本插入 ..."/>
-                                    <MenuItem Header="文本格式">
-                                        <MenuItem.Items>
-                                            <MenuItem Header="格式化当前文件" InputGestureText="Ctrl + Alt + F"/>
-                                            <MenuItem Header="格式化选定的内容"/>
-                                            <MenuItem Header="统一前导空格为 Tab"/>
-                                            <MenuItem Header="统一前导空格为空格" InputGestureText="Ctrl + Alt + S"/>
-                                            <Separator/>
-                                            <MenuItem Header="转换为大写"/>
-                                            <MenuItem Header="转换为小写"/>
-                                            <Separator/>
-                                            <MenuItem Header="将选定行上移"/>
-                                            <MenuItem Header="将选定行下移"/>
-                                            <MenuItem Header="注释选定行" InputGestureText="Ctrl + Plus"/>
-                                            <MenuItem Header="取消注释选定行" InputGestureText="Ctrl + Minus"/>
-                                            <Separator/>
-                                            <MenuItem Header="切换查看（省略）空白字符"/>
-                                            <MenuItem Header="切换自动换行"/>
-                                        </MenuItem.Items>
-                                    </MenuItem>
-                                    <MenuItem Header="书签">
-                                        <MenuItem.Items>
-                                            <MenuItem Header="切换书签状态" InputGestureText="Ctrl + B"/>
-                                            <MenuItem Header="上一个书签" InputGestureText="Ctrl + Shift + Up"/>
-                                            <MenuItem Header="下一个书签" InputGestureText="Ctrl + Shift + Down"/>
-                                            <MenuItem Header="清除文档中的所有书签" InputGestureText="Ctrl + Shift + C"/>
-                                        </MenuItem.Items>
-                                    </MenuItem>
-                                    <MenuItem Header="相同缩进域的开头" InputGestureText="Ctrl + Up"/>
-                                    <MenuItem Header="相同缩进域的结尾" InputGestureText="Ctrl + Down"/>
-                                    <MenuItem Header="文件编辑设置 ..." />
-                                </MenuItem.Items>
-                            </MenuItem>
-                            <MenuItem Header=" 调试和分析(_D) " Name="mi_0_debug" Height="24">
-                                <MenuItem Header="从数据文件导入变量 ..." InputGestureText="Ctrl + I"/>
-                                <MenuItem Header="新建变量 ..." InputGestureText="Ctrl + Shift + V"/>
-                                <MenuItem Header="导出当前的工作区变量 ..."/>
-                                <Separator/>
-                                <MenuItem Header="编辑工作区中的变量"/>
-                                <MenuItem Header="清除工作区中定义的变量" InputGestureText="Ctrl + Shift + R"/>
-                                <MenuItem Header="复位变量和函数的重定义 ..." InputGestureText="Ctrl + R"/>
-                                <Separator/>
-                                <MenuItem Header="代码度量值 ..." InputGestureText="Ctrl + Shift + I"/>
-                                <MenuItem Header="代码清理">
-                                    <MenuItem Header="对工作区进行代码清理"/>
-                                    <MenuItem Header="代码清理选项 ..."/>
-                                </MenuItem>
-                                <MenuItem Header="执行效率分析 ..."/>
-                                <MenuItem Header="运行时系统资源分析 ..."/>
-                                <Separator/>
-                                <MenuItem Header="开始调试" InputGestureText="F5"/>
-                                <MenuItem Header="开始执行（不调试）" InputGestureText="Ctrl + F5"/>
-                                <Separator/>
-                                <MenuItem Header="逐语句" InputGestureText="F11"/>
-                                <MenuItem Header="跳出" InputGestureText="F13"/>
-                                <MenuItem Header="逐过程" InputGestureText="F12"/>
-                                <Separator/>
-                                <MenuItem Header="切换断点状态" InputGestureText="F9"/>
-                                <MenuItem Header="新建条件断点 ..."/>
-                                <MenuItem Header="删除文档中的所有断点" InputGestureText="Ctrl + Alt + B"/>
-                                <MenuItem Header="删除工作区内的所有断点 ..."/>
-                                <Separator/>
-                                <MenuItem Header="异常行为设置 ..."/>
-                                <Separator/>
-                                <MenuItem Header="生成工作区" InputGestureText="Ctrl + B"/>
-                                <MenuItem Header="重新生成工作区" InputGestureText="Ctrl + Shift + B"/>
-                                <MenuItem Header="打包当前工作区为工具集 ..." InputGestureText="Ctrl + Shift + P"/>
-
-                            </MenuItem>
-                            <MenuItem Header=" 应用程序(_A) " Name="mi_0_application" Height="24"/>
-                            <MenuItem Header=" 拓展(_X) " Name="mi_0_extension" Height="24" >
-                                <MenuItem Header="管理拓展程序和工具集 ..." InputGestureText="F9" Click="Menu_ManageExtensions"/>
-                                <MenuItem Header="管理自定义代码片段 ..." InputGestureText="Ctrl + F9"/>
-                                <Separator/>
-                                <MenuItem Header="创建 GUID ..."/>
-                                <MenuItem Header="管理外部工具 ..."/>
-                                <Separator/>
-                                <MenuItem Header="命令提示符 ..." InputGestureText="Ctrl + `"/>
-                            </MenuItem>
-                            <MenuItem Header=" 布局(_L) " Name="mi_0_layout" Height="24">
-                                <MenuItem Header="关闭所有选项卡" InputGestureText="Ctrl + Alt + X"/>
-                                <MenuItem Header="关闭当前选项卡" InputGestureText="Ctrl + Shift + X"/>
-                                <Separator/>
-                                <MenuItem Header="起始页"/>
-                                <MenuItem Header="窗口 ..." InputGestureText="Ctrl + W"/>
-                            </MenuItem>
-                            <MenuItem Header=" 帮助(_H) " Name="mi_0_help" Height="24">
-                                <MenuItem.Items>
-                                    <MenuItem Header="关于  Simula ..." InputGestureText="Ctrl + Alt + A" Click="Menu_About"/>
-                                    <MenuItem Header="关于  Simula 增效工具和工具集 ..." />
-                                    <MenuItem Header="获取在线帮助 ..." InputGestureText="F1"/>
-                                    <Separator/>
-                                    <MenuItem Header="法律信息 ..."/>
-                                    <MenuItem Header="检查更新程序" Click="Menu_CheckUpdate"/>
-                                </MenuItem.Items>
-                            </MenuItem>
-                            <MenuItem Header=" 图形(_G) " Name="mi_0_graphic" Height="24" Visibility="Hidden"/>
-                        </Menu.Items>
-                    </Menu>
                 </Grid>
                 <Grid UseLayoutRounding="True" TextElement.FontWeight="Bold">
                     <Grid.ColumnDefinitions>
@@ -504,7 +509,7 @@
                                             <Expander DockPanel.Dock="Top" Header="文档大纲" IsExpanded="True">
                                                 <StackPanel Orientation="Vertical">
                                                     <TreeView Height="175" TextElement.FontWeight="Regular" TextElement.FontFamily="{StaticResource default}">
-                                                        <TreeView.Items> </TreeView.Items>
+                                                        <TreeView.Items></TreeView.Items>
                                                     </TreeView>
                                                     <Grid Height="70" Background="#f8f8f8">
                                                         <StackPanel Margin="5" Orientation="Vertical" TextElement.FontWeight="Regular">
@@ -564,59 +569,131 @@
                                             </Expander>
                                         </DockPanel>
                                     </TabItem>
-                                    <TabItem Header="变量工作区">
-                                    <TreeView TextElement.FontWeight="Regular" TextElement.FontFamily="Cascadia Code, Consolas" TextElement.FontSize="11">
+                                    <TabItem Header="版本控制">
+                                        <Grid>
+                                            <DockPanel x:Name="panelGit" Visibility="Hidden">
+                                                <Expander DockPanel.Dock="Top" Header="已作出的更改" IsExpanded="True">
+                                                    <StackPanel Orientation="Vertical">
+                                                        <Grid Height="139" Background="#f8f8f8" Margin="0,0,0,0">
+                                                            <StackPanel Margin="5" Orientation="Vertical" TextElement.FontWeight="Regular">
+                                                                <DockPanel Height="20">
+                                                                    <Label DockPanel.Dock="Left" Width="100" Content="提交摘要" Margin="0 -5 0 0"/>
+                                                                    <Label Margin="0 -4 0 0" HorizontalAlignment="Right" FontWeight="Bold" FontFamily="Cascadia Code, Consolas" Content="0 个推送到分支 master"/>
+                                                                </DockPanel>
+                                                                <DockPanel Margin="0 0 0 0">
+                                                                    <Border BorderThickness="1" BorderBrush="#eeeeee" CornerRadius="3" Margin="1 1 1 3" Background="White">
+                                                                        <editor:TextEditor Background="#FFFFFF" FontWeight="Regular" FontFamily="Consolas, Simsun" FontSize="11" Language="Markdown" Foreground="#666666"
+                                                                                   ShowLineNumbers="True" LineNumbersForeground="#bbbbbb" WordWrap="True" Height="68" Margin="3" x:Name="gitMessage" Text=" Write your comment message here ..."/>
+                                                                    </Border>
+                                                                </DockPanel>
+                                                                <Grid DockPanel.Dock="Top" Height="37" Background="#f8f8f8">
+                                                                    <DockPanel>
+                                                                        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                                                                            <Button Width="32" FontSize="13" Margin="0 2 5 10">
+                                                                                <Image IsHitTestVisible="False" Source="pack://siteoforigin:,,,/resources/icons/browse.png" Width="16" Height="16"/>
+                                                                            </Button>
+                                                                            <Button Width="32" FontSize="13" Margin="0 2 5 10">
+                                                                                <Image IsHitTestVisible="False" Source="pack://siteoforigin:,,,/resources/icons/tree-collapseall.png" Width="16" Height="16"/>
+                                                                            </Button>
+                                                                            <Button Width="32" FontSize="13" Margin="0 2 5 10">
+                                                                                <Image IsHitTestVisible="False" Source="pack://siteoforigin:,,,/resources/icons/tree-expandall.png" Width="16" Height="16"/>
+                                                                            </Button>
+                                                                        </StackPanel>
+                                                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                                                            <Button Width="32" FontSize="13" Margin="0 2 5 10">
+                                                                                <Image IsHitTestVisible="False" Source="pack://siteoforigin:,,,/resources/icons/archieve-remove.png" Width="16" Height="16"/>
+                                                                            </Button>
+                                                                            <Button Width="32" FontSize="13" Margin="0 2 0 10">
+                                                                                <Image IsHitTestVisible="False" Source="pack://siteoforigin:,,,/resources/icons/archieve.png" Width="16" Height="16"/>
+                                                                            </Button>
+                                                                        </StackPanel>
+                                                                        <Grid/>
+                                                                    </DockPanel>
+                                                                </Grid>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                        <TreeView Height="175" TextElement.FontWeight="Regular" TextElement.FontFamily="{StaticResource default}">
                                                             <TreeView.Items>
-                                                                <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Header="lorentzNext ~> [func]" Icon="pack://siteoforigin:,,,/resources/icons/function.png">
-                                                                    <ui:IconTreeNode.Items>
-                                                                        <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Icon="pack://siteoforigin:,,,/resources/icons/function.png">
-                                                                            <ui:IconTreeNode.Header>
-                                                                                <WrapPanel Orientation="Horizontal">
-                                                                                    <TextBlock Text="operator " Foreground="#0078d4"/>
-                                                                                    <TextBlock Text="+ add " Foreground="#002000" FontWeight="Bold"/>
-                                                                                    <TextBlock Text="~> [" Foreground="#555555"/>
-                                                                                    <TextBlock Text="func" Foreground="#00b8c4"/>
-                                                                                    <TextBlock Text="] " Foreground="#555555"/>
-                                                                                    <TextBlock Text="(linked)" Foreground="#555555" FontStyle="Italic"/>
-                                                                                </WrapPanel>
-                                                                            </ui:IconTreeNode.Header>
-                                                                        </ui:IconTreeNode>
-                                                                        <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Icon="pack://siteoforigin:,,,/resources/icons/function.png">
-                                                                            <ui:IconTreeNode.Header>
-                                                                                <WrapPanel Orientation="Horizontal">
-                                                                                    <TextBlock Text="operator " Foreground="#0078d4"/>
-                                                                                    <TextBlock Text="- substract " Foreground="#002000" FontWeight="Bold"/>
-                                                                                    <TextBlock Text="~> [" Foreground="#555555"/>
-                                                                                    <TextBlock Text="func" Foreground="#00b8c4"/>
-                                                                                    <TextBlock Text="] " Foreground="#555555"/>
-                                                                                    <TextBlock Text="(linked)" Foreground="#555555" FontStyle="Italic"/>
-                                                                                </WrapPanel>
-                                                                            </ui:IconTreeNode.Header>
-                                                                        </ui:IconTreeNode>
-                                                                        <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Icon="pack://siteoforigin:,,,/resources/icons/function.png">
-                                                                            <ui:IconTreeNode.Header>
-                                                                                <WrapPanel Orientation="Horizontal">
-                                                                                    <TextBlock Text="operator " Foreground="#0078d4"/>
-                                                                                    <TextBlock Text="|> compound " Foreground="#002000" FontWeight="Bold"/>
-                                                                                    <TextBlock Text="~> [" Foreground="#555555"/>
-                                                                                    <TextBlock Text="func" Foreground="#00b8c4"/>
-                                                                                    <TextBlock Text="] " Foreground="#555555"/>
-                                                                                    <TextBlock Text="(linked)" Foreground="#555555" FontStyle="Italic"/>
-                                                                                </WrapPanel>
-                                                                            </ui:IconTreeNode.Header>
-                                                                        </ui:IconTreeNode>
-                                                                        <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Header="x ~> [double]" Icon="pack://siteoforigin:,,,/resources/icons/bracket-square.png"/>
-                                                                        <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Header="y ~> [double]" Icon="pack://siteoforigin:,,,/resources/icons/bracket-square.png"/>
-                                                                        <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Header="z ~> [double]" Icon="pack://siteoforigin:,,,/resources/icons/bracket-square.png"/>
-                                                                        <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Header="deltaX ~> [double]" Icon="pack://siteoforigin:,,,/resources/icons/bracket-square.png"/>
-                                                                        <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Header="deltaY ~> [double]" Icon="pack://siteoforigin:,,,/resources/icons/bracket-square.png"/>
-                                                                        <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Header="deltaZ ~> [double]" Icon="pack://siteoforigin:,,,/resources/icons/bracket-square.png"/>
-                                                                        <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Header="flag ~> [bool | null]" Icon="pack://siteoforigin:,,,/resources/icons/bracket-square.png"/>
-                                                                    </ui:IconTreeNode.Items>
+                                                                <ui:IconTreeNode Header="更改" Icon="pack://siteoforigin:,,,/resources/icons/data.png">
                                                                 </ui:IconTreeNode>
-                                                                <ui:IconTreeNode Style="{StaticResource CondensedTreeView}" Header="Private Settings" Icon="pack://siteoforigin:,,,/resources/icons/settings.png"/>
+                                                                <ui:IconTreeNode Header="已暂存的更改" Icon="pack://siteoforigin:,,,/resources/icons/data-check.png"/>
                                                             </TreeView.Items>
                                                         </TreeView>
+                                                    </StackPanel>
+                                                </Expander>
+                                                <Grid Height="5" DockPanel.Dock="Top"/>
+                                                <Expander Header="Git 储存库" IsExpanded="True" Visibility="Visible">
+                                                    <DockPanel>
+                                                        <Grid DockPanel.Dock="Top" Height="37" Background="#f8f8f8">
+                                                            <DockPanel>
+                                                                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                                                                    <Button Width="32" FontSize="13" Margin="6 6 5 6">
+                                                                        <Image IsHitTestVisible="False" Source="pack://siteoforigin:,,,/resources/icons/upload.png" Width="16" Height="16"/>
+                                                                    </Button>
+                                                                    <Button Width="32" FontSize="13" Margin="0 6 5 6">
+                                                                        <Image IsHitTestVisible="False" Source="pack://siteoforigin:,,,/resources/icons/download-fromcloud.png" Width="16" Height="16"/>
+                                                                    </Button>
+                                                                    <Button Width="32" FontSize="13" Margin="0 6 5 6">
+                                                                        <Image IsHitTestVisible="False" Source="pack://siteoforigin:,,,/resources/icons/branch.png" Width="16" Height="16"/>
+                                                                    </Button>
+                                                                    <Button Width="32" FontSize="13" Margin="0 6 5 6">
+                                                                        <Image IsHitTestVisible="False" Source="pack://siteoforigin:,,,/resources/icons/approve-reject.png" Width="16" Height="16"/>
+                                                                    </Button>
+                                                                </StackPanel>
+                                                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                                                    <Button Width="32" FontSize="13" Margin="0 6 5 6">
+                                                                        <Image IsHitTestVisible="False" Source="pack://siteoforigin:,,,/resources/icons/tree-expandall.png" Width="16" Height="16"/>
+                                                                    </Button>
+                                                                    <Button Width="32" FontSize="13" Margin="0 6 5 6">
+                                                                        <Image IsHitTestVisible="False" Source="pack://siteoforigin:,,,/resources/icons/tree-collapseall.png" Width="16" Height="16"/>
+                                                                    </Button>
+                                                                </StackPanel>
+                                                                <Grid/>
+                                                            </DockPanel>
+                                                        </Grid>
+                                                        <Grid>
+                                                            <TreeView TextElement.FontWeight="Regular" TextElement.FontFamily="{StaticResource default}">
+                                                                <TreeView.Items>
+                                                                    <ui:IconTreeNode x:Name="treeItemGitBranch" Header="分支" Icon="pack://siteoforigin:,,,/resources/icons/branch.png">
+                                                                    </ui:IconTreeNode>
+                                                                    <ui:IconTreeNode x:Name="treeItemGitLocal" Header="本地提交" Icon="pack://siteoforigin:,,,/resources/icons/archieve.png"/>
+                                                                    <ui:IconTreeNode x:Name="treeItemGitRemote" Header="远程分支上的提交" Icon="pack://siteoforigin:,,,/resources/icons/upload.png"/>
+                                                                    <ui:IconTreeNode x:Name="treeItemGitTag" Header="远程分支上的提交" Icon="pack://siteoforigin:,,,/resources/icons/labels.png"/>
+                                                                    <ui:IconTreeNode x:Name="treeItemGitAuthors" Header="已认证的提交作者" Icon="pack://siteoforigin:,,,/resources/icons/profile.png"/>
+                                                                </TreeView.Items>
+                                                            </TreeView>
+                                                        </Grid>
+                                                    </DockPanel>
+                                                </Expander>
+                                            </DockPanel>
+                                            <DockPanel x:Name="panelInitGit" Visibility="Visible">
+                                                <Expander x:Name="expInitGit" Header="初始化源代码管理" IsExpanded="True">
+                                                    <StackPanel Orientation="Vertical" Margin="5">
+                                                        <Label Content="当前工作目录下没有可用的 Git 储存库"/>
+                                                        <TextBlock FontWeight="Regular" TextWrapping="Wrap" Margin="5" Foreground="Gray" Text="你可以在当前文件夹上初始化一个 Git 储存库，这样你可以使用由 Git 提供的源代码版本控制服务和相应的管理服务"/>
+                                                        <Button x:Name="btnInitRepo" Margin="10 5 10 5" Click="Event_InitGitFromDirectory" IsEnabled="False">
+                                                            <Button.Content>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <Image Width="16" Height="16" Source="pack://siteoforigin:,,,/resources/icons/branch-circle.png"/>
+                                                                    <TextBlock Text="初始化 Git 储存库" Margin="5"/>
+                                                                </StackPanel>
+                                                            </Button.Content>
+                                                        </Button>
+                                                        <Grid Height="15"/>
+                                                        <Label Content="从一个现有的在线储存库"/>
+                                                        <TextBlock FontWeight="Regular" TextWrapping="Wrap" Margin="5" Foreground="Gray" Text="从在线代码托管平台你可以克隆一个在线储存库，并在它的基础上进行工作"/>
+                                                        <Button x:Name="btnInitRemote" Margin="10 5 10 5" Click="Event_InitGitFromRemote" IsEnabled="False">
+                                                            <Button.Content>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <Image Width="16" Height="16" Source="pack://siteoforigin:,,,/resources/icons/download-fromcloud.png"/>
+                                                                    <TextBlock Text="克隆储存库" Margin="5"/>
+                                                                </StackPanel>
+                                                            </Button.Content>
+                                                        </Button>
+                                                    </StackPanel>
+                                                </Expander>
+                                            </DockPanel>
+                                        </Grid>
                                     </TabItem>
                                     <TabItem Header="工具集"></TabItem>
                                 </TabControl.Items>
@@ -675,10 +752,10 @@
             </DockPanel>
 
             <Popup Name="popDialogHost" AllowsTransparency="True" StaysOpen="False" PopupAnimation="Fade"  
-               Placement="Absolute" VerticalAlignment="Center"
+               Placement="Absolute" VerticalAlignment="Center" 
                VerticalOffset="90" Height="100" Margin="1,0,-1,0">
                 <Grid Name="popDialogGrid" Width="440" Height="520">
-                    <Rectangle Name="popRectangle" Width="400" Height="500" Margin="20 0 20 20">
+                    <Rectangle Name="popRectangle" Width="400" Height="500" Margin="20 0 20 20" RadiusX="5" RadiusY="5">
                         <Rectangle.Fill>
                             <LinearGradientBrush>
                                 <LinearGradientBrush.GradientStops>
@@ -695,14 +772,18 @@
             </Popup>
         </Grid>
 
-        <Grid x:Name="InstallMainGrid" Visibility="Hidden">
+        <Grid x:Name="InstallMainGrid" Visibility="Hidden" Margin="0,0,-0.288,0.48" Grid.RowSpan="2">
             <DockPanel>
                 <Grid DockPanel.Dock="Top" Height="32" Name="InstallWindowController"  MouseLeftButtonDown="Window_Drag" >
                     <Border Width="auto" Height="auto" Background="{StaticResource headerPanel}" BorderBrush="#cccccc" BorderThickness="0 0 0 0.5">
                         <DockPanel>
                             <StackPanel Width="65" DockPanel.Dock="Left" Orientation="Horizontal">
-                                <Button Content="&#xE00E;" FontFamily="Segoe MDL2 Assets" Width="25" FontSize="13" Margin="4"></Button>
-                                <Button Content="&#xE00F;" FontFamily="Segoe MDL2 Assets" Width="25" FontSize="13" Margin="0 5 5 5"></Button>
+                                <Button  FontFamily="Segoe MDL2 Assets" Width="25" FontSize="13" Margin="5">
+                                    <Image IsHitTestVisible="False" Source="pack://siteoforigin:,,,/resources/icons/chevron-left.png" Width="20" Height="20"/>
+                                </Button>
+                                <Button  FontFamily="Segoe MDL2 Assets" Width="25" FontSize="13" Margin="0 5 5 5">
+                                    <Image IsHitTestVisible="False" Source="pack://siteoforigin:,,,/resources/icons/chevron-right.png" Width="20" Height="20"/>
+                                </Button>
                             </StackPanel>
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                                 <Grid Width="46" Height="30" Margin="0 0 0 5" VerticalAlignment="Center">
@@ -760,22 +841,21 @@
                                        VerticalAlignment="Center"/>
                                 </Grid>
                             </StackPanel>
-                            <Menu Margin="2,5,2,5" Width="300" FontWeight="Bold" FontFamily="{StaticResource default}">
+                            <Menu Margin="2,3,2,3" Width="300" FontWeight="Bold" FontFamily="{StaticResource default}">
                                 <Menu.Items>
                                     <MenuItem>
                                         <MenuItem.Header>
                                             <StackPanel Orientation="Horizontal">
                                                 <Image Source="pack://siteoforigin:,,,/app.icon.ico" Margin="0 0 0 -3" Width="16"/>
-                                                <Label Content="Simula Installer" Margin="0 -5 0 -5"/>
                                             </StackPanel>
                                         </MenuItem.Header>
                                     </MenuItem>
-                                    <MenuItem Header="安装程序(_I)">
+                                    <MenuItem Header="安装程序">
                                         <MenuItem Header="检查更新 ..."/>
                                         <MenuItem Header="选择更新和更改的组件 ..."/>
                                         <MenuItem Header="API 兼容性报告 ..."/>
                                     </MenuItem>
-                                    <MenuItem Header="网络(_N)">
+                                    <MenuItem Header="网络">
                                         <MenuItem Header="诊断网络 ..."/>
                                         <MenuItem Header="更新行为选项 ..."/>
                                     </MenuItem>
@@ -793,7 +873,7 @@
                         <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
                             <StackPanel Orientation="Vertical">
                                 <StackPanel Orientation="Horizontal">
-                                    <ui:Load Size="0.25" Width="75" Height="75" Margin="-90,-95,0,0"/>
+                                    <ui:Load Size="0.15" Width="75" Height="75" Margin="-90,-95,0,0"/>
                                     <Label Content="正在检查更新版本的 Simula" FontWeight="Light" Margin="45,0,0,0" FontSize="25" VerticalContentAlignment="Center" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </StackPanel>
@@ -808,8 +888,8 @@
                                 <ScrollViewer Width="700" Height="380"/>
                                 <Grid>
                                     <WrapPanel HorizontalAlignment="Right" Margin="6">
-                                        <Button Margin="6 2 6 2" Padding="20 0 20 2" Content="返回上一步"/>
-                                        <Button  Margin="6 2 6 2" Padding="20 0 20 2"  Content="下一步"/>
+                                        <Button FontWeight="Bold" Margin="6 0 6 0" Padding="20 2 20 2" Height="23" Content="返回上一步"/>
+                                        <Button FontWeight="Bold" Margin="6 0 6 0" Padding="20 2 20 2" Height="23" Content="下一步"/>
                                     </WrapPanel>
                                 </Grid>
                             </StackPanel>
@@ -824,8 +904,8 @@
                                 <ScrollViewer Width="700" Height="380"/>
                                 <Grid>
                                     <WrapPanel HorizontalAlignment="Right" Margin="6">
-                                        <Button Margin="6 2 6 2" Padding="20 0 20 2" Content="返回上一步"/>
-                                        <Button  Margin="6 2 6 2" Padding="20 0 20 2"  Content="下一步"/>
+                                        <Button FontWeight="Bold" Margin="6 0 6 0" Padding="20 2 20 2" Height="23" Content="返回上一步"/>
+                                        <Button FontWeight="Bold" Margin="6 0 6 0" Padding="20 2 20 2" Height="23" Content="下一步"/>
                                     </WrapPanel>
                                 </Grid>
                             </StackPanel>
@@ -839,23 +919,23 @@
                                 </StackPanel>
                                 <ScrollViewer Width="700" Height="380" HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <StackPanel Orientation="Vertical" Width="450" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <Label Content="正在下载包： Xornent Prerequisites ..."/>
-                                        <ProgressBar Height="16" Value="3" Width="440"/>
+                                        <Label FontWeight="Bold" Content="正在下载包： Xornent Prerequisites ..."/>
+                                        <ProgressBar Height="16" Value="10" Width="440"/>
 
                                         <Grid Height="1"/>
                                         <StackPanel Orientation="Horizontal">
-                                            <Label Content=" &#xe814;" FontSize="16" Foreground="Orange" FontFamily="Segoe MDL2 Assets"/>
+                                            <Image Source="pack://siteoforigin:,,,/resources/icons/alert.png" Margin="10 0 5 0" Width="16"/>
                                             <TextBlock TextWrapping="Wrap" Width="410" Margin="5" Text="在下载过程中需要持续的互联网连接，你应当保持设备处在联网状态." Foreground="OrangeRed" Height="16"/>
                                         </StackPanel>
                                         <Grid Height="20"/>
                                         <Label Content="正在创建系统还原点 ..."/>
-                                        <ProgressBar Height="16" Value="1" Width="440"/>
+                                        <ProgressBar Height="16" Value="5" Width="440"/>
                                         <Grid Height="50"/>
                                     </StackPanel>
                                 </ScrollViewer>
                                 <Grid>
                                     <WrapPanel HorizontalAlignment="Right" Margin="6">
-                                        <Button Margin="6 2 6 2" Padding="20,0,20,2" Content="取消安装程序" Click="Installer_Cancel"/>
+                                        <Button FontWeight="Bold" Margin="6 0 6 0" Padding="20,2,20,2" Height="23" Content="取消安装程序" Click="Installer_Cancel"/>
                                     </WrapPanel>
                                 </Grid>
                             </StackPanel>

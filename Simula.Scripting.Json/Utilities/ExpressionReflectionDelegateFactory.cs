@@ -1,11 +1,12 @@
-
 #if !(NET20 || NET35)
 
-using Simula.Scripting.Json.Serialization;
-using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using Simula.Scripting.Json.Serialization;
 
 namespace Simula.Scripting.Json.Utilities
 {
@@ -13,7 +14,10 @@ namespace Simula.Scripting.Json.Utilities
     {
         private static readonly ExpressionReflectionDelegateFactory _instance = new ExpressionReflectionDelegateFactory();
 
-        internal static ReflectionDelegateFactory Instance => _instance;
+        internal static ReflectionDelegateFactory Instance
+        {
+            get { return _instance; }
+        }
 
         public override ObjectConstructor<object> CreateParameterizedConstructor(MethodBase method)
         {
@@ -31,7 +35,7 @@ namespace Simula.Scripting.Json.Utilities
             return compiled;
         }
 
-        public override MethodCall<T, object?> CreateMethodCall<T>(MethodBase method)
+        public override MethodCall<T, object> CreateMethodCall<T>(MethodBase method)
         {
             ValidationUtils.ArgumentNotNull(method, nameof(method));
 
@@ -44,7 +48,7 @@ namespace Simula.Scripting.Json.Utilities
 
             LambdaExpression lambdaExpression = Expression.Lambda(typeof(MethodCall<T, object>), callExpression, targetParameterExpression, argsParameterExpression);
 
-            MethodCall<T, object?> compiled = (MethodCall<T, object?>)lambdaExpression.Compile();
+            MethodCall<T, object> compiled = (MethodCall<T, object>)lambdaExpression.Compile();
             return compiled;
         }
 
@@ -53,33 +57,31 @@ namespace Simula.Scripting.Json.Utilities
             public Expression Value;
             public ParameterExpression Variable;
             public bool IsOut;
-
-            public ByRefParameter(Expression value, ParameterExpression variable, bool isOut)
-            {
-                Value = value;
-                Variable = variable;
-                IsOut = isOut;
-            }
         }
 
-        private Expression BuildMethodCall(MethodBase method, Type type, ParameterExpression? targetParameterExpression, ParameterExpression argsParameterExpression)
+        private Expression BuildMethodCall(MethodBase method, Type type, ParameterExpression targetParameterExpression, ParameterExpression argsParameterExpression)
         {
             ParameterInfo[] parametersInfo = method.GetParameters();
 
             Expression[] argsExpression;
             IList<ByRefParameter> refParameterMap;
-            if (parametersInfo.Length == 0) {
+            if (parametersInfo.Length == 0)
+            {
                 argsExpression = CollectionUtils.ArrayEmpty<Expression>();
                 refParameterMap = CollectionUtils.ArrayEmpty<ByRefParameter>();
-            } else {
+            }
+            else
+            {
                 argsExpression = new Expression[parametersInfo.Length];
                 refParameterMap = new List<ByRefParameter>();
 
-                for (int i = 0; i < parametersInfo.Length; i++) {
+                for (int i = 0; i < parametersInfo.Length; i++)
+                {
                     ParameterInfo parameter = parametersInfo[i];
                     Type parameterType = parameter.ParameterType;
                     bool isByRef = false;
-                    if (parameterType.IsByRef) {
+                    if (parameterType.IsByRef)
+                    {
                         parameterType = parameterType.GetElementType();
                         isByRef = true;
                     }
@@ -90,9 +92,10 @@ namespace Simula.Scripting.Json.Utilities
 
                     Expression argExpression = EnsureCastExpression(paramAccessorExpression, parameterType, !isByRef);
 
-                    if (isByRef) {
+                    if (isByRef)
+                    {
                         ParameterExpression variable = Expression.Variable(parameterType);
-                        refParameterMap.Add(new ByRefParameter(argExpression, variable, parameter.IsOut));
+                        refParameterMap.Add(new ByRefParameter {Value = argExpression, Variable = variable, IsOut = parameter.IsOut});
 
                         argExpression = variable;
                     }
@@ -102,31 +105,46 @@ namespace Simula.Scripting.Json.Utilities
             }
 
             Expression callExpression;
-            if (method.IsConstructor) {
+            if (method.IsConstructor)
+            {
                 callExpression = Expression.New((ConstructorInfo)method, argsExpression);
-            } else if (method.IsStatic) {
+            }
+            else if (method.IsStatic)
+            {
                 callExpression = Expression.Call((MethodInfo)method, argsExpression);
-            } else {
-                Expression readParameter = EnsureCastExpression(targetParameterExpression!, method.DeclaringType);
+            }
+            else
+            {
+                Expression readParameter = EnsureCastExpression(targetParameterExpression, method.DeclaringType);
 
                 callExpression = Expression.Call(readParameter, (MethodInfo)method, argsExpression);
             }
 
-            if (method is MethodInfo m) {
-                if (m.ReturnType != typeof(void)) {
+            MethodInfo m = method as MethodInfo;
+            if (m != null)
+            {
+                if (m.ReturnType != typeof(void))
+                {
                     callExpression = EnsureCastExpression(callExpression, type);
-                } else {
+                }
+                else
+                {
                     callExpression = Expression.Block(callExpression, Expression.Constant(null));
                 }
-            } else {
+            }
+            else
+            {
                 callExpression = EnsureCastExpression(callExpression, type);
             }
 
-            if (refParameterMap.Count > 0) {
+            if (refParameterMap.Count > 0)
+            {
                 IList<ParameterExpression> variableExpressions = new List<ParameterExpression>();
                 IList<Expression> bodyExpressions = new List<Expression>();
-                foreach (ByRefParameter p in refParameterMap) {
-                    if (!p.IsOut) {
+                foreach (ByRefParameter p in refParameterMap)
+                {
+                    if (!p.IsOut)
+                    {
                         bodyExpressions.Add(Expression.Assign(p.Variable, p.Value));
                     }
 
@@ -144,11 +162,15 @@ namespace Simula.Scripting.Json.Utilities
         public override Func<T> CreateDefaultConstructor<T>(Type type)
         {
             ValidationUtils.ArgumentNotNull(type, "type");
-            if (type.IsAbstract()) {
+
+            // avoid error from expressions compiler because of abstract class
+            if (type.IsAbstract())
+            {
                 return () => (T)Activator.CreateInstance(type);
             }
 
-            try {
+            try
+            {
                 Type resultType = typeof(T);
 
                 Expression expression = Expression.New(type);
@@ -159,12 +181,16 @@ namespace Simula.Scripting.Json.Utilities
 
                 Func<T> compiled = (Func<T>)lambdaExpression.Compile();
                 return compiled;
-            } catch {
+            }
+            catch
+            {
+                // an error can be thrown if constructor is not valid on Win8
+                // will have INVOCATION_FLAGS_NON_W8P_FX_API invocation flag
                 return () => (T)Activator.CreateInstance(type);
             }
         }
 
-        public override Func<T, object?> CreateGet<T>(PropertyInfo propertyInfo)
+        public override Func<T, object> CreateGet<T>(PropertyInfo propertyInfo)
         {
             ValidationUtils.ArgumentNotNull(propertyInfo, nameof(propertyInfo));
 
@@ -174,14 +200,14 @@ namespace Simula.Scripting.Json.Utilities
             ParameterExpression parameterExpression = Expression.Parameter(instanceType, "instance");
             Expression resultExpression;
 
-            MethodInfo? getMethod = propertyInfo.GetGetMethod(true);
-            if (getMethod == null) {
-                throw new ArgumentException("Property does not have a getter.");
-            }
+            MethodInfo getMethod = propertyInfo.GetGetMethod(true);
 
-            if (getMethod.IsStatic) {
+            if (getMethod.IsStatic)
+            {
                 resultExpression = Expression.MakeMemberAccess(null, propertyInfo);
-            } else {
+            }
+            else
+            {
                 Expression readParameter = EnsureCastExpression(parameterExpression, propertyInfo.DeclaringType);
 
                 resultExpression = Expression.MakeMemberAccess(readParameter, propertyInfo);
@@ -191,20 +217,23 @@ namespace Simula.Scripting.Json.Utilities
 
             LambdaExpression lambdaExpression = Expression.Lambda(typeof(Func<T, object>), resultExpression, parameterExpression);
 
-            Func<T, object?> compiled = (Func<T, object?>)lambdaExpression.Compile();
+            Func<T, object> compiled = (Func<T, object>)lambdaExpression.Compile();
             return compiled;
         }
 
-        public override Func<T, object?> CreateGet<T>(FieldInfo fieldInfo)
+        public override Func<T, object> CreateGet<T>(FieldInfo fieldInfo)
         {
             ValidationUtils.ArgumentNotNull(fieldInfo, nameof(fieldInfo));
 
             ParameterExpression sourceParameter = Expression.Parameter(typeof(T), "source");
 
             Expression fieldExpression;
-            if (fieldInfo.IsStatic) {
+            if (fieldInfo.IsStatic)
+            {
                 fieldExpression = Expression.Field(null, fieldInfo);
-            } else {
+            }
+            else
+            {
                 Expression sourceExpression = EnsureCastExpression(sourceParameter, fieldInfo.DeclaringType);
 
                 fieldExpression = Expression.Field(sourceExpression, fieldInfo);
@@ -212,14 +241,18 @@ namespace Simula.Scripting.Json.Utilities
 
             fieldExpression = EnsureCastExpression(fieldExpression, typeof(object));
 
-            Func<T, object?> compiled = Expression.Lambda<Func<T, object?>>(fieldExpression, sourceParameter).Compile();
+            Func<T, object> compiled = Expression.Lambda<Func<T, object>>(fieldExpression, sourceParameter).Compile();
             return compiled;
         }
 
-        public override Action<T, object?> CreateSet<T>(FieldInfo fieldInfo)
+        public override Action<T, object> CreateSet<T>(FieldInfo fieldInfo)
         {
             ValidationUtils.ArgumentNotNull(fieldInfo, nameof(fieldInfo));
-            if (fieldInfo.DeclaringType.IsValueType() || fieldInfo.IsInitOnly) {
+
+            // use reflection for structs
+            // expression doesn't correctly set value
+            if (fieldInfo.DeclaringType.IsValueType() || fieldInfo.IsInitOnly)
+            {
                 return LateBoundReflectionDelegateFactory.Instance.CreateSet<T>(fieldInfo);
             }
 
@@ -227,9 +260,12 @@ namespace Simula.Scripting.Json.Utilities
             ParameterExpression valueParameterExpression = Expression.Parameter(typeof(object), "value");
 
             Expression fieldExpression;
-            if (fieldInfo.IsStatic) {
+            if (fieldInfo.IsStatic)
+            {
                 fieldExpression = Expression.Field(null, fieldInfo);
-            } else {
+            }
+            else
+            {
                 Expression sourceExpression = EnsureCastExpression(sourceParameterExpression, fieldInfo.DeclaringType);
 
                 fieldExpression = Expression.Field(sourceExpression, fieldInfo);
@@ -241,14 +277,18 @@ namespace Simula.Scripting.Json.Utilities
 
             LambdaExpression lambdaExpression = Expression.Lambda(typeof(Action<T, object>), assignExpression, sourceParameterExpression, valueParameterExpression);
 
-            Action<T, object?> compiled = (Action<T, object?>)lambdaExpression.Compile();
+            Action<T, object> compiled = (Action<T, object>)lambdaExpression.Compile();
             return compiled;
         }
 
-        public override Action<T, object?> CreateSet<T>(PropertyInfo propertyInfo)
+        public override Action<T, object> CreateSet<T>(PropertyInfo propertyInfo)
         {
             ValidationUtils.ArgumentNotNull(propertyInfo, nameof(propertyInfo));
-            if (propertyInfo.DeclaringType.IsValueType()) {
+
+            // use reflection for structs
+            // expression doesn't correctly set value
+            if (propertyInfo.DeclaringType.IsValueType())
+            {
                 return LateBoundReflectionDelegateFactory.Instance.CreateSet<T>(propertyInfo);
             }
 
@@ -260,51 +300,57 @@ namespace Simula.Scripting.Json.Utilities
             ParameterExpression valueParameter = Expression.Parameter(valueType, "value");
             Expression readValueParameter = EnsureCastExpression(valueParameter, propertyInfo.PropertyType);
 
-            MethodInfo? setMethod = propertyInfo.GetSetMethod(true);
-            if (setMethod == null) {
-                throw new ArgumentException("Property does not have a setter.");
-            }
+            MethodInfo setMethod = propertyInfo.GetSetMethod(true);
 
             Expression setExpression;
-            if (setMethod.IsStatic) {
+            if (setMethod.IsStatic)
+            {
                 setExpression = Expression.Call(setMethod, readValueParameter);
-            } else {
+            }
+            else
+            {
                 Expression readInstanceParameter = EnsureCastExpression(instanceParameter, propertyInfo.DeclaringType);
 
                 setExpression = Expression.Call(readInstanceParameter, setMethod, readValueParameter);
             }
 
-            LambdaExpression lambdaExpression = Expression.Lambda(typeof(Action<T, object?>), setExpression, instanceParameter, valueParameter);
+            LambdaExpression lambdaExpression = Expression.Lambda(typeof(Action<T, object>), setExpression, instanceParameter, valueParameter);
 
-            Action<T, object?> compiled = (Action<T, object?>)lambdaExpression.Compile();
+            Action<T, object> compiled = (Action<T, object>)lambdaExpression.Compile();
             return compiled;
         }
-
+        
         private Expression EnsureCastExpression(Expression expression, Type targetType, bool allowWidening = false)
         {
             Type expressionType = expression.Type;
-            if (expressionType == targetType || (!expressionType.IsValueType() && targetType.IsAssignableFrom(expressionType))) {
+            
+            // check if a cast or conversion is required
+            if (expressionType == targetType || (!expressionType.IsValueType() && targetType.IsAssignableFrom(expressionType)))
+            {
                 return expression;
             }
 
-            if (targetType.IsValueType()) {
+            if (targetType.IsValueType())
+            {
                 Expression convert = Expression.Unbox(expression, targetType);
 
-                if (allowWidening && targetType.IsPrimitive()) {
+                if (allowWidening && targetType.IsPrimitive())
+                {
                     MethodInfo toTargetTypeMethod = typeof(Convert)
                         .GetMethod("To" + targetType.Name, new[] { typeof(object) });
 
-                    if (toTargetTypeMethod != null) {
+                    if (toTargetTypeMethod != null)
+                    {
                         convert = Expression.Condition(
                             Expression.TypeIs(expression, targetType),
                             convert,
                             Expression.Call(toTargetTypeMethod, expression));
                     }
                 }
-
+                
                 return Expression.Condition(
                     Expression.Equal(expression, Expression.Constant(null, typeof(object))),
-                    Expression.Default(targetType),
+                    Expression.Default(targetType), 
                     convert);
             }
 

@@ -1,0 +1,140 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{693B50F0-8045-4436-A21C-AD29B994BE5A}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Simula.Scripting.Emit</RootNamespace>
+    <AssemblyName>Simula.Scripting.Emit</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Analysis\AnalysisEnvironment.cs" />
+    <Compile Include="Analysis\AnalysisScope.cs" />
+    <Compile Include="Analysis\Interop\ClrFunctionRecord.cs" />
+    <Compile Include="Analysis\Interop\ClrTypeRecord.cs" />
+    <Compile Include="Analysis\Record\AnyType.cs" />
+    <Compile Include="Analysis\Record\CombinationType.cs" />
+    <Compile Include="Analysis\Record\DataRecord.cs" />
+    <Compile Include="Analysis\Record\EitherType.cs" />
+    <Compile Include="Analysis\Record\ExcludeType.cs" />
+    <Compile Include="Analysis\Record\FunctionRecord.cs" />
+    <Compile Include="Analysis\Record\IRecord.cs" />
+    <Compile Include="Analysis\Record\NullType.cs" />
+    <Compile Include="Analysis\Record\TypeRecord.cs" />
+    <Compile Include="Analysis\Record\UnionRecord.cs" />
+    <Compile Include="Analysis\SyntaxTree.cs" />
+    <Compile Include="Emit\EmitHelper.cs" />
+    <Compile Include="Parser\Ast\BinaryExpression.cs" />
+    <Compile Include="Parser\Ast\BlockStatement.cs" />
+    <Compile Include="Parser\Ast\BreakStatement.cs" />
+    <Compile Include="Parser\Ast\CallExpression.cs" />
+    <Compile Include="Parser\Ast\CatchStatement.cs" />
+    <Compile Include="Parser\Ast\ConditionalStatement.cs" />
+    <Compile Include="Parser\Ast\ConfigureStatement.cs" />
+    <Compile Include="Parser\Ast\ContinueStatement.cs" />
+    <Compile Include="Parser\Ast\DataDeclaration.cs" />
+    <Compile Include="Parser\Ast\DebuggerStatement.cs" />
+    <Compile Include="Parser\Ast\DeclarationBlock.cs" />
+    <Compile Include="Parser\Ast\EmptyStatement.cs" />
+    <Compile Include="Parser\Ast\ErrorStatement.cs" />
+    <Compile Include="Parser\Ast\FunctionDeclaration.cs" />
+    <Compile Include="Parser\Ast\ICommandmentStatement.cs" />
+    <Compile Include="Parser\Ast\IExpression.cs" />
+    <Compile Include="Parser\Ast\IfStatement.cs" />
+    <Compile Include="Parser\Ast\IIterateStatement.cs" />
+    <Compile Include="Parser\Ast\IndexExpression.cs" />
+    <Compile Include="Parser\Ast\IOperatorExpression.cs" />
+    <Compile Include="Parser\Ast\IStatement.cs" />
+    <Compile Include="Parser\Ast\IterateLiteralStatement.cs" />
+    <Compile Include="Parser\Ast\IteratePositionalStatement.cs" />
+    <Compile Include="Parser\Ast\IterateStatement.cs" />
+    <Compile Include="Parser\Ast\LazyExpression.cs" />
+    <Compile Include="Parser\Ast\Literal.cs" />
+    <Compile Include="Parser\Ast\MatchCaseExpression.cs" />
+    <Compile Include="Parser\Ast\MatchStatement.cs" />
+    <Compile Include="Parser\Ast\ModuleStatement.cs" />
+    <Compile Include="Parser\Ast\ReturnStatement.cs" />
+    <Compile Include="Parser\Ast\SequenceExpression.cs" />
+    <Compile Include="Parser\Ast\TouchStatement.cs" />
+    <Compile Include="Parser\Ast\TryStatement.cs" />
+    <Compile Include="Parser\Ast\UnaryExpression.cs" />
+    <Compile Include="Parser\Ast\UseStatement.cs" />
+    <Compile Include="Parser\Ast\VariableDeclaration.cs" />
+    <Compile Include="Parser\Ast\WarningStatement.cs" />
+    <Compile Include="Parser\Ast\WhileStatement.cs" />
+    <Compile Include="Parser\IFunctionScope.cs" />
+    <Compile Include="Parser\IVariableScope.cs" />
+    <Compile Include="Parser\LexicalError.cs" />
+    <Compile Include="Parser\Parser.cs" />
+    <Compile Include="Parser\ParserOptions.cs" />
+    <Compile Include="Parser\ParserResult.cs" />
+    <Compile Include="Parser\ParserState.cs" />
+    <Compile Include="Parser\Position.cs" />
+    <Compile Include="Parser\Program.cs" />
+    <Compile Include="Parser\Span.cs" />
+    <Compile Include="Parser\SyntaxError.cs" />
+    <Compile Include="Parser\Token.cs" />
+    <Compile Include="Parser\TokenCollection.cs" />
+    <Compile Include="Parser\Tokenizer.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnitTest.cs" />
+    <Compile Include="Workspace\ILibrary.cs" />
+    <Compile Include="Workspace\Library.cs" />
+    <Compile Include="Workspace\Source.cs" />
+    <Compile Include="Workspace\Workspace.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Native\Data\" />
+    <Folder Include="Native\Expr\" />
+    <Folder Include="Native\Function\" />
+    <Folder Include="Native\Matrix\" />
+    <Folder Include="Native\Tuple\" />
+    <Folder Include="Runtime\Debugger\" />
+    <Folder Include="Runtime\Environments\" />
+    <Folder Include="Runtime\Interop\" />
+    <Folder Include="Runtime\Profiler\" />
+    <Folder Include="Runtime\References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Simula.Resources\Simula.Resources.csproj">
+      <Project>{ca54c164-b6ba-47d4-b3e5-dd8cf7dd7290}</Project>
+      <Name>Simula.Resources</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

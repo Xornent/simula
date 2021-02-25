@@ -1,6 +1,5 @@
-
-using Simula.Scripting.Json.Serialization;
 using System;
+using Simula.Scripting.Json.Serialization;
 using System.Reflection;
 
 #if !HAVE_LINQ
@@ -13,24 +12,37 @@ namespace Simula.Scripting.Json.Utilities
     {
         private static readonly LateBoundReflectionDelegateFactory _instance = new LateBoundReflectionDelegateFactory();
 
-        internal static ReflectionDelegateFactory Instance => _instance;
+        internal static ReflectionDelegateFactory Instance
+        {
+            get { return _instance; }
+        }
 
         public override ObjectConstructor<object> CreateParameterizedConstructor(MethodBase method)
         {
             ValidationUtils.ArgumentNotNull(method, nameof(method));
 
-            if (method is ConstructorInfo c) {
-                return a => c.Invoke(a);
+            ConstructorInfo c = method as ConstructorInfo;
+            if (c != null)
+            {
+                // don't convert to method group to avoid medium trust issues
+                // https://github.com/JamesNK/Simula.Scripting.Json/issues/476
+                return a =>
+                {
+                    object[] args = a;
+                    return c.Invoke(args);
+                };
             }
 
             return a => method.Invoke(null, a);
         }
 
-        public override MethodCall<T, object?> CreateMethodCall<T>(MethodBase method)
+        public override MethodCall<T, object> CreateMethodCall<T>(MethodBase method)
         {
             ValidationUtils.ArgumentNotNull(method, nameof(method));
 
-            if (method is ConstructorInfo c) {
+            ConstructorInfo c = method as ConstructorInfo;
+            if (c != null)
+            {
                 return (o, a) => c.Invoke(a);
             }
 
@@ -41,7 +53,8 @@ namespace Simula.Scripting.Json.Utilities
         {
             ValidationUtils.ArgumentNotNull(type, nameof(type));
 
-            if (type.IsValueType()) {
+            if (type.IsValueType())
+            {
                 return () => (T)Activator.CreateInstance(type);
             }
 
@@ -50,28 +63,28 @@ namespace Simula.Scripting.Json.Utilities
             return () => (T)constructorInfo.Invoke(null);
         }
 
-        public override Func<T, object?> CreateGet<T>(PropertyInfo propertyInfo)
+        public override Func<T, object> CreateGet<T>(PropertyInfo propertyInfo)
         {
             ValidationUtils.ArgumentNotNull(propertyInfo, nameof(propertyInfo));
 
             return o => propertyInfo.GetValue(o, null);
         }
 
-        public override Func<T, object?> CreateGet<T>(FieldInfo fieldInfo)
+        public override Func<T, object> CreateGet<T>(FieldInfo fieldInfo)
         {
             ValidationUtils.ArgumentNotNull(fieldInfo, nameof(fieldInfo));
 
             return o => fieldInfo.GetValue(o);
         }
 
-        public override Action<T, object?> CreateSet<T>(FieldInfo fieldInfo)
+        public override Action<T, object> CreateSet<T>(FieldInfo fieldInfo)
         {
             ValidationUtils.ArgumentNotNull(fieldInfo, nameof(fieldInfo));
 
             return (o, v) => fieldInfo.SetValue(o, v);
         }
 
-        public override Action<T, object?> CreateSet<T>(PropertyInfo propertyInfo)
+        public override Action<T, object> CreateSet<T>(PropertyInfo propertyInfo)
         {
             ValidationUtils.ArgumentNotNull(propertyInfo, nameof(propertyInfo));
 

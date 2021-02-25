@@ -1,27 +1,40 @@
-﻿
-using Simula.Scripting.Json.Utilities;
-using System;
+﻿using System;
 using System.Globalization;
+using Simula.Scripting.Json.Utilities;
 
 namespace Simula.Scripting.Json.Converters
 {
+    /// <summary>
+    /// Converts a <see cref="DateTime"/> to and from a JavaScript <c>Date</c> constructor (e.g. <c>new Date(52231943)</c>).
+    /// </summary>
     public class JavaScriptDateTimeConverter : DateTimeConverterBase
     {
-        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+        /// <summary>
+        /// Writes the JSON representation of the object.
+        /// </summary>
+        /// <param name="writer">The <see cref="JsonWriter"/> to write to.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="serializer">The calling serializer.</param>
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             long ticks;
 
-            if (value is DateTime dateTime) {
+            if (value is DateTime)
+            {
+                DateTime dateTime = (DateTime)value;
                 DateTime utcDateTime = dateTime.ToUniversalTime();
                 ticks = DateTimeUtils.ConvertDateTimeToJavaScriptTicks(utcDateTime);
             }
 #if HAVE_DATE_TIME_OFFSET
-            else if (value is DateTimeOffset dateTimeOffset) {
+            else if (value is DateTimeOffset)
+            {
+                DateTimeOffset dateTimeOffset = (DateTimeOffset)value;
                 DateTimeOffset utcDateTimeOffset = dateTimeOffset.ToUniversalTime();
                 ticks = DateTimeUtils.ConvertDateTimeToJavaScriptTicks(utcDateTimeOffset.UtcDateTime);
             }
 #endif
-            else {
+            else
+            {
                 throw new JsonSerializationException("Expected date object value.");
             }
 
@@ -29,29 +42,56 @@ namespace Simula.Scripting.Json.Converters
             writer.WriteValue(ticks);
             writer.WriteEndConstructor();
         }
-        public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+
+        /// <summary>
+        /// Reads the JSON representation of the object.
+        /// </summary>
+        /// <param name="reader">The <see cref="JsonReader"/> to read from.</param>
+        /// <param name="objectType">Type of the object.</param>
+        /// <param name="existingValue">The existing property value of the JSON that is being converted.</param>
+        /// <param name="serializer">The calling serializer.</param>
+        /// <returns>The object value.</returns>
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            if (reader.TokenType == JsonToken.Null) {
-                if (!ReflectionUtils.IsNullable(objectType)) {
+            if (reader.TokenType == JsonToken.Null)
+            {
+                if (!ReflectionUtils.IsNullable(objectType))
+                {
                     throw JsonSerializationException.Create(reader, "Cannot convert null value to {0}.".FormatWith(CultureInfo.InvariantCulture, objectType));
                 }
 
                 return null;
             }
 
-            if (reader.TokenType != JsonToken.StartConstructor || !string.Equals(reader.Value?.ToString(), "Date", StringComparison.Ordinal)) {
+            if (reader.TokenType != JsonToken.StartConstructor || !string.Equals(reader.Value.ToString(), "Date", StringComparison.Ordinal))
+            {
                 throw JsonSerializationException.Create(reader, "Unexpected token or value when parsing date. Token: {0}, Value: {1}".FormatWith(CultureInfo.InvariantCulture, reader.TokenType, reader.Value));
             }
 
-            if (!JavaScriptUtils.TryGetDateFromConstructorJson(reader, out DateTime d, out string? errorMessage)) {
-                throw JsonSerializationException.Create(reader, errorMessage);
+            reader.Read();
+
+            if (reader.TokenType != JsonToken.Integer)
+            {
+                throw JsonSerializationException.Create(reader, "Unexpected token parsing date. Expected Integer, got {0}.".FormatWith(CultureInfo.InvariantCulture, reader.TokenType));
             }
 
-#if HAVE_DATE_TIME_OFFSET
+            long ticks = (long)reader.Value;
+
+            DateTime d = DateTimeUtils.ConvertJavaScriptTicksToDateTime(ticks);
+
+            reader.Read();
+
+            if (reader.TokenType != JsonToken.EndConstructor)
+            {
+                throw JsonSerializationException.Create(reader, "Unexpected token parsing date. Expected EndConstructor, got {0}.".FormatWith(CultureInfo.InvariantCulture, reader.TokenType));
+            }
+
             Type t = (ReflectionUtils.IsNullableType(objectType))
                 ? Nullable.GetUnderlyingType(objectType)
                 : objectType;
-            if (t == typeof(DateTimeOffset)) {
+#if HAVE_DATE_TIME_OFFSET
+            if (t == typeof(DateTimeOffset))
+            {
                 return new DateTimeOffset(d);
             }
 #endif

@@ -1,15 +1,14 @@
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Globalization;
-using System.Diagnostics.CodeAnalysis;
 #if !HAVE_LINQ
 using Simula.Scripting.Json.Utilities.LinqBridge;
 #else
 using System.Linq;
 #endif
+using Simula.Scripting.Json.Serialization;
 
 namespace Simula.Scripting.Json.Utilities
 {
@@ -21,49 +20,58 @@ namespace Simula.Scripting.Json.Utilities
         public const char LineFeed = '\n';
         public const char Tab = '\t';
 
-        public static bool IsNullOrEmpty([NotNullWhen(false)] string? value)
+        public static string FormatWith(this string format, IFormatProvider provider, object arg0)
         {
-            return string.IsNullOrEmpty(value);
+            return format.FormatWith(provider, new[] { arg0 });
         }
 
-        public static string FormatWith(this string format, IFormatProvider provider, object? arg0)
+        public static string FormatWith(this string format, IFormatProvider provider, object arg0, object arg1)
         {
-            return format.FormatWith(provider, new object?[] { arg0 });
+            return format.FormatWith(provider, new[] { arg0, arg1 });
         }
 
-        public static string FormatWith(this string format, IFormatProvider provider, object? arg0, object? arg1)
+        public static string FormatWith(this string format, IFormatProvider provider, object arg0, object arg1, object arg2)
         {
-            return format.FormatWith(provider, new object?[] { arg0, arg1 });
+            return format.FormatWith(provider, new[] { arg0, arg1, arg2 });
         }
 
-        public static string FormatWith(this string format, IFormatProvider provider, object? arg0, object? arg1, object? arg2)
+        public static string FormatWith(this string format, IFormatProvider provider, object arg0, object arg1, object arg2, object arg3)
         {
-            return format.FormatWith(provider, new object?[] { arg0, arg1, arg2 });
+            return format.FormatWith(provider, new[] { arg0, arg1, arg2, arg3 });
         }
 
-        public static string FormatWith(this string format, IFormatProvider provider, object? arg0, object? arg1, object? arg2, object? arg3)
+        private static string FormatWith(this string format, IFormatProvider provider, params object[] args)
         {
-            return format.FormatWith(provider, new object?[] { arg0, arg1, arg2, arg3 });
-        }
-
-        private static string FormatWith(this string format, IFormatProvider provider, params object?[] args)
-        {
+            // leave this a private to force code to use an explicit overload
+            // avoids stack memory being reserved for the object array
             ValidationUtils.ArgumentNotNull(format, nameof(format));
 
             return string.Format(provider, format, args);
         }
+
+        /// <summary>
+        /// Determines whether the string is all white space. Empty string will return <c>false</c>.
+        /// </summary>
+        /// <param name="s">The string to test whether it is all white space.</param>
+        /// <returns>
+        /// 	<c>true</c> if the string is all white space; otherwise, <c>false</c>.
+        /// </returns>
         public static bool IsWhiteSpace(string s)
         {
-            if (s == null) {
+            if (s == null)
+            {
                 throw new ArgumentNullException(nameof(s));
             }
 
-            if (s.Length == 0) {
+            if (s.Length == 0)
+            {
                 return false;
             }
 
-            for (int i = 0; i < s.Length; i++) {
-                if (!char.IsWhiteSpace(s[i])) {
+            for (int i = 0; i < s.Length; i++)
+            {
+                if (!char.IsWhiteSpace(s[i]))
+                {
                     return false;
                 }
             }
@@ -91,17 +99,23 @@ namespace Simula.Scripting.Json.Utilities
 
         public static TSource ForgivingCaseSensitiveFind<TSource>(this IEnumerable<TSource> source, Func<TSource, string> valueSelector, string testValue)
         {
-            if (source == null) {
+            if (source == null)
+            {
                 throw new ArgumentNullException(nameof(source));
             }
-            if (valueSelector == null) {
+            if (valueSelector == null)
+            {
                 throw new ArgumentNullException(nameof(valueSelector));
             }
 
             IEnumerable<TSource> caseInsensitiveResults = source.Where(s => string.Equals(valueSelector(s), testValue, StringComparison.OrdinalIgnoreCase));
-            if (caseInsensitiveResults.Count() <= 1) {
+            if (caseInsensitiveResults.Count() <= 1)
+            {
                 return caseInsensitiveResults.SingleOrDefault();
-            } else {
+            }
+            else
+            {
+                // multiple results returned. now filter using case sensitivity
                 IEnumerable<TSource> caseSensitiveResults = source.Where(s => string.Equals(valueSelector(s), testValue, StringComparison.Ordinal));
                 return caseSensitiveResults.SingleOrDefault();
             }
@@ -109,47 +123,39 @@ namespace Simula.Scripting.Json.Utilities
 
         public static string ToCamelCase(string s)
         {
-            if (StringUtils.IsNullOrEmpty(s) || !char.IsUpper(s[0])) {
+            if (string.IsNullOrEmpty(s) || !char.IsUpper(s[0]))
+            {
                 return s;
             }
 
             char[] chars = s.ToCharArray();
 
-            for (int i = 0; i < chars.Length; i++) {
-                if (i == 1 && !char.IsUpper(chars[i])) {
+            for (int i = 0; i < chars.Length; i++)
+            {
+                if (i == 1 && !char.IsUpper(chars[i]))
+                {
                     break;
                 }
 
                 bool hasNext = (i + 1 < chars.Length);
-                if (i > 0 && hasNext && !char.IsUpper(chars[i + 1])) {
-                    if (char.IsSeparator(chars[i + 1])) {
-                        chars[i] = ToLower(chars[i]);
-                    }
-
+                if (i > 0 && hasNext && !char.IsUpper(chars[i + 1]))
+                {
                     break;
                 }
 
-                chars[i] = ToLower(chars[i]);
+                char c;
+#if HAVE_CHAR_TO_STRING_WITH_CULTURE
+                c = char.ToLower(chars[i], CultureInfo.InvariantCulture);
+#else
+                c = char.ToLowerInvariant(chars[i]);
+#endif
+                chars[i] = c;
             }
 
             return new string(chars);
         }
 
-        private static char ToLower(char c)
-        {
-#if HAVE_CHAR_TO_LOWER_WITH_CULTURE
-            c = char.ToLower(c, CultureInfo.InvariantCulture);
-#else
-            c = char.ToLowerInvariant(c);
-#endif
-            return c;
-        }
-
-        public static string ToSnakeCase(string s) => ToSeparatedCase(s, '_');
-
-        public static string ToKebabCase(string s) => ToSeparatedCase(s, '-');
-
-        private enum SeparatedCaseState
+        internal enum SnakeCaseState
         {
             Start,
             Lower,
@@ -157,34 +163,43 @@ namespace Simula.Scripting.Json.Utilities
             NewWord
         }
 
-        private static string ToSeparatedCase(string s, char separator)
+        public static string ToSnakeCase(string s)
         {
-            if (StringUtils.IsNullOrEmpty(s)) {
+            if (string.IsNullOrEmpty(s))
+            {
                 return s;
             }
 
             StringBuilder sb = new StringBuilder();
-            SeparatedCaseState state = SeparatedCaseState.Start;
+            SnakeCaseState state = SnakeCaseState.Start;
 
-            for (int i = 0; i < s.Length; i++) {
-                if (s[i] == ' ') {
-                    if (state != SeparatedCaseState.Start) {
-                        state = SeparatedCaseState.NewWord;
+            for (int i = 0; i < s.Length; i++)
+            {
+                if (s[i] == ' ')
+                {
+                    if (state != SnakeCaseState.Start)
+                    {
+                        state = SnakeCaseState.NewWord;
                     }
-                } else if (char.IsUpper(s[i])) {
-                    switch (state) {
-                        case SeparatedCaseState.Upper:
+                }
+                else if (char.IsUpper(s[i]))
+                {
+                    switch (state)
+                    {
+                        case SnakeCaseState.Upper:
                             bool hasNext = (i + 1 < s.Length);
-                            if (i > 0 && hasNext) {
+                            if (i > 0 && hasNext)
+                            {
                                 char nextChar = s[i + 1];
-                                if (!char.IsUpper(nextChar) && nextChar != separator) {
-                                    sb.Append(separator);
+                                if (!char.IsUpper(nextChar) && nextChar != '_')
+                                {
+                                    sb.Append('_');
                                 }
                             }
                             break;
-                        case SeparatedCaseState.Lower:
-                        case SeparatedCaseState.NewWord:
-                            sb.Append(separator);
+                        case SnakeCaseState.Lower:
+                        case SnakeCaseState.NewWord:
+                            sb.Append('_');
                             break;
                     }
 
@@ -196,17 +211,22 @@ namespace Simula.Scripting.Json.Utilities
 #endif
                     sb.Append(c);
 
-                    state = SeparatedCaseState.Upper;
-                } else if (s[i] == separator) {
-                    sb.Append(separator);
-                    state = SeparatedCaseState.Start;
-                } else {
-                    if (state == SeparatedCaseState.NewWord) {
-                        sb.Append(separator);
+                    state = SnakeCaseState.Upper;
+                }
+                else if (s[i] == '_')
+                {
+                    sb.Append('_');
+                    state = SnakeCaseState.Start;
+                }
+                else
+                {
+                    if (state == SnakeCaseState.NewWord)
+                    {
+                        sb.Append('_');
                     }
 
                     sb.Append(s[i]);
-                    state = SeparatedCaseState.Lower;
+                    state = SnakeCaseState.Lower;
                 }
             }
 
@@ -243,26 +263,36 @@ namespace Simula.Scripting.Json.Utilities
 
         public static string Trim(this string s, int start, int length)
         {
-            if (s == null) {
+            // References: https://referencesource.microsoft.com/#mscorlib/system/string.cs,2691
+            // https://referencesource.microsoft.com/#mscorlib/system/string.cs,1226
+            if (s == null)
+            {
                 throw new ArgumentNullException();
             }
-            if (start < 0) {
+            if (start < 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(start));
             }
-            if (length < 0) {
+            if (length < 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(length));
             }
             int end = start + length - 1;
-            if (end >= s.Length) {
+            if (end >= s.Length)
+            {
                 throw new ArgumentOutOfRangeException(nameof(length));
             }
-            for (; start < end; start++) {
-                if (!char.IsWhiteSpace(s[start])) {
+            for (; start < end; start++)
+            {
+                if (!char.IsWhiteSpace(s[start]))
+                {
                     break;
                 }
             }
-            for (; end >= start; end--) {
-                if (!char.IsWhiteSpace(s[end])) {
+            for (; end >= start; end--)
+            {
+                if (!char.IsWhiteSpace(s[end]))
+                {
                     break;
                 }
             }

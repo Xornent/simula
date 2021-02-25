@@ -1,8 +1,9 @@
-﻿
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
+using System.Security;
 #if HAVE_CAS
 using System.Security.Permissions;
 #endif
@@ -30,17 +31,15 @@ namespace Simula.Scripting.Json.Serialization
         public const string ShouldSerializePrefix = "ShouldSerialize";
         public const string SpecifiedPostfix = "Specified";
 
-        public const string ConcurrentDictionaryTypeName = "System.Collections.Concurrent.ConcurrentDictionary`2";
-
-        private static readonly ThreadSafeStore<Type, Func<object[]?, object>> CreatorCache =
-            new ThreadSafeStore<Type, Func<object[]?, object>>(GetCreator);
+        private static readonly ThreadSafeStore<Type, Func<object[], object>> CreatorCache = 
+            new ThreadSafeStore<Type, Func<object[], object>>(GetCreator);
 
 #if !(NET20 || DOTNET)
-        private static readonly ThreadSafeStore<Type, Type?> AssociatedMetadataTypesCache = new ThreadSafeStore<Type, Type?>(GetAssociateMetadataTypeFromAttribute);
-        private static ReflectionObject? _metadataTypeAttributeReflectionObject;
+        private static readonly ThreadSafeStore<Type, Type> AssociatedMetadataTypesCache = new ThreadSafeStore<Type, Type>(GetAssociateMetadataTypeFromAttribute);
+        private static ReflectionObject _metadataTypeAttributeReflectionObject;
 #endif
 
-        public static T? GetCachedAttribute<T>(object attributeProvider) where T : Attribute
+        public static T GetCachedAttribute<T>(object attributeProvider) where T : Attribute
         {
             return CachedAttributeGetter<T>.GetAttribute(attributeProvider);
         }
@@ -49,13 +48,16 @@ namespace Simula.Scripting.Json.Serialization
         public static bool CanTypeDescriptorConvertString(Type type, out TypeConverter typeConverter)
         {
             typeConverter = TypeDescriptor.GetConverter(type);
-            if (typeConverter != null) {
+
+            // use the objectType's TypeConverter if it has one and can convert to a string
+            if (typeConverter != null)
+            {
                 Type converterType = typeConverter.GetType();
 
-                if (!string.Equals(converterType.FullName, "System.ComponentModel.ComponentConverter", StringComparison.Ordinal)
-                    && !string.Equals(converterType.FullName, "System.ComponentModel.ReferenceConverter", StringComparison.Ordinal)
-                    && !string.Equals(converterType.FullName, "System.Windows.Forms.Design.DataSourceConverter", StringComparison.Ordinal)
-                    && converterType != typeof(TypeConverter)) {
+                if (converterType.FullName != "System.ComponentModel.ComponentConverter"
+                    && converterType.FullName != "System.ComponentModel.ReferenceConverter"
+                    && converterType != typeof(TypeConverter))
+                {
                     return typeConverter.CanConvertTo(typeof(string));
                 }
 
@@ -66,13 +68,16 @@ namespace Simula.Scripting.Json.Serialization
 #endif
 
 #if HAVE_DATA_CONTRACTS
-        public static DataContractAttribute? GetDataContractAttribute(Type type)
+        public static DataContractAttribute GetDataContractAttribute(Type type)
         {
+            // DataContractAttribute does not have inheritance
             Type currentType = type;
 
-            while (currentType != null) {
-                DataContractAttribute? result = CachedAttributeGetter<DataContractAttribute>.GetAttribute(currentType);
-                if (result != null) {
+            while (currentType != null)
+            {
+                DataContractAttribute result = CachedAttributeGetter<DataContractAttribute>.GetAttribute(currentType);
+                if (result != null)
+                {
                     return result;
                 }
 
@@ -82,20 +87,30 @@ namespace Simula.Scripting.Json.Serialization
             return null;
         }
 
-        public static DataMemberAttribute? GetDataMemberAttribute(MemberInfo memberInfo)
+        public static DataMemberAttribute GetDataMemberAttribute(MemberInfo memberInfo)
         {
-            if (memberInfo.MemberType() == MemberTypes.Field) {
+            // DataMemberAttribute does not have inheritance
+
+            // can't override a field
+            if (memberInfo.MemberType() == MemberTypes.Field)
+            {
                 return CachedAttributeGetter<DataMemberAttribute>.GetAttribute(memberInfo);
             }
+
+            // search property and then search base properties if nothing is returned and the property is virtual
             PropertyInfo propertyInfo = (PropertyInfo)memberInfo;
-            DataMemberAttribute? result = CachedAttributeGetter<DataMemberAttribute>.GetAttribute(propertyInfo);
-            if (result == null) {
-                if (propertyInfo.IsVirtual()) {
+            DataMemberAttribute result = CachedAttributeGetter<DataMemberAttribute>.GetAttribute(propertyInfo);
+            if (result == null)
+            {
+                if (propertyInfo.IsVirtual())
+                {
                     Type currentType = propertyInfo.DeclaringType;
 
-                    while (result == null && currentType != null) {
+                    while (result == null && currentType != null)
+                    {
                         PropertyInfo baseProperty = (PropertyInfo)ReflectionUtils.GetMemberInfoFromType(currentType, propertyInfo);
-                        if (baseProperty != null && baseProperty.IsVirtual()) {
+                        if (baseProperty != null && baseProperty.IsVirtual())
+                        {
                             result = CachedAttributeGetter<DataMemberAttribute>.GetAttribute(baseProperty);
                         }
 
@@ -110,14 +125,16 @@ namespace Simula.Scripting.Json.Serialization
 
         public static MemberSerialization GetObjectMemberSerialization(Type objectType, bool ignoreSerializableAttribute)
         {
-            JsonObjectAttribute? objectAttribute = GetCachedAttribute<JsonObjectAttribute>(objectType);
-            if (objectAttribute != null) {
+            JsonObjectAttribute objectAttribute = GetCachedAttribute<JsonObjectAttribute>(objectType);
+            if (objectAttribute != null)
+            {
                 return objectAttribute.MemberSerialization;
             }
 
 #if HAVE_DATA_CONTRACTS
-            DataContractAttribute? dataContractAttribute = GetDataContractAttribute(objectType);
-            if (dataContractAttribute != null) {
+            DataContractAttribute dataContractAttribute = GetDataContractAttribute(objectType);
+            if (dataContractAttribute != null)
+            {
                 return MemberSerialization.OptIn;
             }
 #endif
@@ -128,38 +145,51 @@ namespace Simula.Scripting.Json.Serialization
                 return MemberSerialization.Fields;
             }
 #endif
+
+            // the default
             return MemberSerialization.OptOut;
         }
 
-        public static JsonConverter? GetJsonConverter(object attributeProvider)
+        public static JsonConverter GetJsonConverter(object attributeProvider)
         {
-            JsonConverterAttribute? converterAttribute = GetCachedAttribute<JsonConverterAttribute>(attributeProvider);
+            JsonConverterAttribute converterAttribute = GetCachedAttribute<JsonConverterAttribute>(attributeProvider);
 
-            if (converterAttribute != null) {
-                Func<object[]?, object> creator = CreatorCache.Get(converterAttribute.ConverterType);
-                if (creator != null) {
+            if (converterAttribute != null)
+            {
+                Func<object[], object> creator = CreatorCache.Get(converterAttribute.ConverterType);
+                if (creator != null)
+                {
                     return (JsonConverter)creator(converterAttribute.ConverterParameters);
                 }
             }
 
             return null;
         }
-        public static JsonConverter CreateJsonConverterInstance(Type converterType, object[]? args)
+
+        /// <summary>
+        /// Lookup and create an instance of the <see cref="JsonConverter"/> type described by the argument.
+        /// </summary>
+        /// <param name="converterType">The <see cref="JsonConverter"/> type to create.</param>
+        /// <param name="converterArgs">Optional arguments to pass to an initializing constructor of the JsonConverter.
+        /// If <c>null</c>, the default constructor is used.</param>
+        public static JsonConverter CreateJsonConverterInstance(Type converterType, object[] converterArgs)
         {
-            Func<object[]?, object> converterCreator = CreatorCache.Get(converterType);
-            return (JsonConverter)converterCreator(args);
+            Func<object[], object> converterCreator = CreatorCache.Get(converterType);
+            return (JsonConverter)converterCreator(converterArgs);
         }
 
-        public static NamingStrategy CreateNamingStrategyInstance(Type namingStrategyType, object[]? args)
+        public static NamingStrategy CreateNamingStrategyInstance(Type namingStrategyType, object[] converterArgs)
         {
-            Func<object[]?, object> converterCreator = CreatorCache.Get(namingStrategyType);
-            return (NamingStrategy)converterCreator(args);
+            Func<object[], object> converterCreator = CreatorCache.Get(namingStrategyType);
+            return (NamingStrategy)converterCreator(converterArgs);
         }
 
-        public static NamingStrategy? GetContainerNamingStrategy(JsonContainerAttribute containerAttribute)
+        public static NamingStrategy GetContainerNamingStrategy(JsonContainerAttribute containerAttribute)
         {
-            if (containerAttribute.NamingStrategyInstance == null) {
-                if (containerAttribute.NamingStrategyType == null) {
+            if (containerAttribute.NamingStrategyInstance == null)
+            {
+                if (containerAttribute.NamingStrategyType == null)
+                {
                     return null;
                 }
 
@@ -169,63 +199,72 @@ namespace Simula.Scripting.Json.Serialization
             return containerAttribute.NamingStrategyInstance;
         }
 
-        private static Func<object[]?, object> GetCreator(Type type)
+        private static Func<object[], object> GetCreator(Type type)
         {
-            Func<object>? defaultConstructor = (ReflectionUtils.HasDefaultConstructor(type, false))
+            Func<object> defaultConstructor = (ReflectionUtils.HasDefaultConstructor(type, false))
                 ? ReflectionDelegateFactory.CreateDefaultConstructor<object>(type)
                 : null;
 
-            return (parameters) => {
-                try {
-                    if (parameters != null) {
-                        Type[] paramTypes = parameters.Select(param => {
-                            if (param == null) {
-                                throw new InvalidOperationException("Cannot pass a null parameter to the constructor.");
-                            }
-
-                            return param.GetType();
-                        }).ToArray();
+            return (parameters) =>
+            {
+                try
+                {
+                    if (parameters != null)
+                    {
+                        Type[] paramTypes = parameters.Select(param => param.GetType()).ToArray();
                         ConstructorInfo parameterizedConstructorInfo = type.GetConstructor(paramTypes);
 
-                        if (parameterizedConstructorInfo != null) {
+                        if (null != parameterizedConstructorInfo)
+                        {
                             ObjectConstructor<object> parameterizedConstructor = ReflectionDelegateFactory.CreateParameterizedConstructor(parameterizedConstructorInfo);
                             return parameterizedConstructor(parameters);
-                        } else {
+                        }
+                        else
+                        {
                             throw new JsonException("No matching parameterized constructor found for '{0}'.".FormatWith(CultureInfo.InvariantCulture, type));
                         }
                     }
 
-                    if (defaultConstructor == null) {
+                    if (defaultConstructor == null)
+                    {
                         throw new JsonException("No parameterless constructor defined for '{0}'.".FormatWith(CultureInfo.InvariantCulture, type));
                     }
 
                     return defaultConstructor();
-                } catch (Exception ex) {
+                }
+                catch (Exception ex)
+                {
                     throw new JsonException("Error creating '{0}'.".FormatWith(CultureInfo.InvariantCulture, type), ex);
                 }
             };
         }
 
 #if !(NET20 || DOTNET)
-        private static Type? GetAssociatedMetadataType(Type type)
+        private static Type GetAssociatedMetadataType(Type type)
         {
             return AssociatedMetadataTypesCache.Get(type);
         }
 
-        private static Type? GetAssociateMetadataTypeFromAttribute(Type type)
+        private static Type GetAssociateMetadataTypeFromAttribute(Type type)
         {
             Attribute[] customAttributes = ReflectionUtils.GetAttributes(type, null, true);
 
-            foreach (Attribute attribute in customAttributes) {
+            foreach (Attribute attribute in customAttributes)
+            {
                 Type attributeType = attribute.GetType();
-                if (string.Equals(attributeType.FullName, "System.ComponentModel.DataAnnotations.MetadataTypeAttribute", StringComparison.Ordinal)) {
+
+                // only test on attribute type name
+                // attribute assembly could change because of type forwarding, etc
+                if (string.Equals(attributeType.FullName, "System.ComponentModel.DataAnnotations.MetadataTypeAttribute", StringComparison.Ordinal))
+                {
                     const string metadataClassTypeName = "MetadataClassType";
 
-                    if (_metadataTypeAttributeReflectionObject == null) {
+                    if (_metadataTypeAttributeReflectionObject == null)
+                    {
                         _metadataTypeAttributeReflectionObject = ReflectionObject.Create(attributeType, metadataClassTypeName);
                     }
 
-                    return (Type?)_metadataTypeAttributeReflectionObject.GetValue(attribute, metadataClassTypeName);
+                    return (Type)_metadataTypeAttributeReflectionObject.GetValue(attribute, metadataClassTypeName);
                 }
             }
 
@@ -233,28 +272,33 @@ namespace Simula.Scripting.Json.Serialization
         }
 #endif
 
-        private static T? GetAttribute<T>(Type type) where T : Attribute
+        private static T GetAttribute<T>(Type type) where T : Attribute
         {
-            T? attribute;
+            T attribute;
 
 #if !(NET20 || DOTNET)
-            Type? metadataType = GetAssociatedMetadataType(type);
-            if (metadataType != null) {
+            Type metadataType = GetAssociatedMetadataType(type);
+            if (metadataType != null)
+            {
                 attribute = ReflectionUtils.GetAttribute<T>(metadataType, true);
-                if (attribute != null) {
+                if (attribute != null)
+                {
                     return attribute;
                 }
             }
 #endif
 
             attribute = ReflectionUtils.GetAttribute<T>(type, true);
-            if (attribute != null) {
+            if (attribute != null)
+            {
                 return attribute;
             }
 
-            foreach (Type typeInterface in type.GetInterfaces()) {
+            foreach (Type typeInterface in type.GetInterfaces())
+            {
                 attribute = ReflectionUtils.GetAttribute<T>(typeInterface, true);
-                if (attribute != null) {
+                if (attribute != null)
+                {
                     return attribute;
                 }
             }
@@ -262,18 +306,21 @@ namespace Simula.Scripting.Json.Serialization
             return null;
         }
 
-        private static T? GetAttribute<T>(MemberInfo memberInfo) where T : Attribute
+        private static T GetAttribute<T>(MemberInfo memberInfo) where T : Attribute
         {
-            T? attribute;
+            T attribute;
 
 #if !(NET20 || DOTNET)
-            Type? metadataType = GetAssociatedMetadataType(memberInfo.DeclaringType);
-            if (metadataType != null) {
+            Type metadataType = GetAssociatedMetadataType(memberInfo.DeclaringType);
+            if (metadataType != null)
+            {
                 MemberInfo metadataTypeMemberInfo = ReflectionUtils.GetMemberInfoFromType(metadataType, memberInfo);
 
-                if (metadataTypeMemberInfo != null) {
+                if (metadataTypeMemberInfo != null)
+                {
                     attribute = ReflectionUtils.GetAttribute<T>(metadataTypeMemberInfo, true);
-                    if (attribute != null) {
+                    if (attribute != null)
+                    {
                         return attribute;
                     }
                 }
@@ -281,17 +328,22 @@ namespace Simula.Scripting.Json.Serialization
 #endif
 
             attribute = ReflectionUtils.GetAttribute<T>(memberInfo, true);
-            if (attribute != null) {
+            if (attribute != null)
+            {
                 return attribute;
             }
 
-            if (memberInfo.DeclaringType != null) {
-                foreach (Type typeInterface in memberInfo.DeclaringType.GetInterfaces()) {
+            if (memberInfo.DeclaringType != null)
+            {
+                foreach (Type typeInterface in memberInfo.DeclaringType.GetInterfaces())
+                {
                     MemberInfo interfaceTypeMemberInfo = ReflectionUtils.GetMemberInfoFromType(typeInterface, memberInfo);
 
-                    if (interfaceTypeMemberInfo != null) {
+                    if (interfaceTypeMemberInfo != null)
+                    {
                         attribute = ReflectionUtils.GetAttribute<T>(interfaceTypeMemberInfo, true);
-                        if (attribute != null) {
+                        if (attribute != null)
+                        {
                             return attribute;
                         }
                     }
@@ -305,9 +357,10 @@ namespace Simula.Scripting.Json.Serialization
         public static bool IsNonSerializable(object provider)
         {
 #if HAVE_FULL_REFLECTION
-            return (ReflectionUtils.GetAttribute<NonSerializedAttribute>(provider, false) != null);
+            return (GetCachedAttribute<NonSerializedAttribute>(provider) != null);
 #else
-            if (provider is FieldInfo fieldInfo && (fieldInfo.Attributes & FieldAttributes.NotSerialized) == FieldAttributes.NotSerialized)
+            FieldInfo fieldInfo = provider as FieldInfo;
+            if (fieldInfo != null && (fieldInfo.Attributes & FieldAttributes.NotSerialized) == FieldAttributes.NotSerialized)
             {
                 return true;
             }
@@ -321,9 +374,10 @@ namespace Simula.Scripting.Json.Serialization
         public static bool IsSerializable(object provider)
         {
 #if HAVE_FULL_REFLECTION
-            return (ReflectionUtils.GetAttribute<SerializableAttribute>(provider, false) != null);
+            return (GetCachedAttribute<SerializableAttribute>(provider) != null);
 #else
-            if (provider is Type type && (type.GetTypeInfo().Attributes & TypeAttributes.Serializable) == TypeAttributes.Serializable)
+            Type type = provider as Type;
+            if (type != null && (type.GetTypeInfo().Attributes & TypeAttributes.Serializable) == TypeAttributes.Serializable)
             {
                 return true;
             }
@@ -333,13 +387,17 @@ namespace Simula.Scripting.Json.Serialization
         }
 #endif
 
-        public static T? GetAttribute<T>(object provider) where T : Attribute
+        public static T GetAttribute<T>(object provider) where T : Attribute
         {
-            if (provider is Type type) {
+            Type type = provider as Type;
+            if (type != null)
+            {
                 return GetAttribute<T>(type);
             }
 
-            if (provider is MemberInfo memberInfo) {
+            MemberInfo memberInfo = provider as MemberInfo;
+            if (memberInfo != null)
+            {
                 return GetAttribute<T>(memberInfo);
             }
 
@@ -358,12 +416,15 @@ namespace Simula.Scripting.Json.Serialization
         }
 #endif
 
-        public static bool DynamicCodeGeneration {
+        public static bool DynamicCodeGeneration
+        {
 #if HAVE_SECURITY_SAFE_CRITICAL_ATTRIBUTE
             [SecuritySafeCritical]
 #endif
-            get {
-                if (_dynamicCodeGeneration == null) {
+                get
+            {
+                if (_dynamicCodeGeneration == null)
+                {
 #if HAVE_CAS
                     try
                     {
@@ -387,12 +448,15 @@ namespace Simula.Scripting.Json.Serialization
             }
         }
 
-        public static bool FullyTrusted {
-            get {
-                if (_fullyTrusted == null) {
-#if (DOTNET || PORTABLE || PORTABLE40)
+        public static bool FullyTrusted
+        {
+            get
+            {
+                if (_fullyTrusted == null)
+                {
+#if (DOTNET || PORTABLE)
                     _fullyTrusted = true;
-#elif !(NET20 || NET35 || PORTABLE40)
+#elif !(NET20 || NET35)
                     AppDomain appDomain = AppDomain.CurrentDomain;
 
                     _fullyTrusted = appDomain.IsHomogenous && appDomain.IsFullyTrusted;
@@ -413,9 +477,11 @@ namespace Simula.Scripting.Json.Serialization
             }
         }
 
-        public static ReflectionDelegateFactory ReflectionDelegateFactory {
-            get {
-#if !(PORTABLE40 || PORTABLE || DOTNET || NETSTANDARD2_0)
+        public static ReflectionDelegateFactory ReflectionDelegateFactory
+        {
+            get
+            {
+#if !(PORTABLE || DOTNET)
                 if (DynamicCodeGeneration)
                 {
                     return DynamicReflectionDelegateFactory.Instance;

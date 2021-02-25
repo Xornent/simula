@@ -1,5 +1,5 @@
-using Simula.TeX.Boxes;
 using System;
+using Simula.TeX.Boxes;
 
 namespace Simula.TeX.Atoms
 {
@@ -7,7 +7,7 @@ namespace Simula.TeX.Atoms
     internal class SpaceAtom : Atom
     {
         // Collection of unit conversion functions.
-        private static readonly UnitConversion[] unitConversions = new UnitConversion[]
+        private static UnitConversion[] unitConversions = new UnitConversion[]
                 {
                     new UnitConversion(e => e.MathFont.GetXHeight(e.Style, e.LastFontId)),
 
@@ -46,7 +46,7 @@ namespace Simula.TeX.Atoms
         private readonly TexUnit depthUnit;
 
         public SpaceAtom(
-            SourceSpan? source,
+            SourceSpan source,
             TexUnit widthUnit,
             double width,
             TexUnit heightUnit,
@@ -59,7 +59,7 @@ namespace Simula.TeX.Atoms
             CheckUnit(heightUnit);
             CheckUnit(depthUnit);
 
-            isHardSpace = false;
+            this.isHardSpace = false;
             this.widthUnit = widthUnit;
             this.heightUnit = heightUnit;
             this.depthUnit = depthUnit;
@@ -68,33 +68,33 @@ namespace Simula.TeX.Atoms
             this.depth = depth;
         }
 
-        public SpaceAtom(SourceSpan? source, TexUnit unit, double width, double height, double depth)
+        public SpaceAtom(SourceSpan source, TexUnit unit, double width, double height, double depth)
             : base(source)
         {
             CheckUnit(unit);
 
-            isHardSpace = false;
-            widthUnit = unit;
-            heightUnit = unit;
-            depthUnit = unit;
+            this.isHardSpace = false;
+            this.widthUnit = unit;
+            this.heightUnit = unit;
+            this.depthUnit = unit;
             this.width = width;
             this.height = height;
             this.depth = depth;
         }
 
-        public SpaceAtom(SourceSpan? source)
+        public SpaceAtom(SourceSpan source)
             : base(source)
         {
-            isHardSpace = true;
+            this.isHardSpace = true;
         }
 
         protected override Box CreateBoxCore(TexEnvironment environment)
         {
-            if (isHardSpace)
+            if (this.isHardSpace)
                 return new StrutBox(environment.MathFont.GetSpace(environment.Style), 0, 0, 0);
             else
-                return new StrutBox(width * GetConversionFactor(widthUnit, environment), height * GetConversionFactor(
-                    heightUnit, environment), depth * GetConversionFactor(depthUnit, environment), 0);
+                return new StrutBox(this.width * this.GetConversionFactor(this.widthUnit, environment), this.height * this.GetConversionFactor(
+                    this.heightUnit, environment), this.depth * this.GetConversionFactor(this.depthUnit, environment), 0);
         }
 
         private double GetConversionFactor(TexUnit unit, TexEnvironment environment)

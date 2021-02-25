@@ -1,79 +1,87 @@
-using Simula.TeX.Rendering;
+﻿using Simula.TeX.Rendering;
 using Simula.TeX.Rendering.Transformations;
 
 namespace Simula.TeX.Boxes
 {
-    // Box representing other box with delimiter and script box over or under it.
+    // Box representing other box with delimeter and script box over or under it.
     internal class OverUnderBox : Box
     {
-        public OverUnderBox(Box baseBox, Box delimiterBox, Box? scriptBox, double kern, bool over)
+        public OverUnderBox(Box baseBox, Box delimeterBox, Box scriptBox, double kern, bool over)
             : base()
         {
-            BaseBox = baseBox;
-            DelimiterBox = delimiterBox;
-            ScriptBox = scriptBox;
-            Kern = kern;
-            Over = over;
+            this.BaseBox = baseBox;
+            this.DelimeterBox = delimeterBox;
+            this.ScriptBox = scriptBox;
+            this.Kern = kern;
+            this.Over = over;
 
             // Calculate dimensions of box.
-            Width = baseBox.Width;
-            Height = baseBox.Height + (over ? delimiterBox.Width : 0.0) +
-                (over && scriptBox != null ? scriptBox.Height + scriptBox.Depth + kern : 0.0);
-            Depth = baseBox.Depth + (over ? 0.0 : delimiterBox.Width) +
-                (!over && scriptBox != null ? scriptBox.Height + scriptBox.Depth + kern : 0.0);
+            this.Width = baseBox.Width;
+            this.Height = baseBox.Height + (over ? delimeterBox.Width : 0) +
+                (over && scriptBox != null ? scriptBox.Height + scriptBox.Depth + kern : 0);
+            this.Depth = baseBox.Depth + (over ? 0 : delimeterBox.Width) +
+                (!over && scriptBox == null ? 0 : scriptBox.Height + scriptBox.Depth + kern);
         }
 
-        public Box BaseBox {
+        public Box BaseBox
+        {
             get;
             private set;
         }
 
-        public Box DelimiterBox {
+        public Box DelimeterBox
+        {
             get;
             private set;
         }
 
-        public Box? ScriptBox {
+        public Box ScriptBox
+        {
             get;
             private set;
         }
 
         // Kern between delimeter and Script.
-        public double Kern {
+        public double Kern
+        {
             get;
             private set;
         }
 
         // True to draw delimeter and script over base; false to draw under base.
-        public bool Over {
+        public bool Over
+        {
             get;
             private set;
         }
 
         public override void RenderTo(IElementRenderer renderer, double x, double y)
         {
-            renderer.RenderElement(BaseBox, x, y);
+            renderer.RenderElement(this.BaseBox, x, y);
 
-            if (Over) {
+            if (this.Over)
+            {
                 // Draw delimeter and script boxes over base box.
-                var centerY = y - BaseBox.Height - DelimiterBox.Width;
-                var translationX = x + DelimiterBox.Width / 2;
-                var translationY = centerY + DelimiterBox.Width / 2;
+                var centerY = y - this.BaseBox.Height - this.DelimeterBox.Width;
+                var translationX = x + this.DelimeterBox.Width / 2;
+                var translationY = centerY + this.DelimeterBox.Width / 2;
 
                 RenderDelimiter(translationX, translationY);
 
                 // Draw script box as superscript.
-                RenderScriptBox(centerY - Kern - ScriptBox!.Depth); // Nullable TODO: This probably needs null checking
-            } else {
+                RenderScriptBox(centerY - this.Kern - this.ScriptBox.Depth);
+            }
+            else
+            {
                 // Draw delimeter and script boxes under base box.
-                var centerY = y + BaseBox.Depth + DelimiterBox.Width;
-                var translationX = x + DelimiterBox.Width / 2;
-                var translationY = centerY - DelimiterBox.Width / 2;
+                var centerY = y + this.BaseBox.Depth + this.DelimeterBox.Width;
+                var translationX = x + this.DelimeterBox.Width / 2;
+                var translationY = centerY - this.DelimeterBox.Width / 2;
 
                 RenderDelimiter(translationX, translationY);
 
                 // Draw script box as subscript.
-                RenderScriptBox(centerY + Kern + ScriptBox!.Height); // Nullable TODO: This probably needs null checking
+                RenderScriptBox(centerY + this.Kern + this.ScriptBox.Height);
             }
 
             void RenderDelimiter(double translationX, double translationY)
@@ -85,16 +93,17 @@ namespace Simula.TeX.Boxes
                 };
 
                 renderer.RenderTransformed(
-                    DelimiterBox,
+                    this.DelimeterBox,
                     transformations,
-                    -DelimiterBox.Width / 2,
-                    -DelimiterBox.Depth + DelimiterBox.Width / 2);
+                    -this.DelimeterBox.Width / 2,
+                    -this.DelimeterBox.Depth + this.DelimeterBox.Width / 2);
             }
 
             void RenderScriptBox(double yPosition)
             {
-                if (ScriptBox != null) {
-                    renderer.RenderElement(ScriptBox, x, yPosition);
+                if (this.ScriptBox != null)
+                {
+                    renderer.RenderElement(this.ScriptBox, x, yPosition);
                 }
             }
         }

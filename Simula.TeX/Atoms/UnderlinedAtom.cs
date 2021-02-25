@@ -5,20 +5,20 @@ namespace Simula.TeX.Atoms
     // Atom representing other atom that is underlined.
     internal class UnderlinedAtom : Atom
     {
-        public UnderlinedAtom(SourceSpan? source, Atom? baseAtom)
+        public UnderlinedAtom(SourceSpan source, Atom baseAtom)
             : base(source)
         {
-            BaseAtom = baseAtom;
+            this.BaseAtom = baseAtom;
         }
 
-        public Atom? BaseAtom { get; }
+        public Atom BaseAtom { get; }
 
         protected override Box CreateBoxCore(TexEnvironment environment)
         {
             var defaultLineThickness = environment.MathFont.GetDefaultLineThickness(environment.Style);
 
             // Create box for base atom.
-            var baseBox = BaseAtom == null ? StrutBox.Empty : BaseAtom.CreateBox(environment);
+            var baseBox = this.BaseAtom == null ? StrutBox.Empty : this.BaseAtom.CreateBox(environment);
 
             // Create result box.
             var resultBox = new VerticalBox();

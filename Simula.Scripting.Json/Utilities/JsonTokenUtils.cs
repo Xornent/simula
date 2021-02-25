@@ -1,11 +1,14 @@
-﻿
+﻿using System;
+using System.Text;
+
 namespace Simula.Scripting.Json.Utilities
 {
     internal static class JsonTokenUtils
     {
         internal static bool IsEndToken(JsonToken token)
         {
-            switch (token) {
+            switch (token)
+            {
                 case JsonToken.EndObject:
                 case JsonToken.EndArray:
                 case JsonToken.EndConstructor:
@@ -17,7 +20,8 @@ namespace Simula.Scripting.Json.Utilities
 
         internal static bool IsStartToken(JsonToken token)
         {
-            switch (token) {
+            switch (token)
+            {
                 case JsonToken.StartObject:
                 case JsonToken.StartArray:
                 case JsonToken.StartConstructor:
@@ -29,7 +33,8 @@ namespace Simula.Scripting.Json.Utilities
 
         internal static bool IsPrimitiveToken(JsonToken token)
         {
-            switch (token) {
+            switch (token)
+            {
                 case JsonToken.Integer:
                 case JsonToken.Float:
                 case JsonToken.String:

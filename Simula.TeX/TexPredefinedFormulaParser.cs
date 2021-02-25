@@ -14,10 +14,10 @@ namespace Simula.TeX
     {
         public static readonly string resourceName = TexUtilities.ResourcesDataDirectory + "PredefinedTexFormulas.xml";
 
-        private static readonly IDictionary<string, Type> typeMappings;
-        private static readonly IDictionary<string, ArgumentValueParser> argValueParsers;
-        private static readonly IDictionary<string, ActionParser> actionParsers;
-        private static readonly TexFormulaParser formulaParser;
+        private static IDictionary<string, Type> typeMappings;
+        private static IDictionary<string, ArgumentValueParser> argValueParsers;
+        private static IDictionary<string, ActionParser> actionParsers;
+        private static TexFormulaParser formulaParser;
 
         static TexPredefinedFormulaParser()
         {
@@ -25,7 +25,6 @@ namespace Simula.TeX
             argValueParsers = new Dictionary<string, ArgumentValueParser>();
             actionParsers = new Dictionary<string, ActionParser>();
             formulaParser = new TexFormulaParser();
-            var sharedCacheFormulas = new Dictionary<string, TexFormula>();
 
             typeMappings.Add("Formula", typeof(TexFormula));
             typeMappings.Add("string", typeof(string));
@@ -37,25 +36,26 @@ namespace Simula.TeX
             typeMappings.Add("Unit", typeof(TexUnit));
             typeMappings.Add("AtomType", typeof(TexAtomType));
 
-            actionParsers.Add("CreateFormula", new CreateTeXFormulaParser(sharedCacheFormulas));
-            actionParsers.Add("MethodInvocation", new MethodInvocationParser(sharedCacheFormulas));
-            actionParsers.Add("Return", new ReturnParser(sharedCacheFormulas));
+            actionParsers.Add("CreateFormula", new CreateTeXFormulaParser());
+            actionParsers.Add("MethodInvocation", new MethodInvocationParser());
+            actionParsers.Add("Return", new ReturnParser());
 
-            argValueParsers.Add("Formula", new TeXFormulaValueParser(sharedCacheFormulas));
-            argValueParsers.Add("string", new StringValueParser(sharedCacheFormulas));
-            argValueParsers.Add("double", new DoubleValueParser(sharedCacheFormulas));
-            argValueParsers.Add("int", new IntValueParser(sharedCacheFormulas));
-            argValueParsers.Add("bool", new BooleanValueParser(sharedCacheFormulas));
-            argValueParsers.Add("char", new CharValueParser(sharedCacheFormulas));
-            argValueParsers.Add("Color", new ColorConstantValueParser(sharedCacheFormulas));
-            argValueParsers.Add("Unit", new EnumParser(typeof(TexUnit), sharedCacheFormulas));
-            argValueParsers.Add("AtomType", new EnumParser(typeof(TexAtomType), sharedCacheFormulas));
+            argValueParsers.Add("Formula", new TeXFormulaValueParser());
+            argValueParsers.Add("string", new StringValueParser());
+            argValueParsers.Add("double", new DoubleValueParser());
+            argValueParsers.Add("int", new IntValueParser());
+            argValueParsers.Add("bool", new BooleanValueParser());
+            argValueParsers.Add("char", new CharValueParser());
+            argValueParsers.Add("Color", new ColorConstantValueParser());
+            argValueParsers.Add("Unit", new EnumParser(typeof(TexUnit)));
+            argValueParsers.Add("AtomType", new EnumParser(typeof(TexAtomType)));
         }
 
         private static Type[] GetArgumentTypes(IEnumerable<XElement> args)
         {
             var result = new List<Type>();
-            foreach (var curArg in args) {
+            foreach (var curArg in args)
+            {
                 var typeName = curArg.AttributeValue("type");
                 var type = typeMappings[typeName];
                 Debug.Assert(type != null);
@@ -65,49 +65,57 @@ namespace Simula.TeX
             return result.ToArray();
         }
 
-        private static object?[] GetArgumentValues(IEnumerable<XElement> args)
+        private static object[] GetArgumentValues(IDictionary<string, TexFormula> tempFormulas, IEnumerable<XElement> args)
         {
-            var result = new List<object?>();
-            foreach (var curArg in args) {
+            var result = new List<object>();
+            foreach (var curArg in args)
+            {
                 var typeName = curArg.AttributeValue("type");
                 var value = curArg.AttributeValue("value");
 
-                var parser = argValueParsers[typeName];
+                var parser = ((ArgumentValueParser)argValueParsers[typeName]);
+                parser.TempFormulas = tempFormulas;
                 result.Add(parser.Parse(value, typeName));
             }
 
             return result.ToArray();
         }
 
-        private readonly XElement rootElement;
+        private XElement rootElement;
 
         public TexPredefinedFormulaParser()
         {
-            var doc = XDocument.Load(new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName)!));
-            rootElement = doc.Root;
+            var doc = XDocument.Load(new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName)));
+            this.rootElement = doc.Root;
         }
 
-        public void Parse(IDictionary<string, Func<SourceSpan, TexFormula?>> predefinedTeXFormulas)
+        public void Parse(IDictionary<string, Func<SourceSpan, TexFormula>> predefinedTeXFormulas)
         {
             var rootEnabled = rootElement.AttributeBooleanValue("enabled", true);
-            if (rootEnabled) {
-                foreach (var formulaElement in rootElement.Elements("Formula")) {
+            if (rootEnabled)
+            {
+                foreach (var formulaElement in rootElement.Elements("Formula"))
+                {
                     var enabled = formulaElement.AttributeBooleanValue("enabled", true);
-                    if (enabled) {
+                    if (enabled)
+                    {
                         var formulaName = formulaElement.AttributeValue("name");
-                        predefinedTeXFormulas.Add(formulaName, source => ParseFormula(source, formulaElement));
+                        predefinedTeXFormulas.Add(formulaName, source => this.ParseFormula(source, formulaElement));
                     }
                 }
             }
         }
 
-        public TexFormula? ParseFormula(SourceSpan source, XElement formulaElement)
+        public TexFormula ParseFormula(SourceSpan source, XElement formulaElement)
         {
-            foreach (var element in formulaElement.Elements()) {
+            var tempFormulas = new Dictionary<string, TexFormula>();
+            foreach (var element in formulaElement.Elements())
+            {
                 var parser = actionParsers[element.Name.ToString()];
                 if (parser == null)
                     continue;
 
+                parser.TempFormulas = tempFormulas;
                 parser.Parse(source, element);
                 if (parser is ReturnParser)
                     return ((ReturnParser)parser).Result;
@@ -117,8 +125,8 @@ namespace Simula.TeX
 
         public class MethodInvocationParser : ActionParser
         {
-            public MethodInvocationParser(IDictionary<string, TexFormula> sharedCacheFormulas)
-                : base(sharedCacheFormulas)
+            public MethodInvocationParser()
+                : base()
             {
             }
 
@@ -128,21 +136,21 @@ namespace Simula.TeX
                 var objectName = element.AttributeValue("formula");
                 var args = element.Elements("Argument");
 
-                var formula = SharedCacheFormulas[objectName];
+                var formula = this.TempFormulas[objectName];
                 Debug.Assert(formula != null);
 
                 var argTypes = GetArgumentTypes(args);
-                var argValues = GetArgumentValues(args);
+                var argValues = GetArgumentValues(this.TempFormulas, args);
 
                 var helper = new TexFormulaHelper(formula, source);
-                typeof(TexFormulaHelper).GetMethod(methodName, argTypes)!.Invoke(helper, argValues);
+                typeof(TexFormulaHelper).GetMethod(methodName, argTypes).Invoke(helper, argValues);
             }
         }
 
         public class CreateTeXFormulaParser : ActionParser
         {
-            public CreateTeXFormulaParser(IDictionary<string, TexFormula> sharedCacheFormulas)
-                : base(sharedCacheFormulas)
+            public CreateTeXFormulaParser()
+                : base()
             {
             }
 
@@ -152,29 +160,33 @@ namespace Simula.TeX
                 var args = element.Elements("Argument");
 
                 var argTypes = GetArgumentTypes(args);
-                var argValues = GetArgumentValues(args);
+                var argValues = GetArgumentValues(this.TempFormulas, args);
 
                 Debug.Assert(argValues.Length == 1 || argValues.Length == 0);
-                TexFormula formula;
-                if (argValues.Length == 1) {
+                TexFormula formula = null;
+                if (argValues.Length == 1)
+                {
                     var parser = new TexFormulaParser();
-                    formula = parser.Parse((string)argValues[0]!); // Nullable TODO: This might need null checking
-                } else {
-                    formula = new TexFormula { Source = source };
+                    formula = parser.Parse((string)argValues[0]);
+                }
+                else
+                {
+                    formula = new TexFormula();
                 }
 
-                SharedCacheFormulas.Add(name, formula);
+                this.TempFormulas.Add(name, formula);
             }
         }
 
         public class ReturnParser : ActionParser
         {
-            public ReturnParser(IDictionary<string, TexFormula> sharedCacheFormulas)
-                : base(sharedCacheFormulas)
+            public ReturnParser()
+                : base()
             {
             }
 
-            public TexFormula? Result {
+            public TexFormula Result
+            {
                 get;
                 private set;
             }
@@ -182,17 +194,16 @@ namespace Simula.TeX
             public override void Parse(SourceSpan source, XElement element)
             {
                 var name = element.AttributeValue("name");
-                var result = SharedCacheFormulas[name];
+                var result = this.TempFormulas[name];
                 Debug.Assert(result != null);
-                Result = result;
-                SharedCacheFormulas.Clear();
+                this.Result = result;
             }
         }
 
         public class DoubleValueParser : ArgumentValueParser
         {
-            public DoubleValueParser(IDictionary<string, TexFormula> sharedCacheFormulas)
-                : base(sharedCacheFormulas)
+            public DoubleValueParser()
+                : base()
             {
             }
 
@@ -204,8 +215,8 @@ namespace Simula.TeX
 
         public class CharValueParser : ArgumentValueParser
         {
-            public CharValueParser(IDictionary<string, TexFormula> sharedCacheFormulas)
-                : base(sharedCacheFormulas)
+            public CharValueParser()
+                : base()
             {
             }
 
@@ -218,8 +229,8 @@ namespace Simula.TeX
 
         public class BooleanValueParser : ArgumentValueParser
         {
-            public BooleanValueParser(IDictionary<string, TexFormula> sharedCacheFormulas)
-                : base(sharedCacheFormulas)
+            public BooleanValueParser()
+                : base()
             {
             }
 
@@ -231,8 +242,8 @@ namespace Simula.TeX
 
         public class IntValueParser : ArgumentValueParser
         {
-            public IntValueParser(IDictionary<string, TexFormula> sharedCacheFormulas)
-                : base(sharedCacheFormulas)
+            public IntValueParser()
+                : base()
             {
             }
 
@@ -244,8 +255,8 @@ namespace Simula.TeX
 
         public class StringValueParser : ArgumentValueParser
         {
-            public StringValueParser(IDictionary<string, TexFormula> sharedCacheFormulas)
-                : base(sharedCacheFormulas)
+            public StringValueParser()
+                : base()
             {
             }
 
@@ -257,75 +268,72 @@ namespace Simula.TeX
 
         public class TeXFormulaValueParser : ArgumentValueParser
         {
-            public TeXFormulaValueParser(IDictionary<string, TexFormula> sharedCacheFormulas)
-                : base(sharedCacheFormulas)
+            public TeXFormulaValueParser()
+                : base()
             {
             }
 
-            public override object? Parse(string value, string type)
+            public override object Parse(string value, string type)
             {
                 if (value == null)
                     return null;
 
-                var formula = SharedCacheFormulas[value];
+                var formula = this.TempFormulas[value];
                 Debug.Assert(formula != null);
-                return formula;
+                return (TexFormula)formula;
             }
         }
 
         public class ColorConstantValueParser : ArgumentValueParser
         {
-            public ColorConstantValueParser(IDictionary<string, TexFormula> sharedCacheFormulas)
-                : base(sharedCacheFormulas)
+            public ColorConstantValueParser()
+                : base()
             {
             }
 
-            public override object? Parse(string value, string type)
+            public override object Parse(string value, string type)
             {
-                return typeof(Color).GetField(value)!.GetValue(null);
+                return typeof(Color).GetField(value).GetValue(null);
             }
         }
 
         public class EnumParser : ArgumentValueParser
         {
-            private readonly Type enumType;
+            private Type enumType;
 
-            public EnumParser(Type enumType, IDictionary<string, TexFormula> sharedCacheFormulas)
-                : base(sharedCacheFormulas)
+            public EnumParser(Type enumType)
+                : base()
             {
                 this.enumType = enumType;
             }
 
             public override object Parse(string value, string type)
             {
-                return Enum.Parse(enumType, value);
+                return Enum.Parse(this.enumType, value);
             }
         }
 
         public abstract class ActionParser : ParserBase
         {
-            protected ActionParser(IDictionary<string, TexFormula> sharedCacheFormulas)
-                : base(sharedCacheFormulas) { }
-
             public abstract void Parse(SourceSpan source, XElement element);
         }
 
         public abstract class ArgumentValueParser : ParserBase
         {
-            protected ArgumentValueParser(IDictionary<string, TexFormula> sharedCacheFormulas)
-                : base(sharedCacheFormulas) { }
-
-            public abstract object? Parse(string value, string type);
+            public abstract object Parse(string value, string type);
         }
 
         public abstract class ParserBase
         {
-            public ParserBase(IDictionary<string, TexFormula> sharedCacheFormulas)
+            public ParserBase()
             {
-                SharedCacheFormulas = sharedCacheFormulas;
             }
 
-            public IDictionary<string, TexFormula> SharedCacheFormulas { get; }
+            public IDictionary<string, TexFormula> TempFormulas
+            {
+                get;
+                set;
+            }
         }
     }
 }

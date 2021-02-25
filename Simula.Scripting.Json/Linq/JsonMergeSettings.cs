@@ -1,45 +1,48 @@
-
 using System;
 
 namespace Simula.Scripting.Json.Linq
 {
+    /// <summary>
+    /// Specifies the settings used when merging JSON.
+    /// </summary>
     public class JsonMergeSettings
     {
         private MergeArrayHandling _mergeArrayHandling;
         private MergeNullValueHandling _mergeNullValueHandling;
-        private StringComparison _propertyNameComparison;
-        public JsonMergeSettings()
+
+        /// <summary>
+        /// Gets or sets the method used when merging JSON arrays.
+        /// </summary>
+        /// <value>The method used when merging JSON arrays.</value>
+        public MergeArrayHandling MergeArrayHandling
         {
-            _propertyNameComparison = StringComparison.Ordinal;
-        }
-        public MergeArrayHandling MergeArrayHandling {
-            get => _mergeArrayHandling;
-            set {
-                if (value < MergeArrayHandling.Concat || value > MergeArrayHandling.Merge) {
+            get { return _mergeArrayHandling; }
+            set
+            {
+                if (value < MergeArrayHandling.Concat || value > MergeArrayHandling.Merge)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
                 _mergeArrayHandling = value;
             }
         }
-        public MergeNullValueHandling MergeNullValueHandling {
-            get => _mergeNullValueHandling;
-            set {
-                if (value < MergeNullValueHandling.Ignore || value > MergeNullValueHandling.Merge) {
+
+        /// <summary>
+        /// Gets or sets how null value properties are merged.
+        /// </summary>
+        /// <value>How null value properties are merged.</value>
+        public MergeNullValueHandling MergeNullValueHandling
+        {
+            get { return _mergeNullValueHandling; }
+            set
+            {
+                if (value < MergeNullValueHandling.Ignore || value > MergeNullValueHandling.Merge)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
                 _mergeNullValueHandling = value;
-            }
-        }
-        public StringComparison PropertyNameComparison {
-            get => _propertyNameComparison;
-            set {
-                if (value < StringComparison.CurrentCulture || value > StringComparison.OrdinalIgnoreCase) {
-                    throw new ArgumentOutOfRangeException(nameof(value));
-                }
-
-                _propertyNameComparison = value;
             }
         }
     }

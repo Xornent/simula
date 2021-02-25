@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
 namespace Simula.TeX
 {
     // Specifies font metrics for single character.
@@ -5,28 +10,32 @@ namespace Simula.TeX
     {
         public TexFontMetrics(double width, double height, double depth, double italicWidth, double scale)
         {
-            Width = width * scale;
-            Height = height * scale;
-            Depth = depth * scale;
-            Italic = italicWidth * scale;
+            this.Width = width * scale;
+            this.Height = height * scale;
+            this.Depth = depth * scale;
+            this.Italic = italicWidth * scale;
         }
 
-        public double Width {
+        public double Width
+        {
             get;
             set;
         }
 
-        public double Height {
+        public double Height
+        {
             get;
             set;
         }
 
-        public double Depth {
+        public double Depth
+        {
             get;
             set;
         }
 
-        public double Italic {
+        public double Italic
+        {
             get;
             set;
         }

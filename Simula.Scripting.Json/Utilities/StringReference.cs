@@ -1,21 +1,32 @@
-﻿
-using System;
+﻿using System;
 
 namespace Simula.Scripting.Json.Utilities
 {
-    internal readonly struct StringReference
+    internal struct StringReference
     {
         private readonly char[] _chars;
         private readonly int _startIndex;
         private readonly int _length;
 
-        public char this[int i] => _chars[i];
+        public char this[int i]
+        {
+            get { return _chars[i]; }
+        }
 
-        public char[] Chars => _chars;
+        public char[] Chars
+        {
+            get { return _chars; }
+        }
 
-        public int StartIndex => _startIndex;
+        public int StartIndex
+        {
+            get { return _startIndex; }
+        }
 
-        public int Length => _length;
+        public int Length
+        {
+            get { return _length; }
+        }
 
         public StringReference(char[] chars, int startIndex, int length)
         {
@@ -35,7 +46,8 @@ namespace Simula.Scripting.Json.Utilities
         public static int IndexOf(this StringReference s, char c, int startIndex, int length)
         {
             int index = Array.IndexOf(s.Chars, c, s.StartIndex + startIndex, length);
-            if (index == -1) {
+            if (index == -1)
+            {
                 return -1;
             }
 
@@ -44,14 +56,17 @@ namespace Simula.Scripting.Json.Utilities
 
         public static bool StartsWith(this StringReference s, string text)
         {
-            if (text.Length > s.Length) {
+            if (text.Length > s.Length)
+            {
                 return false;
             }
 
             char[] chars = s.Chars;
 
-            for (int i = 0; i < text.Length; i++) {
-                if (text[i] != chars[i + s.StartIndex]) {
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] != chars[i + s.StartIndex])
+                {
                     return false;
                 }
             }
@@ -61,15 +76,18 @@ namespace Simula.Scripting.Json.Utilities
 
         public static bool EndsWith(this StringReference s, string text)
         {
-            if (text.Length > s.Length) {
+            if (text.Length > s.Length)
+            {
                 return false;
             }
 
             char[] chars = s.Chars;
 
             int start = s.StartIndex + s.Length - text.Length;
-            for (int i = 0; i < text.Length; i++) {
-                if (text[i] != chars[i + start]) {
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] != chars[i + start])
+                {
                     return false;
                 }
             }

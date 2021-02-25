@@ -5,31 +5,31 @@ namespace Simula.TeX.Atoms
     // Atom representing other atom with custom left and right types.
     internal class TypedAtom : Atom
     {
-        public TypedAtom(SourceSpan? source, Atom? atom, TexAtomType leftType, TexAtomType rightType)
+        public TypedAtom(SourceSpan source, Atom atom, TexAtomType leftType, TexAtomType rightType)
             : base(source)
         {
-            Atom = atom;
-            LeftType = leftType;
-            RightType = rightType;
+            this.Atom = atom;
+            this.LeftType = leftType;
+            this.RightType = rightType;
         }
 
-        public Atom? Atom { get; }
+        public Atom Atom { get; }
 
         public TexAtomType LeftType { get; }
 
         public TexAtomType RightType { get; }
 
         protected override Box CreateBoxCore(TexEnvironment environment) =>
-            Atom!.CreateBox(environment); // Nullable TODO: This probably needs null checking
+            this.Atom.CreateBox(environment);
 
         public override TexAtomType GetLeftType()
         {
-            return LeftType;
+            return this.LeftType;
         }
 
         public override TexAtomType GetRightType()
         {
-            return RightType;
+            return this.RightType;
         }
     }
 }

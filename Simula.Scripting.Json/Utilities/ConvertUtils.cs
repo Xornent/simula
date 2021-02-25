@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -6,13 +5,10 @@ using System.ComponentModel;
 #if HAVE_BIG_INTEGER
 using System.Numerics;
 #endif
-#if !HAVE_GUID_TRY_PARSE
 using System.Text;
 using System.Text.RegularExpressions;
-#endif
 using Simula.Scripting.Json.Serialization;
 using System.Reflection;
-using System.Diagnostics.CodeAnalysis;
 #if !HAVE_LINQ
 using Simula.Scripting.Json.Utilities.LinqBridge;
 #endif
@@ -71,14 +67,8 @@ namespace Simula.Scripting.Json.Utilities
 
     internal class TypeInformation
     {
-        public Type Type { get; }
-        public PrimitiveTypeCode TypeCode { get; }
-
-        public TypeInformation(Type type, PrimitiveTypeCode typeCode)
-        {
-            Type = type;
-            TypeCode = typeCode;
-        }
+        public Type Type { get; set; }
+        public PrimitiveTypeCode TypeCode { get; set; }
     }
 
     internal enum ParseResult
@@ -145,47 +135,56 @@ namespace Simula.Scripting.Json.Utilities
 #if HAVE_ICONVERTIBLE
         private static readonly TypeInformation[] PrimitiveTypeCodes =
         {
-            new TypeInformation(typeof(object), PrimitiveTypeCode.Empty), 
-            new TypeInformation(typeof(object), PrimitiveTypeCode.Object), 
-            new TypeInformation(typeof(object), PrimitiveTypeCode.DBNull), 
-            new TypeInformation(typeof(bool), PrimitiveTypeCode.Boolean), 
-            new TypeInformation(typeof(char), PrimitiveTypeCode.Char), 
-            new TypeInformation(typeof(sbyte), PrimitiveTypeCode.SByte), 
-            new TypeInformation(typeof(byte), PrimitiveTypeCode.Byte), 
-            new TypeInformation(typeof(short), PrimitiveTypeCode.Int16), 
-            new TypeInformation(typeof(ushort), PrimitiveTypeCode.UInt16), 
-            new TypeInformation(typeof(int), PrimitiveTypeCode.Int32), 
-            new TypeInformation(typeof(uint), PrimitiveTypeCode.UInt32), 
-            new TypeInformation(typeof(long), PrimitiveTypeCode.Int64), 
-            new TypeInformation(typeof(ulong), PrimitiveTypeCode.UInt64), 
-            new TypeInformation(typeof(float), PrimitiveTypeCode.Single), 
-            new TypeInformation(typeof(double), PrimitiveTypeCode.Double), 
-            new TypeInformation(typeof(decimal), PrimitiveTypeCode.Decimal), 
-            new TypeInformation(typeof(DateTime), PrimitiveTypeCode.DateTime), 
-            new TypeInformation(typeof(object), PrimitiveTypeCode.Empty), // no 17 in TypeCode for some reason
-            new TypeInformation(typeof(string), PrimitiveTypeCode.String)
+            // need all of these. lookup against the index with TypeCode value
+            new TypeInformation { Type = typeof(object), TypeCode = PrimitiveTypeCode.Empty },
+            new TypeInformation { Type = typeof(object), TypeCode = PrimitiveTypeCode.Object },
+            new TypeInformation { Type = typeof(object), TypeCode = PrimitiveTypeCode.DBNull },
+            new TypeInformation { Type = typeof(bool), TypeCode = PrimitiveTypeCode.Boolean },
+            new TypeInformation { Type = typeof(char), TypeCode = PrimitiveTypeCode.Char },
+            new TypeInformation { Type = typeof(sbyte), TypeCode = PrimitiveTypeCode.SByte },
+            new TypeInformation { Type = typeof(byte), TypeCode = PrimitiveTypeCode.Byte },
+            new TypeInformation { Type = typeof(short), TypeCode = PrimitiveTypeCode.Int16 },
+            new TypeInformation { Type = typeof(ushort), TypeCode = PrimitiveTypeCode.UInt16 },
+            new TypeInformation { Type = typeof(int), TypeCode = PrimitiveTypeCode.Int32 },
+            new TypeInformation { Type = typeof(uint), TypeCode = PrimitiveTypeCode.UInt32 },
+            new TypeInformation { Type = typeof(long), TypeCode = PrimitiveTypeCode.Int64 },
+            new TypeInformation { Type = typeof(ulong), TypeCode = PrimitiveTypeCode.UInt64 },
+            new TypeInformation { Type = typeof(float), TypeCode = PrimitiveTypeCode.Single },
+            new TypeInformation { Type = typeof(double), TypeCode = PrimitiveTypeCode.Double },
+            new TypeInformation { Type = typeof(decimal), TypeCode = PrimitiveTypeCode.Decimal },
+            new TypeInformation { Type = typeof(DateTime), TypeCode = PrimitiveTypeCode.DateTime },
+            new TypeInformation { Type = typeof(object), TypeCode = PrimitiveTypeCode.Empty }, // no 17 in TypeCode for some reason
+            new TypeInformation { Type = typeof(string), TypeCode = PrimitiveTypeCode.String }
         };
 #endif
 
         public static PrimitiveTypeCode GetTypeCode(Type t)
         {
-            return GetTypeCode(t, out _);
+            bool isEnum;
+            return GetTypeCode(t, out isEnum);
         }
 
         public static PrimitiveTypeCode GetTypeCode(Type t, out bool isEnum)
         {
-            if (TypeCodeMap.TryGetValue(t, out PrimitiveTypeCode typeCode)) {
+            PrimitiveTypeCode typeCode;
+            if (TypeCodeMap.TryGetValue(t, out typeCode))
+            {
                 isEnum = false;
                 return typeCode;
             }
 
-            if (t.IsEnum()) {
+            if (t.IsEnum())
+            {
                 isEnum = true;
                 return GetTypeCode(Enum.GetUnderlyingType(t));
             }
-            if (ReflectionUtils.IsNullableType(t)) {
+
+            // performance?
+            if (ReflectionUtils.IsNullableType(t))
+            {
                 Type nonNullable = Nullable.GetUnderlyingType(t);
-                if (nonNullable.IsEnum()) {
+                if (nonNullable.IsEnum())
+                {
                     Type nullableUnderlyingType = typeof(Nullable<>).MakeGenericType(Enum.GetUnderlyingType(nonNullable));
                     isEnum = true;
                     return GetTypeCode(nullableUnderlyingType);
@@ -224,21 +223,65 @@ namespace Simula.Scripting.Json.Utilities
 #endif
         }
 
-        private static readonly ThreadSafeStore<StructMultiKey<Type, Type>, Func<object?, object?>?> CastConverters =
-            new ThreadSafeStore<StructMultiKey<Type, Type>, Func<object?, object?>?>(CreateCastConverter);
-
-        private static Func<object?, object?>? CreateCastConverter(StructMultiKey<Type, Type> t)
+        internal struct TypeConvertKey : IEquatable<TypeConvertKey>
         {
-            Type initialType = t.Value1;
-            Type targetType = t.Value2;
-            MethodInfo castMethodInfo = targetType.GetMethod("op_Implicit", new[] { initialType })
-                ?? targetType.GetMethod("op_Explicit", new[] { initialType });
+            private readonly Type _initialType;
+            private readonly Type _targetType;
 
-            if (castMethodInfo == null) {
+            public Type InitialType
+            {
+                get { return _initialType; }
+            }
+
+            public Type TargetType
+            {
+                get { return _targetType; }
+            }
+
+            public TypeConvertKey(Type initialType, Type targetType)
+            {
+                _initialType = initialType;
+                _targetType = targetType;
+            }
+
+            public override int GetHashCode()
+            {
+                return _initialType.GetHashCode() ^ _targetType.GetHashCode();
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (!(obj is TypeConvertKey))
+                {
+                    return false;
+                }
+
+                return Equals((TypeConvertKey)obj);
+            }
+
+            public bool Equals(TypeConvertKey other)
+            {
+                return (_initialType == other._initialType && _targetType == other._targetType);
+            }
+        }
+
+        private static readonly ThreadSafeStore<TypeConvertKey, Func<object, object>> CastConverters =
+            new ThreadSafeStore<TypeConvertKey, Func<object, object>>(CreateCastConverter);
+
+        private static Func<object, object> CreateCastConverter(TypeConvertKey t)
+        {
+            MethodInfo castMethodInfo = t.TargetType.GetMethod("op_Implicit", new[] { t.InitialType });
+            if (castMethodInfo == null)
+            {
+                castMethodInfo = t.TargetType.GetMethod("op_Explicit", new[] { t.InitialType });
+            }
+
+            if (castMethodInfo == null)
+            {
                 return null;
             }
 
-            MethodCall<object?, object?> call = JsonTypeReflector.ReflectionDelegateFactory.CreateMethodCall<object?>(castMethodInfo);
+            MethodCall<object, object> call = JsonTypeReflector.ReflectionDelegateFactory.CreateMethodCall<object>(castMethodInfo);
 
             return o => call(null, o);
         }
@@ -246,46 +289,48 @@ namespace Simula.Scripting.Json.Utilities
 #if HAVE_BIG_INTEGER
         internal static BigInteger ToBigInteger(object value)
         {
-            if (value is BigInteger integer)
+            if (value is BigInteger)
             {
-                return integer;
+                return (BigInteger)value;
             }
 
-            if (value is string s)
+            string s = value as string;
+            if (s != null)
             {
                 return BigInteger.Parse(s, CultureInfo.InvariantCulture);
             }
 
-            if (value is float f)
+            if (value is float)
             {
-                return new BigInteger(f);
+                return new BigInteger((float)value);
             }
-            if (value is double d)
+            if (value is double)
             {
-                return new BigInteger(d);
+                return new BigInteger((double)value);
             }
-            if (value is decimal @decimal)
+            if (value is decimal)
             {
-                return new BigInteger(@decimal);
+                return new BigInteger((decimal)value);
             }
-            if (value is int i)
+            if (value is int)
             {
-                return new BigInteger(i);
+                return new BigInteger((int)value);
             }
-            if (value is long l)
+            if (value is long)
             {
-                return new BigInteger(l);
+                return new BigInteger((long)value);
             }
-            if (value is uint u)
+            if (value is uint)
             {
-                return new BigInteger(u);
+                return new BigInteger((uint)value);
             }
-            if (value is ulong @ulong)
+            if (value is ulong)
             {
-                return new BigInteger(@ulong);
+                return new BigInteger((ulong)value);
             }
 
-            if (value is byte[] bytes)
+            byte[] bytes = value as byte[];
+            if (bytes != null)
             {
                 return new BigInteger(bytes);
             }
@@ -338,9 +383,11 @@ namespace Simula.Scripting.Json.Utilities
 
         public static object Convert(object initialValue, CultureInfo culture, Type targetType)
         {
-            switch (TryConvertInternal(initialValue, culture, targetType, out object? value)) {
+            object value;
+            switch (TryConvertInternal(initialValue, culture, targetType, out value))
+            {
                 case ConvertResult.Success:
-                    return value!;
+                    return value;
                 case ConvertResult.CannotConvertNull:
                     throw new Exception("Can not convert null {0} into non-nullable {1}.".FormatWith(CultureInfo.InvariantCulture, initialValue.GetType(), targetType));
                 case ConvertResult.NotInstantiableType:
@@ -352,43 +399,57 @@ namespace Simula.Scripting.Json.Utilities
             }
         }
 
-        private static bool TryConvert(object? initialValue, CultureInfo culture, Type targetType, out object? value)
+        private static bool TryConvert(object initialValue, CultureInfo culture, Type targetType, out object value)
         {
-            try {
-                if (TryConvertInternal(initialValue, culture, targetType, out value) == ConvertResult.Success) {
+            try
+            {
+                if (TryConvertInternal(initialValue, culture, targetType, out value) == ConvertResult.Success)
+                {
                     return true;
                 }
 
                 value = null;
                 return false;
-            } catch {
+            }
+            catch
+            {
                 value = null;
                 return false;
             }
         }
 
-        private static ConvertResult TryConvertInternal(object? initialValue, CultureInfo culture, Type targetType, out object? value)
+        private static ConvertResult TryConvertInternal(object initialValue, CultureInfo culture, Type targetType, out object value)
         {
-            if (initialValue == null) {
+            if (initialValue == null)
+            {
                 throw new ArgumentNullException(nameof(initialValue));
             }
 
-            if (ReflectionUtils.IsNullableType(targetType)) {
+            if (ReflectionUtils.IsNullableType(targetType))
+            {
                 targetType = Nullable.GetUnderlyingType(targetType);
             }
 
             Type initialType = initialValue.GetType();
 
-            if (targetType == initialType) {
+            if (targetType == initialType)
+            {
                 value = initialValue;
                 return ConvertResult.Success;
             }
-            if (IsConvertible(initialValue.GetType()) && IsConvertible(targetType)) {
-                if (targetType.IsEnum()) {
-                    if (initialValue is string) {
+
+            // use Convert.ChangeType if both types are IConvertible
+            if (ConvertUtils.IsConvertible(initialValue.GetType()) && ConvertUtils.IsConvertible(targetType))
+            {
+                if (targetType.IsEnum())
+                {
+                    if (initialValue is string)
+                    {
                         value = Enum.Parse(targetType, initialValue.ToString(), true);
                         return ConvertResult.Success;
-                    } else if (IsInteger(initialValue)) {
+                    }
+                    else if (IsInteger(initialValue))
+                    {
                         value = Enum.ToObject(targetType, initialValue);
                         return ConvertResult.Success;
                     }
@@ -399,48 +460,62 @@ namespace Simula.Scripting.Json.Utilities
             }
 
 #if HAVE_DATE_TIME_OFFSET
-            if (initialValue is DateTime dt && targetType == typeof(DateTimeOffset)) {
-                value = new DateTimeOffset(dt);
+            if (initialValue is DateTime && targetType == typeof(DateTimeOffset))
+            {
+                value = new DateTimeOffset((DateTime)initialValue);
                 return ConvertResult.Success;
             }
 #endif
 
-            if (initialValue is byte[] bytes && targetType == typeof(Guid)) {
+            byte[] bytes = initialValue as byte[];
+            if (bytes != null && targetType == typeof(Guid))
+            {
                 value = new Guid(bytes);
                 return ConvertResult.Success;
             }
 
-            if (initialValue is Guid guid && targetType == typeof(byte[])) {
-                value = guid.ToByteArray();
+            if (initialValue is Guid && targetType == typeof(byte[]))
+            {
+                value = ((Guid)initialValue).ToByteArray();
                 return ConvertResult.Success;
             }
 
-            if (initialValue is string s) {
-                if (targetType == typeof(Guid)) {
+            string s = initialValue as string;
+            if (s != null)
+            {
+                if (targetType == typeof(Guid))
+                {
                     value = new Guid(s);
                     return ConvertResult.Success;
                 }
-                if (targetType == typeof(Uri)) {
+                if (targetType == typeof(Uri))
+                {
                     value = new Uri(s, UriKind.RelativeOrAbsolute);
                     return ConvertResult.Success;
                 }
-                if (targetType == typeof(TimeSpan)) {
+                if (targetType == typeof(TimeSpan))
+                {
                     value = ParseTimeSpan(s);
                     return ConvertResult.Success;
                 }
-                if (targetType == typeof(byte[])) {
+                if (targetType == typeof(byte[]))
+                {
                     value = System.Convert.FromBase64String(s);
                     return ConvertResult.Success;
                 }
-                if (targetType == typeof(Version)) {
-                    if (VersionTryParse(s, out Version? result)) {
+                if (targetType == typeof(Version))
+                {
+                    Version result;
+                    if (VersionTryParse(s, out result))
+                    {
                         value = result;
                         return ConvertResult.Success;
                     }
                     value = null;
                     return ConvertResult.NoValidConversion;
                 }
-                if (typeof(Type).IsAssignableFrom(targetType)) {
+                if (typeof(Type).IsAssignableFrom(targetType))
+                {
                     value = Type.GetType(s, true);
                     return ConvertResult.Success;
                 }
@@ -452,29 +527,33 @@ namespace Simula.Scripting.Json.Utilities
                 value = ToBigInteger(initialValue);
                 return ConvertResult.Success;
             }
-            if (initialValue is BigInteger integer)
+            if (initialValue is BigInteger)
             {
-                value = FromBigInteger(integer, targetType);
+                value = FromBigInteger((BigInteger)initialValue, targetType);
                 return ConvertResult.Success;
             }
 #endif
 
 #if HAVE_TYPE_DESCRIPTOR
+            // see if source or target types have a TypeConverter that converts between the two
             TypeConverter toConverter = TypeDescriptor.GetConverter(initialType);
 
-            if (toConverter != null && toConverter.CanConvertTo(targetType)) {
+            if (toConverter != null && toConverter.CanConvertTo(targetType))
+            {
                 value = toConverter.ConvertTo(null, culture, initialValue, targetType);
                 return ConvertResult.Success;
             }
 
             TypeConverter fromConverter = TypeDescriptor.GetConverter(targetType);
 
-            if (fromConverter != null && fromConverter.CanConvertFrom(initialType)) {
+            if (fromConverter != null && fromConverter.CanConvertFrom(initialType))
+            {
                 value = fromConverter.ConvertFrom(null, culture, initialValue);
                 return ConvertResult.Success;
             }
 #endif
 #if HAVE_ADO_NET
+            // handle DBNull and INullable
             if (initialValue == DBNull.Value)
             {
                 if (ReflectionUtils.IsNullable(targetType))
@@ -482,12 +561,23 @@ namespace Simula.Scripting.Json.Utilities
                     value = EnsureTypeAssignable(null, initialType, targetType);
                     return ConvertResult.Success;
                 }
+
+                // cannot convert null to non-nullable
                 value = null;
                 return ConvertResult.CannotConvertNull;
             }
 #endif
+#if HAVE_ADO_NET
+            INullable nullable = initialValue as INullable;
+            if (nullable != null)
+            {
+                value = EnsureTypeAssignable(ToValue(nullable), initialType, targetType);
+                return ConvertResult.Success;
+            }
+#endif
 
-            if (targetType.IsInterface() || targetType.IsGenericTypeDefinition() || targetType.IsAbstract()) {
+            if (targetType.IsInterface() || targetType.IsGenericTypeDefinition() || targetType.IsAbstract())
+            {
                 value = null;
                 return ConvertResult.NotInstantiableType;
             }
@@ -498,39 +588,61 @@ namespace Simula.Scripting.Json.Utilities
         #endregion
 
         #region ConvertOrCast
-        public static object? ConvertOrCast(object? initialValue, CultureInfo culture, Type targetType)
+        /// <summary>
+        /// Converts the value to the specified type. If the value is unable to be converted, the
+        /// value is checked whether it assignable to the specified type.
+        /// </summary>
+        /// <param name="initialValue">The value to convert.</param>
+        /// <param name="culture">The culture to use when converting.</param>
+        /// <param name="targetType">The type to convert or cast the value to.</param>
+        /// <returns>
+        /// The converted type. If conversion was unsuccessful, the initial value
+        /// is returned if assignable to the target type.
+        /// </returns>
+        public static object ConvertOrCast(object initialValue, CultureInfo culture, Type targetType)
         {
-            if (targetType == typeof(object)) {
+            object convertedValue;
+
+            if (targetType == typeof(object))
+            {
                 return initialValue;
             }
 
-            if (initialValue == null && ReflectionUtils.IsNullable(targetType)) {
+            if (initialValue == null && ReflectionUtils.IsNullable(targetType))
+            {
                 return null;
             }
 
-            if (TryConvert(initialValue, culture, targetType, out object? convertedValue)) {
+            if (TryConvert(initialValue, culture, targetType, out convertedValue))
+            {
                 return convertedValue;
             }
 
-            return EnsureTypeAssignable(initialValue, ReflectionUtils.GetObjectType(initialValue)!, targetType);
+            return EnsureTypeAssignable(initialValue, ReflectionUtils.GetObjectType(initialValue), targetType);
         }
         #endregion
 
-        private static object? EnsureTypeAssignable(object? value, Type initialType, Type targetType)
+        private static object EnsureTypeAssignable(object value, Type initialType, Type targetType)
         {
-            if (value != null) {
-                Type valueType = value.GetType();
+            Type valueType = value?.GetType();
 
-                if (targetType.IsAssignableFrom(valueType)) {
+            if (value != null)
+            {
+                if (targetType.IsAssignableFrom(valueType))
+                {
                     return value;
                 }
 
-                Func<object?, object?>? castConverter = CastConverters.Get(new StructMultiKey<Type, Type>(valueType, targetType));
-                if (castConverter != null) {
+                Func<object, object> castConverter = CastConverters.Get(new TypeConvertKey(valueType, targetType));
+                if (castConverter != null)
+                {
                     return castConverter(value);
                 }
-            } else {
-                if (ReflectionUtils.IsNullable(targetType)) {
+            }
+            else
+            {
+                if (ReflectionUtils.IsNullable(targetType))
+                {
                     return null;
                 }
             }
@@ -538,11 +650,44 @@ namespace Simula.Scripting.Json.Utilities
             throw new ArgumentException("Could not cast or convert from {0} to {1}.".FormatWith(CultureInfo.InvariantCulture, initialType?.ToString() ?? "{null}", targetType));
         }
 
-        public static bool VersionTryParse(string input, [NotNullWhen(true)] out Version? result)
+#if HAVE_ADO_NET
+        public static object ToValue(INullable nullableValue)
+        {
+            if (nullableValue == null)
+            {
+                return null;
+            }
+            else if (nullableValue is SqlInt32)
+            {
+                return ToValue((SqlInt32)nullableValue);
+            }
+            else if (nullableValue is SqlInt64)
+            {
+                return ToValue((SqlInt64)nullableValue);
+            }
+            else if (nullableValue is SqlBoolean)
+            {
+                return ToValue((SqlBoolean)nullableValue);
+            }
+            else if (nullableValue is SqlString)
+            {
+                return ToValue((SqlString)nullableValue);
+            }
+            else if (nullableValue is SqlDateTime)
+            {
+                return ToValue((SqlDateTime)nullableValue);
+            }
+
+            throw new ArgumentException("Unsupported INullable type: {0}".FormatWith(CultureInfo.InvariantCulture, nullableValue.GetType()));
+        }
+#endif
+
+        public static bool VersionTryParse(string input, out Version result)
         {
 #if HAVE_VERSION_TRY_PARSE
             return Version.TryParse(input, out result);
 #else
+            // improve failure performance with regex?
             try
             {
                 result = new Version(input);
@@ -558,7 +703,8 @@ namespace Simula.Scripting.Json.Utilities
 
         public static bool IsInteger(object value)
         {
-            switch (GetTypeCode(value.GetType())) {
+            switch (GetTypeCode(value.GetType()))
+            {
                 case PrimitiveTypeCode.SByte:
                 case PrimitiveTypeCode.Byte:
                 case PrimitiveTypeCode.Int16:
@@ -577,14 +723,18 @@ namespace Simula.Scripting.Json.Utilities
         {
             value = 0;
 
-            if (length == 0) {
+            if (length == 0)
+            {
                 return ParseResult.Invalid;
             }
 
             bool isNegative = (chars[start] == '-');
 
-            if (isNegative) {
-                if (length == 1) {
+            if (isNegative)
+            {
+                // text just a negative sign
+                if (length == 1)
+                {
                     return ParseResult.Invalid;
                 }
 
@@ -593,11 +743,19 @@ namespace Simula.Scripting.Json.Utilities
             }
 
             int end = start + length;
-            if (length > 10 || (length == 10 && chars[start] - '0' > 2)) {
-                for (int i = start; i < end; i++) {
+
+            // Int32.MaxValue and MinValue are 10 chars
+            // Or is 10 chars and start is greater than two
+            // Need to improve this!
+            if (length > 10 || (length == 10 && chars[start] - '0' > 2))
+            {
+                // invalid result takes precedence over overflow
+                for (int i = start; i < end; i++)
+                {
                     int c = chars[i] - '0';
 
-                    if (c < 0 || c > 9) {
+                    if (c < 0 || c > 9)
+                    {
                         return ParseResult.Invalid;
                     }
                 }
@@ -605,20 +763,30 @@ namespace Simula.Scripting.Json.Utilities
                 return ParseResult.Overflow;
             }
 
-            for (int i = start; i < end; i++) {
+            for (int i = start; i < end; i++)
+            {
                 int c = chars[i] - '0';
 
-                if (c < 0 || c > 9) {
+                if (c < 0 || c > 9)
+                {
                     return ParseResult.Invalid;
                 }
 
                 int newValue = (10 * value) - c;
-                if (newValue > value) {
+
+                // overflow has caused the number to loop around
+                if (newValue > value)
+                {
                     i++;
-                    for (; i < end; i++) {
+
+                    // double check the rest of the string that there wasn't anything invalid
+                    // invalid result takes precedence over overflow result
+                    for (; i < end; i++)
+                    {
                         c = chars[i] - '0';
 
-                        if (c < 0 || c > 9) {
+                        if (c < 0 || c > 9)
+                        {
                             return ParseResult.Invalid;
                         }
                     }
@@ -628,8 +796,14 @@ namespace Simula.Scripting.Json.Utilities
 
                 value = newValue;
             }
-            if (!isNegative) {
-                if (value == int.MinValue) {
+
+            // go from negative to positive to avoids overflow
+            // negative can be slightly bigger than positive
+            if (!isNegative)
+            {
+                // negative integer can be one bigger than positive
+                if (value == int.MinValue)
+                {
                     return ParseResult.Overflow;
                 }
 
@@ -643,14 +817,18 @@ namespace Simula.Scripting.Json.Utilities
         {
             value = 0;
 
-            if (length == 0) {
+            if (length == 0)
+            {
                 return ParseResult.Invalid;
             }
 
             bool isNegative = (chars[start] == '-');
 
-            if (isNegative) {
-                if (length == 1) {
+            if (isNegative)
+            {
+                // text just a negative sign
+                if (length == 1)
+                {
                     return ParseResult.Invalid;
                 }
 
@@ -659,11 +837,17 @@ namespace Simula.Scripting.Json.Utilities
             }
 
             int end = start + length;
-            if (length > 19) {
-                for (int i = start; i < end; i++) {
+
+            // Int64.MaxValue and MinValue are 19 chars
+            if (length > 19)
+            {
+                // invalid result takes precedence over overflow
+                for (int i = start; i < end; i++)
+                {
                     int c = chars[i] - '0';
 
-                    if (c < 0 || c > 9) {
+                    if (c < 0 || c > 9)
+                    {
                         return ParseResult.Invalid;
                     }
                 }
@@ -671,20 +855,30 @@ namespace Simula.Scripting.Json.Utilities
                 return ParseResult.Overflow;
             }
 
-            for (int i = start; i < end; i++) {
+            for (int i = start; i < end; i++)
+            {
                 int c = chars[i] - '0';
 
-                if (c < 0 || c > 9) {
+                if (c < 0 || c > 9)
+                {
                     return ParseResult.Invalid;
                 }
 
                 long newValue = (10 * value) - c;
-                if (newValue > value) {
+
+                // overflow has caused the number to loop around
+                if (newValue > value)
+                {
                     i++;
-                    for (; i < end; i++) {
+
+                    // double check the rest of the string that there wasn't anything invalid
+                    // invalid result takes precedence over overflow result
+                    for (; i < end; i++)
+                    {
                         c = chars[i] - '0';
 
-                        if (c < 0 || c > 9) {
+                        if (c < 0 || c > 9)
+                        {
                             return ParseResult.Invalid;
                         }
                     }
@@ -694,8 +888,14 @@ namespace Simula.Scripting.Json.Utilities
 
                 value = newValue;
             }
-            if (!isNegative) {
-                if (value == long.MinValue) {
+
+            // go from negative to positive to avoids overflow
+            // negative can be slightly bigger than positive
+            if (!isNegative)
+            {
+                // negative integer can be one bigger than positive
+                if (value == long.MinValue)
+                {
                     return ParseResult.Overflow;
                 }
 
@@ -705,13 +905,19 @@ namespace Simula.Scripting.Json.Utilities
             return ParseResult.Success;
         }
 
-#if HAS_CUSTOM_DOUBLE_PARSE
         private static class IEEE754
         {
+            /// <summary>
+            /// Exponents for both powers of 10 and 0.1
+            /// </summary>
             private static readonly int[] MultExp64Power10 = new int[]
             {
                 4, 7, 10, 14, 17, 20, 24, 27, 30, 34, 37, 40, 44, 47, 50
             };
+
+            /// <summary>
+            /// Normalized powers of 10
+            /// </summary>
             private static readonly ulong[] MultVal64Power10 = new ulong[]
             {
                 0xa000000000000000, 0xc800000000000000, 0xfa00000000000000,
@@ -720,6 +926,10 @@ namespace Simula.Scripting.Json.Utilities
                 0x9502f90000000000, 0xba43b74000000000, 0xe8d4a51000000000,
                 0x9184e72a00000000, 0xb5e620f480000000, 0xe35fa931a0000000,
             };
+
+            /// <summary>
+            /// Normalized powers of 0.1
+            /// </summary>
             private static readonly ulong[] MultVal64Power10Inv = new ulong[]
             {
                 0xcccccccccccccccd, 0xa3d70a3d70a3d70b, 0x83126e978d4fdf3c,
@@ -728,11 +938,19 @@ namespace Simula.Scripting.Json.Utilities
                 0xdbe6fecebdedd5c2, 0xafebff0bcb24ab02, 0x8cbccc096f5088cf,
                 0xe12e13424bb40e18, 0xb424dc35095cd813, 0x901d7cf73ab0acdc,
             };
+
+            /// <summary>
+            /// Exponents for both powers of 10^16 and 0.1^16
+            /// </summary>
             private static readonly int[] MultExp64Power10By16 = new int[]
             {
                 54, 107, 160, 213, 266, 319, 373, 426, 479, 532, 585, 638,
                 691, 745, 798, 851, 904, 957, 1010, 1064, 1117,
             };
+
+            /// <summary>
+            /// Normalized powers of 10^16
+            /// </summary>
             private static readonly ulong[] MultVal64Power10By16 = new ulong[]
             {
                 0x8e1bc9bf04000000, 0x9dc5ada82b70b59e, 0xaf298d050e4395d6,
@@ -743,6 +961,10 @@ namespace Simula.Scripting.Json.Utilities
                 0xaa7eebfb9df9de8a, 0xbd49d14aa79dbc7e, 0xd226fc195c6a2f88,
                 0xe950df20247c83f8, 0x81842f29f2cce373, 0x8fcac257558ee4e2,
             };
+
+            /// <summary>
+            /// Normalized powers of 0.1^16
+            /// </summary>
             private static readonly ulong[] MultVal64Power10By16Inv = new ulong[]
             {
                 0xe69594bec44de160, 0xcfb11ead453994c3, 0xbb127c53b17ec165,
@@ -753,12 +975,26 @@ namespace Simula.Scripting.Json.Utilities
                 0xc0314325637a1978, 0xad1c8eab5ee43ba2, 0x9becce62836ac5b0,
                 0x8c71dcd9ba0b495c, 0xfd00b89747823938, 0xe3e27a444d8d991a,
             };
+
+            /// <summary>
+            /// Packs <paramref name="val"/>*10^<paramref name="scale"/> as 64-bit floating point value according to IEEE 754 standard
+            /// </summary>
+            /// <param name="negative">Sign</param>
+            /// <param name="val">Mantissa</param>
+            /// <param name="scale">Exponent</param>
+            /// <remarks>
+            /// Adoption of native function NumberToDouble() from coreclr sources,
+            /// see https://github.com/dotnet/coreclr/blob/master/src/classlibnative/bcltype/number.cpp#L451
+            /// </remarks>
             public static double PackDouble(bool negative, ulong val, int scale)
             {
+                // handle zero value
                 if (val == 0)
                 {
                     return negative ? -0.0 : 0.0;
                 }
+
+                // normalize the mantissa
                 int exp = 64;
 
                 if ((val & 0xFFFFFFFF00000000) == 0)
@@ -795,10 +1031,15 @@ namespace Simula.Scripting.Json.Utilities
                 if (scale < 0)
                 {
                     scale = -scale;
+
+                    // check scale bounds
                     if (scale >= 22 * 16)
                     {
+                        // underflow
                         return negative ? -0.0 : 0.0;
                     }
+
+                    // perform scaling
                     int index = scale & 15;
                     if (index != 0)
                     {
@@ -815,10 +1056,14 @@ namespace Simula.Scripting.Json.Utilities
                 }
                 else
                 {
+                    // check scale bounds
                     if (scale >= 22 * 16)
                     {
+                        // overflow
                         return negative ? double.NegativeInfinity : double.PositiveInfinity;
                     }
+
+                    // perform scaling
                     int index = scale & 15;
                     if (index != 0)
                     {
@@ -834,42 +1079,57 @@ namespace Simula.Scripting.Json.Utilities
                     }
                 }
 
+                // round & scale down
+
                 if ((val & (1 << 10)) != 0)
                 {
+                    // IEEE round to even
                     ulong tmp = val + ((1UL << 10) - 1 + ((val >> 11) & 1));
                     if (tmp < val)
                     {
+                        // overflow
                         tmp = (tmp >> 1) | 0x8000000000000000;
                         exp++;
                     }
                     val = tmp;
                 }
 
+                // return the exponent to a biased state
+
                 exp += 0x3FE;
+
+                // handle overflow, underflow, "Epsilon - 1/2 Epsilon", denormalized, and the normal case
 
                 if (exp <= 0)
                 {
                     if (exp == -52 && (val >= 0x8000000000000058))
                     {
+                        // round X where {Epsilon > X >= 2.470328229206232730000000E-324} up to Epsilon (instead of down to zero)
                         val = 0x0000000000000001;
                     }
                     else if (exp <= -52)
                     {
+                        // underflow
                         val = 0;
                     }
                     else
                     {
+                        // denormalized value
                         val >>= (-exp + 12);
                     }
                 }
                 else if (exp >= 0x7FF)
                 {
+                    // overflow
                     val = 0x7FF0000000000000;
                 }
                 else
                 {
+                    // normal positive exponent case
                     val = ((ulong)exp << 52) | ((val >> 11) & 0x000FFFFFFFFFFFFF);
                 }
+
+                // apply sign
 
                 if (negative)
                 {
@@ -888,6 +1148,9 @@ namespace Simula.Scripting.Json.Utilities
 
                 ulong result = a_hi * b_hi;
 
+                // save some multiplications if lo-parts aren't big enough to produce carry
+                // (hi-parts will be always big enough, since a and b are normalized)
+
                 if ((b_lo & 0xFFFF0000) != 0)
                 {
                     result += (a_hi * b_lo) >> 32;
@@ -897,6 +1160,8 @@ namespace Simula.Scripting.Json.Utilities
                 {
                     result += (a_lo * b_hi) >> 32;
                 }
+
+                // normalize
                 if ((result & 0x8000000000000000) == 0)
                 {
                     result <<= 1;
@@ -919,6 +1184,7 @@ namespace Simula.Scripting.Json.Utilities
             bool isNegative = (chars[start] == '-');
             if (isNegative)
             {
+                // text just a negative sign
                 if (length == 1)
                 {
                     return ParseResult.Invalid;
@@ -953,6 +1219,7 @@ namespace Simula.Scripting.Json.Utilities
 
                         if (numDecimalStart != end)
                         {
+                            // multiple decimal points
                             return ParseResult.Invalid;
                         }
 
@@ -966,6 +1233,7 @@ namespace Simula.Scripting.Json.Utilities
                         }
                         if (i == numDecimalStart)
                         {
+                            // E follows decimal point
                             return ParseResult.Invalid;
                         }
                         i++;
@@ -991,6 +1259,8 @@ namespace Simula.Scripting.Json.Utilities
                                 i++;
                                 break;
                         }
+
+                        // parse 3 digit
                         for (; i < end; i++)
                         {
                             c = chars[i];
@@ -1000,6 +1270,7 @@ namespace Simula.Scripting.Json.Utilities
                             }
 
                             int newExponent = (10 * exponent) + (c - '0');
+                            // stops updating exponent when overflowing
                             if (exponent < newExponent)
                             {
                                 exponent = newExponent;
@@ -1053,12 +1324,13 @@ namespace Simula.Scripting.Json.Utilities
             }
 
             exponent += exponentFromMantissa;
+
+            // correct the decimal point
             exponent -= (numDecimalEnd - numDecimalStart);
 
             value = IEEE754.PackDouble(isNegative, mantissa, exponent);
             return double.IsInfinity(value) ? ParseResult.Overflow : ParseResult.Success;
         }
-#endif
 
         public static ParseResult DecimalTryParse(char[] chars, int start, int length, out decimal value)
         {
@@ -1068,13 +1340,17 @@ namespace Simula.Scripting.Json.Utilities
             const ulong decimalMaxValueLo9 = 354395033UL;
             const char decimalMaxValueLo1 = '5';
 
-            if (length == 0) {
+            if (length == 0)
+            {
                 return ParseResult.Invalid;
             }
 
             bool isNegative = (chars[start] == '-');
-            if (isNegative) {
-                if (length == 1) {
+            if (isNegative)
+            {
+                // text just a negative sign
+                if (length == 1)
+                {
                     return ParseResult.Invalid;
                 }
 
@@ -1091,20 +1367,26 @@ namespace Simula.Scripting.Json.Utilities
             ulong lo10 = 0UL;
             int mantissaDigits = 0;
             int exponentFromMantissa = 0;
-            char? digit29 = null;
+            bool? roundUp = null;
             bool? storeOnly28Digits = null;
-            for (; i < end; i++) {
+            for (; i < end; i++)
+            {
                 char c = chars[i];
-                switch (c) {
+                switch (c)
+                {
                     case '.':
-                        if (i == start) {
+                        if (i == start)
+                        {
                             return ParseResult.Invalid;
                         }
-                        if (i + 1 == end) {
+                        if (i + 1 == end)
+                        {
                             return ParseResult.Invalid;
                         }
 
-                        if (numDecimalStart != end) {
+                        if (numDecimalStart != end)
+                        {
+                            // multiple decimal points
                             return ParseResult.Invalid;
                         }
 
@@ -1112,24 +1394,30 @@ namespace Simula.Scripting.Json.Utilities
                         break;
                     case 'e':
                     case 'E':
-                        if (i == start) {
+                        if (i == start)
+                        {
                             return ParseResult.Invalid;
                         }
-                        if (i == numDecimalStart) {
+                        if (i == numDecimalStart)
+                        {
+                            // E follows decimal point		
                             return ParseResult.Invalid;
                         }
                         i++;
-                        if (i == end) {
+                        if (i == end)
+                        {
                             return ParseResult.Invalid;
                         }
 
-                        if (numDecimalStart < end) {
+                        if (numDecimalStart < end)
+                        {
                             numDecimalEnd = i - 1;
                         }
 
                         c = chars[i];
                         bool exponentNegative = false;
-                        switch (c) {
+                        switch (c)
+                        {
                             case '-':
                                 exponentNegative = true;
                                 i++;
@@ -1138,35 +1426,47 @@ namespace Simula.Scripting.Json.Utilities
                                 i++;
                                 break;
                         }
-                        for (; i < end; i++) {
+
+                        // parse 3 digit 
+                        for (; i < end; i++)
+                        {
                             c = chars[i];
-                            if (c < '0' || c > '9') {
+                            if (c < '0' || c > '9')
+                            {
                                 return ParseResult.Invalid;
                             }
 
                             int newExponent = (10 * exponent) + (c - '0');
-                            if (exponent < newExponent) {
+                            // stops updating exponent when overflowing
+                            if (exponent < newExponent)
+                            {
                                 exponent = newExponent;
                             }
                         }
 
-                        if (exponentNegative) {
+                        if (exponentNegative)
+                        {
                             exponent = -exponent;
                         }
                         break;
                     default:
-                        if (c < '0' || c > '9') {
+                        if (c < '0' || c > '9')
+                        {
                             return ParseResult.Invalid;
                         }
 
-                        if (i == start && c == '0') {
+                        if (i == start && c == '0')
+                        {
                             i++;
-                            if (i != end) {
+                            if (i != end)
+                            {
                                 c = chars[i];
-                                if (c == '.') {
+                                if (c == '.')
+                                {
                                     goto case '.';
                                 }
-                                if (c == 'e' || c == 'E') {
+                                if (c == 'e' || c == 'E')
+                                {
                                     goto case 'E';
                                 }
 
@@ -1174,16 +1474,23 @@ namespace Simula.Scripting.Json.Utilities
                             }
                         }
 
-                        if (mantissaDigits < 29 && (mantissaDigits != 28 || !(storeOnly28Digits ?? (storeOnly28Digits = (hi19 > decimalMaxValueHi19 || (hi19 == decimalMaxValueHi19 && (lo10 > decimalMaxValueLo9 || (lo10 == decimalMaxValueLo9 && c > decimalMaxValueLo1))))).GetValueOrDefault()))) {
-                            if (mantissaDigits < 19) {
+                        if (mantissaDigits < 29 && (mantissaDigits != 28 || !(storeOnly28Digits ?? (storeOnly28Digits = (hi19 > decimalMaxValueHi19 || (hi19 == decimalMaxValueHi19 && (lo10 > decimalMaxValueLo9 || (lo10 == decimalMaxValueLo9 && c > decimalMaxValueLo1))))).GetValueOrDefault())))
+                        {
+                            if (mantissaDigits < 19)
+                            {
                                 hi19 = (hi19 * 10UL) + (ulong)(c - '0');
-                            } else {
+                            }
+                            else
+                            {
                                 lo10 = (lo10 * 10UL) + (ulong)(c - '0');
                             }
                             ++mantissaDigits;
-                        } else {
-                            if (!digit29.HasValue) {
-                                digit29 = c;
+                        }
+                        else
+                        {
+                            if (!roundUp.HasValue)
+                            {
+                                roundUp = c >= '5';
                             }
                             ++exponentFromMantissa;
                         }
@@ -1192,59 +1499,101 @@ namespace Simula.Scripting.Json.Utilities
             }
 
             exponent += exponentFromMantissa;
+
+            // correct the decimal point
             exponent -= (numDecimalEnd - numDecimalStart);
 
-            if (mantissaDigits <= 19) {
+            if (mantissaDigits <= 19)
+            {
                 value = hi19;
-            } else {
-                value = (hi19 / new decimal(1, 0, 0, false, (byte)(mantissaDigits - 19))) + lo10;
+            }
+            else
+            {
+                value = (hi19 * DecimalFactors[mantissaDigits - 20]) + lo10;
             }
 
-            if (exponent > 0) {
+            if (exponent > 0)
+            {
                 mantissaDigits += exponent;
-                if (mantissaDigits > 29) {
+                if (mantissaDigits > 29)
+                {
                     return ParseResult.Overflow;
                 }
-                if (mantissaDigits == 29) {
-                    if (exponent > 1) {
-                        value /= new decimal(1, 0, 0, false, (byte)(exponent - 1));
-                        if (value > decimalMaxValueHi28) {
+                if (mantissaDigits == 29)
+                {
+                    if (exponent > 1)
+                    {
+                        value *= DecimalFactors[exponent - 2];
+                        if (value > decimalMaxValueHi28)
+                        {
                             return ParseResult.Overflow;
                         }
-                    } else if (value == decimalMaxValueHi28 && digit29 > decimalMaxValueLo1) {
-                        return ParseResult.Overflow;
                     }
                     value *= 10M;
-                } else {
-                    value /= new decimal(1, 0, 0, false, (byte)exponent);
                 }
-            } else {
-                if (digit29 >= '5' && exponent >= -28) {
+                else
+                {
+                    value *= DecimalFactors[exponent - 1];
+                }
+            }
+            else
+            {
+                if (roundUp == true && exponent >= -28)
+                {
                     ++value;
                 }
-                if (exponent < 0) {
-                    if (mantissaDigits + exponent + 28 <= 0) {
-                        value = isNegative ? -0M : 0M;
+                if (exponent < 0)
+                {
+                    if (mantissaDigits + exponent + 28 <= 0)
+                    {
+                        value = 0M;
                         return ParseResult.Success;
                     }
-                    if (exponent >= -28) {
-                        value *= new decimal(1, 0, 0, false, (byte)(-exponent));
-                    } else {
-                        value /= 1e28M;
-                        value *= new decimal(1, 0, 0, false, (byte)(-exponent - 28));
+                    if (exponent >= -28)
+                    {
+                        value /= DecimalFactors[-exponent - 1];
+                    }
+                    else
+                    {
+                        decimal[] decimalFactors = DecimalFactors;
+                        value /= decimalFactors[27];
+                        value /= decimalFactors[-exponent - 29];
                     }
                 }
             }
 
-            if (isNegative) {
+            if (isNegative)
+            {
                 value = -value;
             }
 
             return ParseResult.Success;
         }
 
+        private static decimal[] _decimalFactors;
+
+        private static decimal[] DecimalFactors
+        {
+            get
+            {
+                decimal[] decimalFactors = _decimalFactors;
+                if (decimalFactors == null)
+                {
+                    decimalFactors = new decimal[28];
+                    decimal last = 1M;
+                    for (int i = 0; i < decimalFactors.Length; ++i)
+                    {
+                        decimalFactors[i] = last *= 10M;
+                    }
+                    _decimalFactors = decimalFactors;
+                }
+                return decimalFactors;
+            }
+        }
+
         public static bool TryConvertGuid(string s, out Guid g)
         {
+            // GUID has to have format 00000000-0000-0000-0000-000000000000
 #if !HAVE_GUID_TRY_PARSE
             if (s == null)
             {
@@ -1270,17 +1619,25 @@ namespace Simula.Scripting.Json.Utilities
         {
             value = 0;
 
-            for (int i = start; i < end; i++) {
+            for (int i = start; i < end; i++)
+            {
                 char ch = text[i];
                 int chValue;
 
-                if (ch <= 57 && ch >= 48) {
+                if (ch <= 57 && ch >= 48)
+                {
                     chValue = ch - 48;
-                } else if (ch <= 70 && ch >= 65) {
+                }
+                else if (ch <= 70 && ch >= 65)
+                {
                     chValue = ch - 55;
-                } else if (ch <= 102 && ch >= 97) {
+                }
+                else if (ch <= 102 && ch >= 97)
+                {
                     chValue = ch - 87;
-                } else {
+                }
+                else
+                {
                     value = 0;
                     return false;
                 }

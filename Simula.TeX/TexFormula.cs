@@ -1,26 +1,47 @@
-using Simula.TeX.Atoms;
-using Simula.TeX.Boxes;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Media;
+using Simula.TeX.Atoms;
+using Simula.TeX.Boxes;
 
 namespace Simula.TeX
 {
     // Represents mathematical formula that can be rendered.
     public sealed class TexFormula
     {
-        public string? TextStyle {
+        public TexFormula(IList<TexFormula> formulaList)
+        {
+            Debug.Assert(formulaList != null);
+
+            if (formulaList.Count == 1)
+                Add(formulaList[0]);
+            else
+                this.RootAtom = new RowAtom(null, formulaList);
+        }
+
+        public TexFormula(TexFormula formula)
+        {
+            Debug.Assert(formula != null);
+
+            Add(formula);
+        }
+
+        public TexFormula()
+        {
+        }
+
+        public string TextStyle
+        {
             get;
             set;
         }
 
-        internal Atom? RootAtom {
+        internal Atom RootAtom
+        {
             get;
             set;
         }
-
-        public SourceSpan? Source { get; set; }
 
         public TexRenderer GetRenderer(TexStyle style, double scale, string systemTextFontName)
         {
@@ -30,12 +51,12 @@ namespace Simula.TeX
             return new TexRenderer(CreateBox(environment), scale);
         }
 
-        public void Add(TexFormula formula, SourceSpan? source = null)
+        public void Add(TexFormula formula, SourceSpan source = null)
         {
             Debug.Assert(formula != null);
             Debug.Assert(formula.RootAtom != null);
 
-            Add(
+            this.Add(
                 formula.RootAtom is RowAtom
                     ? new RowAtom(source, formula.RootAtom)
                     : formula.RootAtom,
@@ -48,43 +69,53 @@ namespace Simula.TeX
         /// </summary>
         /// <param name="atom">The atom to add.</param>
         /// <param name="rowSource">The source that will be set for the resulting row atom.</param>
-        internal void Add(Atom atom, SourceSpan? rowSource)
+        internal void Add(Atom atom, SourceSpan rowSource)
         {
-            if (RootAtom == null) {
-                RootAtom = atom;
-            } else {
-                var elements = (RootAtom is RowAtom r
-                    ? (IEnumerable<Atom>)r.Elements
-                    : new[] { RootAtom }).ToList();
+            Debug.Assert(atom != null);
+            if (this.RootAtom == null)
+            {
+                this.RootAtom = atom;
+            }
+            else
+            {
+                var elements = (this.RootAtom is RowAtom r
+                    ? (IEnumerable<Atom>) r.Elements
+                    : new[] { this.RootAtom }).ToList();
                 elements.Add(atom);
-                RootAtom = new RowAtom(rowSource, elements);
+                this.RootAtom = new RowAtom(rowSource, elements);
             }
         }
 
         public void SetForeground(Brush brush)
         {
-            if (RootAtom is StyledAtom sa) {
-                RootAtom = sa.Clone(foreground: brush);
-            } else {
-                RootAtom = new StyledAtom(RootAtom?.Source, RootAtom, null, brush);
+            if (this.RootAtom is StyledAtom sa)
+            {
+                this.RootAtom = sa.Clone(foreground: brush);
+            }
+            else
+            {
+                this.RootAtom = new StyledAtom(this.RootAtom?.Source, this.RootAtom, null, brush);
             }
         }
 
         public void SetBackground(Brush brush)
         {
-            if (RootAtom is StyledAtom sa) {
-                RootAtom = sa.Clone(background: brush);
-            } else {
-                RootAtom = new StyledAtom(RootAtom?.Source, RootAtom, brush, null);
+            if (this.RootAtom is StyledAtom sa)
+            {
+                this.RootAtom = sa.Clone(background: brush);
+            }
+            else
+            {
+                this.RootAtom = new StyledAtom(this.RootAtom?.Source, this.RootAtom, brush, null);
             }
         }
 
         internal Box CreateBox(TexEnvironment environment)
         {
-            if (RootAtom == null)
+            if (this.RootAtom == null)
                 return StrutBox.Empty;
             else
-                return RootAtom.CreateBox(environment);
+                return this.RootAtom.CreateBox(environment);
         }
 
         internal static SystemFont GetSystemFont(string fontName, double size)

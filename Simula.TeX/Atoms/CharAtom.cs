@@ -5,28 +5,30 @@ namespace Simula.TeX.Atoms
     // Atom representing single character in specific text style.
     internal class CharAtom : CharSymbol
     {
-        public CharAtom(SourceSpan? source, char character, string? textStyle = null)
+        public CharAtom(SourceSpan source, char character, string textStyle = null)
             : base(source)
         {
-            TextStyle = textStyle;
-            Character = character;
+            this.TextStyle = textStyle;
+            this.Character = character;
         }
 
         public char Character { get; }
 
         // Null means default text style.
-        public string? TextStyle { get; }
+        public string TextStyle { get; }
+
+        private bool IsDefaultTextStyle => this.TextStyle == null;
 
         public override ITeXFont GetStyledFont(TexEnvironment environment) =>
-            TextStyle == TexUtilities.TextStyleName ? environment.TextFont : base.GetStyledFont(environment);
+            this.TextStyle == TexUtilities.TextStyleName ? environment.TextFont : base.GetStyledFont(environment);
 
         protected override Result<CharInfo> GetCharInfo(ITeXFont texFont, TexStyle style) =>
-            TextStyle == null
-                ? texFont.GetDefaultCharInfo(Character, style)
-                : texFont.GetCharInfo(Character, TextStyle, style);
+            this.IsDefaultTextStyle
+                ? texFont.GetDefaultCharInfo(this.Character, style)
+                : texFont.GetCharInfo(this.Character, this.TextStyle, style);
 
         public override Result<CharFont> GetCharFont(ITeXFont texFont) =>
             // Style is irrelevant here.
-            GetCharInfo(texFont, TexStyle.Display).Map(ci => ci.GetCharacterFont());
+            this.GetCharInfo(texFont, TexStyle.Display).Map(ci => ci.GetCharacterFont());
     }
 }

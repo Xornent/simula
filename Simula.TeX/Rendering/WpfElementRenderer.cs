@@ -1,83 +1,69 @@
-using Simula.TeX.Boxes;
-using Simula.TeX.Rendering.Transformations;
-using System;
+﻿using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
+using Simula.TeX.Boxes;
+using Simula.TeX.Rendering.Transformations;
 
 namespace Simula.TeX.Rendering
 {
     /// <summary>The renderer that uses WPF drawing context.</summary>
-    /// <remarks>
-    /// The WPF renderer draws all the image elements into two layers: the background and the foreground. Background
-    /// gets drawn immediately into the target context. Foreground gets drawn onto a separate <see cref="DrawingGroup"/>
-    /// that gets merged into the target context during the <see cref="WpfElementRenderer.FinishRendering"/> call.
-    /// </remarks>
     internal class WpfElementRenderer : IElementRenderer
     {
-        private readonly DrawingContext _targetContext;
+        private readonly DrawingContext _drawingContext;
         private readonly double _scale;
 
-        private readonly DrawingGroup _foregroundGroup = new DrawingGroup();
-        private readonly DrawingContext _foregroundContext;
-
-        public WpfElementRenderer(DrawingContext targetContext, double scale)
+        public WpfElementRenderer(DrawingContext drawingContext, double scale)
         {
-            _targetContext = targetContext;
+            _drawingContext = drawingContext;
             _scale = scale;
-
-            _foregroundContext = _foregroundGroup.Append();
         }
 
         public void RenderElement(Box box, double x, double y)
         {
             var guidelines = GenerateGuidelines(box, x, y);
-            _foregroundContext.PushGuidelineSet(guidelines);
-            _targetContext.PushGuidelineSet(guidelines);
+            _drawingContext.PushGuidelineSet(guidelines);
 
             RenderBackground(box, x, y);
             box.RenderTo(this, x, y);
 
-            _targetContext.Pop();
-            _foregroundContext.Pop();
+            _drawingContext.Pop();
         }
 
         public void RenderGlyphRun(Func<double, GlyphRun> scaledGlyphFactory, double x, double y, Brush foreground)
         {
             var glyphRun = scaledGlyphFactory(_scale);
-            _foregroundContext.DrawGlyphRun(foreground, glyphRun);
+            _drawingContext.DrawGlyphRun(foreground, glyphRun);
         }
 
         public void RenderRectangle(Rect rectangle, Brush foreground)
         {
             var scaledRectangle = GeometryHelper.ScaleRectangle(_scale, rectangle);
-            _foregroundContext.DrawRectangle(foreground, null, scaledRectangle);
+            _drawingContext.DrawRectangle(foreground, null, scaledRectangle);
         }
 
         public void RenderTransformed(Box box, Transformation[] transforms, double x, double y)
         {
             var scaledTransformations = transforms.Select(t => t.Scale(_scale)).ToList();
-            foreach (var transformation in scaledTransformations) {
-                _foregroundContext.PushTransform(ToTransform(transformation));
+            foreach (var transformation in scaledTransformations)
+            {
+                _drawingContext.PushTransform(ToTransform(transformation));
             }
 
             RenderElement(box, x, y);
 
-            for (var i = 0; i < scaledTransformations.Count; ++i) {
-                _foregroundContext.Pop();
+            for (var i = 0; i < scaledTransformations.Count; ++i)
+            {
+                _drawingContext.Pop();
             }
-        }
-
-        public void FinishRendering()
-        {
-            _foregroundContext.Close();
-            _targetContext.DrawDrawing(_foregroundGroup);
         }
 
         private void RenderBackground(Box box, double x, double y)
         {
-            if (box.Background != null) {
-                _targetContext.DrawRectangle(
+            if (box.Background != null)
+            {
+                // Fill background of box with color:
+                _drawingContext.DrawRectangle(
                     box.Background,
                     null,
                     new Rect(_scale * x, _scale * (y - box.Height),
@@ -88,12 +74,13 @@ namespace Simula.TeX.Rendering
 
         private static Transform ToTransform(Transformation transformation)
         {
-            switch (transformation.Kind) {
+            switch (transformation.Kind)
+            {
                 case TransformationKind.Translate:
-                    var tt = (Transformation.Translate)transformation;
+                    var tt = (Transformation.Translate) transformation;
                     return new TranslateTransform(tt.X, tt.Y);
                 case TransformationKind.Rotate:
-                    var rt = (Transformation.Rotate)transformation;
+                    var rt = (Transformation.Rotate) transformation;
                     return new RotateTransform(rt.RotationDegrees);
                 default:
                     throw new NotSupportedException($"Unknown {nameof(Transformation)} kind: {transformation.Kind}");
@@ -105,8 +92,8 @@ namespace Simula.TeX.Rendering
         /// </summary>
         private GuidelineSet GenerateGuidelines(Box box, double x, double y) => new GuidelineSet
         {
-            GuidelinesX = { _scale * x, _scale * (x + box.TotalWidth) },
-            GuidelinesY = { _scale * y, _scale * (y + box.TotalHeight) }
+            GuidelinesX = {_scale * x, _scale * (x + box.TotalWidth)},
+            GuidelinesY = {_scale * y, _scale * (y + box.TotalHeight)}
         };
     }
 }

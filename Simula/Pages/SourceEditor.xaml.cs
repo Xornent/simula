@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System;
 using System.Windows.Controls;
+using Simula.Editor.Rendering;
 // using Simula.Scripting.Syntax;
 // using Simula.Scripting.Token;
 // using Simula.Scripting.Contexts;
@@ -12,6 +13,8 @@ namespace Simula.Pages
         public SourceEditor()
         {
             InitializeComponent();
+            TextView.LineHeightScale = 1.1;
+            editor.SyntaxHighlighting = Simula.Editor.Highlighting.HighlightingManager.Instance.GetDefinition("Simula");
         }
 
         public void HandleRun(object sender, EventArgs e)

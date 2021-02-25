@@ -1,46 +1,47 @@
-using Simula.TeX.Boxes;
 using System;
+using Simula.TeX.Boxes;
 
 namespace Simula.TeX.Atoms
 {
     // Atom representing base atom with accent above it.
     internal class AccentedAtom : Atom
     {
-        public AccentedAtom(SourceSpan? source, Atom? baseAtom, string accentName)
+        public AccentedAtom(SourceSpan source, Atom baseAtom, string accentName)
             : base(source)
         {
-            BaseAtom = baseAtom;
-            AccentAtom = SymbolAtom.GetAtom(accentName, null);
+            this.BaseAtom = baseAtom;
+            this.AccentAtom = SymbolAtom.GetAtom(accentName, null);
 
-            if (AccentAtom.Type != TexAtomType.Accent)
+            if (this.AccentAtom.Type != TexAtomType.Accent)
                 throw new ArgumentException("The specified symbol name is not an accent.", "accent");
         }
 
-        public AccentedAtom(SourceSpan? source, Atom? baseAtom, TexFormula accent)
+        public AccentedAtom(SourceSpan source, Atom baseAtom, TexFormula accent)
             : base(source)
         {
             if (!(accent.RootAtom is SymbolAtom rootSymbol))
                 throw new ArgumentException("The formula for the accent is not a single symbol.", nameof(accent));
 
-            BaseAtom = baseAtom;
-            AccentAtom = rootSymbol;
+            this.BaseAtom = baseAtom;
+            this.AccentAtom = rootSymbol;
 
-            if (AccentAtom.Type != TexAtomType.Accent)
+            if (this.AccentAtom.Type != TexAtomType.Accent)
                 throw new ArgumentException("The specified symbol name is not an accent.", "accent");
         }
 
         // Atom over which accent symbol is placed.
-        public Atom? BaseAtom { get; }
+        public Atom BaseAtom { get; }
 
         // Atom representing accent symbol to place over base atom.
         public SymbolAtom AccentAtom { get; }
 
         protected override Box CreateBoxCore(TexEnvironment environment)
         {
-            CharSymbol? GetBaseChar()
+            CharSymbol GetBaseChar()
             {
-                var baseAtom = BaseAtom;
-                while (baseAtom is AccentedAtom a) {
+                var baseAtom = this.BaseAtom;
+                while (baseAtom is AccentedAtom a)
+                {
                     baseAtom = a.BaseAtom;
                 }
 
@@ -51,13 +52,14 @@ namespace Simula.TeX.Atoms
             var style = environment.Style;
 
             // Create box for base atom.
-            var baseBox = BaseAtom == null ? StrutBox.Empty : BaseAtom.CreateBox(environment.GetCrampedStyle());
+            var baseBox = this.BaseAtom == null ? StrutBox.Empty : this.BaseAtom.CreateBox(environment.GetCrampedStyle());
             var baseCharFont = GetBaseChar()?.GetCharFont(texFont).Value;
             var skew = baseCharFont == null ? 0.0 : texFont.GetSkew(baseCharFont, style);
 
             // Find character of best scale for accent symbol.
-            var accentChar = texFont.GetCharInfo(AccentAtom.Name, style).Value;
-            while (texFont.HasNextLarger(accentChar)) {
+            var accentChar = texFont.GetCharInfo(this.AccentAtom.Name, style).Value;
+            while (texFont.HasNextLarger(accentChar))
+            {
                 var nextLargerChar = texFont.GetNextLargerCharInfo(accentChar, style);
                 if (nextLargerChar.Metrics.Width > baseBox.Width)
                     break;
@@ -69,10 +71,13 @@ namespace Simula.TeX.Atoms
             // Create and add box for accent symbol.
             Box accentBox;
             var accentItalicWidth = accentChar.Metrics.Italic;
-            if (accentItalicWidth > TexUtilities.FloatPrecision) {
+            if (accentItalicWidth > TexUtilities.FloatPrecision)
+            {
                 accentBox = new HorizontalBox(new CharBox(environment, accentChar));
                 accentBox.Add(new StrutBox(accentItalicWidth, 0, 0, 0));
-            } else {
+            }
+            else
+            {
                 accentBox = new CharBox(environment, accentChar);
             }
             resultBox.Add(accentBox);

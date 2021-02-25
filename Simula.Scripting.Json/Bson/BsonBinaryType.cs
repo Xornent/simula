@@ -1,7 +1,4 @@
-﻿
-using System;
-
-#nullable disable
+﻿using System;
 
 namespace Simula.Scripting.Json.Bson
 {

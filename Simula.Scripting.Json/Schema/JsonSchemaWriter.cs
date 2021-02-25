@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Simula.Scripting.Json.Linq;
 using Simula.Scripting.Json.Serialization;
@@ -11,11 +10,9 @@ using System.Linq;
 
 #endif
 
-#nullable disable
-
 namespace Simula.Scripting.Json.Schema
 {
-    [Obsolete("JSON Schema validation has been moved to its own package. See https://www.newtonsoft.com/jsonschema for more details.")]
+    [Obsolete("JSON Schema validation has been moved to its own package. See http://www.newtonsoft.com/jsonschema for more details.")]
     internal class JsonSchemaWriter
     {
         private readonly JsonWriter _writer;
@@ -30,12 +27,15 @@ namespace Simula.Scripting.Json.Schema
 
         private void ReferenceOrWriteSchema(JsonSchema schema)
         {
-            if (schema.Id != null && _resolver.GetSchema(schema.Id) != null) {
+            if (schema.Id != null && _resolver.GetSchema(schema.Id) != null)
+            {
                 _writer.WriteStartObject();
                 _writer.WritePropertyName(JsonTypeReflector.RefPropertyName);
                 _writer.WriteValue(schema.Id);
                 _writer.WriteEndObject();
-            } else {
+            }
+            else
+            {
                 WriteSchema(schema);
             }
         }
@@ -44,7 +44,8 @@ namespace Simula.Scripting.Json.Schema
         {
             ValidationUtils.ArgumentNotNull(schema, nameof(schema));
 
-            if (!_resolver.LoadedSchemas.Contains(schema)) {
+            if (!_resolver.LoadedSchemas.Contains(schema))
+            {
                 _resolver.LoadedSchemas.Add(schema);
             }
 
@@ -56,23 +57,32 @@ namespace Simula.Scripting.Json.Schema
             WritePropertyIfNotNull(_writer, JsonSchemaConstants.ReadOnlyPropertyName, schema.ReadOnly);
             WritePropertyIfNotNull(_writer, JsonSchemaConstants.HiddenPropertyName, schema.Hidden);
             WritePropertyIfNotNull(_writer, JsonSchemaConstants.TransientPropertyName, schema.Transient);
-            if (schema.Type != null) {
+            if (schema.Type != null)
+            {
                 WriteType(JsonSchemaConstants.TypePropertyName, _writer, schema.Type.GetValueOrDefault());
             }
-            if (!schema.AllowAdditionalProperties) {
+            if (!schema.AllowAdditionalProperties)
+            {
                 _writer.WritePropertyName(JsonSchemaConstants.AdditionalPropertiesPropertyName);
                 _writer.WriteValue(schema.AllowAdditionalProperties);
-            } else {
-                if (schema.AdditionalProperties != null) {
+            }
+            else
+            {
+                if (schema.AdditionalProperties != null)
+                {
                     _writer.WritePropertyName(JsonSchemaConstants.AdditionalPropertiesPropertyName);
                     ReferenceOrWriteSchema(schema.AdditionalProperties);
                 }
             }
-            if (!schema.AllowAdditionalItems) {
+            if (!schema.AllowAdditionalItems)
+            {
                 _writer.WritePropertyName(JsonSchemaConstants.AdditionalItemsPropertyName);
                 _writer.WriteValue(schema.AllowAdditionalItems);
-            } else {
-                if (schema.AdditionalItems != null) {
+            }
+            else
+            {
+                if (schema.AdditionalItems != null)
+                {
                     _writer.WritePropertyName(JsonSchemaConstants.AdditionalItemsPropertyName);
                     ReferenceOrWriteSchema(schema.AdditionalItems);
                 }
@@ -91,28 +101,37 @@ namespace Simula.Scripting.Json.Schema
             WritePropertyIfNotNull(_writer, JsonSchemaConstants.DivisibleByPropertyName, schema.DivisibleBy);
             WritePropertyIfNotNull(_writer, JsonSchemaConstants.FormatPropertyName, schema.Format);
             WritePropertyIfNotNull(_writer, JsonSchemaConstants.PatternPropertyName, schema.Pattern);
-            if (schema.Enum != null) {
+            if (schema.Enum != null)
+            {
                 _writer.WritePropertyName(JsonSchemaConstants.EnumPropertyName);
                 _writer.WriteStartArray();
-                foreach (JToken token in schema.Enum) {
+                foreach (JToken token in schema.Enum)
+                {
                     token.WriteTo(_writer);
                 }
                 _writer.WriteEndArray();
             }
-            if (schema.Default != null) {
+            if (schema.Default != null)
+            {
                 _writer.WritePropertyName(JsonSchemaConstants.DefaultPropertyName);
                 schema.Default.WriteTo(_writer);
             }
-            if (schema.Disallow != null) {
+            if (schema.Disallow != null)
+            {
                 WriteType(JsonSchemaConstants.DisallowPropertyName, _writer, schema.Disallow.GetValueOrDefault());
             }
-            if (schema.Extends != null && schema.Extends.Count > 0) {
+            if (schema.Extends != null && schema.Extends.Count > 0)
+            {
                 _writer.WritePropertyName(JsonSchemaConstants.ExtendsPropertyName);
-                if (schema.Extends.Count == 1) {
+                if (schema.Extends.Count == 1)
+                {
                     ReferenceOrWriteSchema(schema.Extends[0]);
-                } else {
+                }
+                else
+                {
                     _writer.WriteStartArray();
-                    foreach (JsonSchema jsonSchema in schema.Extends) {
+                    foreach (JsonSchema jsonSchema in schema.Extends)
+                    {
                         ReferenceOrWriteSchema(jsonSchema);
                     }
                     _writer.WriteEndArray();
@@ -123,10 +142,12 @@ namespace Simula.Scripting.Json.Schema
 
         private void WriteSchemaDictionaryIfNotNull(JsonWriter writer, string propertyName, IDictionary<string, JsonSchema> properties)
         {
-            if (properties != null) {
+            if (properties != null)
+            {
                 writer.WritePropertyName(propertyName);
                 writer.WriteStartObject();
-                foreach (KeyValuePair<string, JsonSchema> property in properties) {
+                foreach (KeyValuePair<string, JsonSchema> property in properties)
+                {
                     writer.WritePropertyName(property.Key);
                     ReferenceOrWriteSchema(property.Value);
                 }
@@ -136,16 +157,21 @@ namespace Simula.Scripting.Json.Schema
 
         private void WriteItems(JsonSchema schema)
         {
-            if (schema.Items == null && !schema.PositionalItemsValidation) {
+            if (schema.Items == null && !schema.PositionalItemsValidation)
+            {
                 return;
             }
 
             _writer.WritePropertyName(JsonSchemaConstants.ItemsPropertyName);
 
-            if (!schema.PositionalItemsValidation) {
-                if (schema.Items != null && schema.Items.Count > 0) {
+            if (!schema.PositionalItemsValidation)
+            {
+                if (schema.Items != null && schema.Items.Count > 0)
+                {
                     ReferenceOrWriteSchema(schema.Items[0]);
-                } else {
+                }
+                else
+                {
                     _writer.WriteStartObject();
                     _writer.WriteEndObject();
                 }
@@ -153,8 +179,10 @@ namespace Simula.Scripting.Json.Schema
             }
 
             _writer.WriteStartArray();
-            if (schema.Items != null) {
-                foreach (JsonSchema itemSchema in schema.Items) {
+            if (schema.Items != null)
+            {
+                foreach (JsonSchema itemSchema in schema.Items)
+                {
                     ReferenceOrWriteSchema(itemSchema);
                 }
             }
@@ -163,22 +191,30 @@ namespace Simula.Scripting.Json.Schema
 
         private void WriteType(string propertyName, JsonWriter writer, JsonSchemaType type)
         {
-            if (Enum.IsDefined(typeof(JsonSchemaType), type)) {
+            if (Enum.IsDefined(typeof(JsonSchemaType), type))
+            {
                 writer.WritePropertyName(propertyName);
                 writer.WriteValue(JsonSchemaBuilder.MapType(type));
-            } else {
+            }
+            else
+            {
                 IEnumerator<JsonSchemaType> en = EnumUtils.GetFlagsValues(type).Where(v => v != JsonSchemaType.None).GetEnumerator();
-                if (en.MoveNext()) {
+                if (en.MoveNext())
+                {
                     writer.WritePropertyName(propertyName);
                     JsonSchemaType first = en.Current;
-                    if (en.MoveNext()) {
+                    if (en.MoveNext())
+                    {
                         writer.WriteStartArray();
                         writer.WriteValue(JsonSchemaBuilder.MapType(first));
-                        do {
+                        do
+                        {
                             writer.WriteValue(JsonSchemaBuilder.MapType(en.Current));
                         } while (en.MoveNext());
                         writer.WriteEndArray();
-                    } else {
+                    }
+                    else
+                    {
                         writer.WriteValue(JsonSchemaBuilder.MapType(first));
                     }
                 }
@@ -187,7 +223,8 @@ namespace Simula.Scripting.Json.Schema
 
         private void WritePropertyIfNotNull(JsonWriter writer, string propertyName, object value)
         {
-            if (value != null) {
+            if (value != null)
+            {
                 writer.WritePropertyName(propertyName);
                 writer.WriteValue(value);
             }

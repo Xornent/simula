@@ -1,13 +1,12 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections;
 using System.Threading;
-using System.Diagnostics.CodeAnalysis;
 #if !HAVE_LINQ
 using Simula.Scripting.Json.Utilities.LinqBridge;
 #else
 using System.Linq;
+
 #endif
 
 namespace Simula.Scripting.Json.Utilities
@@ -20,12 +19,12 @@ namespace Simula.Scripting.Json.Utilities
 
     internal class DictionaryWrapper<TKey, TValue> : IDictionary<TKey, TValue>, IWrappedDictionary
     {
-        private readonly IDictionary? _dictionary;
-        private readonly IDictionary<TKey, TValue>? _genericDictionary;
+        private readonly IDictionary _dictionary;
+        private readonly IDictionary<TKey, TValue> _genericDictionary;
 #if HAVE_READ_ONLY_COLLECTIONS
-        private readonly IReadOnlyDictionary<TKey, TValue>? _readOnlyDictionary;
+        private readonly IReadOnlyDictionary<TKey, TValue> _readOnlyDictionary;
 #endif
-        private object? _syncRoot;
+        private object _syncRoot;
 
         public DictionaryWrapper(IDictionary dictionary)
         {
@@ -50,281 +49,350 @@ namespace Simula.Scripting.Json.Utilities
         }
 #endif
 
-        internal IDictionary<TKey, TValue> GenericDictionary {
-            get {
-                MiscellaneousUtils.Assert(_genericDictionary != null);
-                return _genericDictionary;
-            }
-        }
-
         public void Add(TKey key, TValue value)
         {
-            if (_dictionary != null) {
+            if (_dictionary != null)
+            {
                 _dictionary.Add(key, value);
-            } else if (_genericDictionary != null) {
+            }
+            else if (_genericDictionary != null)
+            {
                 _genericDictionary.Add(key, value);
-            } else {
+            }
+            else
+            {
                 throw new NotSupportedException();
             }
         }
 
         public bool ContainsKey(TKey key)
         {
-            if (_dictionary != null) {
+            if (_dictionary != null)
+            {
                 return _dictionary.Contains(key);
             }
 #if HAVE_READ_ONLY_COLLECTIONS
-            else if (_readOnlyDictionary != null) {
+            else if (_readOnlyDictionary != null)
+            {
                 return _readOnlyDictionary.ContainsKey(key);
             }
 #endif
-            else {
-                return GenericDictionary.ContainsKey(key);
+            else
+            {
+                return _genericDictionary.ContainsKey(key);
             }
         }
 
-        public ICollection<TKey> Keys {
-            get {
-                if (_dictionary != null) {
+        public ICollection<TKey> Keys
+        {
+            get
+            {
+                if (_dictionary != null)
+                {
                     return _dictionary.Keys.Cast<TKey>().ToList();
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
-                else if (_readOnlyDictionary != null) {
+                else if (_readOnlyDictionary != null)
+                {
                     return _readOnlyDictionary.Keys.ToList();
                 }
 #endif
-                else {
-                    return GenericDictionary.Keys;
+                else
+                {
+                    return _genericDictionary.Keys;
                 }
             }
         }
 
         public bool Remove(TKey key)
         {
-            if (_dictionary != null) {
-                if (_dictionary.Contains(key)) {
+            if (_dictionary != null)
+            {
+                if (_dictionary.Contains(key))
+                {
                     _dictionary.Remove(key);
                     return true;
-                } else {
+                }
+                else
+                {
                     return false;
                 }
             }
 #if HAVE_READ_ONLY_COLLECTIONS
-            else if (_readOnlyDictionary != null) {
+            else if (_readOnlyDictionary != null)
+            {
                 throw new NotSupportedException();
             }
 #endif
-            else {
-                return GenericDictionary.Remove(key);
+            else
+            {
+                return _genericDictionary.Remove(key);
             }
         }
 
-        public bool TryGetValue(TKey key, [MaybeNull] out TValue value)
+        public bool TryGetValue(TKey key, out TValue value)
         {
-            if (_dictionary != null) {
-                if (!_dictionary.Contains(key)) {
-#pragma warning disable CS8653 // A default expression introduces a null value for a type parameter.
-                    value = default;
-#pragma warning restore CS8653 // A default expression introduces a null value for a type parameter.
+            if (_dictionary != null)
+            {
+                if (!_dictionary.Contains(key))
+                {
+                    value = default(TValue);
                     return false;
-                } else {
+                }
+                else
+                {
                     value = (TValue)_dictionary[key];
                     return true;
                 }
             }
 #if HAVE_READ_ONLY_COLLECTIONS
-            else if (_readOnlyDictionary != null) {
+            else if (_readOnlyDictionary != null)
+            {
                 throw new NotSupportedException();
             }
 #endif
-            else {
-                return GenericDictionary.TryGetValue(key, out value);
+            else
+            {
+                return _genericDictionary.TryGetValue(key, out value);
             }
         }
 
-        public ICollection<TValue> Values {
-            get {
-                if (_dictionary != null) {
+        public ICollection<TValue> Values
+        {
+            get
+            {
+                if (_dictionary != null)
+                {
                     return _dictionary.Values.Cast<TValue>().ToList();
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
-                else if (_readOnlyDictionary != null) {
+                else if (_readOnlyDictionary != null)
+                {
                     return _readOnlyDictionary.Values.ToList();
                 }
 #endif
-                else {
-                    return GenericDictionary.Values;
+                else
+                {
+                    return _genericDictionary.Values;
                 }
             }
         }
 
-        public TValue this[TKey key] {
-            get {
-                if (_dictionary != null) {
+        public TValue this[TKey key]
+        {
+            get
+            {
+                if (_dictionary != null)
+                {
                     return (TValue)_dictionary[key];
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
-                else if (_readOnlyDictionary != null) {
+                else if (_readOnlyDictionary != null)
+                {
                     return _readOnlyDictionary[key];
                 }
 #endif
-                else {
-                    return GenericDictionary[key];
+                else
+                {
+                    return _genericDictionary[key];
                 }
             }
-            set {
-                if (_dictionary != null) {
+            set
+            {
+                if (_dictionary != null)
+                {
                     _dictionary[key] = value;
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
-                else if (_readOnlyDictionary != null) {
+                else if (_readOnlyDictionary != null)
+                {
                     throw new NotSupportedException();
                 }
 #endif
-                else {
-                    GenericDictionary[key] = value;
+                else
+                {
+                    _genericDictionary[key] = value;
                 }
             }
         }
 
         public void Add(KeyValuePair<TKey, TValue> item)
         {
-            if (_dictionary != null) {
+            if (_dictionary != null)
+            {
                 ((IList)_dictionary).Add(item);
             }
 #if HAVE_READ_ONLY_COLLECTIONS
-            else if (_readOnlyDictionary != null) {
+            else if (_readOnlyDictionary != null)
+            {
                 throw new NotSupportedException();
             }
 #endif
-            else {
+            else
+            {
                 _genericDictionary?.Add(item);
             }
         }
 
         public void Clear()
         {
-            if (_dictionary != null) {
+            if (_dictionary != null)
+            {
                 _dictionary.Clear();
             }
 #if HAVE_READ_ONLY_COLLECTIONS
-            else if (_readOnlyDictionary != null) {
+            else if (_readOnlyDictionary != null)
+            {
                 throw new NotSupportedException();
             }
 #endif
-            else {
-                GenericDictionary.Clear();
+            else
+            {
+                _genericDictionary.Clear();
             }
         }
 
         public bool Contains(KeyValuePair<TKey, TValue> item)
         {
-            if (_dictionary != null) {
+            if (_dictionary != null)
+            {
                 return ((IList)_dictionary).Contains(item);
             }
 #if HAVE_READ_ONLY_COLLECTIONS
-            else if (_readOnlyDictionary != null) {
+            else if (_readOnlyDictionary != null)
+            {
                 return _readOnlyDictionary.Contains(item);
             }
 #endif
-            else {
-                return GenericDictionary.Contains(item);
+            else
+            {
+                return _genericDictionary.Contains(item);
             }
         }
 
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
-            if (_dictionary != null) {
+            if (_dictionary != null)
+            {
+                // Manual use of IDictionaryEnumerator instead of foreach to avoid DictionaryEntry box allocations.
                 IDictionaryEnumerator e = _dictionary.GetEnumerator();
-                try {
-                    while (e.MoveNext()) {
+                try
+                {
+                    while (e.MoveNext())
+                    {
                         DictionaryEntry entry = e.Entry;
                         array[arrayIndex++] = new KeyValuePair<TKey, TValue>((TKey)entry.Key, (TValue)entry.Value);
                     }
-                } finally {
+                }
+                finally
+                {
                     (e as IDisposable)?.Dispose();
                 }
             }
 #if HAVE_READ_ONLY_COLLECTIONS
-            else if (_readOnlyDictionary != null) {
+            else if (_readOnlyDictionary != null)
+            {
                 throw new NotSupportedException();
             }
 #endif
-            else {
-                GenericDictionary.CopyTo(array, arrayIndex);
+            else
+            {
+                _genericDictionary.CopyTo(array, arrayIndex);
             }
         }
 
-        public int Count {
-            get {
-                if (_dictionary != null) {
+        public int Count
+        {
+            get
+            {
+                if (_dictionary != null)
+                {
                     return _dictionary.Count;
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
-                else if (_readOnlyDictionary != null) {
+                else if (_readOnlyDictionary != null)
+                {
                     return _readOnlyDictionary.Count;
                 }
 #endif
-                else {
-                    return GenericDictionary.Count;
+                else
+                {
+                    return _genericDictionary.Count;
                 }
             }
         }
 
-        public bool IsReadOnly {
-            get {
-                if (_dictionary != null) {
+        public bool IsReadOnly
+        {
+            get
+            {
+                if (_dictionary != null)
+                {
                     return _dictionary.IsReadOnly;
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
-                else if (_readOnlyDictionary != null) {
+                else if (_readOnlyDictionary != null)
+                {
                     return true;
                 }
 #endif
-                else {
-                    return GenericDictionary.IsReadOnly;
+                else
+                {
+                    return _genericDictionary.IsReadOnly;
                 }
             }
         }
 
         public bool Remove(KeyValuePair<TKey, TValue> item)
         {
-            if (_dictionary != null) {
-                if (_dictionary.Contains(item.Key)) {
+            if (_dictionary != null)
+            {
+                if (_dictionary.Contains(item.Key))
+                {
                     object value = _dictionary[item.Key];
 
-                    if (Equals(value, item.Value)) {
+                    if (object.Equals(value, item.Value))
+                    {
                         _dictionary.Remove(item.Key);
                         return true;
-                    } else {
+                    }
+                    else
+                    {
                         return false;
                     }
-                } else {
+                }
+                else
+                {
                     return true;
                 }
             }
 #if HAVE_READ_ONLY_COLLECTIONS
-            else if (_readOnlyDictionary != null) {
+            else if (_readOnlyDictionary != null)
+            {
                 throw new NotSupportedException();
             }
 #endif
-            else {
-                return GenericDictionary.Remove(item);
+            else
+            {
+                return _genericDictionary.Remove(item);
             }
         }
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
-            if (_dictionary != null) {
+            if (_dictionary != null)
+            {
                 return _dictionary.Cast<DictionaryEntry>().Select(de => new KeyValuePair<TKey, TValue>((TKey)de.Key, (TValue)de.Value)).GetEnumerator();
             }
 #if HAVE_READ_ONLY_COLLECTIONS
-            else if (_readOnlyDictionary != null) {
+            else if (_readOnlyDictionary != null)
+            {
                 return _readOnlyDictionary.GetEnumerator();
             }
 #endif
-            else {
-                return GenericDictionary.GetEnumerator();
+            else
+            {
+                return _genericDictionary.GetEnumerator();
             }
         }
 
@@ -335,51 +403,61 @@ namespace Simula.Scripting.Json.Utilities
 
         void IDictionary.Add(object key, object value)
         {
-            if (_dictionary != null) {
+            if (_dictionary != null)
+            {
                 _dictionary.Add(key, value);
             }
 #if HAVE_READ_ONLY_COLLECTIONS
-            else if (_readOnlyDictionary != null) {
+            else if (_readOnlyDictionary != null)
+            {
                 throw new NotSupportedException();
             }
 #endif
-            else {
-                GenericDictionary.Add((TKey)key, (TValue)value);
+            else
+            {
+                _genericDictionary.Add((TKey)key, (TValue)value);
             }
         }
 
-        object? IDictionary.this[object key] {
-            get {
-                if (_dictionary != null) {
+        object IDictionary.this[object key]
+        {
+            get
+            {
+                if (_dictionary != null)
+                {
                     return _dictionary[key];
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
-                else if (_readOnlyDictionary != null) {
+                else if (_readOnlyDictionary != null)
+                {
                     return _readOnlyDictionary[(TKey)key];
                 }
 #endif
-                else {
-                    return GenericDictionary[(TKey)key];
+                else
+                {
+                    return _genericDictionary[(TKey)key];
                 }
             }
-            set {
-                if (_dictionary != null) {
+            set
+            {
+                if (_dictionary != null)
+                {
                     _dictionary[key] = value;
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
-                else if (_readOnlyDictionary != null) {
+                else if (_readOnlyDictionary != null)
+                {
                     throw new NotSupportedException();
                 }
 #endif
-                else {
-#pragma warning disable CS8601 // Possible null reference assignment.
-                    GenericDictionary[(TKey)key] = (TValue)value;
-#pragma warning restore CS8601 // Possible null reference assignment.
+                else
+                {
+                    _genericDictionary[(TKey)key] = (TValue)value;
                 }
             }
         }
 
-        private readonly struct DictionaryEnumerator<TEnumeratorKey, TEnumeratorValue> : IDictionaryEnumerator
+        private struct DictionaryEnumerator<TEnumeratorKey, TEnumeratorValue> : IDictionaryEnumerator
         {
             private readonly IEnumerator<KeyValuePair<TEnumeratorKey, TEnumeratorValue>> _e;
 
@@ -389,13 +467,25 @@ namespace Simula.Scripting.Json.Utilities
                 _e = e;
             }
 
-            public DictionaryEntry Entry => (DictionaryEntry)Current;
+            public DictionaryEntry Entry
+            {
+                get { return (DictionaryEntry)Current; }
+            }
 
-            public object Key => Entry.Key;
+            public object Key
+            {
+                get { return Entry.Key; }
+            }
 
-            public object Value => Entry.Value;
+            public object Value
+            {
+                get { return Entry.Value; }
+            }
 
-            public object Current => new DictionaryEntry(_e.Current.Key, _e.Current.Value);
+            public object Current
+            {
+                get { return new DictionaryEntry(_e.Current.Key, _e.Current.Value); }
+            }
 
             public bool MoveNext()
             {
@@ -410,125 +500,160 @@ namespace Simula.Scripting.Json.Utilities
 
         IDictionaryEnumerator IDictionary.GetEnumerator()
         {
-            if (_dictionary != null) {
+            if (_dictionary != null)
+            {
                 return _dictionary.GetEnumerator();
             }
 #if HAVE_READ_ONLY_COLLECTIONS
-            else if (_readOnlyDictionary != null) {
+            else if (_readOnlyDictionary != null)
+            {
                 return new DictionaryEnumerator<TKey, TValue>(_readOnlyDictionary.GetEnumerator());
             }
 #endif
-            else {
-                return new DictionaryEnumerator<TKey, TValue>(GenericDictionary.GetEnumerator());
+            else
+            {
+                return new DictionaryEnumerator<TKey, TValue>(_genericDictionary.GetEnumerator());
             }
         }
 
         bool IDictionary.Contains(object key)
         {
-            if (_genericDictionary != null) {
+            if (_genericDictionary != null)
+            {
                 return _genericDictionary.ContainsKey((TKey)key);
             }
 #if HAVE_READ_ONLY_COLLECTIONS
-            else if (_readOnlyDictionary != null) {
+            else if (_readOnlyDictionary != null)
+            {
                 return _readOnlyDictionary.ContainsKey((TKey)key);
             }
 #endif
-            else {
-                return _dictionary!.Contains(key);
+            else
+            {
+                return _dictionary.Contains(key);
             }
         }
 
-        bool IDictionary.IsFixedSize {
-            get {
-                if (_genericDictionary != null) {
+        bool IDictionary.IsFixedSize
+        {
+            get
+            {
+                if (_genericDictionary != null)
+                {
                     return false;
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
-                else if (_readOnlyDictionary != null) {
+                else if (_readOnlyDictionary != null)
+                {
                     return true;
                 }
 #endif
-                else {
-                    return _dictionary!.IsFixedSize;
+                else
+                {
+                    return _dictionary.IsFixedSize;
                 }
             }
         }
 
-        ICollection IDictionary.Keys {
-            get {
-                if (_genericDictionary != null) {
+        ICollection IDictionary.Keys
+        {
+            get
+            {
+                if (_genericDictionary != null)
+                {
                     return _genericDictionary.Keys.ToList();
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
-                else if (_readOnlyDictionary != null) {
+                else if (_readOnlyDictionary != null)
+                {
                     return _readOnlyDictionary.Keys.ToList();
                 }
 #endif
-                else {
-                    return _dictionary!.Keys;
+                else
+                {
+                    return _dictionary.Keys;
                 }
             }
         }
 
         public void Remove(object key)
         {
-            if (_dictionary != null) {
+            if (_dictionary != null)
+            {
                 _dictionary.Remove(key);
             }
 #if HAVE_READ_ONLY_COLLECTIONS
-            else if (_readOnlyDictionary != null) {
+            else if (_readOnlyDictionary != null)
+            {
                 throw new NotSupportedException();
             }
 #endif
-            else {
-                GenericDictionary.Remove((TKey)key);
+            else
+            {
+                _genericDictionary.Remove((TKey)key);
             }
         }
 
-        ICollection IDictionary.Values {
-            get {
-                if (_genericDictionary != null) {
+        ICollection IDictionary.Values
+        {
+            get
+            {
+                if (_genericDictionary != null)
+                {
                     return _genericDictionary.Values.ToList();
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
-                else if (_readOnlyDictionary != null) {
+                else if (_readOnlyDictionary != null)
+                {
                     return _readOnlyDictionary.Values.ToList();
                 }
 #endif
-                else {
-                    return _dictionary!.Values;
+                else
+                {
+                    return _dictionary.Values;
                 }
             }
         }
 
         void ICollection.CopyTo(Array array, int index)
         {
-            if (_dictionary != null) {
+            if (_dictionary != null)
+            {
                 _dictionary.CopyTo(array, index);
             }
 #if HAVE_READ_ONLY_COLLECTIONS
-            else if (_readOnlyDictionary != null) {
+            else if (_readOnlyDictionary != null)
+            {
                 throw new NotSupportedException();
             }
 #endif
-            else {
-                GenericDictionary.CopyTo((KeyValuePair<TKey, TValue>[])array, index);
+            else
+            {
+                _genericDictionary.CopyTo((KeyValuePair<TKey, TValue>[])array, index);
             }
         }
 
-        bool ICollection.IsSynchronized {
-            get {
-                if (_dictionary != null) {
+        bool ICollection.IsSynchronized
+        {
+            get
+            {
+                if (_dictionary != null)
+                {
                     return _dictionary.IsSynchronized;
-                } else {
+                }
+                else
+                {
                     return false;
                 }
             }
         }
 
-        object ICollection.SyncRoot {
-            get {
-                if (_syncRoot == null) {
+        object ICollection.SyncRoot
+        {
+            get
+            {
+                if (_syncRoot == null)
+                {
                     Interlocked.CompareExchange(ref _syncRoot, new object(), null);
                 }
 
@@ -536,18 +661,23 @@ namespace Simula.Scripting.Json.Utilities
             }
         }
 
-        public object UnderlyingDictionary {
-            get {
-                if (_dictionary != null) {
+        public object UnderlyingDictionary
+        {
+            get
+            {
+                if (_dictionary != null)
+                {
                     return _dictionary;
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
-                else if (_readOnlyDictionary != null) {
+                else if (_readOnlyDictionary != null)
+                {
                     return _readOnlyDictionary;
                 }
 #endif
-                else {
-                    return GenericDictionary;
+                else
+                {
+                    return _genericDictionary;
                 }
             }
         }

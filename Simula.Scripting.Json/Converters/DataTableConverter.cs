@@ -1,5 +1,4 @@
-﻿
-#if HAVE_ADO_NET
+﻿#if HAVE_ADO_NET
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -10,18 +9,21 @@ using Simula.Scripting.Json.Serialization;
 
 namespace Simula.Scripting.Json.Converters
 {
+    /// <summary>
+    /// Converts a <see cref="DataTable"/> to and from JSON.
+    /// </summary>
     public class DataTableConverter : JsonConverter
     {
-        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+        /// <summary>
+        /// Writes the JSON representation of the object.
+        /// </summary>
+        /// <param name="writer">The <see cref="JsonWriter"/> to write to.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="serializer">The calling serializer.</param>
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            if (value == null)
-            {
-                writer.WriteNull();
-                return;
-            }
-
             DataTable table = (DataTable)value;
-            DefaultContractResolver? resolver = serializer.ContractResolver as DefaultContractResolver;
+            DefaultContractResolver resolver = serializer.ContractResolver as DefaultContractResolver;
 
             writer.WriteStartArray();
 
@@ -45,22 +47,37 @@ namespace Simula.Scripting.Json.Converters
 
             writer.WriteEndArray();
         }
-        public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+
+        /// <summary>
+        /// Reads the JSON representation of the object.
+        /// </summary>
+        /// <param name="reader">The <see cref="JsonReader"/> to read from.</param>
+        /// <param name="objectType">Type of the object.</param>
+        /// <param name="existingValue">The existing value of object being read.</param>
+        /// <param name="serializer">The calling serializer.</param>
+        /// <returns>The object value.</returns>
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             if (reader.TokenType == JsonToken.Null)
             {
                 return null;
             }
 
-            if (!(existingValue is DataTable dt))
+            DataTable dt = existingValue as DataTable;
+
+            if (dt == null)
             {
+                // handle typed datasets
                 dt = (objectType == typeof(DataTable))
                     ? new DataTable()
                     : (DataTable)Activator.CreateInstance(objectType);
             }
+
+            // DataTable is inside a DataSet
+            // populate the name from the property name
             if (reader.TokenType == JsonToken.PropertyName)
             {
-                dt.TableName = (string)reader.Value!;
+                dt.TableName = (string)reader.Value;
 
                 reader.ReadAndAssert();
 
@@ -94,7 +111,7 @@ namespace Simula.Scripting.Json.Converters
 
             while (reader.TokenType == JsonToken.PropertyName)
             {
-                string columnName = (string)reader.Value!;
+                string columnName = (string)reader.Value;
 
                 reader.ReadAndAssert();
 
@@ -131,7 +148,7 @@ namespace Simula.Scripting.Json.Converters
                         reader.ReadAndAssert();
                     }
 
-                    List<object?> o = new List<object?>();
+                    List<object> o = new List<object>();
 
                     while (reader.TokenType != JsonToken.EndArray)
                     {
@@ -172,10 +189,9 @@ namespace Simula.Scripting.Json.Converters
                 case JsonToken.String:
                 case JsonToken.Date:
                 case JsonToken.Bytes:
-                    return reader.ValueType!;
+                    return reader.ValueType;
                 case JsonToken.Null:
                 case JsonToken.Undefined:
-                case JsonToken.EndArray:
                     return typeof(string);
                 case JsonToken.StartArray:
                     reader.ReadAndAssert();
@@ -190,6 +206,14 @@ namespace Simula.Scripting.Json.Converters
                     throw JsonSerializationException.Create(reader, "Unexpected JSON token when reading DataTable: {0}".FormatWith(CultureInfo.InvariantCulture, tokenType));
             }
         }
+
+        /// <summary>
+        /// Determines whether this instance can convert the specified value type.
+        /// </summary>
+        /// <param name="valueType">Type of the value.</param>
+        /// <returns>
+        /// 	<c>true</c> if this instance can convert the specified value type; otherwise, <c>false</c>.
+        /// </returns>
         public override bool CanConvert(Type valueType)
         {
             return typeof(DataTable).IsAssignableFrom(valueType);

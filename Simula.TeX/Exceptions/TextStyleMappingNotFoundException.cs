@@ -1,4 +1,4 @@
-namespace Simula.TeX.Exceptions
+﻿namespace Simula.TeX.Exceptions
 {
     public class TextStyleMappingNotFoundException : TexException
     {

@@ -1,45 +1,59 @@
-
-using Simula.Scripting.Json.Utilities;
 using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
+using System.Collections.Generic;
+using System.Text;
+using Simula.Scripting.Json.Utilities;
+using Simula.Scripting.Json.Schema;
 
 namespace Simula.Scripting.Json
 {
+    /// <summary>
+    /// Converts an object to and from JSON.
+    /// </summary>
     public abstract class JsonConverter
     {
-        public abstract void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer);
-        public abstract object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer);
+        /// <summary>
+        /// Writes the JSON representation of the object.
+        /// </summary>
+        /// <param name="writer">The <see cref="JsonWriter"/> to write to.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="serializer">The calling serializer.</param>
+        public abstract void WriteJson(JsonWriter writer, object value, JsonSerializer serializer);
+
+        /// <summary>
+        /// Reads the JSON representation of the object.
+        /// </summary>
+        /// <param name="reader">The <see cref="JsonReader"/> to read from.</param>
+        /// <param name="objectType">Type of the object.</param>
+        /// <param name="existingValue">The existing value of object being read.</param>
+        /// <param name="serializer">The calling serializer.</param>
+        /// <returns>The object value.</returns>
+        public abstract object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer);
+
+        /// <summary>
+        /// Determines whether this instance can convert the specified object type.
+        /// </summary>
+        /// <param name="objectType">Type of the object.</param>
+        /// <returns>
+        /// 	<c>true</c> if this instance can convert the specified object type; otherwise, <c>false</c>.
+        /// </returns>
         public abstract bool CanConvert(Type objectType);
-        public virtual bool CanRead => true;
-        public virtual bool CanWrite => true;
-    }
-    public abstract class JsonConverter<T> : JsonConverter
-    {
-        public sealed override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+
+        /// <summary>
+        /// Gets a value indicating whether this <see cref="JsonConverter"/> can read JSON.
+        /// </summary>
+        /// <value><c>true</c> if this <see cref="JsonConverter"/> can read JSON; otherwise, <c>false</c>.</value>
+        public virtual bool CanRead
         {
-            if (!(value != null ? value is T : ReflectionUtils.IsNullable(typeof(T)))) {
-                throw new JsonSerializationException("Converter cannot write specified value to JSON. {0} is required.".FormatWith(CultureInfo.InvariantCulture, typeof(T)));
-            }
-#pragma warning disable CS8601 // Possible null reference assignment.
-            WriteJson(writer, (T)value, serializer);
-#pragma warning restore CS8601 // Possible null reference assignment.
+            get { return true; }
         }
-        public abstract void WriteJson(JsonWriter writer, [AllowNull] T value, JsonSerializer serializer);
-        public sealed override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+
+        /// <summary>
+        /// Gets a value indicating whether this <see cref="JsonConverter"/> can write JSON.
+        /// </summary>
+        /// <value><c>true</c> if this <see cref="JsonConverter"/> can write JSON; otherwise, <c>false</c>.</value>
+        public virtual bool CanWrite
         {
-            bool existingIsNull = existingValue == null;
-            if (!(existingIsNull || existingValue is T)) {
-                throw new JsonSerializationException("Converter cannot read JSON with the specified existing value. {0} is required.".FormatWith(CultureInfo.InvariantCulture, typeof(T)));
-            }
-#pragma warning disable CS8601 // Possible null reference assignment.
-            return ReadJson(reader, objectType, existingIsNull ? default : (T)existingValue, !existingIsNull, serializer);
-#pragma warning restore CS8601 // Possible null reference assignment.
-        }
-        public abstract T ReadJson(JsonReader reader, Type objectType, [AllowNull] T existingValue, bool hasExistingValue, JsonSerializer serializer);
-        public sealed override bool CanConvert(Type objectType)
-        {
-            return typeof(T).IsAssignableFrom(objectType);
+            get { return true; }
         }
     }
 }

@@ -5,14 +5,19 @@ namespace Simula.TeX.Boxes
     // Box representing whitespace.
     internal class StrutBox : Box
     {
-        public static StrutBox Empty { get; } = new StrutBox(0, 0, 0, 0);
+        private static readonly StrutBox emptyStrutBox = new StrutBox(0, 0, 0, 0);
+
+        public static StrutBox Empty
+        {
+            get { return emptyStrutBox; }
+        }
 
         public StrutBox(double width, double height, double depth, double shift)
         {
-            Width = width;
-            Height = height;
-            Depth = depth;
-            Shift = shift;
+            this.Width = width;
+            this.Height = height;
+            this.Depth = depth;
+            this.Shift = shift;
         }
 
         public override void RenderTo(IElementRenderer renderer, double x, double y)

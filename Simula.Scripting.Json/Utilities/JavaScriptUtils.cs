@@ -1,4 +1,3 @@
-
 using System;
 using System.IO;
 #if HAVE_ASYNC
@@ -6,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 #endif
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
 #if !HAVE_LINQ
 using Simula.Scripting.Json.Utilities.LinqBridge;
 #else
@@ -17,9 +16,10 @@ namespace Simula.Scripting.Json.Utilities
 {
     internal static class BufferUtils
     {
-        public static char[] RentBuffer(IArrayPool<char>? bufferPool, int minSize)
+        public static char[] RentBuffer(IArrayPool<char> bufferPool, int minSize)
         {
-            if (bufferPool == null) {
+            if (bufferPool == null)
+            {
                 return new char[minSize];
             }
 
@@ -27,18 +27,20 @@ namespace Simula.Scripting.Json.Utilities
             return buffer;
         }
 
-        public static void ReturnBuffer(IArrayPool<char>? bufferPool, char[]? buffer)
+        public static void ReturnBuffer(IArrayPool<char> bufferPool, char[] buffer)
         {
             bufferPool?.Return(buffer);
         }
 
-        public static char[] EnsureBufferSize(IArrayPool<char>? bufferPool, int size, char[]? buffer)
+        public static char[] EnsureBufferSize(IArrayPool<char> bufferPool, int size, char[] buffer)
         {
-            if (bufferPool == null) {
+            if (bufferPool == null)
+            {
                 return new char[size];
             }
 
-            if (buffer != null) {
+            if (buffer != null)
+            {
                 bufferPool.Return(buffer);
             }
 
@@ -60,17 +62,21 @@ namespace Simula.Scripting.Json.Utilities
             {
                 '\n', '\r', '\t', '\\', '\f', '\b',
             };
-            for (int i = 0; i < ' '; i++) {
+            for (int i = 0; i < ' '; i++)
+            {
                 escapeChars.Add((char)i);
             }
 
-            foreach (char escapeChar in escapeChars.Union(new[] { '\'' })) {
+            foreach (char escapeChar in escapeChars.Union(new[] { '\'' }))
+            {
                 SingleQuoteCharEscapeFlags[escapeChar] = true;
             }
-            foreach (char escapeChar in escapeChars.Union(new[] { '"' })) {
+            foreach (char escapeChar in escapeChars.Union(new[] { '"' }))
+            {
                 DoubleQuoteCharEscapeFlags[escapeChar] = true;
             }
-            foreach (char escapeChar in escapeChars.Union(new[] { '"', '\'', '<', '>', '&' })) {
+            foreach (char escapeChar in escapeChars.Union(new[] { '"', '\'', '<', '>', '&' }))
+            {
                 HtmlCharEscapeFlags[escapeChar] = true;
             }
         }
@@ -79,26 +85,30 @@ namespace Simula.Scripting.Json.Utilities
 
         public static bool[] GetCharEscapeFlags(StringEscapeHandling stringEscapeHandling, char quoteChar)
         {
-            if (stringEscapeHandling == StringEscapeHandling.EscapeHtml) {
+            if (stringEscapeHandling == StringEscapeHandling.EscapeHtml)
+            {
                 return HtmlCharEscapeFlags;
             }
 
-            if (quoteChar == '"') {
+            if (quoteChar == '"')
+            {
                 return DoubleQuoteCharEscapeFlags;
             }
 
             return SingleQuoteCharEscapeFlags;
         }
 
-        public static bool ShouldEscapeJavaScriptString(string? s, bool[] charEscapeFlags)
+        public static bool ShouldEscapeJavaScriptString(string s, bool[] charEscapeFlags)
         {
-            if (s == null) {
+            if (s == null)
+            {
                 return false;
             }
 
-            for (int i = 0; i < s.Length; i++) {
-                char c = s[i];
-                if (c >= charEscapeFlags.Length || charEscapeFlags[c]) {
+            foreach (char c in s)
+            {
+                if (c >= charEscapeFlags.Length || charEscapeFlags[c])
+                {
                     return true;
                 }
             }
@@ -106,37 +116,50 @@ namespace Simula.Scripting.Json.Utilities
             return false;
         }
 
-        public static void WriteEscapedJavaScriptString(TextWriter writer, string? s, char delimiter, bool appendDelimiters,
-            bool[] charEscapeFlags, StringEscapeHandling stringEscapeHandling, IArrayPool<char>? bufferPool, ref char[]? writeBuffer)
+        public static void WriteEscapedJavaScriptString(TextWriter writer, string s, char delimiter, bool appendDelimiters,
+            bool[] charEscapeFlags, StringEscapeHandling stringEscapeHandling, IArrayPool<char> bufferPool, ref char[] writeBuffer)
         {
-            if (appendDelimiters) {
+            // leading delimiter
+            if (appendDelimiters)
+            {
                 writer.Write(delimiter);
             }
 
-            if (!StringUtils.IsNullOrEmpty(s)) {
+            if (!string.IsNullOrEmpty(s))
+            {
                 int lastWritePosition = FirstCharToEscape(s, charEscapeFlags, stringEscapeHandling);
-                if (lastWritePosition == -1) {
+                if (lastWritePosition == -1)
+                {
                     writer.Write(s);
-                } else {
-                    if (lastWritePosition != 0) {
-                        if (writeBuffer == null || writeBuffer.Length < lastWritePosition) {
+                }
+                else
+                {
+                    if (lastWritePosition != 0)
+                    {
+                        if (writeBuffer == null || writeBuffer.Length < lastWritePosition)
+                        {
                             writeBuffer = BufferUtils.EnsureBufferSize(bufferPool, lastWritePosition, writeBuffer);
                         }
+
+                        // write unchanged chars at start of text.
                         s.CopyTo(0, writeBuffer, 0, lastWritePosition);
                         writer.Write(writeBuffer, 0, lastWritePosition);
                     }
 
                     int length;
-                    for (int i = lastWritePosition; i < s.Length; i++) {
+                    for (int i = lastWritePosition; i < s.Length; i++)
+                    {
                         char c = s[i];
 
-                        if (c < charEscapeFlags.Length && !charEscapeFlags[c]) {
+                        if (c < charEscapeFlags.Length && !charEscapeFlags[c])
+                        {
                             continue;
                         }
 
-                        string? escapedValue;
+                        string escapedValue;
 
-                        switch (c) {
+                        switch (c)
+                        {
                             case '\t':
                                 escapedValue = @"\t";
                                 break;
@@ -165,40 +188,56 @@ namespace Simula.Scripting.Json.Utilities
                                 escapedValue = @"\u2029";
                                 break;
                             default:
-                                if (c < charEscapeFlags.Length || stringEscapeHandling == StringEscapeHandling.EscapeNonAscii) {
-                                    if (c == '\'' && stringEscapeHandling != StringEscapeHandling.EscapeHtml) {
+                                if (c < charEscapeFlags.Length || stringEscapeHandling == StringEscapeHandling.EscapeNonAscii)
+                                {
+                                    if (c == '\'' && stringEscapeHandling != StringEscapeHandling.EscapeHtml)
+                                    {
                                         escapedValue = @"\'";
-                                    } else if (c == '"' && stringEscapeHandling != StringEscapeHandling.EscapeHtml) {
+                                    }
+                                    else if (c == '"' && stringEscapeHandling != StringEscapeHandling.EscapeHtml)
+                                    {
                                         escapedValue = @"\""";
-                                    } else {
-                                        if (writeBuffer == null || writeBuffer.Length < UnicodeTextLength) {
+                                    }
+                                    else
+                                    {
+                                        if (writeBuffer == null || writeBuffer.Length < UnicodeTextLength)
+                                        {
                                             writeBuffer = BufferUtils.EnsureBufferSize(bufferPool, UnicodeTextLength, writeBuffer);
                                         }
 
-                                        StringUtils.ToCharAsUnicode(c, writeBuffer!);
+                                        StringUtils.ToCharAsUnicode(c, writeBuffer);
+
+                                        // slightly hacky but it saves multiple conditions in if test
                                         escapedValue = EscapedUnicodeText;
                                     }
-                                } else {
+                                }
+                                else
+                                {
                                     escapedValue = null;
                                 }
                                 break;
                         }
 
-                        if (escapedValue == null) {
+                        if (escapedValue == null)
+                        {
                             continue;
                         }
 
-                        bool isEscapedUnicodeText = string.Equals(escapedValue, EscapedUnicodeText, StringComparison.Ordinal);
+                        bool isEscapedUnicodeText = string.Equals(escapedValue, EscapedUnicodeText);
 
-                        if (i > lastWritePosition) {
+                        if (i > lastWritePosition)
+                        {
                             length = i - lastWritePosition + ((isEscapedUnicodeText) ? UnicodeTextLength : 0);
                             int start = (isEscapedUnicodeText) ? UnicodeTextLength : 0;
 
-                            if (writeBuffer == null || writeBuffer.Length < length) {
+                            if (writeBuffer == null || writeBuffer.Length < length)
+                            {
                                 char[] newBuffer = BufferUtils.RentBuffer(bufferPool, length);
-                                if (isEscapedUnicodeText) {
-                                    MiscellaneousUtils.Assert(writeBuffer != null, "Write buffer should never be null because it is set when the escaped unicode text is encountered.");
 
+                                // the unicode text is already in the buffer
+                                // copy it over when creating new buffer
+                                if (isEscapedUnicodeText)
+                                {
                                     Array.Copy(writeBuffer, newBuffer, UnicodeTextLength);
                                 }
 
@@ -208,58 +247,79 @@ namespace Simula.Scripting.Json.Utilities
                             }
 
                             s.CopyTo(lastWritePosition, writeBuffer, start, length - start);
+
+                            // write unchanged chars before writing escaped text
                             writer.Write(writeBuffer, start, length - start);
                         }
 
                         lastWritePosition = i + 1;
-                        if (!isEscapedUnicodeText) {
+                        if (!isEscapedUnicodeText)
+                        {
                             writer.Write(escapedValue);
-                        } else {
+                        }
+                        else
+                        {
                             writer.Write(writeBuffer, 0, UnicodeTextLength);
                         }
                     }
 
-                    MiscellaneousUtils.Assert(lastWritePosition != 0);
+                    Debug.Assert(lastWritePosition != 0);
                     length = s.Length - lastWritePosition;
-                    if (length > 0) {
-                        if (writeBuffer == null || writeBuffer.Length < length) {
+                    if (length > 0)
+                    {
+                        if (writeBuffer == null || writeBuffer.Length < length)
+                        {
                             writeBuffer = BufferUtils.EnsureBufferSize(bufferPool, length, writeBuffer);
                         }
 
                         s.CopyTo(lastWritePosition, writeBuffer, 0, length);
+
+                        // write remaining text
                         writer.Write(writeBuffer, 0, length);
                     }
                 }
             }
-            if (appendDelimiters) {
+
+            // trailing delimiter
+            if (appendDelimiters)
+            {
                 writer.Write(delimiter);
             }
         }
 
-        public static string ToEscapedJavaScriptString(string? value, char delimiter, bool appendDelimiters, StringEscapeHandling stringEscapeHandling)
+        public static string ToEscapedJavaScriptString(string value, char delimiter, bool appendDelimiters, StringEscapeHandling stringEscapeHandling)
         {
             bool[] charEscapeFlags = GetCharEscapeFlags(stringEscapeHandling, delimiter);
 
-            using (StringWriter w = StringUtils.CreateStringWriter(value?.Length ?? 16)) {
-                char[]? buffer = null;
+            using (StringWriter w = StringUtils.CreateStringWriter(value?.Length ?? 16))
+            {
+                char[] buffer = null;
                 WriteEscapedJavaScriptString(w, value, delimiter, appendDelimiters, charEscapeFlags, stringEscapeHandling, null, ref buffer);
                 return w.ToString();
             }
         }
-
+        
         private static int FirstCharToEscape(string s, bool[] charEscapeFlags, StringEscapeHandling stringEscapeHandling)
         {
-            for (int i = 0; i != s.Length; i++) {
+            for (int i = 0; i != s.Length; i++)
+            {
                 char c = s[i];
 
-                if (c < charEscapeFlags.Length) {
-                    if (charEscapeFlags[c]) {
+                if (c < charEscapeFlags.Length)
+                {
+                    if (charEscapeFlags[c])
+                    {
                         return i;
                     }
-                } else if (stringEscapeHandling == StringEscapeHandling.EscapeNonAscii) {
+                }
+                else if (stringEscapeHandling == StringEscapeHandling.EscapeNonAscii)
+                {
                     return i;
-                } else {
-                    switch (c) {
+                }
+                else
+                {
+                    switch (c)
+                    {
                         case '\u0085':
                         case '\u2028':
                         case '\u2029':
@@ -272,17 +332,20 @@ namespace Simula.Scripting.Json.Utilities
         }
 
 #if HAVE_ASYNC
-        public static Task WriteEscapedJavaScriptStringAsync(TextWriter writer, string s, char delimiter, bool appendDelimiters, bool[] charEscapeFlags, StringEscapeHandling stringEscapeHandling, JsonTextWriter client, char[] writeBuffer, CancellationToken cancellationToken = default)
+        public static Task WriteEscapedJavaScriptStringAsync(TextWriter writer, string s, char delimiter, bool appendDelimiters, bool[] charEscapeFlags, StringEscapeHandling stringEscapeHandling, JsonTextWriter client, char[] writeBuffer, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (cancellationToken.IsCancellationRequested) {
+            if (cancellationToken.IsCancellationRequested)
+            {
                 return cancellationToken.FromCanceled();
             }
 
-            if (appendDelimiters) {
+            if (appendDelimiters)
+            {
                 return WriteEscapedJavaScriptStringWithDelimitersAsync(writer, s, delimiter, charEscapeFlags, stringEscapeHandling, client, writeBuffer, cancellationToken);
             }
 
-            if (StringUtils.IsNullOrEmpty(s)) {
+            if (string.IsNullOrEmpty(s))
+            {
                 return cancellationToken.CancelIfRequestedAsync() ?? AsyncUtils.CompletedTask;
             }
 
@@ -293,19 +356,22 @@ namespace Simula.Scripting.Json.Utilities
             bool[] charEscapeFlags, StringEscapeHandling stringEscapeHandling, JsonTextWriter client, char[] writeBuffer, CancellationToken cancellationToken)
         {
             Task task = writer.WriteAsync(delimiter, cancellationToken);
-            if (!task.IsCompletedSucessfully()) {
+            if (task.Status != TaskStatus.RanToCompletion)
+            {
                 return WriteEscapedJavaScriptStringWithDelimitersAsync(task, writer, s, delimiter, charEscapeFlags, stringEscapeHandling, client, writeBuffer, cancellationToken);
             }
 
-            if (!StringUtils.IsNullOrEmpty(s)) {
+            if (!string.IsNullOrEmpty(s))
+            {
                 task = WriteEscapedJavaScriptStringWithoutDelimitersAsync(writer, s, charEscapeFlags, stringEscapeHandling, client, writeBuffer, cancellationToken);
-                if (task.IsCompletedSucessfully()) {
+                if (task.Status == TaskStatus.RanToCompletion)
+                {
                     return writer.WriteAsync(delimiter, cancellationToken);
                 }
             }
 
             return WriteCharAsync(task, writer, delimiter, cancellationToken);
-
+            
         }
 
         private static async Task WriteEscapedJavaScriptStringWithDelimitersAsync(Task task, TextWriter writer, string s, char delimiter,
@@ -313,7 +379,8 @@ namespace Simula.Scripting.Json.Utilities
         {
             await task.ConfigureAwait(false);
 
-            if (!StringUtils.IsNullOrEmpty(s)) {
+            if (!string.IsNullOrEmpty(s))
+            {
                 await WriteEscapedJavaScriptStringWithoutDelimitersAsync(writer, s, charEscapeFlags, stringEscapeHandling, client, writeBuffer, cancellationToken).ConfigureAwait(false);
             }
 
@@ -341,27 +408,34 @@ namespace Simula.Scripting.Json.Utilities
             StringEscapeHandling stringEscapeHandling, JsonTextWriter client, char[] writeBuffer,
             CancellationToken cancellationToken)
         {
-            if (writeBuffer == null || writeBuffer.Length < lastWritePosition) {
+            if (writeBuffer == null || writeBuffer.Length < lastWritePosition)
+            {
                 writeBuffer = client.EnsureWriteBuffer(lastWritePosition, UnicodeTextLength);
             }
 
-            if (lastWritePosition != 0) {
+            if (lastWritePosition != 0)
+            {
                 s.CopyTo(0, writeBuffer, 0, lastWritePosition);
+
+                // write unchanged chars at start of text.
                 await writer.WriteAsync(writeBuffer, 0, lastWritePosition, cancellationToken).ConfigureAwait(false);
             }
 
             int length;
             bool isEscapedUnicodeText = false;
-            string? escapedValue = null;
+            string escapedValue = null;
 
-            for (int i = lastWritePosition; i < s.Length; i++) {
+            for (int i = lastWritePosition; i < s.Length; i++)
+            {
                 char c = s[i];
 
-                if (c < charEscapeFlags.Length && !charEscapeFlags[c]) {
+                if (c < charEscapeFlags.Length && !charEscapeFlags[c])
+                {
                     continue;
                 }
 
-                switch (c) {
+                switch (c)
+                {
                     case '\t':
                         escapedValue = @"\t";
                         break;
@@ -390,13 +464,20 @@ namespace Simula.Scripting.Json.Utilities
                         escapedValue = @"\u2029";
                         break;
                     default:
-                        if (c < charEscapeFlags.Length || stringEscapeHandling == StringEscapeHandling.EscapeNonAscii) {
-                            if (c == '\'' && stringEscapeHandling != StringEscapeHandling.EscapeHtml) {
+                        if (c < charEscapeFlags.Length || stringEscapeHandling == StringEscapeHandling.EscapeNonAscii)
+                        {
+                            if (c == '\'' && stringEscapeHandling != StringEscapeHandling.EscapeHtml)
+                            {
                                 escapedValue = @"\'";
-                            } else if (c == '"' && stringEscapeHandling != StringEscapeHandling.EscapeHtml) {
+                            }
+                            else if (c == '"' && stringEscapeHandling != StringEscapeHandling.EscapeHtml)
+                            {
                                 escapedValue = @"\""";
-                            } else {
-                                if (writeBuffer.Length < UnicodeTextLength) {
+                            }
+                            else
+                            {
+                                if (writeBuffer.Length < UnicodeTextLength)
+                                {
                                     writeBuffer = client.EnsureWriteBuffer(UnicodeTextLength, 0);
                                 }
 
@@ -404,28 +485,37 @@ namespace Simula.Scripting.Json.Utilities
 
                                 isEscapedUnicodeText = true;
                             }
-                        } else {
+                        }
+                        else
+                        {
                             continue;
                         }
                         break;
                 }
 
-                if (i > lastWritePosition) {
+                if (i > lastWritePosition)
+                {
                     length = i - lastWritePosition + (isEscapedUnicodeText ? UnicodeTextLength : 0);
                     int start = isEscapedUnicodeText ? UnicodeTextLength : 0;
 
-                    if (writeBuffer.Length < length) {
+                    if (writeBuffer.Length < length)
+                    {
                         writeBuffer = client.EnsureWriteBuffer(length, UnicodeTextLength);
                     }
 
                     s.CopyTo(lastWritePosition, writeBuffer, start, length - start);
+
+                    // write unchanged chars before writing escaped text
                     await writer.WriteAsync(writeBuffer, start, length - start, cancellationToken).ConfigureAwait(false);
                 }
 
                 lastWritePosition = i + 1;
-                if (!isEscapedUnicodeText) {
-                    await writer.WriteAsync(escapedValue!, cancellationToken).ConfigureAwait(false);
-                } else {
+                if (!isEscapedUnicodeText)
+                {
+                    await writer.WriteAsync(escapedValue, cancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
                     await writer.WriteAsync(writeBuffer, 0, UnicodeTextLength, cancellationToken).ConfigureAwait(false);
                     isEscapedUnicodeText = false;
                 }
@@ -433,80 +523,19 @@ namespace Simula.Scripting.Json.Utilities
 
             length = s.Length - lastWritePosition;
 
-            if (length != 0) {
-                if (writeBuffer.Length < length) {
+            if (length != 0)
+            {
+                if (writeBuffer.Length < length)
+                {
                     writeBuffer = client.EnsureWriteBuffer(length, 0);
                 }
 
                 s.CopyTo(lastWritePosition, writeBuffer, 0, length);
+
+                // write remaining text
                 await writer.WriteAsync(writeBuffer, 0, length, cancellationToken).ConfigureAwait(false);
             }
         }
 #endif
-
-        public static bool TryGetDateFromConstructorJson(JsonReader reader, out DateTime dateTime, [NotNullWhen(false)] out string? errorMessage)
-        {
-            dateTime = default;
-            errorMessage = null;
-
-            if (!TryGetDateConstructorValue(reader, out long? t1, out errorMessage) || t1 == null) {
-                errorMessage = errorMessage ?? "Date constructor has no arguments.";
-                return false;
-            }
-            if (!TryGetDateConstructorValue(reader, out long? t2, out errorMessage)) {
-                return false;
-            } else if (t2 != null) {
-                List<long> dateArgs = new List<long>
-                {
-                    t1.Value,
-                    t2.Value
-                };
-                while (true) {
-                    if (!TryGetDateConstructorValue(reader, out long? integer, out errorMessage)) {
-                        return false;
-                    } else if (integer != null) {
-                        dateArgs.Add(integer.Value);
-                    } else {
-                        break;
-                    }
-                }
-
-                if (dateArgs.Count > 7) {
-                    errorMessage = "Unexpected number of arguments when reading date constructor.";
-                    return false;
-                }
-                while (dateArgs.Count < 7) {
-                    dateArgs.Add(0);
-                }
-
-                dateTime = new DateTime((int)dateArgs[0], (int)dateArgs[1] + 1, dateArgs[2] == 0 ? 1 : (int)dateArgs[2],
-                    (int)dateArgs[3], (int)dateArgs[4], (int)dateArgs[5], (int)dateArgs[6]);
-            } else {
-                dateTime = DateTimeUtils.ConvertJavaScriptTicksToDateTime(t1.Value);
-            }
-
-            return true;
-        }
-
-        private static bool TryGetDateConstructorValue(JsonReader reader, out long? integer, out string? errorMessage)
-        {
-            integer = null;
-            errorMessage = null;
-
-            if (!reader.Read()) {
-                errorMessage = "Unexpected end when reading date constructor.";
-                return false;
-            }
-            if (reader.TokenType == JsonToken.EndConstructor) {
-                return true;
-            }
-            if (reader.TokenType != JsonToken.Integer) {
-                errorMessage = "Unexpected token when reading date constructor. Expected Integer, got " + reader.TokenType;
-                return false;
-            }
-
-            integer = (long)reader.Value!;
-            return true;
-        }
     }
 }

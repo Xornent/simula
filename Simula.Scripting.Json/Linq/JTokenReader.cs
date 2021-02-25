@@ -1,42 +1,68 @@
-﻿
+﻿using System;
 using Simula.Scripting.Json.Utilities;
-using System;
 
 namespace Simula.Scripting.Json.Linq
 {
+    /// <summary>
+    /// Represents a reader that provides fast, non-cached, forward-only access to serialized JSON data.
+    /// </summary>
     public class JTokenReader : JsonReader, IJsonLineInfo
     {
         private readonly JToken _root;
-        private string? _initialPath;
-        private JToken? _parent;
-        private JToken? _current;
-        public JToken? CurrentToken => _current;
+        private string _initialPath;
+        private JToken _parent;
+        private JToken _current;
+
+        /// <summary>
+        /// Gets the <see cref="JToken"/> at the reader's current position.
+        /// </summary>
+        public JToken CurrentToken
+        {
+            get { return _current; }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JTokenReader"/> class.
+        /// </summary>
+        /// <param name="token">The token to read from.</param>
         public JTokenReader(JToken token)
         {
             ValidationUtils.ArgumentNotNull(token, nameof(token));
 
             _root = token;
         }
-        public JTokenReader(JToken token, string initialPath)
+
+        // this is used by json.net schema
+        internal JTokenReader(JToken token, string initialPath)
             : this(token)
         {
             _initialPath = initialPath;
         }
+
+        /// <summary>
+        /// Reads the next JSON token from the underlying <see cref="JToken"/>.
+        /// </summary>
+        /// <returns>
+        /// <c>true</c> if the next token was read successfully; <c>false</c> if there are no more tokens to read.
+        /// </returns>
         public override bool Read()
         {
-            if (CurrentState != State.Start) {
-                if (_current == null) {
+            if (CurrentState != State.Start)
+            {
+                if (_current == null)
+                {
                     return false;
                 }
 
-                if (_current is JContainer container && _parent != container) {
+                JContainer container = _current as JContainer;
+                if (container != null && _parent != container)
+                {
                     return ReadInto(container);
-                } else {
+                }
+                else
+                {
                     return ReadOver(_current);
                 }
-            }
-            if (_current == _root) {
-                return false;
             }
 
             _current = _root;
@@ -46,18 +72,23 @@ namespace Simula.Scripting.Json.Linq
 
         private bool ReadOver(JToken t)
         {
-            if (t == _root) {
+            if (t == _root)
+            {
                 return ReadToEnd();
             }
 
-            JToken? next = t.Next;
-            if ((next == null || next == t) || t == t.Parent!.Last) {
-                if (t.Parent == null) {
+            JToken next = t.Next;
+            if ((next == null || next == t) || t == t.Parent.Last)
+            {
+                if (t.Parent == null)
+                {
                     return ReadToEnd();
                 }
 
                 return SetEnd(t.Parent);
-            } else {
+            }
+            else
+            {
                 _current = next;
                 SetToken(_current);
                 return true;
@@ -73,7 +104,8 @@ namespace Simula.Scripting.Json.Linq
 
         private JsonToken? GetEndToken(JContainer c)
         {
-            switch (c.Type) {
+            switch (c.Type)
+            {
                 case JTokenType.Object:
                     return JsonToken.EndObject;
                 case JTokenType.Array:
@@ -89,10 +121,13 @@ namespace Simula.Scripting.Json.Linq
 
         private bool ReadInto(JContainer c)
         {
-            JToken? firstChild = c.First;
-            if (firstChild == null) {
+            JToken firstChild = c.First;
+            if (firstChild == null)
+            {
                 return SetEnd(c);
-            } else {
+            }
+            else
+            {
                 SetToken(firstChild);
                 _current = firstChild;
                 _parent = c;
@@ -103,19 +138,23 @@ namespace Simula.Scripting.Json.Linq
         private bool SetEnd(JContainer c)
         {
             JsonToken? endToken = GetEndToken(c);
-            if (endToken != null) {
+            if (endToken != null)
+            {
                 SetToken(endToken.GetValueOrDefault());
                 _current = c;
                 _parent = c;
                 return true;
-            } else {
+            }
+            else
+            {
                 return ReadOver(c);
             }
         }
 
         private void SetToken(JToken token)
         {
-            switch (token.Type) {
+            switch (token.Type)
+            {
                 case JTokenType.Object:
                     SetToken(JsonToken.StartObject);
                     break;
@@ -149,15 +188,9 @@ namespace Simula.Scripting.Json.Linq
                 case JTokenType.Undefined:
                     SetToken(JsonToken.Undefined, ((JValue)token).Value);
                     break;
-                case JTokenType.Date: {
-                        object? v = ((JValue)token).Value;
-                        if (v is DateTime dt) {
-                            v = DateTimeUtils.EnsureDateTime(dt, DateTimeZoneHandling);
-                        }
-
-                        SetToken(JsonToken.Date, v);
-                        break;
-                    }
+                case JTokenType.Date:
+                    SetToken(JsonToken.Date, ((JValue)token).Value);
+                    break;
                 case JTokenType.Raw:
                     SetToken(JsonToken.Raw, ((JValue)token).Value);
                     break;
@@ -167,11 +200,11 @@ namespace Simula.Scripting.Json.Linq
                 case JTokenType.Guid:
                     SetToken(JsonToken.String, SafeToString(((JValue)token).Value));
                     break;
-                case JTokenType.Uri: {
-                        object? v = ((JValue)token).Value;
-                        SetToken(JsonToken.String, v is Uri uri ? uri.OriginalString : SafeToString(v));
-                        break;
-                    }
+                case JTokenType.Uri:
+                    object v = ((JValue)token).Value;
+                    Uri uri = v as Uri;
+                    SetToken(JsonToken.String, uri != null ? uri.OriginalString : SafeToString(v));
+                    break;
                 case JTokenType.TimeSpan:
                     SetToken(JsonToken.String, SafeToString(((JValue)token).Value));
                     break;
@@ -180,29 +213,34 @@ namespace Simula.Scripting.Json.Linq
             }
         }
 
-        private string? SafeToString(object? value)
+        private string SafeToString(object value)
         {
             return value?.ToString();
         }
 
         bool IJsonLineInfo.HasLineInfo()
         {
-            if (CurrentState == State.Start) {
+            if (CurrentState == State.Start)
+            {
                 return false;
             }
 
-            IJsonLineInfo? info = _current;
+            IJsonLineInfo info = _current;
             return (info != null && info.HasLineInfo());
         }
 
-        int IJsonLineInfo.LineNumber {
-            get {
-                if (CurrentState == State.Start) {
+        int IJsonLineInfo.LineNumber
+        {
+            get
+            {
+                if (CurrentState == State.Start)
+                {
                     return 0;
                 }
 
-                IJsonLineInfo? info = _current;
-                if (info != null) {
+                IJsonLineInfo info = _current;
+                if (info != null)
+                {
                     return info.LineNumber;
                 }
 
@@ -210,36 +248,52 @@ namespace Simula.Scripting.Json.Linq
             }
         }
 
-        int IJsonLineInfo.LinePosition {
-            get {
-                if (CurrentState == State.Start) {
+        int IJsonLineInfo.LinePosition
+        {
+            get
+            {
+                if (CurrentState == State.Start)
+                {
                     return 0;
                 }
 
-                IJsonLineInfo? info = _current;
-                if (info != null) {
+                IJsonLineInfo info = _current;
+                if (info != null)
+                {
                     return info.LinePosition;
                 }
 
                 return 0;
             }
         }
-        public override string Path {
-            get {
+
+        /// <summary>
+        /// Gets the path of the current JSON token. 
+        /// </summary>
+        public override string Path
+        {
+            get
+            {
                 string path = base.Path;
 
-                if (_initialPath == null) {
+                if (_initialPath == null)
+                {
                     _initialPath = _root.Path;
                 }
 
-                if (!StringUtils.IsNullOrEmpty(_initialPath)) {
-                    if (StringUtils.IsNullOrEmpty(path)) {
+                if (!string.IsNullOrEmpty(_initialPath))
+                {
+                    if (string.IsNullOrEmpty(path))
+                    {
                         return _initialPath;
                     }
 
-                    if (path.StartsWith('[')) {
+                    if (path.StartsWith('['))
+                    {
                         path = _initialPath + path;
-                    } else {
+                    }
+                    else
+                    {
                         path = _initialPath + "." + path;
                     }
                 }

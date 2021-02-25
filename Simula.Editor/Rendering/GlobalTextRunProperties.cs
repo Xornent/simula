@@ -10,7 +10,7 @@ namespace Simula.Editor.Rendering
         internal Typeface typeface;
         internal double fontRenderingEmSize;
         internal Brush foregroundBrush;
-        internal Brush backgroundBrush;
+        internal Brush backgroundBrush = Brushes.Transparent;
         internal System.Globalization.CultureInfo cultureInfo;
 
         public override Typeface Typeface { get { return typeface; } }

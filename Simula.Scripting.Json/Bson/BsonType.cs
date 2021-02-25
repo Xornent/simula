@@ -1,7 +1,4 @@
-﻿
-#nullable disable
-
-namespace Simula.Scripting.Json.Bson
+﻿namespace Simula.Scripting.Json.Bson
 {
     internal enum BsonType : sbyte
     {
