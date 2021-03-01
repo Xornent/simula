@@ -1,0 +1,18 @@
+﻿<UserControl x:Class="Simula.Pages.UserDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Simula.Pages"
+             mc:Ignorable="d" Height="163" Width="450" FontFamily="{StaticResource default}">
+    <Grid UseLayoutRounding="True" SnapsToDevicePixels="True">
+        <Image HorizontalAlignment="Left" Height="48" Margin="32,28,0,0" VerticalAlignment="Top" Width="48"
+               Source="pack://siteoforigin:,,,/resources/icons/profile.png"/>
+        <Button FontWeight="Bold" Content="确认" HorizontalAlignment="Left" Margin="339,112,0,0" VerticalAlignment="Top" Width="89" Height="23" Click="Save_Click"/>
+        <Label x:Name="lblName" Content="用户名" FontSize="20" FontWeight="Light" HorizontalAlignment="Left" Margin="108,19,0,0" VerticalAlignment="Top"/>
+        <TextBlock x:Name="lblAddress" MaxWidth="320" TextWrapping="Wrap" Text="Git 账户" FontWeight="Bold"
+                   HorizontalAlignment="Left" Margin="113,60,0,0" VerticalAlignment="Top"/>
+        <Button FontWeight="Bold" Content="配置 Git 用户凭据 ..." HorizontalAlignment="Left" Margin="32,112,0,0" VerticalAlignment="Top" Width="156" Height="23" Click="Save_Click"/>
+
+    </Grid>
+</UserControl>

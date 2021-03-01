@@ -23,6 +23,9 @@ namespace Simula.Scripting.Analysis.Record
         public List<TypeRecord> Assertions { get; set; } = new List<TypeRecord>();
         public List<TypeRecord> Inheritages { get; set; } = new List<TypeRecord>();
 
+        public List<FunctionRecord> Functions { get; set; } = new List<FunctionRecord>();
+        public List<string> FunctionSymbols { get; set; } = new List<string>();
+
         public List<IRecord> Locals { get; set; }
         public List<IRecord> References { get; set; }
     }

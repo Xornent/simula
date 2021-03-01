@@ -246,6 +246,7 @@ namespace Simula.Scripting.Analysis
                             }
                         }
                     }
+
                 } else if (stmt is DataDeclaration data) {
                     block.Variables.DataDeclarations.Add(data);
                     if (block is SequenceExpression) continue;

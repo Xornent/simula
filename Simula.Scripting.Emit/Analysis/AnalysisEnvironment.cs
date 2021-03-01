@@ -42,6 +42,22 @@ namespace Simula.Scripting.Analysis
             var float64 = new Interop.ClrTypeRecord(typeof(double), "float64");
         }
 
+        private void RegisterClrType(System.Type clrType, string name = "")
+        {
+            var type = new Interop.ClrTypeRecord(clrType, string.IsNullOrEmpty(name) ? clrType.Name : name);
+            
+        }
+
+        private void RegisterMemberFunction(Record.TypeRecord type, Record.FunctionRecord function)
+        {
+            type.Functions.Add(function);
+        }
+
+        private T Lookup<T>(string symbol) where T : Record.IRecord
+        {
+
+        }
+
         private void Register(SyntaxTree syntaxTree)
         {
             

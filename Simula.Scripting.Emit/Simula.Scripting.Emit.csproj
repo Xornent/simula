@@ -47,6 +47,7 @@
     <Compile Include="Analysis\AnalysisScope.cs" />
     <Compile Include="Analysis\Interop\ClrFunctionRecord.cs" />
     <Compile Include="Analysis\Interop\ClrTypeRecord.cs" />
+    <Compile Include="Analysis\Interop\PlaceholderRecord.cs" />
     <Compile Include="Analysis\Record\AnyType.cs" />
     <Compile Include="Analysis\Record\CombinationType.cs" />
     <Compile Include="Analysis\Record\DataRecord.cs" />
@@ -59,6 +60,12 @@
     <Compile Include="Analysis\Record\UnionRecord.cs" />
     <Compile Include="Analysis\SyntaxTree.cs" />
     <Compile Include="Emit\EmitHelper.cs" />
+    <Compile Include="Native\Data\DataObject.cs" />
+    <Compile Include="Native\Expr\ExprObject.cs" />
+    <Compile Include="Native\Function\FunctionObject.cs" />
+    <Compile Include="Native\Matrix\MatrixObject.cs" />
+    <Compile Include="Native\ScriptObject.cs" />
+    <Compile Include="Native\Tuple\TupleObject.cs" />
     <Compile Include="Parser\Ast\BinaryExpression.cs" />
     <Compile Include="Parser\Ast\BlockStatement.cs" />
     <Compile Include="Parser\Ast\BreakStatement.cs" />
@@ -119,11 +126,6 @@
     <Compile Include="Workspace\Workspace.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Native\Data\" />
-    <Folder Include="Native\Expr\" />
-    <Folder Include="Native\Function\" />
-    <Folder Include="Native\Matrix\" />
-    <Folder Include="Native\Tuple\" />
     <Folder Include="Runtime\Debugger\" />
     <Folder Include="Runtime\Environments\" />
     <Folder Include="Runtime\Interop\" />

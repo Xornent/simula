@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
@@ -34,6 +36,10 @@ namespace Simula
             SizeChangeEnquiry.Start();
             popDialogHost.Closed += PopDialogHost_Closed;
             popDialogHost.Opened += PopDialogHost_Opened;
+
+            this.panelGit.Visibility = Visibility.Hidden;
+            this.panelInitGit.Visibility = Visibility.Visible;
+            this.Margin = new Thickness();
 
             // this application supports only left-handed operation. otherwise, it will 
             // naturally occur many layout problems
@@ -350,10 +356,12 @@ namespace Simula
                 requireSizeChange = false;
             }
         }
-
+        private DispatcherFrame dispatcherFrame;
+        private FrameworkElement container = null;
         private void DisplayPopup(UserControl control, int width, int height, bool stayOpen = false, bool dialog = false)
         {
             if (!dialog) {
+                container = this;
                 popDialogGrid.Width = width + 40;
                 popDialogGrid.Height = height + 20;
                 popRectangle.Margin = new Thickness(20, 0, 20, 20);
@@ -376,6 +384,10 @@ namespace Simula
                     popDialogHost.HorizontalOffset = (ActualWidth - width) / 2 - 20;
                 popDialogHost.StaysOpen = stayOpen;
                 popDialogHost.IsOpen = true;
+
+                if (stayOpen) {
+
+                }
                 
             } else {
                 Window window = new Window();
@@ -395,14 +407,33 @@ namespace Simula
             }
         }
 
+        // acknowledgement:
+        // [1]: https://www.cnblogs.com/therock/articles/2314460.html
+
         private void PopDialogHost_Opened(object sender, EventArgs e)
         {
-            body.IsHitTestVisible = false;
+            this.MainGrid.IsHitTestVisible = false;
+            // this.GlobalBlur.Radius = 0;
+
+            try {
+                ComponentDispatcher.PushModal();
+                dispatcherFrame = new DispatcherFrame(true);
+                Dispatcher.PushFrame(dispatcherFrame);
+            } finally {
+                ComponentDispatcher.PopModal();
+            }
         }
 
         private void PopDialogHost_Closed(object sender, EventArgs e)
         {
-            body.IsHitTestVisible = true;
+            if (dispatcherFrame != null) {
+                dispatcherFrame.Continue = false;
+            }
+
+            ComponentDispatcher.PopModal();
+
+            this.MainGrid.IsHitTestVisible = true;
+            // this.GlobalBlur.Radius = 0;
         }
 
         #endregion
@@ -421,6 +452,7 @@ namespace Simula
             startup.Width = 450;
             startup.Height = 183;
             DisplayPopup(startup, 450, 183, true);
+            MessageBox.Show("no model");
         }
 
         private void Menu_ManageExtensions(object sender, EventArgs e)
@@ -444,6 +476,61 @@ namespace Simula
         public static void InvokeDialogCloseCallback()
         {
             DialogCloseCallback?.Invoke(null, null);
+        }
+
+        private void RecursiveDelete(DirectoryInfo directory, bool throwException = false)
+        {
+            try {
+                foreach (var item in directory.GetDirectories()) {
+                    RecursiveDelete(item, true);
+                    item.Delete();
+                }
+
+                foreach (var item in directory.GetFiles()) {
+                    item.Delete();
+                }
+            } catch (Exception ex) {
+                if (throwException) throw ex;
+                else this.DisplayPopup(new Pages.DeletePermissionBlockDialog(), 450, 183, true);
+            }
+        }
+
+        //                               Users
+        // ---------------------------------------------------------------------
+        // users in simula is a role to operate and categorize accessibilities
+        // it is also a git authenticator.
+
+        private bool isLoggedin = false;
+        private string userFriendlyName = "";
+        private string userPassword = "";
+
+        private bool userGitLoggedin = false;
+        private string userGitAccount = "";
+        private string userGitPassword = "";
+
+        private void Event_User(object sender, EventArgs e)
+        {
+            if(isLoggedin) {
+                DisplayPopup(new Pages.UserDialog(this.userFriendlyName, this.userGitAccount), 450, 163, true);
+                return;
+            }
+
+            Pages.UserRegisterDialog reg = new Pages.UserRegisterDialog();
+            DisplayPopup(reg, 450, 353, true);
+            this.isLoggedin = true;
+            this.userFriendlyName = reg.FriendlyName;
+            this.userPassword = reg.Password;
+        }
+
+        private void LogIn()
+        {
+            if (isLoggedin) return;
+
+            Pages.UserRegisterDialog reg = new Pages.UserRegisterDialog();
+            DisplayPopup(reg, 450, 353, true);
+            this.isLoggedin = true;
+            this.userFriendlyName = reg.FriendlyName;
+            this.userPassword = reg.Password;
         }
 
         //                             Workspaces
@@ -470,9 +557,23 @@ namespace Simula
                 this.btnInitRemote.IsEnabled = true;
                 this.btnInitRepo.IsEnabled = true;
 
+                FileSystemWatcher watcher = new FileSystemWatcher(this.currentWorkspaceLoc);
+                watcher.EnableRaisingEvents = true;
+                watcher.Created += Event_FileSystemChanged;
+                watcher.Deleted += Event_FileSystemChanged;
+                watcher.Renamed += Event_FileSystemChanged;
+                watcher.Changed += Event_FileSystemChanged;
                 // trigger the directory changing events.
                 this.CheckDirectoryGit();
             }
+        }
+
+        private void Event_FileSystemChanged(object sender, FileSystemEventArgs e)
+        {
+            if (!hasWorkspace) return;
+            if (!gitAvailable) return;
+
+            Dispatcher.Invoke(CheckDirectoryGit);
         }
 
         private void CheckDirectoryGit()
@@ -503,10 +604,14 @@ namespace Simula
                         this.treeItemGitTag.Items.Add(new UI.IconTreeNode(item.FriendlyName, "resources/icons/label.png"));
                     }
 
+                    UpdateGitChanges();
+
                 } catch  {
+
                     this.gitAvailable = false;
                     this.panelInitGit.Visibility = Visibility.Visible;
                     this.panelGit.Visibility = Visibility.Hidden;
+                    this.DisplayPopup(new Pages.InvalidGitConfirmationDialog(), 450, 183, true);
                 }
             }
         }
@@ -515,6 +620,9 @@ namespace Simula
         {
             if (gitAvailable) return;
             if (!hasWorkspace) return;
+            if (Directory.Exists(currentWorkspaceLoc + @"\.git"))
+                this.RecursiveDelete(new DirectoryInfo(currentWorkspaceLoc + @"\.git"));
+
             string root = Scripting.Git.Repository.Init(currentWorkspaceLoc);
             gitAvailable = true;
             CheckDirectoryGit();
@@ -522,7 +630,190 @@ namespace Simula
 
         private void Event_InitGitFromRemote(object sender, EventArgs e)
         {
+            if (gitAvailable) return;
+            if (!hasWorkspace) return;
 
+            GitLogIn();
+
+            Pages.GitCloneRepositoryDialog cloneDlg = new Pages.GitCloneRepositoryDialog();
+            this.DisplayPopup(cloneDlg, 450, 183, true);
+            Scripting.Git.CloneOptions options = new Scripting.Git.CloneOptions();
+            options.CredentialsProvider = (_url, _user, _cred) => new Scripting.Git.UsernamePasswordCredentials 
+            {
+                Username = this.userGitAccount, 
+                Password = this.userGitPassword
+            };
+
+            options.OnProgress += GitTransferProgress;
+
+            string root = Scripting.Git.Repository.Clone(cloneDlg.Repository, currentWorkspaceLoc, options);
+            gitAvailable = true;
+            CheckDirectoryGit();
+        }
+
+        private bool GitTransferProgress(string server)
+        {
+            return true;
+        }
+
+        private void GitLogIn()
+        {
+            if (!userGitLoggedin) {
+                Pages.UserAuthenticationDialog auth = new Pages.UserAuthenticationDialog();
+                this.DisplayPopup(auth, 450, 283, true);
+                this.userGitAccount = auth.Account;
+                this.userGitPassword = auth.Password;
+            }
+        }
+
+        private void UpdateGitChanges()
+        {
+            var options = new Scripting.Git.StatusOptions();
+            var status = this.gitRepository.RetrieveStatus(options);
+            this.treeItemChanges.Items.Clear();
+            this.treeItemStacked.Items.Clear();
+
+            foreach (var item in status) {
+                string[] paths = item.FilePath.Replace("\\", "/").Replace("//", "/").Split('/');
+
+                switch (item.State) {
+                    case Scripting.Git.FileStatus.Nonexistent:
+                        break;
+                    case Scripting.Git.FileStatus.Unaltered:
+                        break;
+                    case Scripting.Git.FileStatus.NewInIndex:
+                        AddToTreeItemRecursive(this.treeItemStacked, paths.ToList(), "resources/icons/data-add.png", item.FilePath);
+                        break;
+                    case Scripting.Git.FileStatus.ModifiedInIndex:
+                        AddToTreeItemRecursive(this.treeItemStacked, paths.ToList(), "resources/icons/data-refresh.png", item.FilePath);
+                        break;
+                    case Scripting.Git.FileStatus.DeletedFromIndex:
+                        AddToTreeItemRecursive(this.treeItemStacked, paths.ToList(), "resources/icons/data-remove.png", item.FilePath);
+                        break;
+                    case Scripting.Git.FileStatus.RenamedInIndex:
+                        AddToTreeItemRecursive(this.treeItemStacked, paths.ToList(), "resources/icons/project-name-edit.png", item.FilePath);
+                        break;
+                    case Scripting.Git.FileStatus.TypeChangeInIndex:
+                        AddToTreeItemRecursive(this.treeItemStacked, paths.ToList(), "resources/icons/project-name-edit.png", item.FilePath);
+                        break;
+                    case Scripting.Git.FileStatus.NewInWorkdir:
+                        AddToTreeItemRecursive(this.treeItemChanges, paths.ToList(), "resources/icons/data-add.png", item.FilePath);
+                        break;
+                    case Scripting.Git.FileStatus.ModifiedInWorkdir:
+                        AddToTreeItemRecursive(this.treeItemChanges, paths.ToList(), "resources/icons/data-refresh.png", item.FilePath);
+                        break;
+                    case Scripting.Git.FileStatus.DeletedFromWorkdir:
+                        AddToTreeItemRecursive(this.treeItemChanges, paths.ToList(), "resources/icons/data-remove.png", item.FilePath);
+                        break;
+                    case Scripting.Git.FileStatus.TypeChangeInWorkdir:
+                        AddToTreeItemRecursive(this.treeItemChanges, paths.ToList(), "resources/icons/project-name-edit.png", item.FilePath);
+                        break;
+                    case Scripting.Git.FileStatus.RenamedInWorkdir:
+                        AddToTreeItemRecursive(this.treeItemChanges, paths.ToList(), "resources/icons/project-name-edit.png", item.FilePath);
+                        break;
+                    case Scripting.Git.FileStatus.Unreadable:
+                        break;
+                    case Scripting.Git.FileStatus.Ignored:
+                        break;
+                    case Scripting.Git.FileStatus.Conflicted:
+                        AddToTreeItemRecursive(this.treeItemStacked, paths.ToList(), "resources/icons/data-unavailable.png", item.FilePath);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            if (status.IsDirty) this.treeItemChanges.Header = "更改";
+            else this.treeItemChanges.Header = "已全部暂存";
+        }
+
+        private void AddToTreeItemRecursive(TreeViewItem item, List<string> paths, string icon = "resources/icons/apple-files.png", string fullPath = "")
+        {
+            if(paths.Count == 1) {
+                item.Items.Add(new UI.IconTreeNode(paths[0], icon));
+                return;
+            }
+
+            foreach (TreeViewItem searches in item.Items) {
+                if(searches.Header.ToString() == paths[0]) {
+                    paths.RemoveAt(0);
+                    AddToTreeItemRecursive(searches, paths, icon, fullPath);
+                    return;
+                }
+            }
+
+            var tree = new UI.IconTreeNode(paths[0], "resources/icons/apple-files.png");
+            tree.Tag = fullPath;
+            item.Items.Add(tree);
+            paths.RemoveAt(0);
+            AddToTreeItemRecursive(tree, paths, icon, fullPath);
+        }
+
+        private void Event_GitStashAll(object sender, EventArgs e)
+        {
+            if (!gitAvailable) return;
+
+            Scripting.Git.StageOptions options = new Scripting.Git.StageOptions();
+            Scripting.Git.Commands.Stage(this.gitRepository, "*");
+
+            CheckDirectoryGit();
+        }
+
+        private void Event_GitCommit(object sender, EventArgs e)
+        {
+            if (!gitAvailable) return;
+            LogIn();
+            GitLogIn();
+
+            Scripting.Git.CommitOptions options = new Scripting.Git.CommitOptions();
+            Scripting.Git.Signature committer = new Scripting.Git.Signature(this.userFriendlyName, this.userGitAccount, DateTime.Now);
+            this.gitRepository.Commit(this.txtGitCommitMsg.Text, committer, committer, options);
+
+            CheckDirectoryGit();
+        }
+
+        private void Event_GitStashAllAndCommit(object sender, EventArgs e)
+        {
+            this.Event_GitStashAll(sender, e);
+            this.Event_GitCommit(sender, e);
+        }
+
+        private void Event_GitRemoveUntracked(object sender, EventArgs e)
+        {
+            Pages.DeleteConfirmationDialog confirm = new Pages.DeleteConfirmationDialog();
+            this.DisplayPopup(confirm, 450, 183, true);
+            
+            if (confirm.Result == Pages.DialogResult.Confirm)
+                this.gitRepository.RemoveUntrackedFiles();
+        }
+
+        //                         Context Menu Builders
+        // ---------------------------------------------------------------------
+        // the following code build the context menus used in the application's 
+        // contexts.
+
+        private ContextMenu ctxMenuGitFileChange = new ContextMenu();
+        private void InitializeComponentCtxGitFileChange()
+        {
+            ctxMenuGitFileChange = new ContextMenu();
+
+            MenuItem stash = new MenuItem() { Header = "暂存此文件" };
+            MenuItem disgardChange = new MenuItem() { Header = "忽略更改" };
+
+            stash.Click += (sender, e) => {
+                if(sender is UI.IconTreeNode node) {
+                    Scripting.Git.Commands.Stage(this.gitRepository, node.Tag.ToString());
+                    e.Handled = true;
+                }
+            };
+
+            disgardChange.Click += (sender, e) => {
+                if (sender is UI.IconTreeNode node) {
+
+                }
+            };
+
+            ctxMenuGitFileChange.Items.Add(stash);
         }
     }
 }

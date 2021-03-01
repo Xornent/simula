@@ -79,6 +79,28 @@
     <Compile Include="Pages\About.xaml.cs">
       <DependentUpon>About.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\DeleteConfirmation.xaml.cs">
+      <DependentUpon>DeleteConfirmation.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\DeletePermissionBlock.xaml.cs">
+      <DependentUpon>DeletePermissionBlock.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\DialogResult.cs" />
+    <Compile Include="Pages\GitCloneRepository.xaml.cs">
+      <DependentUpon>GitCloneRepository.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\User.xaml.cs">
+      <DependentUpon>User.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\UserRegister.xaml.cs">
+      <DependentUpon>UserRegister.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\UserAuthentication.xaml.cs">
+      <DependentUpon>UserAuthentication.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\InvalidGitConfirmation.xaml.cs">
+      <DependentUpon>InvalidGitConfirmation.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\SaveConfirmationDialog.xaml.cs">
       <DependentUpon>SaveConfirmationDialog.xaml</DependentUpon>
     </Compile>
@@ -109,6 +131,34 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="Pages\About.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\DeleteConfirmation.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\DeletePermissionBlock.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\GitCloneRepository.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\User.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\UserRegister.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\UserAuthentication.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\InvalidGitConfirmation.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
