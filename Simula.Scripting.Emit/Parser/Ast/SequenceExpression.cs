@@ -13,7 +13,7 @@ namespace Simula.Scripting.Parser.Ast
     public enum BracketType
     {
         Parenthesis,
-        Brakcet,
+        Bracket,
         Brace
     }
 

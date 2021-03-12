@@ -25,6 +25,7 @@ use sys.io
 debugger on
 def d1 = data(private int32 i = 0, ...
           public static readonly int32 j)
+ 
 end
 def d2 = data(params int32 k) : d1
     def a = func(int32 i)
@@ -118,6 +119,7 @@ end
 
                 Analysis.SyntaxTree syntax = Analysis.SyntaxTree.Analyse(program);
                 Console.WriteLine("Syntax Static Analysis");
+                Console.WriteLine("");
                 Console.WriteLine("Diagnostics: {0} Errors, {1} Warnings", syntax.Diagnostics.Fatals, syntax.Diagnostics.Warnings);
                 foreach (var item in syntax.Diagnostics.Diagnostics) {
                     switch (item.Severity) {
@@ -138,6 +140,9 @@ end
                     Console.Write("({0},{1})-({2},{3})", item.Location.Start.Line, item.Location.Start.Column, item.Location.End.Line, item.Location.End.Column);
                     Console.WriteLine(" " + item.Error.ToString());
                 }
+
+                Analysis.AnalysisEnvironment environment = new Analysis.AnalysisEnvironment();
+                environment.Load(syntax);
             }
         }
 

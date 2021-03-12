@@ -7,8 +7,13 @@ namespace Simula.Scripting.Analysis.Record
 {
     public class FunctionRecord : IRecord
     {
+        public FunctionRecord()
+        {
+            this.Oid = Guid.NewGuid();
+        }
+
 #pragma warning disable CS8618
-        public FunctionRecord(string symbol)
+        public FunctionRecord(string symbol) : this()
 #pragma warning restore CS8618
         {
             this.Symbol = symbol;
@@ -18,7 +23,7 @@ namespace Simula.Scripting.Analysis.Record
 
         public void Define(FunctionDeclaration decl)
         {
-            this.declaration = decl;
+            this.Declaration = decl;
             
             // evaluate the type used for current function. including the return types and parameter types.
             // a function is complete only when:
@@ -34,15 +39,18 @@ namespace Simula.Scripting.Analysis.Record
         public RecordType RecordType { get { return RecordType.Function; } }
         public bool IsClr { get; } = false;
 
-        private FunctionDeclaration declaration;
+        internal FunctionDeclaration Declaration;
 
         public TypeRecord ReturnType;
         public List<TypeRecord> ParameterType = new List<TypeRecord>();
-        public List<string> ParameterSymbol = new List<string>();
+        public IDictionary<string, Guid> ParameterSymbol = new Dictionary<string, Guid>();
         public List<ParameterModifer> ParameterModifer = new List<ParameterModifer>();
 
-        public List<IRecord> Locals = new List<IRecord>();
-        public List<IRecord> References = new List<IRecord>();
+        public Dictionary<string, IRecord> Locals = new Dictionary<string, IRecord>();
+        public Dictionary<string, IRecord> References = new Dictionary<string, IRecord>();
+
+        public bool IsStatic { get; set; } = false;
+        public Guid Oid { get; set; }
     }
 
     public enum ParameterModifer

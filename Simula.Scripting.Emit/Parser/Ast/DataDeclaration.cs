@@ -13,6 +13,6 @@ namespace Simula.Scripting.Parser.Ast
         
         public List<FunctionParameter> Fields { get; set; } = new List<FunctionParameter>();
         public List<IExpression> Inheritage { get; set; } = new List<IExpression>();
-        public List<Literal> Assumptions { get; set; } = new List<Literal>();
+        public List<IExpression> Assertions { get; set; } = new List<IExpression>();
     }
 }

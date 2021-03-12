@@ -6,8 +6,12 @@ namespace Simula.Scripting.Analysis.Record
 {
     public class TypeRecord : IRecord
     {
-        public TypeRecord() { }
-        public TypeRecord(string symbol)
+        public TypeRecord() 
+        {
+            this.Oid = Guid.NewGuid();
+        }
+
+        public TypeRecord(string symbol) : this()
         {
             this.Symbol = symbol;
         }
@@ -17,16 +21,17 @@ namespace Simula.Scripting.Analysis.Record
         public RecordType RecordType { get { return RecordType.Type; } }
         public bool IsClr { get; } = false;
 
-        public List<string> FieldSymbols { get; set; } = new List<string>();
+        internal Parser.Ast.DataDeclaration Declaration;
+
+        public IDictionary<string, Guid> FieldSymbols { get; set; } = new Dictionary<string, Guid>();
         public List<TypeRecord> FieldTypes { get; set; } = new List<TypeRecord>();
 
         public List<TypeRecord> Assertions { get; set; } = new List<TypeRecord>();
         public List<TypeRecord> Inheritages { get; set; } = new List<TypeRecord>();
 
-        public List<FunctionRecord> Functions { get; set; } = new List<FunctionRecord>();
-        public List<string> FunctionSymbols { get; set; } = new List<string>();
-
         public List<IRecord> Locals { get; set; }
         public List<IRecord> References { get; set; }
+
+        public Guid Oid { get; set; }
     }
 }

@@ -326,7 +326,7 @@ namespace Simula.Scripting.Parser
                         return null;
                     }
 
-                    dataStatement.Assumptions.Add(new Literal(assertion[0].Value));
+                    dataStatement.Assertions.Add(ParseExpression(assertion, state, options, result));
                 }
                 declarator = assertSecs[0];
             }
@@ -1273,7 +1273,7 @@ namespace Simula.Scripting.Parser
                     return tuple;
 
                 } else {
-                    if (tokens.Count == 0) return new Matrix2DExpression() { Bracket = BracketType.Brakcet };
+                    if (tokens.Count == 0) return new Matrix2DExpression() { Bracket = BracketType.Bracket };
                     List<TokenCollection> exprs = new List<TokenCollection>();
                     TokenCollection exprBlocks = new TokenCollection();
                     int rowCount = 1;
@@ -1330,7 +1330,7 @@ namespace Simula.Scripting.Parser
                                 if (columnCount == 0) columnCount = tempCol;
                                 else { if (columnCount != tempCol) {
                                         result.AddFatal(SyntaxError.MatrixNotUniform, returns.Tokens[0]);
-                                        return new Matrix2DExpression() { Bracket = BracketType.Brakcet };
+                                        return new Matrix2DExpression() { Bracket = BracketType.Bracket };
                                     } }
 
                                 rowCount++;
@@ -1340,17 +1340,17 @@ namespace Simula.Scripting.Parser
                         } else exprBlocks.Add(item);
                     }
 
-                    if (columnCount == 0 && exprBlocks.Count == 0) return new Matrix2DExpression() { Bracket = BracketType.Brakcet };
+                    if (columnCount == 0 && exprBlocks.Count == 0) return new Matrix2DExpression() { Bracket = BracketType.Bracket };
                     if (columnCount == 0 ) columnCount = tempCol;
                     if (exprBlocks.Count > 0) exprs.Add(exprBlocks);
 
                     if(rowCount*columnCount != exprs.Count) {
                         result.AddFatal(SyntaxError.InternalMatrixAssignment, returns.Tokens[0]);
-                        return new Matrix2DExpression() { Bracket = BracketType.Brakcet };
+                        return new Matrix2DExpression() { Bracket = BracketType.Bracket };
                     }
 
                     Matrix2DExpression matrix = new Matrix2DExpression();
-                    matrix.Bracket = BracketType.Brakcet;
+                    matrix.Bracket = BracketType.Bracket;
                     int linearCount = 0;
                     matrix.Width = columnCount;
                     matrix.Height = rowCount;

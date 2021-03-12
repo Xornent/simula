@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Simula.Scripting.Analysis.Interop
 {
-    public class ClrTypeRecord : Record.FunctionRecord
+    public class ClrTypeRecord : Record.TypeRecord
     {
         public ClrTypeRecord(Type type) : base(type.Name)
         {

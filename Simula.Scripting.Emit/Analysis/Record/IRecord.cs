@@ -26,12 +26,13 @@ namespace Simula.Scripting.Analysis.Record
         bool IsUnion { get; }
         bool IsClr { get; }
         RecordType RecordType { get; }
+
+        Guid Oid { get; set; }
     }
 
     public enum RecordType
     {
         Data,
-        Union,
         Type,
         Function
     }

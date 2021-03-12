@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Simula.Scripting.Analysis.Record
@@ -25,6 +26,17 @@ namespace Simula.Scripting.Analysis.Record
 
     public class EitherType : TypeRecord
     {
-        List<TypeRecord> Choices { get; set; } = new List<TypeRecord>();
+        public EitherType() : base() { }
+        public EitherType(List<TypeRecord> choices) : base()
+        {
+            this.Choices = choices;
+        }
+
+        public EitherType(params TypeRecord[] choices) : base()
+        {
+            this.Choices = choices.ToList();
+        }
+
+        public List<TypeRecord> Choices { get; set; } = new List<TypeRecord>();
     }
 }

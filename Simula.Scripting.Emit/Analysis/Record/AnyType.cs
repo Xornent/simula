@@ -21,6 +21,7 @@ namespace Simula.Scripting.Analysis.Record
 
     public class AnyType : TypeRecord
     {
+        public AnyType() : base() { }
         public new string Symbol { get; set; } = "any";
     }
 }

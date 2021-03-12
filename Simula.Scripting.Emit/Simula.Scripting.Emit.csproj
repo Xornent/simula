@@ -48,6 +48,7 @@
     <Compile Include="Analysis\Interop\ClrFunctionRecord.cs" />
     <Compile Include="Analysis\Interop\ClrTypeRecord.cs" />
     <Compile Include="Analysis\Interop\PlaceholderRecord.cs" />
+    <Compile Include="Analysis\ParameterModifers.cs" />
     <Compile Include="Analysis\Record\AnyType.cs" />
     <Compile Include="Analysis\Record\CombinationType.cs" />
     <Compile Include="Analysis\Record\DataRecord.cs" />
@@ -57,7 +58,6 @@
     <Compile Include="Analysis\Record\IRecord.cs" />
     <Compile Include="Analysis\Record\NullType.cs" />
     <Compile Include="Analysis\Record\TypeRecord.cs" />
-    <Compile Include="Analysis\Record\UnionRecord.cs" />
     <Compile Include="Analysis\SyntaxTree.cs" />
     <Compile Include="Emit\EmitHelper.cs" />
     <Compile Include="Native\Data\DataObject.cs" />
